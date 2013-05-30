@@ -15,11 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 """use sympy to generate code for generating spectral method matrix subroutines"""
 
-<<<<<<< HEAD
-from __future__ import division
-=======
 from __future__ import division, print_function
->>>>>>> wrote and tested dim1sin_af_linear
 
 import sympy
 
@@ -101,11 +97,7 @@ def create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et', 'mv',
         linear_expressions[prop]=linear(z, ztop, eval(prop+suffix['t']), zbot, eval(prop+suffix['b']))
     return (prop_map, linear_expressions)
     
-<<<<<<< HEAD
-def generate_dim1sin_af_linear():
-=======
 def dim1sin_af_linear():
->>>>>>> wrote and tested dim1sin_af_linear
     """Generate code to calculate spectral method integrations
     
     Performs integrations of `sin(mi * z) * a(z) * sin(mj * z)` between [0, 1]
@@ -165,8 +157,6 @@ def dim1sin_af_linear():
         
     return fn
 
-<<<<<<< HEAD
-=======
 def dim1sin_abf_linear():
     """Generate code to calculate spectral method integrations
     
@@ -246,7 +236,6 @@ def dim1sin_abf_linear():
 
 
 
->>>>>>> wrote and tested dim1sin_af_linear
 def generate_psi_code():
     """Perform integrations and output the function that will generate psi (without docstring).
 
@@ -444,17 +433,10 @@ def generate_theta_two_prop():
     
 if __name__ == '__main__':
     #print(generate_gamma_code())
-<<<<<<< HEAD
-    print '#'*65
-    #print(generate_psi_code())
-    #print(generate_theta_two_prop())
-    print(generate_dim1sin_af_linear())
-=======
     print('#'*65)
     #print(generate_psi_code())
     #print(generate_theta_two_prop())
     print(generate_dim1sin_abf_linear())
->>>>>>> wrote and tested dim1sin_af_linear
     pass
         
     

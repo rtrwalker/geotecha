@@ -18,11 +18,7 @@
 Shows a few approaches to testing (so there may be some repeated test)
 
 """
-<<<<<<< HEAD
-from __future__ import division
-=======
 from __future__ import division, print_function
->>>>>>> wrote and tested dim1sin_af_linear
 
 from nose import with_setup
 from nose.tools.trivial import assert_almost_equal
@@ -33,10 +29,7 @@ from math import pi
 import numpy as np
 
 from geotecha.speccon.integrals import dim1sin_af_linear
-<<<<<<< HEAD
-=======
 from geotecha.speccon.integrals import dim1sin_abf_linear
->>>>>>> wrote and tested dim1sin_af_linear
 from geotecha.speccon.integrals import m_from_sin_mx
 
 
@@ -96,11 +89,7 @@ def test_m_from_sin_mx_bc_1v2():
 class test_m_from_sin_mx(object):
     """A suite of tests for m_from_sin_mx
     Shows two approaches: individual methods and looping through a list
-<<<<<<< HEAD
-    
-=======
         
->>>>>>> wrote and tested dim1sin_af_linear
     """
     
     def __init__(self):        
@@ -221,19 +210,11 @@ class test_dim1sin_af_linear(base_t_ester):
              self.gamma_isotropic * 2],
             
             ['a 2 layers, const within each layer, PTIB', 
-<<<<<<< HEAD
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 0.5], 'ab': [1, 0.5]}, 
-             np.array([[0.274317, 0.052295], [0.052295, 0.3655915]])],
-            ['a 2 layers, const within each layer, PTPB', 
-             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 0.5], 'ab': [1, 0.5]},
-             np.array([[0.326612767905, 0.0912741609272], [0.0912741609272, 0.368920668216]])],
-=======
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2]}, 
              np.array([[0.95136535, -0.10459088], [-0.10459088, 0.76881702]])],
             ['a 2 layers, const within each layer, PTPB', 
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2]},
              np.array([[0.84677446, -0.18254832], [-0.18254832, 0.76215866]])],
->>>>>>> wrote and tested dim1sin_af_linear
             
             
             #from speccon vba : debug.Print ("[[" & gammat(1,1) & ", " & gammat(1,2) & "],[" & gammat(2,1) & ", " & gammat(2,2) & "]]")
@@ -245,9 +226,6 @@ class test_dim1sin_af_linear(base_t_ester):
              np.array([[0.750000000000001, -9.00632743487448E-02],[-9.00632743487448E-02, 0.750000000000001]])]
             ]
             
-<<<<<<< HEAD
-            
-=======
 
 
 
@@ -375,5 +353,4 @@ class test_dim1sin_abf_linear(base_t_ester):
              np.array([[1.1413364, -0.27018982], [-0.27018982, 1.1603341]])],
              
             ]
->>>>>>> wrote and tested dim1sin_af_linear
 

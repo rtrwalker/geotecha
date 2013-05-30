@@ -17,11 +17,7 @@
     
 """
 
-<<<<<<< HEAD
-from __future__ import division
-=======
 from __future__ import division, print_function
->>>>>>> wrote and tested dim1sin_af_linear
 import numpy as np
 
 def m_from_sin_mx(i, boundary=0):
@@ -86,12 +82,8 @@ def dim1sin_af_linear(m, at, ab, zt, zb):
     geotecha.integrals_generate_code.generate_dim1sin_af_linear : use sympy 
     to perform the integrasl symbolically and generate expressions for 
     this function
-<<<<<<< HEAD
-    
-=======
     geotecha.speccon.integrals_generate_code.dim1sin_af_linear : sympy
     integrations to produce the code to this function
->>>>>>> wrote and tested dim1sin_af_linear
     Notes
     -----
     The `dim1sin_af_linear' matrix, :math:`\\mathbf{A}` is given by:
@@ -123,8 +115,6 @@ def dim1sin_af_linear(m, at, ab, zt, zb):
         for j in range(i + 1, neig):
             A[j, i] = A[i, j]                
     
-<<<<<<< HEAD
-=======
     return A
     
     
@@ -203,5 +193,4 @@ def dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb):
         for j in range(i + 1, neig):
             A[j, i] = A[i, j]                
     
->>>>>>> wrote and tested dim1sin_af_linear
     return A
