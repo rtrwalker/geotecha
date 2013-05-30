@@ -15,7 +15,11 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 """use sympy to generate code for generating spectral method matrix subroutines"""
 
+<<<<<<< HEAD
 from __future__ import division
+=======
+from __future__ import division, print_function
+>>>>>>> wrote and tested dim1sin_af_linear
 
 import sympy
 
@@ -97,7 +101,11 @@ def create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et', 'mv',
         linear_expressions[prop]=linear(z, ztop, eval(prop+suffix['t']), zbot, eval(prop+suffix['b']))
     return (prop_map, linear_expressions)
     
+<<<<<<< HEAD
 def generate_dim1sin_af_linear():
+=======
+def dim1sin_af_linear():
+>>>>>>> wrote and tested dim1sin_af_linear
     """Generate code to calculate spectral method integrations
     
     Performs integrations of `sin(mi * z) * a(z) * sin(mj * z)` between [0, 1]
@@ -157,6 +165,88 @@ def generate_dim1sin_af_linear():
         
     return fn
 
+<<<<<<< HEAD
+=======
+def dim1sin_abf_linear():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * a(z) *b(z) * sin(mj * z)` 
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.  
+    Code is generated that will produce a square array with the appropriate 
+    integrals at each location
+    
+    Paste the resulting code (at least the loops) into `dim1sin_abf_linear`.
+    
+    Notes
+    -----
+    The `dim1sin_abf_linear' matrix, :math:`\\mathbf{A}` is given by:
+    
+    
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}{sin\\left({m_j}z\\right)}{sin\\left({m_i}z\\right)}\,dz}
+    
+    where :math:`a\\left(z\\right)` in one layer is given by:
+        
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    :math:`b\\left(z\\right)` in one layer is given by:
+        
+    .. math:: b\\left(z\\right) = b_t+\\frac{b_b-b_t}{z_b-z_t}\\left(z-z_t\\right)    
+    
+    """
+    from sympy import cos, sin
+    
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a', 'b'])
+    
+    fdiag = sympy.integrate(p['a'] * p['b'] * sin(mi * z) * sin(mi * z), z)    
+    fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
+    fdiag = fdiag.subs(mp)
+    
+    foff = sympy.integrate(p['a'] * p['b'] * sin(mj * z) * sin(mi * z), z)  
+    foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
+    foff = foff.subs(mp)
+    
+    text = """def dim1sin_abf_linear(m, at, ab, bt, bb,  zt, zb):
+    import numpy as np
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    A = np.zeros([neig, neig], float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            A[i, i] += %s
+        for i in range(neig-1):
+            for j in range(i + 1, neig):
+                A[i, j] += %s                
+                
+    #A is symmetric
+    for i in range(neig - 1):        
+        for j in range(i + 1, neig):
+            A[j, i] = A[i, j]                
+    
+    return A"""
+    
+        
+    fn = text % (fdiag, foff)
+        
+    return fn
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+>>>>>>> wrote and tested dim1sin_af_linear
 def generate_psi_code():
     """Perform integrations and output the function that will generate psi (without docstring).
 
@@ -354,10 +444,17 @@ def generate_theta_two_prop():
     
 if __name__ == '__main__':
     #print(generate_gamma_code())
+<<<<<<< HEAD
     print '#'*65
     #print(generate_psi_code())
     #print(generate_theta_two_prop())
     print(generate_dim1sin_af_linear())
+=======
+    print('#'*65)
+    #print(generate_psi_code())
+    #print(generate_theta_two_prop())
+    print(generate_dim1sin_abf_linear())
+>>>>>>> wrote and tested dim1sin_af_linear
     pass
         
     

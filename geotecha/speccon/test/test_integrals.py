@@ -18,7 +18,11 @@
 Shows a few approaches to testing (so there may be some repeated test)
 
 """
+<<<<<<< HEAD
 from __future__ import division
+=======
+from __future__ import division, print_function
+>>>>>>> wrote and tested dim1sin_af_linear
 
 from nose import with_setup
 from nose.tools.trivial import assert_almost_equal
@@ -29,6 +33,10 @@ from math import pi
 import numpy as np
 
 from geotecha.speccon.integrals import dim1sin_af_linear
+<<<<<<< HEAD
+=======
+from geotecha.speccon.integrals import dim1sin_abf_linear
+>>>>>>> wrote and tested dim1sin_af_linear
 from geotecha.speccon.integrals import m_from_sin_mx
 
 
@@ -88,7 +96,11 @@ def test_m_from_sin_mx_bc_1v2():
 class test_m_from_sin_mx(object):
     """A suite of tests for m_from_sin_mx
     Shows two approaches: individual methods and looping through a list
+<<<<<<< HEAD
     
+=======
+        
+>>>>>>> wrote and tested dim1sin_af_linear
     """
     
     def __init__(self):        
@@ -209,11 +221,19 @@ class test_dim1sin_af_linear(base_t_ester):
              self.gamma_isotropic * 2],
             
             ['a 2 layers, const within each layer, PTIB', 
+<<<<<<< HEAD
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 0.5], 'ab': [1, 0.5]}, 
              np.array([[0.274317, 0.052295], [0.052295, 0.3655915]])],
             ['a 2 layers, const within each layer, PTPB', 
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 0.5], 'ab': [1, 0.5]},
              np.array([[0.326612767905, 0.0912741609272], [0.0912741609272, 0.368920668216]])],
+=======
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2]}, 
+             np.array([[0.95136535, -0.10459088], [-0.10459088, 0.76881702]])],
+            ['a 2 layers, const within each layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2]},
+             np.array([[0.84677446, -0.18254832], [-0.18254832, 0.76215866]])],
+>>>>>>> wrote and tested dim1sin_af_linear
             
             
             #from speccon vba : debug.Print ("[[" & gammat(1,1) & ", " & gammat(1,2) & "],[" & gammat(2,1) & ", " & gammat(2,2) & "]]")
@@ -225,5 +245,135 @@ class test_dim1sin_af_linear(base_t_ester):
              np.array([[0.750000000000001, -9.00632743487448E-02],[-9.00632743487448E-02, 0.750000000000001]])]
             ]
             
+<<<<<<< HEAD
             
+=======
+
+
+
+class test_dim1sin_abf_linear(base_t_ester):
+    """loop through and test the dim1sin_abf_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin_abf_linear, prefix = self.__class__.__name__)                
+        self.iso = np.array([[0.5, 0], [0, 0.5]])        
+        self.cases = [     
+             
+            #a
+            ['a const, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},  
+             self.iso], 
+            ['a const, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},  
+             self.iso], 
+            
+            ['a const*2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [2], 'ab':[2], 'bt': [1], 'bb': [1]},  
+             self.iso*2], 
+            ['a const*2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [2], 'ab':[2], 'bt': [1], 'bb': [1]},  
+             self.iso*2],
+             
+            ['a const, 2 layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},  
+             self.iso], 
+            ['a const, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},  
+             self.iso],
+             
+            ['a 2 layers, const within each layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 2], 'ab':[1, 2], 'bt': [1, 1], 'bb': [1, 1]},  
+             np.array([[ 0.951365345728, -0.104590881539], [-0.104590881539,  0.768817023874]])], 
+            ['a 2 layers, const within each layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 2], 'ab':[1, 2], 'bt': [1, 1], 'bb': [1, 1]},  
+             np.array([[ 0.846774464189, -0.182548321854], [-0.182548321854, 0.762158663568]])],             
+            
+            ['a linear within 1 layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [1]},  
+             np.array([[0.851321183642337, -0.101321183642336],[-0.101321183642336, 0.761257909293592]])], 
+            ['a linear within 1 layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [1]},  
+             np.array([[0.750000000000001, -9.00632743487448E-02],[-9.00632743487448E-02, 0.750000000000001]])], 
+            
+            #b, originally Walker Phd a and b were lumped together.  
+            #Therefore once separated varying one parameter while keeping 
+            #the other constant, then changing which parameter alters should
+            #yiueld the same result. Hence reusing the a results.
+            ['b const, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},  
+             self.iso], 
+            ['b const, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},  
+             self.iso], 
+            
+            ['b const*2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [2], 'ab':[2], 'bt': [1], 'bb': [1]},  
+             self.iso*2], 
+            ['b const*2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [2], 'bb': [2]},  
+             self.iso*2],
+            
+            ['b const, 2 layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},  
+             self.iso], 
+            ['b const, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},  
+             self.iso],
+             
+            ['b 2 layers, const within each layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 2], 'bb': [1, 2]},  
+             np.array([[ 0.951365345728, -0.104590881539], [-0.104590881539,  0.768817023874]])], 
+            ['b 2 layers, const within each layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 2], 'bb': [1, 2]},  
+             np.array([[ 0.846774464189, -0.182548321854], [-0.182548321854, 0.762158663568]])], 
+             
+            ['b linear within 1 layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [2]},  
+             np.array([[0.851321183642337, -0.101321183642336],[-0.101321183642336, 0.761257909293592]])], 
+            ['b linear within 1 layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [2]},  
+             np.array([[0.750000000000001, -9.00632743487448E-02],[-9.00632743487448E-02, 0.750000000000001]])], 
+            
+            
+            
+            #mixed
+            ['a const, b const cancel out, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [0.5], 'ab':[0.5], 'bt': [2], 'bb': [2]},  
+             self.iso], 
+            ['a const, b const cancel out, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [0.5], 'ab':[0.5], 'bt': [2], 'bb': [2]},  
+             self.iso],
+            
+            ['a linear in one layer, b linear in one layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [2]},  
+             np.array([[1.4706302, -0.32929385], [-0.32929385, 1.2004404]])], 
+            ['a linear in one layer, b linear in one layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [2]},  
+             np.array([[1.1413364, -0.27018982], [-0.27018982, 1.1603341]])],
+             
+            ]
+>>>>>>> wrote and tested dim1sin_af_linear
 
