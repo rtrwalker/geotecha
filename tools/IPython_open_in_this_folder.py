@@ -29,20 +29,24 @@ Assumes ipython.exe is on the path somewhere.
 
 import subprocess
 
+def main():
+    cmd = 'ipython.exe notebook --pylab=inline --NotebookManager.save_script=True'
+    title = "IPython notebook server"
 
-cmd = 'ipython.exe notebook --pylab=inline --NotebookManager.save_script=True'
-title = "IPython notebook server"
+    """Note if you just use a subprocess.call approach then the program will be 
+    run entirely in python which is not want you always want.  If you begin your 
+    command line with 'start' then a new stand alone window will be created.  
 
-"""Note if you just use a subprocess.call approach then the program will be 
-run entirely in python which is not want you always want.  If you begin your 
-command line with 'start' then a new stand alone window will be created.  
+    'start' expects the first argument to be the title of the window.  Remember 
+    this as it can stuff you up.. use an empty "" string if in doubt
 
-'start' expects the first argument to be the title of the window.  Remember 
-this as it can stuff you up.. use an empty "" string if in doubt
+    """
 
-"""
+    c = subprocess.Popen('cmd', stdin = subprocess.PIPE)
+    #c.stdin.write(s + '\n')
+    #for wierd 1st argument to start see http://stackoverflow.com/questions/154075/using-the-dos-start-command-with-parameters-passed-to-the-started-program
+    c.stdin.write('start ' + '"' + title + '" ' + cmd + "\n")
 
-c = subprocess.Popen('cmd', stdin = subprocess.PIPE)
-#c.stdin.write(s + '\n')
-#for wierd 1st argument to start see http://stackoverflow.com/questions/154075/using-the-dos-start-command-with-parameters-passed-to-the-started-program
-c.stdin.write('start ' + '"' + title + '" ' + cmd + "\n")
+
+if __name__ == '__main__':
+    main()

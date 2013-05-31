@@ -212,12 +212,35 @@ def dim1sin_af_linear():
         ]
     run_cases('dim1sin_abf_linear', cases, two_dim)
 
+def dim1sin_D_aDf_linear():
+    """print some test case data for geotecha.speccon.integrals.dim1sin_D_aDf_linear
+    
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_D_aDf_linear : full implementation of 
+    the function
+    geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear : data is 
+    used in testing
+    
+    """
+    
+    cases = [
+        ['a const', 
+            ['sin(mi*x)*a_const(x)*sympy.diff(sin(mj*x),x,2)']],
+        ['a const in two layers', 
+            ['sin(mi*x)*A1*sympy.diff(sin(mj*x),x,2) - A1*sympy.diff(sin(mi*x)*sympy.diff(sin(mj*x),x), x)','sin(mi*x)*A2*sympy.diff(sin(mj*x),x,2) - A2*sympy.diff(sin(mi*x)*sympy.diff(sin(mj*x),x), x)']],
+        ['a linear in one layer', 
+            ['sin(mi*x)*a_linear(x)*sympy.diff(sin(mj*x),x,2) + sin(mi*x)*a_const(x)*sympy.diff(sin(mj*x),x)']],
+        ]
+
+    run_cases('dim1sin_D_aDf_linear', cases, two_dim)
         
 def main():
     """ run all the test data generations"""
     
-    dim1sin_af_linear()
+    #dim1sin_af_linear()    
     #dim1sin_abf_linear()
+    dim1sin_D_aDf_linear()
 
 
 if __name__ == '__main__':

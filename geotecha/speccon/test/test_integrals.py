@@ -30,6 +30,7 @@ import numpy as np
 
 from geotecha.speccon.integrals import dim1sin_af_linear
 from geotecha.speccon.integrals import dim1sin_abf_linear
+from geotecha.speccon.integrals import dim1sin_D_aDf_linear
 from geotecha.speccon.integrals import m_from_sin_mx
 
 
@@ -354,3 +355,57 @@ class test_dim1sin_abf_linear(base_t_ester):
              
             ]
 
+
+
+class test_dim1sin_D_aDf_linear(base_t_ester):
+    """loop through and test the dim1sin_abf_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin_D_aDf_linear, prefix = self.__class__.__name__)                
+        self.iso_PTIB = (-0.5) * np.array([[(np.pi/2.0)**2.0, 0], [0, (3.0*np.pi/2.0)**2.0]])
+        self.iso_PTPB = (-0.5) * np.array([[(np.pi)**2.0, 0], [0, (2.0*np.pi)**2.0]])        
+        
+        self.cases = [     
+            
+            ['a const, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1]},
+             self.iso_PTIB], 
+            ['a const, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1]},
+             self.iso_PTPB],
+            
+            ['a const*2, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [2], 'ab': [2]}, 
+             self.iso_PTIB*2], 
+            ['a const*2, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [2], 'ab': [2]},
+             self.iso_PTPB*2],            
+            
+            ['a const, 2 layers, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1]},
+             self.iso_PTIB], 
+            ['a const, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1]},
+             self.iso_PTPB],
+            
+            ['a const*2, 2 layers, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [2, 2], 'ab': [2, 2]},
+             self.iso_PTIB * 2], 
+            ['a const*2, 2 layers, PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [2, 2], 'ab': [2, 2]},
+             self.iso_PTPB * 2], 
+            
+            ['2 layers, a const within eachlayer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2]},
+             np.array([[-1.60044185963,  1.466671155],[1.466671155, -18.4577561084]])], 
+            ['2 layers, a const within eachlayer, PTPB',
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2]},
+             np.array([[-7.43403806325, 2.37230488791], [2.37230488791, -33.0766501659]])], 
+             
+            # from speccon debug.Print ("[[" & psimat(1,1) & ", " & psimat(1,2) & "],[" & psimat(2,1) & ", " & psimat(2,2) & "]]") 
+            ['a linear within one layer, PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2]},
+             np.array([[-1.60055082520425, 0.749999999999957],[0.749999999999957, -16.4049574268382]])], 
+            ['a linear within one layer, PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2]},
+             np.array([[-7.40220330081701, 2.22222222222222],[2.22222222222222, -29.6088132032681]])],             
+            ]

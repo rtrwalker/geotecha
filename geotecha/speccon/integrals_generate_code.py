@@ -108,14 +108,22 @@ def dim1sin_af_linear():
     
     Notes
     -----
-    The `dim1sin_af_linear' matrix, :math:`\\mathbf{A}` is given by:
-    
-    
-    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}{sin\\left({m_j}z\\right)}{sin\\left({m_i}z\\right)}\,dz}
-    
-    where :math:`a\\left(z\\right)` in one layer is given by:
+    The `dim1sin_af_linear` matrix, :math:`A` is given by:    
         
-    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}\\phi_i\\phi_j\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:
+    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` is a piecewise linear function
+    w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
     
     """
     from sympy import cos, sin
@@ -169,18 +177,21 @@ def dim1sin_abf_linear():
     
     Notes
     -----
-    The `dim1sin_abf_linear' matrix, :math:`\\mathbf{A}` is given by:
-    
-    
-    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}{sin\\left({m_j}z\\right)}{sin\\left({m_i}z\\right)}\,dz}
-    
-    where :math:`a\\left(z\\right)` in one layer is given by:
+    The `dim1sin_abf_linear` matrix, :math:`A` is given by:
         
-    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\phi_i\\phi_j\\,dz}
     
-    :math:`b\\left(z\\right)` in one layer is given by:
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
         
-    .. math:: b\\left(z\\right) = b_t+\\frac{b_b-b_t}{z_b-z_t}\\left(z-z_t\\right)    
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
     
     """
     from sympy import cos, sin
@@ -236,28 +247,41 @@ def dim1sin_abf_linear():
 
 
 
-def generate_psi_code():
-    """Perform integrations and output the function that will generate psi (without docstring).
-
-    Paste the resulting code (at least the loops) into make_psi.
+def dim1sin_D_aDf_linear():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * D[a(z) * D[sin(mj * z),z],z]` 
+    between [0, 1] where a(z) i piecewise linear functions of z.  
+    Code is generated that will produce a square array with the appropriate 
+    integrals at each location
+    
+    Paste the resulting code (at least the loops) into `dim1sin_D_aDf_linear`.
     
     Notes
     -----    
-    The :math:`\\mathbf{\\Psi}` matrix arises when integrating the depth 
-    dependant vertical permeability (:math:`m_v`), horizontal permeability 
-    (:math:`k_h`), lumped vertical drain parameter (:math:`\\eta`), 
-    against the spectral basis functions:
+    The `dim1sin_D_aDf_linear` matrix, :math:`A` is given by:
     
-    .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}    
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right)\\phi_i\\,dz}
     
-    Integrating the horizontal drainage terms, :math:`dT_h`, is 
-    straightforward.  However, integrating the vertical drainage terms, 
-    :math:`dT_v`, requires some explanation.  The difficultly arises because 
-    the vertical permeability :math:`k_v` is defined using step functions at 
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+    
+    The integration requires some explanation.  The difficultly arises because 
+    piecewise linear :math:`a\\left(z\\right)` is defined using step functions at 
     the top and bottom of each layer; those step functions when differentiated 
     yield dirac-delta or impulse functions which must be handled specially 
     when integrating against the spectral basis functions.  The graph below
-    shows what happens when the :math:`k_v` distribution is differentiated.    
+    shows what happens when the :math:`a\\left(z\\right) distribution is 
+    differentiated for one layer.
     
     ::
         
@@ -296,42 +320,43 @@ def generate_psi_code():
     of f between a and b is F(b)-F(a) where F is the anti-derivative of f.
     
     
-    The general expression for :math:`\\mathbf{\\Psi}` is:
+    The general expression for :math:`{A}` is:
     
-    .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\right)\\phi_i\\,dZ}    
-        :label: psi
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right)\\phi_i\\,dz}
+        :label: full
         
-    Expanding out the integrals in :eq:`psi`. yields:
+    Expanding out the integrals in :eq:`full` yields:
         
-    .. math:: \\mathbf{\\Psi}_{i,j}=\\frac{dT_h}{dT}\\int_{0}^1{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^1{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ} 
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}+\\int_{0}^1{\\frac{d{a\\left(z\\right)}}{dZ}\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}
     
     Considering a single layer and separating the layer boundaries from the behaviour within a layer gives:
         
-    .. math:: \\mathbf{\\Psi}_{i,j,layer}=\\frac{dT_h}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{0}^{1}{\\frac{k_v}{\\overline{k}_v}\\delta\\left(Z-Z_t\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}+\\frac{dT_v}{dT}\\int_{0}^{1}{\\frac{k_v}{\\overline{k}_v}\\delta\\left(Z-Z_b\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=\\int_{z_t}^{z_b}{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int_{z_t}^{z_b}{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}+\\int_{0}^{1}{{a\\left(z\\right)}\\delta\\left(z-z_t\\right)\\frac{d\\phi_j}{dz}\\phi_i\\,dz}-\\int_{0}^{1}{{a\\left(z\\right)}\\delta\\left(z-z_b\\right)\\frac{d\\phi_j}{dz}\\phi_i\\,dz}
     
     Performing the dirac delta integrations:
         
-    .. math:: \\mathbf{\\Psi}_{i,j,layer}=\\frac{dT_h}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_t}+\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_b}
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=\\int_{z_t}^{z_b}{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int_{z_t}^{z_b}{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}+\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z_t}-\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z_b}
     
     Now, to get it in the form of F(zb)-F(zt) we only take the zb part of the dirac integration:
         
-    .. math:: F\\left(z\\right)=\\frac{dT_h}{dT}\\int{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}+\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z}
+    .. math:: F\\left(z\\right)=\\int{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}-\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z}
     
     Finally we get:
         
-    .. math:: \\mathbf{\\Psi}_{i,j,layer}=F\\left(Z_b\\right)-F\\left(Z_t\\right)
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=F\\left(z_b\\right)-F\\left(z_t\\right)
     
     
     """
-    sympy.var('dTv, dTh, dT')    
-    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','kv','kh','et'])
+    def phi(m,z):
+        return sympy.sin(m*z)
         
-    fdiag = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mi, z) * phi(mi, z), z)
-    fdiag -= dTv / dT * (
-        sympy.integrate(p['kv'] * sympy.diff(phi(mi, z), z, 2) * phi(mi,z), z))
-    fdiag -= dTv / dT * (
-        sympy.integrate(sympy.diff(p['kv'], z) * sympy.diff(phi(mi, z), z) * phi(mi, z),z))
-    fdiag += dTv / dT * (p['kv'] * sympy.diff(phi(mi, z), z) * phi(mi, z))         
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a'])
+        
+    fdiag =  (
+        sympy.integrate(p['a'] * sympy.diff(phi(mi, z), z, 2) * phi(mi,z), z))
+    fdiag +=   (
+        sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi(mi, z), z) * phi(mi, z),z))
+    fdiag -=  (p['a'] * sympy.diff(phi(mi, z), z) * phi(mi, z))         
         # note the 'negative' for the dTv*diff (kv) part is because the step fn 
         #at the top and bottom of the layer yields a dirac function that is 
         #positive at ztop and negative at zbot. It works because definite 
@@ -342,36 +367,36 @@ def generate_psi_code():
     fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
     fdiag = fdiag.subs(mp)
     
-    foff = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mj, z) * phi(mi, z), z)
-    foff -= dTv / dT * (
-        sympy.integrate(p['kv'] * sympy.diff(phi(mj, z), z, 2) * phi(mi,z), z))
-    foff -= dTv / dT * (
-        sympy.integrate(sympy.diff(p['kv'], z) * sympy.diff(phi(mj, z), z) * phi(mi, z),z))
-    foff += dTv / dT * (p['kv'] * sympy.diff(phi(mj, z), z) * phi(mi, z))                 
+    #foff = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mj, z) * phi(mi, z), z)
+    foff =  (
+        sympy.integrate(p['a'] * sympy.diff(phi(mj, z), z, 2) * phi(mi,z), z))
+    foff += (
+        sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi(mj, z), z) * phi(mi, z),z))
+    foff -= (p['a'] * sympy.diff(phi(mj, z), z) * phi(mi, z))                 
     foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
     foff = foff.subs(mp)
     
-    text = """def make_psi(m, kvt, kvb, kht, khb, ett, etb, zt, zb, dTv, dTh, dT = 1.0):
-    import numpy
+    text = """def dim1sin_D_aDf_linear(m, at, ab, zt, zb):
+    import numpy as np
     from math import sin, cos
     
     neig = len(m)
     nlayers = len(zt)
     
-    psi = numpy.zeros([neig, neig], float)        
+    A = np.zeros([neig, neig], float)        
     for layer in range(nlayers):
         for i in range(neig):
-            psi[i, i] += %s
+            A[i, i] += %s
         for i in range(neig-1):
             for j in range(i + 1, neig):
-                psi[i, j] += %s                
+                A[i, j] += %s                
                 
-    #psi is symmetric
+    #A is symmetric
     for i in range(neig - 1):        
         for j in range(i + 1, neig):
-            psi[j, i] = psi[i, j]                
+            A[j, i] = A[i, j]                
     
-    return psi"""
+    return A"""
     
         
     fn = text % (fdiag, foff)
@@ -390,14 +415,14 @@ def generate_theta_two_prop():
     
     .. math:: \\mathbf{\\theta}_{two prop, i}=\\int_{0}^1{a\\left(Z\\right)b\\left(Z\\right)\\phi_i\\,dZ}    
     
-    Specifically it is used in calculating :math:`\\mathbf{\\theta}_\\sigma` 
+    Specifically it is used in calculating :math:`{\\theta}_\\sigma` 
     which arises when integrating the depth dependant volume compressibility 
     (:math:`m_v`) and surcharge :math:`\\sigma` against the spectral basis 
     functions:
     
     .. math:: \\mathbf{\\theta}_{\\sigma,i}=\\int_{0}^1{\\frac{m_v}{\\overline{m}_v}\\sigma\\left(Z\\right)\\phi_i\\,dZ}
     
-    It is also used in calculating :math:`\\mathbf{\\theta}_w` 
+    It is also used in calculating :math:`{\\theta}_w` 
     which arises when integrating the depth dependant vertical drain parameter  
     (:math:`\\eta`) and vacuum :math:`w` against the spectral basis 
     function:
@@ -436,7 +461,8 @@ if __name__ == '__main__':
     print('#'*65)
     #print(generate_psi_code())
     #print(generate_theta_two_prop())
-    print(generate_dim1sin_abf_linear())
+    #print(generate_dim1sin_abf_linear())
+    print(dim1sin_D_aDf_linear())
     pass
         
     
