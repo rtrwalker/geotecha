@@ -25,9 +25,6 @@ def linear(x, x1, y1, x2, y2):
 
     """
     return (y2 - y1)/(x2 - x1) * (x-x1) + y1
-    
-    
-
 
 def string_to_IndexedBase(s):
     """turn string into sympy.tensor.IndexedBase
@@ -113,8 +110,7 @@ def dim1sin_af_linear():
     .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}\\phi_i\\phi_j\\,dz}
     
     where the basis function :math:`\\phi_i` is given by:
-    
-    
+        
     ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
     
     and :math:`a\\left(z\\right)` is a piecewise linear function
@@ -126,15 +122,17 @@ def dim1sin_af_linear():
     each layer respectively.
     
     """
-    from sympy import cos, sin
     
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a'])
     
-    fdiag = sympy.integrate(p['a'] * sin(mi * z) * sin(mi * z), z)    
+    phi_i = sympy.sin(mi * z)
+    phi_j = sympy.sin(mj * z)    
+    
+    fdiag = sympy.integrate(p['a'] * phi_i * phi_i, z)    
     fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
     fdiag = fdiag.subs(mp)
     
-    foff = sympy.integrate(p['a'] * sin(mj * z) * sin(mi * z), z)  
+    foff = sympy.integrate(p['a'] * phi_j * phi_i, z)  
     foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
     foff = foff.subs(mp)
     
@@ -193,16 +191,18 @@ def dim1sin_abf_linear():
     with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
     each layer respectively.
     
-    """
-    from sympy import cos, sin
-    
+    """    
+        
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a', 'b'])
     
-    fdiag = sympy.integrate(p['a'] * p['b'] * sin(mi * z) * sin(mi * z), z)    
+    phi_i = sympy.sin(mi * z)
+    phi_j = sympy.sin(mj * z)    
+    
+    fdiag = sympy.integrate(p['a'] * p['b'] * phi_i * phi_i, z)    
     fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
     fdiag = fdiag.subs(mp)
     
-    foff = sympy.integrate(p['a'] * p['b'] * sin(mj * z) * sin(mi * z), z)  
+    foff = sympy.integrate(p['a'] * p['b'] * phi_j * phi_i, z)  
     foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
     foff = foff.subs(mp)
     
@@ -232,20 +232,6 @@ def dim1sin_abf_linear():
     fn = text % (fdiag, foff)
         
     return fn
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 def dim1sin_D_aDf_linear():
     """Generate code to calculate spectral method integrations
@@ -347,17 +333,16 @@ def dim1sin_D_aDf_linear():
     
     
     """
-    def phi(m,z):
-        return sympy.sin(m*z)
-        
+            
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a'])
-        
-    fdiag =  (
-        sympy.integrate(p['a'] * sympy.diff(phi(mi, z), z, 2) * phi(mi,z), z))
-    fdiag +=   (
-        sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi(mi, z), z) * phi(mi, z),z))
-    fdiag -=  (p['a'] * sympy.diff(phi(mi, z), z) * phi(mi, z))         
-        # note the 'negative' for the dTv*diff (kv) part is because the step fn 
+    
+    phi_i = sympy.sin(mi * z)
+    phi_j = sympy.sin(mj * z)    
+    
+    fdiag = (sympy.integrate(p['a'] * sympy.diff(phi_i, z, 2) * phi_i, z))
+    fdiag += (sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi_i, z) * phi_i,z))
+    fdiag -= (p['a'] * sympy.diff(phi_i, z) * phi_i)         
+        # note the 'negative' for the diff (a) part is because the step fn 
         #at the top and bottom of the layer yields a dirac function that is 
         #positive at ztop and negative at zbot. It works because definite 
         #integral of f between ztop and zbot is F(ztop)- F(zbot). 
@@ -366,13 +351,10 @@ def dim1sin_D_aDf_linear():
         #for the step functions at ztop and zbot            
     fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
     fdiag = fdiag.subs(mp)
-    
-    #foff = dTh / dT * sympy.integrate(p['kh'] * p['et'] * phi(mj, z) * phi(mi, z), z)
-    foff =  (
-        sympy.integrate(p['a'] * sympy.diff(phi(mj, z), z, 2) * phi(mi,z), z))
-    foff += (
-        sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi(mj, z), z) * phi(mi, z),z))
-    foff -= (p['a'] * sympy.diff(phi(mj, z), z) * phi(mi, z))                 
+        
+    foff = (sympy.integrate(p['a'] * sympy.diff(phi_j, z, 2) * phi_i, z))
+    foff += (sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi_j, z) * phi_i,z))
+    foff -= (p['a'] * sympy.diff(phi_j, z) * phi_i)                 
     foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
     foff = foff.subs(mp)
     
@@ -404,53 +386,58 @@ def dim1sin_D_aDf_linear():
     return fn
 
 
-def generate_theta_two_prop():
-    """Perform integrations and output a function that will generate theta_two_prop (without docstring).
+def dim1sin_ab_linear():
+    """Generate code to calculate spectral method integrations
     
-    Paste the resulting code (at least the loops) into make_theta_two_prop.
+    Performs integrations of `sin(mi * z) * a(z) * b(z)` 
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.  
+    Code is generated that will produce a 1d array with the appropriate 
+    integrals at each location.
+    
+    Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
     
     Notes
-    -----
-    theta_two_prop is used when integrating two linear properties against the basis fuction.
-    
-    .. math:: \\mathbf{\\theta}_{two prop, i}=\\int_{0}^1{a\\left(Z\\right)b\\left(Z\\right)\\phi_i\\,dZ}    
-    
-    Specifically it is used in calculating :math:`{\\theta}_\\sigma` 
-    which arises when integrating the depth dependant volume compressibility 
-    (:math:`m_v`) and surcharge :math:`\\sigma` against the spectral basis 
-    functions:
-    
-    .. math:: \\mathbf{\\theta}_{\\sigma,i}=\\int_{0}^1{\\frac{m_v}{\\overline{m}_v}\\sigma\\left(Z\\right)\\phi_i\\,dZ}
-    
-    It is also used in calculating :math:`{\\theta}_w` 
-    which arises when integrating the depth dependant vertical drain parameter  
-    (:math:`\\eta`) and vacuum :math:`w` against the spectral basis 
-    function:
+    -----    
+    The `dim1sin_ab_linear` which should be treated as a column vector, 
+    :math:`A` is given by:    
         
-    .. math:: \\mathbf{\\theta}_{w,i}=dTh\\int_{0}^1{\\frac{\\eta}{\\overline{\\eta}}w\\left(Z\\right)\\phi_i\\,dZ}
+    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
         
     """
+           
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
     
+    phi_i = sympy.sin(mi * z)
     
-    
-    fcol = sympy.integrate(p['a'] * p['b'] * phi(mi, z), z)        
+    fcol = sympy.integrate(p['a'] * p['b'] * phi_i, z)        
     fcol = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
     fcol = fcol.subs(mp)
     
-    text = """def make_theta_two_prop(m, at, ab, bt, bb, zt, zb):
-    import numpy
+    text = """def dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb):
+    import numpy as np
     from math import sin, cos
     
     neig = len(m)
     nlayers = len(zt)
     
-    theta_two_prop = numpy.zeros(neig, float)        
+    A = np.zeros(neig, float)        
     for layer in range(nlayers):
         for i in range(neig):
-            theta_two_prop[i] += %s
+            A[i] += %s
     
-    return theta_two_prop"""
+    return A"""
     
         
     fn = text % fcol
@@ -462,6 +449,9 @@ if __name__ == '__main__':
     #print(generate_psi_code())
     #print(generate_theta_two_prop())
     #print(generate_dim1sin_abf_linear())
+    #print(dim1sin_ab_linear())
+    #print(dim1sin_af_linear())
+    #print(dim1sin_abf_linear())
     print(dim1sin_D_aDf_linear())
     pass
         
