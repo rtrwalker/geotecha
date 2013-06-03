@@ -129,10 +129,14 @@ print('%s\n' * len(s) % tuple(map(unraw,s)))
 
 # <codecell>
 
+s = []
+s += [r'\mathbf{A}_{i,j}=\int_{0}^1{\frac{d}{dz}\left({a\left(z\right)}\frac{d}{dz}{b\left(z\right)}\right)\phi_i\,dz}']
+d(s[-1])
+
+print('%s\n' * len(s) % tuple(map(unraw,s)))
 
 # <codecell>
 
-print '\\mathbf{\\Psi}_{i,j,layer}=\\frac{dT_h}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_h}{\\overline{k}_h}\\frac{\\eta}{\\overline{\\eta}}\\phi_j\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{k_v}{\\overline{k}_v}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\int_{Z_t}^{Z_b}{\\frac{d}{dZ}\\left(\\frac{k_v}{\\overline{k}_v}\\right)\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}-\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_t}+\\frac{dT_v}{dT}\\left.\\frac{k_v}{\\overline{k}_v}\\frac{d\\phi_j}{dZ}\\phi_i\\right|_{Z=Z_b}'
 
 # <codecell>
 

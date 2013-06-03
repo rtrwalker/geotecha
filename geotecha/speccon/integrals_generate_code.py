@@ -331,6 +331,7 @@ def dim1sin_D_aDf_linear():
         
     .. math:: \\mathbf{A}_{i,j,\\text{layer}}=F\\left(z_b\\right)-F\\left(z_t\\right)
     
+    TODO: explain why dirac integrations disapera at end points because in this case it will always be sin(mx)*cos(mx) and so always be zero.
     
     """
             
@@ -442,6 +443,140 @@ def dim1sin_ab_linear():
         
     fn = text % fcol
     return fn
+
+def dim1sin_abc_linear():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * a(z) * b(z) * c(z)` 
+    between [0, 1] where a(z), b(z), c(z) are piecewise linear functions of z.  
+    Code is generated that will produce a 1d array with the appropriate 
+    integrals at each location.
+    
+    Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
+    
+    Notes
+    -----    
+    The `dim1sin_ab_linear` which should be treated as a column vector, 
+    :math:`A` is given by:    
+        
+    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}{c\\left(z\\right)}\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)`, and 
+    :math:`c\\left(z\\right)` are piecewise linear functions 
+    w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+        
+    """
+           
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b', 'c'])
+    
+    phi_i = sympy.sin(mi * z)
+    
+    fcol = sympy.integrate(p['a'] * p['b'] * p['c'] * phi_i, z)        
+    fcol = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
+    fcol = fcol.subs(mp)
+    
+    text = """def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb):
+    import numpy as np
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    A = np.zeros(neig, float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            A[i] += %s
+    
+    return A"""
+    
+        
+    fn = text % fcol
+    return fn
+
+def dim1sin_D_aDb_linear():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * D[a(z) * D[b(z), z], z]` 
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.  
+    Code is generated that will produce a 1d array with the appropriate 
+    integrals at each location.
+    
+    Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
+    
+    Notes
+    -----    
+    The `dim1sin_D_aDb_linear` which should be treated as a column vector, 
+    :math:`A` is given by:    
+        
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d}{dz}{b\\left(z\\right)}\\right)\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+    
+    TODO: explain why the dirac integrations at 0 and 1 must be omitted i.e. not for all cases do they not contribute only.    
+    
+    """
+           
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
+    
+    phi_i = sympy.sin(mi * z)
+    
+    fcol = sympy.integrate(sympy.diff(p['a'],z) * sympy.diff(p['b'],z) * phi_i, z)
+    fcol -= p['a']*sympy.diff(p['b'], z) * phi_i        
+    fcol = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
+    fcol = fcol.subs(mp)
+    
+    
+    layer = sympy.tensor.Idx('layer')
+    
+    ffirst = -p['a']*sympy.diff(p['b'], z) * phi_i
+    ffirst = ffirst.subs(z, mp['ztop'])
+    ffirst = ffirst.subs(mp)
+    ffirst = ffirst.subs(layer, 0)
+    
+    flast = p['a']*sympy.diff(p['b'], z) * phi_i
+    flast = flast.subs(z, mp['zbot'])
+    flast = flast.subs(mp)
+    flast = flast.subs(layer, -1)
+        
+    text = """def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb):
+    import numpy as np
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    A = np.zeros(neig, float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            A[i] += %s
+    
+    for i in range(neig):
+        A[i] += %s + %s
+    
+    return A"""
+    
+        
+    fn = text % (fcol, ffirst, flast)
+    return fn
     
 if __name__ == '__main__':
     #print(generate_gamma_code())
@@ -452,7 +587,9 @@ if __name__ == '__main__':
     #print(dim1sin_ab_linear())
     #print(dim1sin_af_linear())
     #print(dim1sin_abf_linear())
-    print(dim1sin_D_aDf_linear())
+    #print(dim1sin_D_aDf_linear())
+    #print(dim1sin_abc_linear())
+    print(dim1sin_D_aDb_linear())
     pass
         
     

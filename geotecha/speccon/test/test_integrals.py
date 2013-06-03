@@ -30,7 +30,9 @@ import numpy as np
 
 from geotecha.speccon.integrals import dim1sin_af_linear
 from geotecha.speccon.integrals import dim1sin_ab_linear
+from geotecha.speccon.integrals import dim1sin_abc_linear
 from geotecha.speccon.integrals import dim1sin_abf_linear
+from geotecha.speccon.integrals import dim1sin_D_aDb_linear
 from geotecha.speccon.integrals import dim1sin_D_aDf_linear
 from geotecha.speccon.integrals import m_from_sin_mx
 
@@ -409,6 +411,13 @@ class test_dim1sin_D_aDf_linear(base_t_ester):
             ['a linear within one layer, PTPB', 
              {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2]},
              np.array([[-7.40220330081701, 2.22222222222222],[2.22222222222222, -29.6088132032681]])],             
+
+            ['2 layers, a linear within eachlayer, PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6]},
+             np.array([[-1.4538543, 0.16333154], [0.16333154, -13.463177]])], 
+            ['2 layers, a linear within eachlayer, PTPB',
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6]},
+             np.array([[-6.4025090, 1.2733003], [1.2733003, -24.273837]])],
             ]
             
 class test_dim1sin_ab_linear(base_t_ester):
@@ -458,7 +467,7 @@ class test_dim1sin_ab_linear(base_t_ester):
              np.array([1.05329, -0.287914])],
              
             ['a const, b const within 2 layers PTIB', 
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1, 1], 'bb': [1, 1]}, 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 2], 'bb': [1, 2]}, 
              np.array([1.15166, 0.146631])],
             ['a const, b const within 2 layers PTPB', 
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 2], 'bb': [1, 2]}, 
@@ -485,4 +494,157 @@ class test_dim1sin_ab_linear(base_t_ester):
              {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
              np.array([(5*pi**2-4)/pi**3, -3/(2*pi)])],                                     
             ]
+
+class test_dim1sin_abc_linear(base_t_ester):
+    """A suite of tests for the dim1sin_abc_linear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin_abc_linear, prefix = self.__class__.__name__)                
+        
+        self.iso_PTIB = np.array([2/pi, 2/(3*pi)])
+        self.iso_PTPB = np.array([2/pi, 0.0])
+        
+        
+        self.cases = [                        
+            #a
+            ['a const, b const PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[1]}, 
+             self.iso_PTIB],
+            ['a const, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[1]},
+             self.iso_PTPB],
+            
+            ['a const*2,b const PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [2], 'ab': [2], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[1]}, 
+             self.iso_PTIB * 2],
+            ['a const*2, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [2], 'ab': [2], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[1]},
+             self.iso_PTPB * 2],
+            
+            ['a const, b const*2 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [2], 'bb': [2], 'ct':[1], 'cb':[1]}, 
+             self.iso_PTIB * 2],
+            ['a const, b const*2 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [2], 'bb': [2], 'ct':[1], 'cb':[1]},
+             self.iso_PTPB * 2],
+             
+            ['a const, b const, c const*2 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1], 'ct':[2], 'cb':[2]}, 
+             self.iso_PTIB * 2],
+            ['a const, b const, c const*2 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1], 'ct':[2], 'cb':[2]},
+             self.iso_PTPB * 2], 
+            
+            ['a const*0.4, b const*2, c const* 1.25 PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [0.4], 'ab': [0.4], 'bt': [2], 'bb': [2], 'ct':[1.25], 'cb':[1.25]}, 
+             self.iso_PTIB],
+            ['a const*0.5, b const*2 PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [0.4], 'ab': [0.4], 'bt': [2], 'bb': [2], 'ct':[1.25], 'cb':[1.25]},
+             self.iso_PTPB],
+            
+            ['a const within 2 layers, b const PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1, 1], 'bb': [1, 1], 'ct':[1,1], 'cb':[1,1]}, 
+             np.array([1.15166, 0.146631])],
+            ['a const within 2 layers, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1, 1], 'bb': [1, 1], 'ct':[1,1], 'cb':[1,1]}, 
+             np.array([1.05329, -0.287914])],
+             
+            ['a const, b const within 2 layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 2], 'bb': [1, 2], 'ct':[1,1], 'cb':[1,1]}, 
+             np.array([1.15166, 0.146631])],
+            ['a const, b const within 2 layers PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 2], 'bb': [1, 2], 'ct':[1,1], 'cb':[1,1]}, 
+             np.array([1.05329, -0.287914])], 
+            
+            ['a const, b const, c const within 2 layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 1], 'bb': [1, 1], 'ct':[1, 2], 'cb':[1, 2]}, 
+             np.array([1.15166, 0.146631])],
+            ['a const, b const, c const within 2 layers PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 1], 'bb': [1, 1], 'ct':[1, 2], 'cb':[1, 2]}, 
+             np.array([1.05329, -0.287914])], 
+
+            ['a linear within one layer, b const PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[1]}, 
+             np.array([(2*(2+pi))/pi**2, (2*(3*pi-2))/(9*pi**2)])],
+            ['a linear within one layer, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[1]},
+             np.array([3/pi, -1/(2*pi)])], 
+             
+            ['a const, b linear within one layer PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2], 'ct':[1], 'cb':[1]}, 
+             np.array([(2*(2+pi))/pi**2, (2*(3*pi-2))/(9*pi**2)])],
+            ['a const, b linear within one layer PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2], 'ct':[1], 'cb':[1]},
+             np.array([3/pi, -1/(2*pi)])],
+
+            ['a const, b const, c linear within one layer PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[2]}, 
+             np.array([1.0419045, 0.16717495])],
+            ['a const, b const, c linear within one layer PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1], 'ct':[1], 'cb':[2]},
+             np.array([0.95492966, -0.15915494])],    
+             
+             
+            ['a and b and c linear witin one layer PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2], 'ct':[1], 'cb':[2]}, 
+             np.array([2.9664286, -0.37334203])],
+            ['a and b linear witin one layer PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2], 'ct':[1], 'cb':[2]},
+             np.array([2.2842614, -1.0898960])],                                     
+            ]
                                     
+                                    
+                                    
+                                    
+class test_dim1sin_D_aDb_linear(base_t_ester):
+    """A suite of tests for the make_thesig function"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin_D_aDb_linear, prefix = self.__class__.__name__)                
+        self.zero = np.zeros(2)
+        
+        
+        
+        self.cases = [            
+            
+            ['a const, b const PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]}, 
+             self.zero],
+            ['a const, b const PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]},
+             self.zero],
+            
+            ['a const, b linear within one layer PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]}, 
+             self.zero],
+            ['a const, b linear within one layer PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]},
+             self.zero],
+                        
+            ['a linear within one layer, b linear within one layer PTIB', 
+             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]}, 
+             np.array([0.63661977, 0.21220659])],
+            ['a linear within one layer, b linear within one layer PTPB', 
+             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
+             np.array([0.63661977, 0])],
+            
+            ['a const within two layers, b linear accross both layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             np.array([0.58778525, 0.95105652])],
+            ['a const within two layers, b linear accross both layers PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             np.array([0.95105652, 0.58778525])],
+            
+            ['a linear within two layers, b linear accross both layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             np.array([0.40150567, -0.16821602])],
+            ['a linear within two layers, b linear accross both layers PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             np.array([0.25619717, -0.23511410])],
+
+            ['a const, b linear  in two layers PTIB', 
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 1], 'bb': [1.4, 2.2]},
+             np.array([0.58778525, 0.95105652])],
+            ['a const, b linear in two layers PTPB', 
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1, 1], 'bt': [1, 1], 'bb': [1.4, 2.2]},
+             np.array([0.95105652, 0.58778525])],
+                                                
+            ]                                    
