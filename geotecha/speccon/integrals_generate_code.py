@@ -577,6 +577,203 @@ def dim1sin_D_aDb_linear():
         
     fn = text % (fcol, ffirst, flast)
     return fn
+
+
+
+def EDload_linear():
+    """Generate code to perform time integration for spectral methods
+    
+    Perform time integrations of a piecewise linear load vs time
+    
+    
+    Notes
+    -----
+    the default output for the integrals will have expression s like 
+    exp(-dT*eig*t)*exp(dT*eig*loadtim[k]).  when dT*eig*loadtim[k] is large 
+    the exponential may be so large as to cause an error.  YOu may need to 
+    manually alter the expression to exp(is large exp(-dT*eig*(t-loadtim[k])) 
+    in which case the term in the exponential will always be negative and not 
+    lead to any numerical blow up.
+    
+    """
+    
+    from sympy import exp
+    
+    sympy.var('t, tau, dT, eig')    
+    loadmag = sympy.tensor.IndexedBase('loadmag')
+    loadtim = sympy.tensor.IndexedBase('loadtim')
+    tvals = sympy.tensor.IndexedBase('tvals')
+    eigs = sympy.tensor.IndexedBase('eigs')
+    i = sympy.tensor.Idx('i')
+    j = sympy.tensor.Idx('j')
+    k = sympy.tensor.Idx('k')    
+    
+    mp = [(exp(-dT*eig*t)*exp(dT*eig*loadtim[k]),exp(-dT*eig*(t-loadtim[k]))),(exp(-dT*eig*t)*exp(dT*eig*loadtim[k+1]),exp(-dT*eig*(t-loadtim[k+1])))]
+#    the default output for the integrals will have expression s like 
+#    exp(-dT*eig*t)*exp(dT*eig*loadtim[k]).  when dT*eig*loadtim[k] is large 
+#    the exponential may be so large as to cause an error.  YOu may need to 
+#    manually alter the expression to exp(is large exp(-dT*eig*(t-loadtim[k])) 
+#    in which case the term in the exponential will always be negative and not 
+#    lead to any numerical blow up.
+#    load = linear(tau, loadtim[k], loadmag[k], loadtim[k+1], loadmag[k+1])    
+#    after_instant = (loadmag[k+1] - loadmag[k]) * exp(-dT * eig * (t - loadtim[k]))
+#    mp does this automatically with subs
+    
+    Dload = sympy.diff(linear(tau, loadtim[k], loadmag[k], loadtim[k+1], loadmag[k+1]), tau)
+    after_instant = (loadmag[k+1] - loadmag[k]) * exp(-dT * eig * (t - loadtim[k]))
+
+    within_ramp = Dload * exp(-dT * eig * (t - tau))
+    within_ramp = sympy.integrate(within_ramp, (tau, loadtim[k], t))
+    within_ramp = within_ramp.subs(mp)
+    
+    after_ramp = Dload * exp(-dT * eig * (t - tau))          
+    after_ramp = sympy.integrate(after_ramp, (tau, loadtim[k], loadtim[k+1]))
+    after_ramp = after_ramp.subs(mp)    
+    
+    
+    text = """def EDload_linear(loadtim, loadmag, eigs, tvals):
+        
+    from math import exp
+    
+    
+    #should do some checking of data maybe? i.e. coerce into numpy arrays
+    
+    #break up piecewise linear load into separate types of load.
+    
+    #find start index of instantaneous loads
+    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
+    #find the instantaneous loads where t is after the load
+    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
+    
+    #find start index of constant loads
+    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
+    
+    #find start index of ramp loads    
+    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
+    #find the ramp loads where t is within the ramp
+    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
+    #find the ramp loads where t is beyond the ramp    
+    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
+    
+    
+           
+    A = np.zeros([len(tvals), len(eigs)])
+    
+        
+    for i, t in enumerate(tvals):
+        for k in after_instant_loads[i]:    
+            for j, eig in enumerate(eigs):
+                A[i,j] += %s 
+        for k in within_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += %s 
+        for k in after_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += %s
+    return A"""
+    
+    fn = text % (after_instant, within_ramp, after_ramp)
+    return fn
+
+def Eload_linear():
+    """Generate code to perform time integration for spectral methods
+    
+    Perform time integrations of a piecewise linear load vs time
+    
+    
+    
+    
+    """
+    
+    from sympy import exp
+    
+    sympy.var('t, tau, dT, eig')    
+    loadmag = sympy.tensor.IndexedBase('loadmag')
+    loadtim = sympy.tensor.IndexedBase('loadtim')
+    tvals = sympy.tensor.IndexedBase('tvals')
+    eigs = sympy.tensor.IndexedBase('eigs')
+    i = sympy.tensor.Idx('i')
+    j = sympy.tensor.Idx('j')
+    k = sympy.tensor.Idx('k')    
+    
+    mp = [(exp(-dT*eig*t)*exp(dT*eig*loadtim[k]),exp(-dT*eig*(t-loadtim[k]))),(exp(-dT*eig*t)*exp(dT*eig*loadtim[k+1]),exp(-dT*eig*(t-loadtim[k+1])))]
+#    the default output for the integrals will have expression s like 
+#    exp(-dT*eig*t)*exp(dT*eig*loadtim[k]).  when dT*eig*loadtim[k] is large 
+#    the exponential may be so large as to cause an error.  YOu may need to 
+#    manually alter the expression to exp(is large exp(-dT*eig*(t-loadtim[k])) 
+#    in which case the term in the exponential will always be negative and not 
+#    lead to any numerical blow up.
+#    load = linear(tau, loadtim[k], loadmag[k], loadtim[k+1], loadmag[k+1])    
+#    after_instant = (loadmag[k+1] - loadmag[k]) * exp(-dT * eig * (t - loadtim[k]))
+#    mp does this automatically with subs
+
+    within_constant = loadmag[k] * exp(-dT * eig * (t - tau))
+    within_constant = sympy.integrate(within_constant, (tau, loadtim[k], t))
+    within_constant = within_constant.subs(mp)
+
+    after_constant = loadmag[k] * exp(-dT * eig * (t - tau))
+    after_constant = sympy.integrate(after_constant, (tau, loadtim[k], loadtim[k+1]))
+    after_constant = after_constant.subs(mp)
+    
+    within_ramp = load * exp(-dT * eig * (t - tau))
+    within_ramp = sympy.integrate(within_ramp, (tau, loadtim[k], t))
+    within_ramp = within_ramp.subs(mp)
+    
+    after_ramp = load * exp(-dT * eig * (t - tau))          
+    after_ramp = sympy.integrate(after_ramp, (tau, loadtim[k], loadtim[k+1]))
+    after_ramp = after_ramp.subs(mp)
+    
+    
+    text = """def Eload_linear(loadtim, loadmag, eigs, tvals):
+        
+    from math import exp
+    
+    
+    #should do some checking of data maybe? i.e. coerce into numpy arrays
+    
+    #break up piecewise linear load into separate types of load.
+    
+    #find start index of instantaneous loads
+    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
+    #find the instantaneous loads where t is after the load
+    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
+    
+    #find start index of constant loads
+    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
+    #find the constant loads where t is within the constant period
+    within_constant_loads= np.array([constant_loads[(t>loadtim[constant_loads]) & (t<=loadtim[constant_loads+1])] for t in tvals])    
+    #find the constant loads where t is beyond the constant period    
+    after_constant_loads = np.array([constant_loads[np.where(t>loadtim[constant_loads+1])[0]] for t in tvals])
+    
+    #find start index of ramp loads    
+    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
+    #find the ramp loads where t is within the ramp
+    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
+    #find the ramp loads where t is beyond the ramp    
+    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
+    
+    
+           
+    A = np.zeros([len(tvals), len(eigs)])
+    
+        
+    for i, t in enumerate(tvals):
+        for k in within_constant_loads[i]:    
+            for j, eig in enumerate(eigs):
+                A[i,j] += %s
+        for k in after_constant_loads[i]:    
+            for j, eig in enumerate(eigs):
+                A[i,j] += %s 
+        for k in within_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += %s 
+        for k in after_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += %s
+    return A"""
+    
+    fn = text % (within_constant, after_constant, within_ramp, after_ramp)
+    return fn
     
 if __name__ == '__main__':
     #print(generate_gamma_code())
@@ -589,7 +786,9 @@ if __name__ == '__main__':
     #print(dim1sin_abf_linear())
     #print(dim1sin_D_aDf_linear())
     #print(dim1sin_abc_linear())
-    print(dim1sin_D_aDb_linear())
+    #print(dim1sin_D_aDb_linear())    
+    print(EDload_linear())
+    #print(Eload_linear())
     pass
         
     

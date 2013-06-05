@@ -312,6 +312,9 @@ def dim1sin_D_aDb_linear():
 #            ['-sympy.diff(A1*sin(mi*x),x)', '-sympy.diff(A2*sin(mi*x),x)']],
 #        ]
     run_cases('dim1sin_D_aDb_linear', cases, one_dim)   
+
+def Eload_linear():
+    pass
     
 def main():
     """ run all the test data generations"""

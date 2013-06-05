@@ -35,7 +35,8 @@ from geotecha.speccon.integrals import dim1sin_abf_linear
 from geotecha.speccon.integrals import dim1sin_D_aDb_linear
 from geotecha.speccon.integrals import dim1sin_D_aDf_linear
 from geotecha.speccon.integrals import m_from_sin_mx
-
+from geotecha.speccon.integrals import Eload_linear
+from geotecha.speccon.integrals import EDload_linear
 
 
 
@@ -648,3 +649,71 @@ class test_dim1sin_D_aDb_linear(base_t_ester):
              np.array([0.95105652, 0.58778525])],
                                                 
             ]                                    
+            
+class test_EDload_linear(base_t_ester):
+    """A suite of tests for the make_thesig function"""
+    def __init__(self):
+        base_t_ester.__init__(self, EDload_linear, prefix = self.__class__.__name__)                
+        self.eigs = np.array([2.46740110027, 22.2066099025])        
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #Eload_linear(loadtim, loadmag, eigs, tvals)
+        
+        
+        self.cases = [            
+            
+            ['instantaneous load at 0', 
+             {'loadtim': np.array([0,0]), 'loadmag': np.array([0, 100]), 'eigs': self.eigs, 'tvals': np.array([-1,0,1])}, 
+             np.array([[0, 0], [100, 100], [8.48049725, 2.26877724e-08]])],
+            
+            ['instantaneous load at 0, dT=2', 
+             {'loadtim': np.array([0,0]), 'loadmag': np.array([0, 100]), 'eigs': self.eigs_dT2, 'tvals': np.array([-1,0,1]), 'dT':2.0}, 
+             np.array([[0, 0], [100, 100], [8.48049725, 2.26877724e-08]])],
+            
+            ['two ramp loads', 
+             {'loadtim': np.array([0, 0.3, 0.5, 0.8]), 'loadmag': np.array([0, 40, 40, 80]), 'eigs': self.eigs, 'tvals': np.array([-1,0.1, 0.3, 0.4, 0.5, 0.7, 1])}, 
+             np.array([[0, 0],
+                       [11.8157397503, 5.35253639003],
+                       [28.2613797105, 5.9965412459],
+                       [22.0818518534, 0.650848653927],
+                       [17.2535165046, 0.0706413835822],
+                       [31.5811316808, 5.9343186486],
+                       [22.2779636541, 0.0706424476152],                       
+                       ])],
+            
+                                                
+            ]             
+            
+class test_Eload_linear(base_t_ester):
+    """A suite of tests for the make_thesig function"""
+    def __init__(self):
+        base_t_ester.__init__(self, Eload_linear, prefix = self.__class__.__name__)                
+        self.eigs = np.array([2.46740110027, 22.2066099025])        
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #Eload_linear(loadtim, loadmag, eigs, tvals)
+        
+        
+        self.cases = [            
+            
+            ['instantaneous load at 0', 
+             {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': self.eigs, 'tvals': np.array([-1,0,1])}, 
+             np.array([[0, 0], [0, 0], [-37.0914569616, -4.50316371642]])],
+            
+            ['instantaneous load at 0, dT=2', 
+             {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': self.eigs_dT2, 'tvals': np.array([-1,0,1]), 'dT':2.0}, 
+             np.array([[0, 0], [0, 0], [-37.0914569616, -4.50316371642]])],
+            
+            ['two ramp loads', 
+             {'loadtim': np.array([0, 0.3, 0.5, 0.8, 10]), 'loadmag': np.array([0, -40, -40, -80, -80]), 'eigs': self.eigs, 'tvals': np.array([-1,0.1, 0.3, 0.4, 0.5, 0.7, 1])}, 
+             np.array([[0, 0],
+                       [-0.615057512497, -0.359388352313],
+                       [-4.75748360824, -1.53123141729],
+                       [-7.26195191556, -1.77195670654],
+                       [-9.21880252584, -1.79808438982],
+                       [-14.219631734, -2.7348770607],
+                       [-23.3938601792, -3.59934982888],                       
+                       ])],
+            
+                                                
+            ]
+                                                
+                       

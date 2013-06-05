@@ -492,3 +492,170 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb):
         A[i] += -(zb[0] - zt[0])**(-1)*(bb[0] - bt[0])*at[0]*sin(m[i]*zt[0]) + (zb[-1] - zt[-1])**(-1)*(bb[-1] - bt[-1])*((zb[-1] - zt[-1])**(-1)*(ab[-1] - at[-1])*(zb[-1] - zt[-1]) + at[-1])*sin(m[i]*zb[-1])
     
     return A       
+    
+    
+    
+    
+def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
+    """Generate code to perform time integration for spectral methods
+    
+    Integrates D[load(tau), tau] * exp(dT * eig * (t-tau)) between [0, t].
+    Performs integrations involving time and the time derivative of a 
+    piecewise linear load.  A 2d array of dimesnions A[len(tvals), len(eigs)] 
+    is produced where the 'i'th row of A contains the diagonal elements of the 
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of 
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
+    
+    
+    Parameters
+    ----------
+    loadtim : 1d numpy.ndarray
+        list of times describing load application
+    loadmag : 1d numpy.ndarray
+        list of load magnitudes        
+    eigs : 1d numpy.ndarray
+        list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    dT : ``float``, optional
+        time factor multiple (default = 1.0)
+    
+    Returns
+    -------
+    A : numpy.ndarray
+        returns a 2d array of dimesnions A[len(tvals), len(eigs)].  
+        The 'i'th row of A is the diagonal elements of the spectral 'E' matrix 
+        calculated for the time tvals[i].
+        vector
+
+    Notes
+    -----
+    
+    TODO: equations etc.
+    
+    """
+    
+    
+    from math import exp
+    
+    
+    #should do some checking of data maybe? i.e. coerce into numpy arrays
+    
+    #break up piecewise linear load into separate types of load.
+    
+    #find start index of instantaneous loads
+    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
+    #find the instantaneous loads where t is after the load
+    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
+    
+    #find start index of constant loads
+    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
+    
+    #find start index of ramp loads    
+    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
+    #find the ramp loads where t is within the ramp
+    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
+    #find the ramp loads where t is beyond the ramp    
+    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
+    
+    
+           
+    A = np.zeros([len(tvals), len(eigs)])
+    
+        
+    for i, t in enumerate(tvals):
+        for k in after_instant_loads[i]:    
+            for j, eig in enumerate(eigs):
+                A[i,j] += (loadmag[k + 1] - loadmag[k])*exp(-dT*eig*(t - loadtim[k])) 
+        for k in within_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += (loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig) 
+        for k in after_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += exp(-dT*eig*(t - loadtim[k + 1]))*(loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig)
+    return A
+    
+def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
+    """Generate code to perform time integration for spectral methods
+    
+    Integrates load(tau) * exp(dT * eig * (t-tau)) between [0, t].
+    Performs integrations involving time and the time derivative of a 
+    piecewise linear load.  A 2d array of dimesnions A[len(tvals), len(eigs)] 
+    is produced where the 'i'th row of A contains the diagonal elements of the 
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of 
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
+    
+    
+    Parameters
+    ----------
+    loadtim : 1d numpy.ndarray
+        list of times describing load application
+    loadmag : 1d numpy.ndarray
+        list of load magnitudes        
+    eigs : 1d numpy.ndarray
+        list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    dT : ``float``, optional
+        time factor multiple (default = 1.0)
+    
+    Returns
+    -------
+    A : numpy.ndarray
+        returns a 2d array of dimesnions A[len(tvals), len(eigs)].  
+        The 'i'th row of A is the diagonal elements of the spectral 'E' matrix 
+        calculated for the time tvals[i].
+        vector
+
+    Notes
+    -----
+    
+    TODO: equations etc.
+    
+    """
+    
+    from math import exp
+    
+    
+    #should do some checking of data maybe? i.e. coerce into numpy arrays
+    
+    #break up piecewise linear load into separate types of load.
+    
+    #find start index of instantaneous loads
+    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
+    #find the instantaneous loads where t is after the load
+    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
+    
+    #find start index of constant loads
+    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
+    #find the constant loads where t is within the constant period
+    within_constant_loads= np.array([constant_loads[(t>loadtim[constant_loads]) & (t<=loadtim[constant_loads+1])] for t in tvals])    
+    #find the constant loads where t is beyond the constant period    
+    after_constant_loads = np.array([constant_loads[np.where(t>loadtim[constant_loads+1])[0]] for t in tvals])
+    
+    #find start index of ramp loads    
+    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
+    #find the ramp loads where t is within the ramp
+    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
+    #find the ramp loads where t is beyond the ramp    
+    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
+    
+    
+           
+    A = np.zeros([len(tvals), len(eigs)])
+    
+        
+    for i, t in enumerate(tvals):
+        for k in within_constant_loads[i]:    
+            for j, eig in enumerate(eigs):
+                A[i,j] += -exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) + loadmag[k]/(dT*eig)
+        for k in after_constant_loads[i]:    
+            for j, eig in enumerate(eigs):
+                A[i,j] += exp(-dT*eig*(t - loadtim[k + 1]))*loadmag[k]/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) 
+        for k in within_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += (-t/(dT*eig) + 1/(dT**2*eig**2))*loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1) + (t/(dT*eig) - 1/(dT**2*eig**2))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1) - (-loadtim[k]*exp(-dT*eig*(t - loadtim[k]))/(dT*eig) + exp(-dT*eig*(t - loadtim[k]))/(dT**2*eig**2))*loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1) - (loadtim[k]*exp(-dT*eig*(t - loadtim[k]))/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))/(dT**2*eig**2))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1) + exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig) - loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig) + loadmag[k]/(dT*eig) + loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig) 
+        for k in after_ramp_loads[i]:
+            for j, eig in enumerate(eigs):
+                A[i,j] += (-loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k + 1]))/(dT*eig) + exp(-dT*eig*(t - loadtim[k + 1]))/(dT**2*eig**2))*loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1) + (loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k + 1]))/(dT*eig) - exp(-dT*eig*(t - loadtim[k + 1]))/(dT**2*eig**2))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1) - (-loadtim[k]*exp(-dT*eig*(t - loadtim[k]))/(dT*eig) + exp(-dT*eig*(t - loadtim[k]))/(dT**2*eig**2))*loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1) - (loadtim[k]*exp(-dT*eig*(t - loadtim[k]))/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))/(dT**2*eig**2))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1) - exp(-dT*eig*(t - loadtim[k + 1]))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig) + exp(-dT*eig*(t - loadtim[k + 1]))*loadmag[k]/(dT*eig) + exp(-dT*eig*(t - loadtim[k + 1]))*loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig) + exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*loadmag[k]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k]/(dT*eig)
+    return A
