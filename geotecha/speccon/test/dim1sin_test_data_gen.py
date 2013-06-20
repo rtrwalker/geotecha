@@ -37,7 +37,9 @@ from sympy import sin
 import numpy
 
 
-
+danger = False #this module contains some eval commands that can 
+               #be a security threat rather than fix the problem 
+               # I've just hard coded in this 'danger' variable
     
 
 #This is bad form to use global variables, but it works
@@ -90,19 +92,22 @@ def two_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x')):
         
     """
     #global A1
-    #global A2    
-    for drainage in MS:
-        A = [[0, 0], [0, 0]]
-        for i, mi in enumerate(eval(drainage)):
-            for j, mj in enumerate(eval(drainage)):
-                if f2:
-                    
-                    A[i][j] = sympy.N(sympy.integrate(eval(f), (x, 0, xc)) + sympy.integrate(eval(f2), (x, xc, 1.0)), 8)
-                else:
-                    A[i][j] = sympy.N(sympy.integrate(eval(f), (x, 0, 1)), 8)                    
-        print(drainage)
-        print('np.array(' + str(A) + ')')
-
+    #global A2   
+    global danger
+    if danger:
+        for drainage in MS:
+            A = [[0, 0], [0, 0]]
+            for i, mi in enumerate(eval(drainage)):
+                for j, mj in enumerate(eval(drainage)):
+                    if f2:
+                        
+                        A[i][j] = sympy.N(sympy.integrate(eval(f), (x, 0, xc)) + sympy.integrate(eval(f2), (x, xc, 1.0)), 8)
+                    else:
+                        A[i][j] = sympy.N(sympy.integrate(eval(f), (x, 0, 1)), 8)                    
+            print(drainage)
+            print('np.array(' + str(A) + ')')
+    else:
+        print('eval is disabled')
 def one_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x')):
     """
     Evaluate string `f` then integrate between 0 and 1.
@@ -137,15 +142,20 @@ def one_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x')):
     """
     #global A1
     #global A2    
-    for drainage in MS:
-        A = [0, 0]
-        for i, mi in enumerate(eval(drainage)):
-            if f2:                    
-                A[i] = sympy.N(sympy.integrate(eval(f), (x, 0, xc)) + sympy.integrate(eval(f2), (x, xc, 1.0)), 8)
-            else:
-                A[i] = sympy.N(sympy.integrate(eval(f), (x, 0, 1)), 8)                    
-        print(drainage)
-        print('np.array(' + str(A) + ')')
+    global danger
+    if danger:    
+        for drainage in MS:
+            A = [0, 0]
+            for i, mi in enumerate(eval(drainage)):
+                if f2:                    
+                    A[i] = sympy.N(sympy.integrate(eval(f), (x, 0, xc)) + sympy.integrate(eval(f2), (x, xc, 1.0)), 8)
+                else:
+                    A[i] = sympy.N(sympy.integrate(eval(f), (x, 0, 1)), 8)                    
+            print(drainage)
+            print('np.array(' + str(A) + ')')
+        
+    else:
+        print('eval is disabled')
         
 def run_cases(title, cases, fn):
     """run a bunch of cases through fn

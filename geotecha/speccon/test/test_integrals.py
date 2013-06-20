@@ -28,6 +28,8 @@ from nose.tools.trivial import ok_
 from math import pi
 import numpy as np
 
+from geotecha.speccon.integrals import dim1sin
+from geotecha.speccon.integrals import dim1sin_avg
 from geotecha.speccon.integrals import dim1sin_af_linear
 from geotecha.speccon.integrals import dim1sin_ab_linear
 from geotecha.speccon.integrals import dim1sin_abc_linear
@@ -703,17 +705,41 @@ class test_Eload_linear(base_t_ester):
              np.array([[0, 0], [0, 0], [-37.0914569616, -4.50316371642]])],
             
             ['two ramp loads', 
-             {'loadtim': np.array([0, 0.3, 0.5, 0.8, 10]), 'loadmag': np.array([0, -40, -40, -80, -80]), 'eigs': self.eigs, 'tvals': np.array([-1,0.1, 0.3, 0.4, 0.5, 0.7, 1])}, 
-             np.array([[0, 0],
-                       [-0.615057512497, -0.359388352313],
-                       [-4.75748360824, -1.53123141729],
-                       [-7.26195191556, -1.77195670654],
-                       [-9.21880252584, -1.79808438982],
-                       [-14.219631734, -2.7348770607],
-                       [-23.3938601792, -3.59934982888],                       
-                       ])],
+             {'loadtim': [0, 0.3, 0.5, 0.8, 10], 'loadmag': [0, -40, -40, -80, -80], 'eigs': self.eigs, 'tvals': [-1,0.1, 0.3, 0.4, 0.5, 0.7, 1]}, 
+              [[0, 0],
+               [-0.615057512497, -0.359388352313],
+               [-4.75748360824, -1.53123141729],
+               [-7.26195191556, -1.77195670654],
+               [-9.21880252584, -1.79808438982],
+               [-14.219631734, -2.7348770607],
+               [-23.3938601792, -3.59934982888],                       
+               ]],
             
                                                 
             ]
                                                 
-                       
+class test_dim1sin(base_t_ester):
+    """A suite of tests for the dim1sin function"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin, prefix = self.__class__.__name__)                
+                            
+        self.cases = [            
+            
+            ['3 zs, 2 ms', 
+             {'m': self.PTIB, 'z': [0,0.25, 1]}, 
+             np.array([[0, 0], [0.382683, 0.9238795], [1, -1]])],
+                                                     
+            ]
+            
+class test_dim1sin_avg(base_t_ester):
+    """A suite of tests for the dim1sin function"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin_avg, prefix = self.__class__.__name__)                
+                            
+        self.cases = [            
+            
+            ['3 zs, 2 ms', 
+             {'m': self.PTIB, 'z': [[0, 1], [0.1, 0.2], [0.5, 1]]}, 
+             np.array([[0.636619772, 0.21220659], [0.023320543/0.1, 0.064345552/0.1], [0.450158158/0.5, -0.150052719/0.5]])],   
+
+            ]         
