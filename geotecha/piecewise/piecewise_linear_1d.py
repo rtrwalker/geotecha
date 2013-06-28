@@ -21,8 +21,9 @@ module for piecewise 1d linear relationships
 from __future__ import print_function, division
 
 import numpy as np
-import operator
-import numbers
+import math
+#import operator
+#import numbers
 
 def has_steps(x):
     """check if data points have any step changes
@@ -373,9 +374,10 @@ def segment_containing_xi(x, xi, subset = None, choose_max = False):
     
     x = np.asarray(x)
     
-    if isinstance(xi, numbers.Number):    
-        xi = np.array([xi])        
-    xi = np.asarray(xi)
+    xi = np.atleast_1d(xi)    
+#    if isinstance(xi, numbers.Number):    
+#        xi = np.array([xi])        
+#    xi = np.asarray(xi)
     
     if subset is None:
         subset = np.arange(len(x)-1)       
@@ -383,9 +385,11 @@ def segment_containing_xi(x, xi, subset = None, choose_max = False):
         return [np.array([],dtype = int) for v in xi]        
         
     subset = np.asarray(subset)
+    #this commented one doesn't work for descending
+    #A = [subset[(v>=x[subset]) & (v<=x[subset+1]) & (x[subset]!=x[subset+1])] for v in xi]
 
-    A = [subset[(v>=x[subset]) & (v<=x[subset+1]) & (x[subset]!=x[subset+1])] for v in xi]
-        
+    A = [subset[(abs(v-x[subset])<=abs(x[subset]-x[subset+1])) & (abs(v-x[subset+1])<=abs(x[subset]-x[subset+1])) & (x[subset]!=x[subset+1])] for v in xi]        
+    
     if choose_max:    
         f = -1        
     else:
@@ -430,9 +434,10 @@ def segments_less_than_xi(x, xi, subset = None, or_equal_to = False):
     """
     x = np.asarray(x)
     
-    if isinstance(xi, numbers.Number):    
-        xi = np.array([xi])        
-    xi = np.asarray(xi)
+    xi = np.atleast_1d(xi)    
+#    if isinstance(xi, numbers.Number):    
+#        xi = np.array([xi])        
+#    xi = np.asarray(xi)
     
     
                         
@@ -530,9 +535,10 @@ def segment_containing_also_segments_less_than_xi(x, y, xi, steps_or_equal_to = 
     x = np.asarray(x)
     y = np.asarray(y)
     
-    if isinstance(xi, numbers.Number):    
-        xi = np.array([xi])        
-    xi = np.asarray(xi)
+    xi = np.atleast_1d(xi)    
+#    if isinstance(xi, numbers.Number):    
+#        xi = np.array([xi])        
+#    xi = np.asarray(xi)
     
     
     ramps, constants, steps = ramps_constants_steps(x,y)
@@ -627,7 +633,7 @@ def segments_between_xi_and_xj(x, xi, xj):
             
     Returns
     -------
-    segment_both: list of single element lists
+    segment_both : list of single element lists
         each sub-list is the start index of the segement that contains xi or xj.          
     segment_xi_only : list of single element lists
         when xi and xj not in the same segement, segment_xi_only will be the 
@@ -656,16 +662,443 @@ def segments_between_xi_and_xj(x, xi, xj):
         if len(i1)==0 or len(i2)==0:
             continue
         if i1[0]==i2[0]:
-            np.insert(segment_both[i],0,i1[0])
+            segment_both[i] = np.insert(segment_both[i],0,i1[0])
+#            np.insert(segment_both[i],0,i1[0])
         else:
-            np.insert(segment_xi_only[i],0,i1[0])
-            np.insert(segment_xj_only[i],0,i2[0])
+            segment_xi_only[i]=np.insert(segment_xi_only[i],0,i1[0])
+            segment_xj_only[i]=np.insert(segment_xj_only[i],0,i2[0])
             segments_between[i]=np.r_[i1[0]+1:i2[0]]
+#            np.insert(segment_xi_only[i],0,i1[0])
+#            np.insert(segment_xj_only[i],0,i2[0])
+#            segments_between[i]=np.r_[i1[0]+1:i2[0]]
             
     return (segment_both, segment_xi_only, segment_xj_only, segments_between)
 
+def convert_x1_x2_y1_y2_to_x_y(x1, x2, y1, y2):
+    """convert data defined at start and end of each segment to a line of data
+    
+    x1_x2_y1_y2 data is defined by x1[1:]==x2[:-1]
+    
+    Parameters
+    ----------
+    x1, y1 : array_like, float
+        x and y values at start of each segment
+    x2, y2 : array_like, float
+        x and y values at end of each segment (note x1[1:]==x2[:-1])
+    
+    Returns
+    -------
+    x, y : 1d ndarray, float
+        x and y data of continuous line that matches the x1_x2_y1_y2 data
+    
+    See also
+    --------
+    `convert_x_y_to_x1_x2_y1_y2` : reverse of this function
+    
+    Notes
+    -----
+    Graphs showing x1_x2_y1_y2 data and x_y data are shown below.
+    
+    ::
+        
+        x1_x2_y1_y2 type data
+        y                                              y2[2]           
+        ^                                             /|              
+        |                                            / |               
+        |                           y2[0]           /  |               
+        |                          /|              /   |               
+        |                         / |       y1[2] /    |               
+        |                        /  |            |     |              
+        |                       /   |y1[1]  y2[1]|     |               
+        |                 y1[0]/    |------------|     |              
+        |                     | (0) |     (1)    | (2) |              
+        |                     |     |            |     |              
+        |----------------------------------------------------------->x
+                            x1[0] x1[1]        x1[2]  
+                                  x2[0]        x2[1] x2[2]
+
+        e.g. x1 = [0.0, 0.3, 0.7], y1 = [1, 1, 2]
+             x2 = [0.3, 0.7, 1.0], y2 = [3, 1, 4]
+
+        x_y_data
+        y                                              y[5]            
+        ^                                             /|              
+        |                                            / |              
+        |                           y[1]            /  |               
+        |                          /|              /   |              
+        |                         / |         y[4]/    |              
+        |                        /  |            |     |              
+        |                       /   |y[2]    y[3]|     |              
+        |                  y[0]/    |------------|     |              
+        |                     |     |            |     |              
+        |                     |     |            |     |              
+        |----------------------------------------------------------->x
+                            x[0]   x[1]         x[3]  x[5] 
+                                   x[2]         x[4] 
+                                   
+        e.g. x = [0.0, 0.3, 0.3, 0.7, 0.7, 1.0]
+             y = [1.0, 3.0, 1.0, 1.0, 2.0, 4.0]
+
+    """        
+    #TODO: include an option to collapse segments where step changes are tiny 
+    #and where consecutive segments lie on a straight line see np.allclose with
+    #atol and rtol.  Maybe collapse close steps first and then check for #
+    #straight lines. probably better to do it in a separate function e.g.
+    #def tidy_up_x1_x2_y1_y2() and tidy_up_x_y().
+    
+    
+    x1 = np.asarray(x1)
+    x2 = np.asarray(x2)
+    y1 = np.asarray(y1)
+    y2 = np.asarray(y2)
+    
+    n = len(x1)    
+    if not all(len(v) == n for v in [x2,y1,y2]):
+            raise ValueError("x1, x2, y1, y2 must be of same length")
+        
+    if not np.allclose(x1[1:],x2[:-1]):
+        raise ValueError("data is not x1_x2_y1_y2, i.e. x1[1:] != x2[:-1]")
+            
+   
+    
+    
+    
+    x = x1[:]
+    x = np.append(x, x2[-1])
+    y = y1[:]
+    y = np.append(y, y2[-1])
+    
+    
+    insert_index = np.where(y2[:-1]!=y1[1:])[0]
+    
+    x = np.insert(x, insert_index + 1, x2[insert_index])
+    y = np.insert(y, insert_index + 1, y2[insert_index])
+    
+    return x, y
+    
+def convert_x_y_to_x1_x2_y1_y2(x, y):
+    """convert a line of data to data defined at start and end of each segment
+        
+    
+    Parameters
+    ----------
+    x1, y1 : array_like, float
+        x and y values at start of each segment
+    x2, y2 : array_like, float
+        x and y values at end of each segment (note x1[1:]==x2[:-1])
+    
+    Returns
+    -------
+    x1, y1 : 1d array, float
+        x and y values at start of each segment
+    x2, y2 : 1d array, float
+        x and y values at end of each segment (note x1[1:]==x2[:-1])
+    
+    See also
+    --------
+    `convert_x1_x2_y1_y2_to_x_y` : reverse of this function
+        
+    Notes
+    -----
+    Graphs showing x1_x2_y1_y2 data and x_y data are shown below.
+    
+    ::
+        
+        
+
+        x_y_data
+        y                                              y[5]            
+        ^                                             /|              
+        |                                            / |              
+        |                           y[1]            /  |               
+        |                          /|              /   |              
+        |                         / |         y[4]/    |              
+        |                        /  |            |     |              
+        |                       /   |y[2]    y[3]|     |              
+        |                  y[0]/    |------------|     |              
+        |                     |     |            |     |              
+        |                     |     |            |     |              
+        |----------------------------------------------------------->x
+                            x[0]   x[1]         x[3]  x[5] 
+                                   x[2]         x[4] 
+                                   
+        e.g. x = [0.0, 0.3, 0.3, 0.7, 0.7, 1.0]
+             y = [1.0, 3.0, 1.0, 1.0, 2.0, 4.0]
+             
+    x1_x2_y1_y2 type data
+        y                                              y2[2]           
+        ^                                             /|              
+        |                                            / |               
+        |                           y2[0]           /  |               
+        |                          /|              /   |               
+        |                         / |       y1[2] /    |               
+        |                        /  |            |     |              
+        |                       /   |y1[1]  y2[1]|     |               
+        |                 y1[0]/    |------------|     |              
+        |                     | (0) |     (1)    | (2) |              
+        |                     |     |            |     |              
+        |----------------------------------------------------------->x
+                            x1[0] x1[1]        x1[2]  
+                                  x2[0]        x2[1] x2[2]
+
+        e.g. x1 = [0.0, 0.3, 0.7], y1 = [1, 1, 2]
+             x2 = [0.3, 0.7, 1.0], y2 = [3, 1, 4]
+
+    """        
+    #TODO: include an option to collapse segments where step changes are tiny 
+    #and where consecutive segments lie on a straight line see np.allclose with
+    #atol and rtol.  Maybe collapse close steps first and then check for #
+    #straight lines. probably better to do it in a separate function e.g.
+    #def tidy_up_x1_x2_y1_y2() and tidy_up_x_y().
+    
+    
+    x = np.asarray(x)    
+    y = np.asarray(y)
+             
+    if len(x)!=len(y):
+            raise ValueError("x and y must be of same length")
+               
+    segs = np.where(x[:-1]!=x[1:])[0]
+    
+    
+    return x[segs]
+    x1 = x[segs]
+    x2 = x[segs+1]
+    y1 = y[segs]
+    y2 = y[segs+1]
+    
+    return x1, x2, y1, y2
+    
+    
+def interp_x1_x2_y1_y2(x1,x2,y1,y2,xi, choose_max = False):
+    """interpoolate x1_x2_y1_y2 data
+    
+    x1_x2_y1_y2 data is defined by x1[1:]==x2[:-1]
+    if xi is beyond bounds of x then the first or last value of y will be 
+    returned as appropriate
+    
+    Parameters
+    ----------
+    x1, y1 : array_like, float
+        x and y values at start of each segment
+    x2, y2 : array_like, float
+        x and y values at end of each segment (note x1[1:]==x2[:-1])
+    xi : array_like, float
+        x values to interpolate at
+        
+    Returns
+    -------
+    A : 1d ndarray, float
+        interpolated y value corresponding to xi
+        
+    
+
+    """        
+    
+    x1 = np.asarray(x1)
+    x2 = np.asarray(x2)
+    y1 = np.asarray(y1)
+    y2 = np.asarray(y2)
+    
+    n = len(x1)    
+    if not all(len(v) == n for v in [x2,y1,y2]):
+            raise ValueError("x1, x2, y1, y2 must be of same length")
+        
+    if not np.allclose(x1[1:],x2[:-1]):
+        raise ValueError("data is not x1_x2_y1_y2, i.e. x1[1:] != x2[:-1]")
+        
+    xi = np.atleast_1d(xi)    
+#    if isinstance(xi, numbers.Number):    
+#        xi = np.array([xi])        
+#    xi = np.asarray(xi)
+        
+    segs = segment_containing_xi(np.append(x1,x2[-1]), xi, subset = None, choose_max = choose_max)
+    
+    
+    A = np.empty(len(segs))
+    #mask = np.logical_not(map(len,segs))
+        
+    
+    #A = [[] for v in segs]
+    
+    for i, v in enumerate(segs):
+        
+        if len(v)>0:
+            j = v[0]
+            A[i] = y1[j] + (y2[j] - y1[j]) / (x2[j] - x1[j]) * (xi[i] - x1[j])
+        else:
+            if abs(xi[i]-x1[0]) <abs(xi[i] - x2[-1]): #xi[i] beyond 1st value
+                A[i]=y1[0]
+            else: #xi[i] is beyond last value
+                A[i]=y2[-1]
+    
+    return A
+    
+def interp_x_y(x,y,xi, choose_max = False):
+    """interpoolate x, y data
+    
+    
+    if xi is beyond bounds of x then the first or last value of y will be 
+    returned as appropriate
+    
+    Parameters
+    ----------
+    x, y : array_like, float
+        x and y values    
+    xi : array_like, float
+        x values to interpolate at
+        
+    Returns
+    -------
+    A : 1d ndarray, float
+        interpolated y value corresponding to xi
+        
+
+    """        
+    
+    x = np.asarray(x)
+    
+    y = np.asarray(y)
+    
+    
+      
+    if len(x)!=len(y):
+            raise ValueError("x and y must be of same length")
+        
+    
+        
+    xi = np.atleast_1d(xi)    
+#    if isinstance(xi, numbers.Number):    
+#        xi = np.array([xi])        
+#    xi = np.asarray(xi)
+        
+    segs = segment_containing_xi(x, xi, subset = None, choose_max = choose_max)
+    
+    
+    A = np.empty(len(segs))
+    #mask = np.logical_not(map(len,segs))
+        
+    
+    #A = [[] for v in segs]
+    
+    for i, v in enumerate(segs):
+        
+        if len(v)>0:
+            j = v[0]
+            A[i] = y[j] + (y[j+1] - y[j]) / (x[j+1] - x[j]) * (xi[i] - x[j])
+        else:
+            if abs(xi[i] - x[0]) < abs(xi[i] - x[-1]): #xi[i] beyond 1st value
+                A[i]=y[0]
+            else: #xi[i] is beyond last value
+                A[i]=y[-1]
+    
+    return A    
+
+
+def remove_superfluous_from_x_y(x,y, atol=1e-08):
+    """Remove points that are on a line between other points
+    
+    Intermediate points are judged to be 'on a line' and therefore superfluous
+    whenis determined by distance of the point from the line is below `atol`.
+    
+    Parameters
+    ----------
+    x, y : 1d array_like, float
+        x and y values 
+    atol : float, optional
+        atol is the threshold
+        
+    Returns
+    -------
+    xnew, ynew : 1d ndarray, float
+        cleaned up x and y values
+
+    Notes
+    -----
+    #TODO: put in equation for distance of point to a line from wolfram http://mathworld.wolfram.com/Point-LineDistance2-Dimensional.html
+        
+    """
+    n = len(x)    
+    if n!=len(y):
+        raise ValueError("x and y must be of sam length, %s vs %s" % (n, len(y)))
+            
+    x = np.asarray(x)
+    y = np.asarray(y)
+    
+    if n<=2:
+        return x, y
+        
+    ikeep = range(len(x))
+    
+    
+    j = 0
+    x0 = x[j]
+    y0 = y[j]
+    for i in xrange(2,n):
+        x1=x[i]
+        y1=y[i]
+        dx = x1-x0
+        dy = y1-y0
+        d = math.sqrt(dx**2+dy**2)
+        if np.allclose(d,0):
+            ikeep.remove(i-1)
+            continue
+        
+        di = abs((dx*(y0-y[j+1:i])-dy*(x0-x[j+1:i]))/d)
+        if np.any(di>atol): #points not on line anymore
+            j = i - 1            
+            x0 = x[j]
+            y0 = y[j]
+        else: #points on line
+            ikeep.remove(i-1)
+            
+    return x[ikeep], y[ikeep]
+    
+    
+    
+def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, achoose_max=False, bchoose_max=True):
+    """interpolate where f(a, b) defined as g(a)*h(b) where g is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
+    
+    Does little calculation, mostly calls other functions
+    calculates array A[len(xai), len(xbi)]
+    Parameters
+    ----------
+    xa, ya : 1d array_like, float
+        x and y values of x_y part of interpolation function
+    x1b, y1b : array_like, float
+        x and y values at start of each segment for x1_x2_y1_y2 part of 
+        interpolation function 
+    x2b, y2b : array_like, float
+        x and y values at end of each segment for x1_x2_y1_y2 part of 
+        interpolation function  (note x1[1:]==x2[:-1])
+    xai : array_like, float
+        x values to interpolate at for x_y part
+    xbi : array_like, float
+        x values to interpolate at for x1_x2_y1_y2 part
+    achoose_max : ``boolean``, optional
+        if False (default), if xai falls on boundary of segments choose the 
+        minimum segment to interpolate within.
+    bchoose_max : ``boolean``, optional
+        if true (default), if xbi falls on boundary of segments choose the 
+        maximum segment to interpolate within.
+    
+    See also
+    --------
+    interp_x_y : interpolate the x_y part
+    interp_x1_x2_y1_y2 : interpolate the x1_x2_y1_y2 part
+    
+    """
+    
+    yai = interp_x_y(xa, ya, xai, choose_max=achoose_max)
+    ybi = interp_x1_x2_y1_y2(x1b, x2b, y1b, y2b, xbi, choose_max=bchoose_max)
+    
+    return yai[:, np.newaxis] * ybi[np.newaxis,:]
+
+def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between():
+    
     
 if __name__ == '__main__':
+    print(interp_xa_ya_multipy_x1b_x2b_y1b_y2b(**{'xa':[0,1.0] , 'ya':[1,2], 'x1b':[4], 'x2b':[5], 'y1b':[2], 'y2b':[4],'xai':[0,0.5,1], 'xbi':[4, 4.5]}))
     #print(strictly_increasing([0,  0.5,  1,  1.5,  2]))
     #print(non_increasing_and_non_decreasing_parts([0,  0.5,  1,  1.5,  2]))
     #print (force_strictly_increasing([0, 0.5, 1, 0.75, 1.5, 2], keep_end_points=True))
@@ -673,17 +1106,17 @@ if __name__ == '__main__':
     #print(force_strictly_increasing([0,  0.4,   0.4,  1,  2.5,  3,  3], keep_end_points = False, eps=0.01) )
     #print (force_strictly_increasing([0,  0.4,   0.4,  1,  2.5,  3,  3]))
     #a = {'x': [0,  0,  1,  1,  2],                          'y': [0, 10, 10, 30, 30]}
-    a = {'x': [0,  0.4,  1,  1.5,  2],                          'y': [0, 10, 10, 30, 30]}
+#    a = {'x': [0,  0.4,  1,  1.5,  2],                          'y': [0, 10, 10, 30, 30]}
 #    print(ramps_constants_steps(**a))
     #print (start_index_of_ramps(**a))   
 #    print (segment_containing_xi(a['x'], [-1,0,0.2,1,1.7,8]))
 #    print (segment_containing_xi(a['x'], [-1,0,0.2,1,1.7,8], choose_max = True))
 #    print(segment_containing_xi(x=[0,  0.4,   0.4,  1,  2.5,  3,  3], xi=[0,1.2], subset=None, choose_max=True))
     #print (segment_containing_xi(a['x'], [-1,0,0.2,1,1.7]))
-    two_ramps_two_steps = {'x': [0,  0.4,   0.4,  1,  2.5,  3,  3],
-                                    'y': [0,  10.0, 20.0, 20, 30.0, 30, 40]}
-    two_steps = {'x': [0,  0,  1,  1,  2],
-                          'y': [0, 10, 10, 30, 30]}                                    
+#    two_ramps_two_steps = {'x': [0,  0.4,   0.4,  1,  2.5,  3,  3],
+#                                    'y': [0,  10.0, 20.0, 20, 30.0, 30, 40]}
+#    two_steps = {'x': [0,  0,  1,  1,  2],
+#                          'y': [0, 10, 10, 30, 30]}                                    
     #print(segment_containing_also_segments_less_than_xi(xi = 0.42, **two_ramps_two_steps))
     #(ramps_less_than_xi, constants_less_than_xi, steps_less_than_xi, 
     #        ramps_containing_xi, constants_containing_xi) = segment_containing_also_segments_less_than_xi(xi = 0.42, **two_ramps_two_steps)        
@@ -696,8 +1129,8 @@ if __name__ == '__main__':
     #all(map(np.allclose, constants_containing_xi, [2]))
     #print(segments_less_than_xi(x=two_steps['x'], xi= 0, subset=None, or_equal_to=False))
     #print (segment_containing_xi(a['x'], 4))
-    dic = {'x': np.array([0,0,10]), 'y': np.array([0, -100,-100]), 'xi': np.array([-1,0,1])}
-    print (segment_containing_also_segments_less_than_xi(**dic))
+#    dic = {'x': np.array([0,0,10]), 'y': np.array([0, -100,-100]), 'xi': np.array([-1,0,1])}
+    #print (segment_containing_also_segments_less_than_xi(**dic))
 #    ramps, constatnts, steps = ramps_constants_steps([0,0],[0,10])
 #    print(ramps)
 #    
@@ -707,6 +1140,13 @@ if __name__ == '__main__':
     #print(segment_containing_xi(x=[0,  0.4,   0.4,  1,  2.5,  3,  3], xi=[0.4], choose_max=True))
     #print(segments_less_than_xi(x=[0,  0,  1,  1,  2], xi=-1, subset=None, or_equal_to=False))
     #print(segments_less_than_xi(x=[0,  0.4,   0.4,  1,  2.5,  3,  3], xi=0.42, subset=[2,4], or_equal_to=False))
+#    dic = {'x1': [0.0, 0.3, 0.7], 'y1': [1, 1, 2], 'x2':[0.3, 0.7, 1.0], 'y2': [3, 1, 4]}
+#    dic = {'x1': [0.0, -0.3, -0.7], 'y1': [1, 1, 2], 'x2':[-0.3, -0.7, -1.0], 'y2': [3, 1, 4]}
+#    print (convert_x1_x2_y1_y2_to_x_y(**dic))
+    #print(interp_x1_x2_y1_y2(**{'x1': [0.0], 'y1': [1], 'x2':[1], 'y2': [2], 'xi': [0.5]}))
+##    print(interp_x1_x2_y1_y2(**{'x1': [1], 'y1': [10], 'x2':[0], 'y2': [20], 'xi': 0.75}))
+#   print(convert_x1_x2_y1_y2_to_x_y(**{'x1': [0.0, 0.3, 0.7], 'y1': [1, 1, 2], 'x2':[0.3, 0.7, 1.0], 'y2': [3, 1, 4]}))
+#   print(convert_x1_x2_y1_y2_to_x_y(**{'x1': [0.0, 0.3], 'y1': [1,1], 'x2':[0.3, 1], 'y2': [1,1]}))
 #import sys
 #sys.float_info.epsilon
 

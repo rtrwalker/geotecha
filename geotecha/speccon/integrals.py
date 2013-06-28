@@ -19,7 +19,9 @@
 
 from __future__ import division, print_function
 import numpy as np
+import numbers
 from geotecha.piecewise.piecewise_linear_1d import segment_containing_also_segments_less_than_xi
+from geotecha.piecewise.piecewise_linear_1d import segments_between_xi_and_xj
 
 def m_from_sin_mx(i, boundary=0):
     """Sine series eigenvalue of boundary value problem on [0, 1]
@@ -497,88 +499,7 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb):
     
     
     
-#def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
-#    """Generate code to perform time integration for spectral methods
-#    
-#    Integrates D[load(tau), tau] * exp(dT * eig * (t-tau)) between [0, t].
-#    Performs integrations involving time and the time derivative of a 
-#    piecewise linear load.  A 2d array of dimesnions A[len(tvals), len(eigs)] 
-#    is produced where the 'i'th row of A contains the diagonal elements of the 
-#    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of 
-#    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
-#    
-#    
-#    Parameters
-#    ----------
-#    loadtim : 1d numpy.ndarray
-#        list of times describing load application
-#    loadmag : 1d numpy.ndarray
-#        list of load magnitudes        
-#    eigs : 1d numpy.ndarray
-#        list of eigenvalues
-#    tvals : 1d numpy.ndarray`
-#        list of time values to calculate integral at
-#    dT : ``float``, optional
-#        time factor multiple (default = 1.0)
-#    
-#    Returns
-#    -------
-#    A : numpy.ndarray
-#        returns a 2d array of dimesnions A[len(tvals), len(eigs)].  
-#        The 'i'th row of A is the diagonal elements of the spectral 'E' matrix 
-#        calculated for the time tvals[i].
-#        vector
-#
-#    Notes
-#    -----
-#    
-#    TODO: equations etc.
-#    
-#    """
-#    
-#    
-#    from math import exp
-#    
-#    loadtim = np.asarray(loadtim)
-#    loadmag = np.asarray(loadmag)
-#    eigs = np.asarray(eigs)
-#    tvals = np.asarray(tvals)
-#    
-#    #should do some checking of data maybe? i.e. coerce into numpy arrays
-#    
-#    #break up piecewise linear load into separate types of load.
-#    
-#    #find start index of instantaneous loads
-#    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
-#    #find the instantaneous loads where t is after the load
-#    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
-#    
-#    #find start index of constant loads
-#    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
-#    
-#    #find start index of ramp loads    
-#    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
-#    #find the ramp loads where t is within the ramp
-#    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
-#    #find the ramp loads where t is beyond the ramp    
-#    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
-#    
-#    
-#           
-#    A = np.zeros([len(tvals), len(eigs)])
-#    
-#        
-#    for i, t in enumerate(tvals):
-#        for k in after_instant_loads[i]:    
-#            for j, eig in enumerate(eigs):
-#                A[i,j] += (loadmag[k + 1] - loadmag[k])*exp(-dT*eig*(t - loadtim[k])) 
-#        for k in within_ramp_loads[i]:
-#            for j, eig in enumerate(eigs):
-#                A[i,j] += (loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig) 
-#        for k in after_ramp_loads[i]:
-#            for j, eig in enumerate(eigs):
-#                A[i,j] += exp(-dT*eig*(t - loadtim[k + 1]))*(loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig)
-#    return A
+
 def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     """Generate code to perform time integration for spectral methods
     
@@ -626,25 +547,7 @@ def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     eigs = np.asarray(eigs)
     tvals = np.asarray(tvals)
     
-#    #should do some checking of data maybe? i.e. coerce into numpy arrays
-#    
-#    #break up piecewise linear load into separate types of load.
-#    
-#    #find start index of instantaneous loads
-#    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
-#    #find the instantaneous loads where t is after the load
-#    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
-#    
-#    #find start index of constant loads
-#    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
-#    
-#    #find start index of ramp loads    
-#    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
-#    #find the ramp loads where t is within the ramp
-#    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
-#    #find the ramp loads where t is beyond the ramp    
-#    ramps_less_than_xi = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
-#    
+    
     (ramps_less_than_t, constants_less_than_t, steps_less_than_t, 
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
         
@@ -669,7 +572,7 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     
     Integrates load(tau) * exp(dT * eig * (t-tau)) between [0, t].
     Performs integrations involving time and the time derivative of a 
-    piecewise linear load.  A 2d array of dimesnions A[len(tvals), len(eigs)] 
+    piecewise linear load.  A 2d array of dimensions A[len(tvals), len(eigs)] 
     is produced where the 'i'th row of A contains the diagonal elements of the 
     spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of 
     this matrix will be assembled into the diagonal matrix 'E' elsewhere.
@@ -705,34 +608,11 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     
     from math import exp
     
-        
-    #should do some checking of data maybe? i.e. coerce into numpy arrays
     loadtim = np.asarray(loadtim)
     loadmag = np.asarray(loadmag)
     eigs = np.asarray(eigs)
     tvals = np.asarray(tvals)    
-#                   
-#    #break up piecewise linear load into separate types of load.
-#    
-#    #find start index of instantaneous loads
-#    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
-#    #find the instantaneous loads where t is after the load
-#    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
-#    
-#    #find start index of constant loads
-#    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
-#    #find the constant loads where t is within the constant period
-#    within_constant_loads= np.array([constant_loads[(t>loadtim[constant_loads]) & (t<=loadtim[constant_loads+1])] for t in tvals])    
-#    #find the constant loads where t is beyond the constant period    
-#    after_constant_loads = np.array([constant_loads[np.where(t>loadtim[constant_loads+1])[0]] for t in tvals])
-#    
-#    #find start index of ramp loads    
-#    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
-#    #find the ramp loads where t is within the ramp
-#    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
-#    #find the ramp loads where t is beyond the ramp    
-#    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
-#    
+
     (ramps_less_than_t, constants_less_than_t, steps_less_than_t, 
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
            
@@ -788,8 +668,8 @@ def dim1sin(m, z):
     return np.sin(z[:, np.newaxis]*m[np.newaxis, :])
 
 
-def dim1sin_avg(m, z):
-    """calc integrate(sin(m*z), (z, z1, z2) for each combination of m and [z1,z2]
+def dim1sin_avg_between(m, z):
+    """calc integrate(sin(m*z), (z, z1, z2)) for each combination of m and [z1,z2]
     
     calculates array A[len(z), len(m)]
     
@@ -825,11 +705,96 @@ def dim1sin_avg(m, z):
     mm = m[np.newaxis,:]
     
     return (cos(a*mm)-cos(b*mm))/mm/(b-a)
+
+def dim1sin_a_linear_between(m, at, ab, zt, zb, z):
+    """calc integrate(a(z) * sin(m*z), (z, z1, z2)) for each combination of m and [z1,z2]
+    
+    
+    Performs integrations of `sin(mi * z) * a(z) *b(z)` 
+    between [z1, z2] where a(z) is a piecewise linear functions of z.  
+    calculates array A[len(z), len(m)]
+
+    Parameters
+    ----------
+    m : ``list`` of ``float``
+        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx         
+    at : ``list`` of ``float``
+        property at top of each layer
+    ab : ``list`` of ``float``
+        property at bottom of each layer        
+    zt : ``list`` of ``float``
+        normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
+    zb : ``list`` of ``float``
+        normalised depth or z-coordinate at bottom of each layer. `zt[-1]` = 1
+    z : ``list`` of ``list`` of float``
+        normalised depth or z-coordinate pair should be two values 
+        between 0 and 1.
+             
+    Returns
+    -------
+    A : numpy.ndarray
+        returns an array  1d array size A[len(z), len(m)]
+        
+    See Also
+    --------
+    m_from_sin_mx : used to generate 'm' input parameter        
+    
+    
+    Notes
+    -----    
+    TODO:
+        
+    """
+    
+    
+    from math import sin, cos
+    m = np.asarray(m)
+    
+    z = np.atleast_2d(z)
+#    if isinstance(z[0], numbers.Number):    
+#        z = np.array([z])        
+#    z = np.asarray(z)
+
+    
+    z1 = z[:,0]
+    z2 = z[:,1]    
+    
+    z_for_interp = np.zeros(len(zt)+1)
+    z_for_interp[:-1] = zt[:]
+    z_for_interp[-1]=zb[-1]
+    
+    
+    (segment_both, segment_z1_only, segment_z2_only, segments_between) = segments_between_xi_and_xj(z_for_interp,z1,z2)
+        
+    nz = len(z)
+    neig = len(m)  
+    
+    A = np.zeros([nz,neig])      
+    for i in range(nz):        
+        for layer in segment_both[i]:
+            for j in range(neig):
+                A[i,j] += -(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z1[i]) + (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z2[i]) + (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z1[i]) - (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z2[i]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*z1[i]*cos(m[j]*z1[i]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*z2[i]*cos(m[j]*z2[i]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*z1[i]*cos(m[j]*z1[i]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*z2[i]*cos(m[j]*z2[i]) + zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z1[i]) - zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z2[i]) - zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z1[i]) + zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z2[i])
+        for layer in segment_z1_only[i]:
+            for j in range(neig):
+                A[i,j] += -(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z1[i]) + (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zb[layer]) + (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z1[i]) - (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zb[layer]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*z1[i]*cos(m[j]*z1[i]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*zb[layer]*cos(m[j]*zb[layer]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*z1[i]*cos(m[j]*z1[i]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*zb[layer]*cos(m[j]*zb[layer]) + zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z1[i]) - zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zb[layer]) - zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z1[i]) + zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zb[layer])
+        for layer in segments_between[i]:
+            for j in range(neig):
+                A[i,j] += (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zb[layer]) - (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zt[layer]) - (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zb[layer]) + (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zt[layer]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*zb[layer]*cos(m[j]*zb[layer]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*zt[layer]*cos(m[j]*zt[layer]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*zb[layer]*cos(m[j]*zb[layer]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*zt[layer]*cos(m[j]*zt[layer]) - zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zb[layer]) + zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zt[layer]) + zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zb[layer]) - zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zt[layer])
+        for layer in segment_z2_only[i]:
+            for j in range(neig):
+                A[i,j] += (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z2[i]) - (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zt[layer]) - (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z2[i]) + (zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zt[layer]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*z2[i]*cos(m[j]*z2[i]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*zt[layer]*cos(m[j]*zt[layer]) + m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*z2[i]*cos(m[j]*z2[i]) - m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*zt[layer]*cos(m[j]*zt[layer]) - zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z2[i]) + zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zt[layer]) + zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z2[i]) - zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zt[layer])
+    return A
+
     
 if __name__=='__main__':
     eigs = np.array([2.46740110027, 22.2066099025])        
     dic = {'loadtim': np.array([0,0]), 'loadmag': np.array([0, 100]), 'eigs': eigs, 'tvals': np.array([-1,0,1])}
-    print(EDload_linear(**dic))
-    
+    #print(EDload_linear(**dic))
+    #
     dic = {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': eigs, 'tvals': np.array([-1,0,1])}
-    print (Eload_linear(**dic))
+    #print (Eload_linear(**dic))
+    
+    
+    import math
+    dic = {'m': [ math.pi/2,  3 * math.pi/2], 'at':[1], 'ab':[1],'zt':[0], 'zb':[1], 'z': [[0, 1], [0.1, 0.2], [0.5, 1]]}
+    print(dim1sin_a_linear_between(**dic))

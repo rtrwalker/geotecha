@@ -29,7 +29,8 @@ from math import pi
 import numpy as np
 
 from geotecha.speccon.integrals import dim1sin
-from geotecha.speccon.integrals import dim1sin_avg
+from geotecha.speccon.integrals import dim1sin_avg_between
+from geotecha.speccon.integrals import dim1sin_a_linear_between
 from geotecha.speccon.integrals import dim1sin_af_linear
 from geotecha.speccon.integrals import dim1sin_ab_linear
 from geotecha.speccon.integrals import dim1sin_abc_linear
@@ -731,10 +732,10 @@ class test_dim1sin(base_t_ester):
                                                      
             ]
             
-class test_dim1sin_avg(base_t_ester):
-    """A suite of tests for the dim1sin function"""
+class test_dim1sin_avg_between(base_t_ester):
+    """A suite of tests for the dim1sin_avg_between function"""
     def __init__(self):
-        base_t_ester.__init__(self, dim1sin_avg, prefix = self.__class__.__name__)                
+        base_t_ester.__init__(self, dim1sin_avg_between, prefix = self.__class__.__name__)                
                             
         self.cases = [            
             
@@ -743,3 +744,39 @@ class test_dim1sin_avg(base_t_ester):
              np.array([[0.636619772, 0.21220659], [0.023320543/0.1, 0.064345552/0.1], [0.450158158/0.5, -0.150052719/0.5]])],   
 
             ]         
+
+class test_dim1sin_a_linear_between(base_t_ester):
+    """A suite of tests for the dim1sin_a_linear_between function"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin_a_linear_between, prefix = self.__class__.__name__)                
+                            
+        self.cases = [            
+            
+            ['1 layer const a, 3 zs, 2 ms', 
+             {'m': self.PTIB, 'at':[1], 'ab':[1],'zt':[0], 'zb':[1], 'z': [[0, 1], [0.1, 0.2], [0.5, 1]]}, 
+             np.array([[0.636619772, 0.21220659], [0.023320543, 0.064345552], [0.450158158, -0.150052719]])],
+
+            ['2 layer const a same in each layer, 3 zs, 2 ms', 
+             {'m': self.PTIB, 'at':[1,1], 'ab':[1, 1],'zt':[0,0.4], 'zb':[0.4, 1], 'z': [[0, 1], [0.1, 0.2], [0.5, 1]]}, 
+             np.array([[0.636619772, 0.21220659], [0.023320543, 0.064345552], [0.450158158, -0.150052719]])],   
+            
+            ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.1, 0.3], PTIB', 
+             {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.1, 0.3]}, 
+             np.array([0.0615495559529622, 0.155881032360824])],   
+               
+            ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0, 0.4], PTIB', 
+             {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0, 0.4]}, 
+             np.array([0.121583557567097, 0.277782033661425])],
+
+            ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.5], PTIB', 
+             {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.2, 0.5]}, 
+             np.array([0.220181281555903, 0.359261900351956])],
+
+            ['3 layers, a linear = 1+x betwn[0,0.4] 0.6+x betw[0.4,0.6] 0.4+x betw[0.6,1], z = [0.2, 0.8], PTIB', 
+             {'m': self.PTIB, 'at':[1, 1, 1], 'ab':[1.4, 1.2, 1.4],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.2, 0.8]}, 
+             np.array([0.469837253756176, 0.359386748693161])],
+ 
+            ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.8], PTIB', 
+             {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.2, 0.8]}, 
+             np.array([0.904514325378385, 0.372372215462563])],
+            ]           

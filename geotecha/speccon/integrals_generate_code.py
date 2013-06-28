@@ -635,27 +635,13 @@ def EDload_linear():
         
     from math import exp
     
-    
-    #should do some checking of data maybe? i.e. coerce into numpy arrays
-    
-    #break up piecewise linear load into separate types of load.
-    
-    #find start index of instantaneous loads
-    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
-    #find the instantaneous loads where t is after the load
-    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
-    
-    #find start index of constant loads
-    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
-    
-    #find start index of ramp loads    
-    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
-    #find the ramp loads where t is within the ramp
-    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
-    #find the ramp loads where t is beyond the ramp    
-    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
-    
-    
+    loadtim = np.asarray(loadtim)
+    loadmag = np.asarray(loadmag)
+    eigs = np.asarray(eigs)
+    tvals = np.asarray(tvals)    
+
+    (ramps_less_than_t, constants_less_than_t, steps_less_than_t, 
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
            
     A = np.zeros([len(tvals), len(eigs)])
     
@@ -728,31 +714,13 @@ def Eload_linear():
         
     from math import exp
     
-    
-    #should do some checking of data maybe? i.e. coerce into numpy arrays
-    
-    #break up piecewise linear load into separate types of load.
-    
-    #find start index of instantaneous loads
-    instant_loads = np.where(loadtim[1:]-loadtim[0:-1]==0)[0]
-    #find the instantaneous loads where t is after the load
-    after_instant_loads = np.array([instant_loads[np.where(t>=loadtim[instant_loads+1])[0]] for t in tvals])
-    
-    #find start index of constant loads
-    constant_loads = np.where(loadmag[1:]-loadmag[0:-1]==0)[0]
-    #find the constant loads where t is within the constant period
-    within_constant_loads= np.array([constant_loads[(t>loadtim[constant_loads]) & (t<=loadtim[constant_loads+1])] for t in tvals])    
-    #find the constant loads where t is beyond the constant period    
-    after_constant_loads = np.array([constant_loads[np.where(t>loadtim[constant_loads+1])[0]] for t in tvals])
-    
-    #find start index of ramp loads    
-    ramp_loads = np.delete(np.arange(len(loadtim)-1),np.concatenate((instant_loads, constant_loads)))        
-    #find the ramp loads where t is within the ramp
-    within_ramp_loads= np.array([ramp_loads[(t>loadtim[ramp_loads]) & (t<=loadtim[ramp_loads+1])] for t in tvals])    
-    #find the ramp loads where t is beyond the ramp    
-    after_ramp_loads = np.array([ramp_loads[np.where(t>loadtim[ramp_loads+1])[0]] for t in tvals])
-    
-    
+    loadtim = np.asarray(loadtim)
+    loadmag = np.asarray(loadmag)
+    eigs = np.asarray(eigs)
+    tvals = np.asarray(tvals)    
+
+    (ramps_less_than_t, constants_less_than_t, steps_less_than_t, 
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
            
     A = np.zeros([len(tvals), len(eigs)])
     
@@ -775,6 +743,99 @@ def Eload_linear():
     fn = text % (within_constant, after_constant, within_ramp, after_ramp)
     return fn
     
+    
+def dim1sin_a_linear_between():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * a(z)` 
+    between [z1, z2] where a(z) is a piecewise linear functions of z.  
+    Performs integrations of `sin(mi * z) * a(z) *b(z)` 
+    between [z1, z2] where a(z) is a piecewise linear functions of z.  
+    calculates array A[len(z), len(m)]
+    
+    Paste the resulting code (at least the loops) into `dim1sin_a_linear_between`.
+    
+    Notes
+    -----    
+    The `dim1sin_a_linear_between`, :math:`A`, is given by:    
+        
+    .. math:: \\mathbf{A}_{i}=\\int_{z_1}^z_2{{a\\left(z\\right)}\\phi_j\\,dz}
+    
+    where the basis function :math:`\\phi_j` is given by:    
+    
+    ..math:: \\phi_j\\left(z\\right)=\\sin\\left({m_j}z\\right)
+    
+    and :math:`a\\left(z\\right)` is a piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+        
+    """
+           
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
+    sympy.var('z1, z2')        
+    
+    z1 = sympy.tensor.IndexedBase('z1')
+    z2 = sympy.tensor.IndexedBase('z2')
+    i = sympy.tensor.Idx('i')
+    j = sympy.tensor.Idx('j')
+        
+    
+    
+    phi_j = sympy.sin(mj * z)
+    
+    f = sympy.integrate(p['a'] * phi_j, z)
+    
+    both = f.subs(z, z2[i]) - f.subs(z, z1[i])
+    both = both.subs(mp)
+    
+    between = f.subs(z, mp['zbot']) - f.subs(z, mp['ztop'])
+    between = between.subs(mp)
+    
+    z1_only = f.subs(z, mp['zbot']) - f.subs(z, z1[i])
+    z1_only = z1_only.subs(mp)
+    
+    z2_only = f.subs(z, z2[i]) - f.subs(z, mp['ztop'])
+    z2_only = z2_only.subs(mp)
+           
+    text = """dim1sin_a_linear_between(m, at, ab, zt, zb, z):
+    import numpy as np
+    from math import sin, cos
+    m = np.asarray(m)
+    z = np.asarray(z)
+    
+    a = z[:,0]
+    b = z[:,1]    
+    
+    z_for_interp=zt[:].append(zb[-1])
+    
+    
+    (segment_both, segment_z1_only, segment_z2_only, segments_between) = segments_between_xi_and_xj(z_for_interp,a,b)
+        
+    nz = len(z)
+    neig = len(m)        
+    for i in range(nz):        
+        for layer in segment_both:
+            for j in range(neig):
+                A[i,j] += %s
+        for layer in segment_z1_only:
+            for j in range(neig):
+                A[i,j] += %s
+        for layer in segments_between:
+            for j in range(neig):
+                A[i,j] += %s
+        for layer in segment_z2_only:
+            for j in range(neig):
+                A[i,j] += %s
+    return A"""
+    
+        
+    fn = text % (both, z1_only, between, z2_only)
+    
+    return fn    
 if __name__ == '__main__':
     #print(generate_gamma_code())
     print('#'*65)
@@ -787,8 +848,9 @@ if __name__ == '__main__':
     #print(dim1sin_D_aDf_linear())
     #print(dim1sin_abc_linear())
     #print(dim1sin_D_aDb_linear())    
-    print(EDload_linear())
+    #print(EDload_linear())
     #print(Eload_linear())
+    print(dim1sin_a_linear_between())
     pass
         
     

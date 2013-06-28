@@ -23,7 +23,9 @@ generally tests by:
   - prop varies from 1 to 2 on [0, 1].  This gives the simpole eqation 
   prop = 1 + x
   
-
+This module contains some `eval` commands that can be a security threat. Rather 
+than fix the problem I've hard coded in some 'if False' instances that you will
+have to hardcode back to 'if True' for them to work.  
 """
 
 from __future__ import division, print_function
@@ -37,7 +39,7 @@ from sympy import sin
 import numpy
 
 
-danger = False #this module contains some eval commands that can 
+ #this module contains some eval commands that can 
                #be a security threat rather than fix the problem 
                # I've just hard coded in this 'danger' variable
     
@@ -94,7 +96,7 @@ def two_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x')):
     #global A1
     #global A2   
     global danger
-    if danger:
+    if False:
         for drainage in MS:
             A = [[0, 0], [0, 0]]
             for i, mi in enumerate(eval(drainage)):
@@ -108,7 +110,7 @@ def two_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x')):
             print('np.array(' + str(A) + ')')
     else:
         print('eval is disabled')
-def one_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x')):
+def one_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x'),no_integrate_just_eval=False):
     """
     Evaluate string `f` then integrate between 0 and 1.
     
@@ -141,15 +143,14 @@ def one_dim(f, f2 = None, xc = 0.4, x = sympy.Symbol('x')):
     
     """
     #global A1
-    #global A2    
-    global danger
-    if danger:    
+    #global A2        
+    if True:    
         for drainage in MS:
             A = [0, 0]
             for i, mi in enumerate(eval(drainage)):
-                if f2:                    
+                if f2 is not None:                    
                     A[i] = sympy.N(sympy.integrate(eval(f), (x, 0, xc)) + sympy.integrate(eval(f2), (x, xc, 1.0)), 8)
-                else:
+                else:                    
                     A[i] = sympy.N(sympy.integrate(eval(f), (x, 0, 1)), 8)                    
             print(drainage)
             print('np.array(' + str(A) + ')')
@@ -321,8 +322,79 @@ def dim1sin_D_aDb_linear():
 #        ['a const accross both layers, b linear within two layers', #a goes form [0,1] to [0.4, 1.4] and [0.4, 1] to [1, 2.2] i.e. slope 1 and then slope 2
 #            ['-sympy.diff(A1*sin(mi*x),x)', '-sympy.diff(A2*sin(mi*x),x)']],
 #        ]
-    run_cases('dim1sin_D_aDb_linear', cases, one_dim)   
+    run_cases('dim1sin_D_aDb_linear', cases, one_dim) 
+    
+    
+def dim1sin_a_linear_between():
+    """print some test case data for geotecha.speccon.integrals.dim1sin_a_linear_between
+    
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_a_linear_between : full implementation of 
+    the function
+    geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between : data is 
+    used in testing
+    
+    """
+    
+    sympy.var('x, m')
+    f1 = 1*sin(m*x)#between 0,0.4
+    f2 = 2*sin(m*x)#between 0.4, 0.6
+    f3 = 3*sin(m*x)#between 0.6, 1
+    
+    f11 = (1+x)*sin(m*x)#between 0,0.4
+    f22 = (1+x-0.4)*sin(m*x)#between 0.4, 0.6
+    f33 = (1+x-0.6)*sin(m*x)#between 0.6, 1        
+    
+    cases = [
+        ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.1, 0.3]',
+            'sympy.integrate(f1.subs(m,mi),(x,0.1,0.3))'],
 
+        ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0, 0.4]',
+            'sympy.integrate(f1.subs(m,mi),(x,0,0.4))'],
+
+        ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.5]',
+            'sympy.integrate(f1.subs(m,mi),(x,0.2,0.4))+sympy.integrate(f2.subs(m,mi),(x,0.4,0.5))'],
+
+        ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.8]',
+            'sympy.integrate(f1.subs(m,mi),(x,0.2,0.4))+sympy.integrate(f2.subs(m,mi),(x,0.4,0.6))+sympy.integrate(f3.subs(m,mi),(x,0.6,0.8))'],
+
+        ['3 layers, a linear = 1+x betwn[0,0.4] 0.6+x betw[0.4,0.6] 0.4+x betw[0.6,1], z = [0.2, 0.8]',
+            'sympy.integrate(f11.subs(m,mi),(x,0.2,0.4))+sympy.integrate(f22.subs(m,mi),(x,0.4,0.6))+sympy.integrate(f33.subs(m,mi),(x,0.6,0.8))'],
+    ]    
+    for case in cases:        
+        for drainage in MS:            
+            A = []
+            for mi in eval(drainage):
+                
+                A.append(sympy.N(
+                                eval(case[1])
+                                )
+                        )
+            print("%s, %s" % (case[0], drainage))
+            print('np.array(' + str(A) + ')')
+        print ('******')
+#    f1 = 0.1*sin(mi*x)#between 0,0.4
+#    f2 = 0.2*sin(mi*x)#between 0.4, 0.6
+#    f2 = 0.3*sin(mi*x)#between 0.6, 1
+        
+    #[0.1,0.3]
+    #print([sympy.N(sympy.integrate(0.1*sin(mi*x),(x,0.1,0.3))) for mi in MS])    
+#    
+#    
+#    [0.1, 0.3], [0, 0.4], [0.4, 1], [0.2,0.5]
+#    A = sympy.integrate(f1)
+#    cases = [
+#        ['3, ', 
+#            ['sin(mi*x)*a_const(x)*a_const(x)']],
+#        ['a const in two layers, b const', 
+#            ['sin(mi*x)*A1','sin(mi*x)*A2']],
+#        ['a linear in one layer, b const', 
+#            ['sin(mi*x)*a_linear(x)']],
+#        ['a linear in one layer, b linear in one layer', 
+#            ['sin(mi*x)*a_linear(x)*a_linear(x)']],
+#        ]
+#    run_cases('dim1sin_ab_linear', cases, one_dim)
 def Eload_linear():
     pass
     
@@ -334,7 +406,7 @@ def main():
     #dim1sin_D_aDf_linear()
     #dim1sin_abc_linear()
     #dim1sin_D_aDb_linear()
-
+    dim1sin_a_linear_between()
 
 if __name__ == '__main__':
     main()        
