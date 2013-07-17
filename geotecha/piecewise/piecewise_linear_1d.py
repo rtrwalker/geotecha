@@ -1057,10 +1057,10 @@ def remove_superfluous_from_x_y(x,y, atol=1e-08):
     
     
 def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, achoose_max=False, bchoose_max=True):
-    """interpolate where f(a, b) defined as g(a)*h(b) where g is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
+    """interpolate where f(a, b) defined as g(a)*h(b) where g(a) is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
     
     Does little calculation, mostly calls other functions
-    calculates array A[len(xai), len(xbi)]
+    calculates array A[len(xbi),len(xai)]
     Parameters
     ----------
     xa, ya : 1d array_like, float
@@ -1092,13 +1092,297 @@ def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, a
     yai = interp_x_y(xa, ya, xai, choose_max=achoose_max)
     ybi = interp_x1_x2_y1_y2(x1b, x2b, y1b, y2b, xbi, choose_max=bchoose_max)
     
-    return yai[:, np.newaxis] * ybi[np.newaxis,:]
+    return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
-def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between():
+
+def avg_x_y_between_xi_xj(x, y, xi, xj):
+    """find average between xi and xj of x_y
+    
+    
+    calculates array A[len(xi)]
+    Parameters
+    ----------
+    x, y : 1d array_like, float
+        x and y values of x_y part of interpolation function
+    
+    xi, xj : array_like, float
+        x values to interpolate between    
+    
+    See also
+    --------
+    integrate_x_y_between_xi_xj : integration is intemediate step in average calculation    
+    
+    """
+        
+    xi = np.atleast_1d(xi)
+    xj = np.atleast_1d(xj)    
+    
+    return integrate_x_y_between_xi_xj(x, y, xi, xj) / (xj - xi)
+
+def integrate_x_y_between_xi_xj(x, y, xi, xj):
+    """integrate x_y data between xi and xj"
+    
+    
+    calculates array A[len(xi)]
+    Parameters
+    ----------
+    x, y : 1d array_like, float
+        x and y values of x_y part of interpolation function
+    
+    xi, xj : array_like, float
+        x values to integrate between    
+    
+    See also
+    --------
+    interp_x_y : interpolate the x_y part    
+    segments_between_xi_and_xj : segments between xi and xj
+    """
+    
+    x = np.asarray(x)
+    y = np.asarray(y)
+    xi = np.atleast_1d(xi)
+    xj = np.atleast_1d(xj)    
+    
+    (segment_both, segment_xi_only, segment_xj_only, segments_between) = segments_between_xi_and_xj(x, xi, xj)
+    yi = interp_x_y(x, y, xi, choose_max = True)
+    yj = interp_x_y(x, y, xj, choose_max = False)        
+          
+    
+    A = np.zeros(len(xi))      
+    for i in range(len(xi)):        
+        for layer in segment_both[i]:
+            A[i] += (yi[i] + yj[i]) * 0.5 * (xj[i] - xi[i])
+        for layer in segment_xi_only[i]:
+            A[i] += (yi[i] + y[layer + 1]) * 0.5 * (x[layer + 1] - xi[i])
+        for layer in segments_between[i]:
+            A[i] += (y[layer] + y[layer + 1]) * 0.5 * (x[layer + 1] - x[layer])
+        for layer in segment_xj_only[i]:
+            A[i] += (y[layer] + yj[i]) * 0.5 * (xj[i] - x[layer])
+    return A
+    
+def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
+    """integrate x1_x2_y1_y2 data between xi and xj"
+    
+    
+    calculates array A[len(xi)]
+    Parameters
+    ----------
+    x1, y1 : array_like, float
+        x and y values at start of each segment
+    x2, y2 : array_like, float
+        x and y values at end of each segment (note x1[1:]==x2[:-1])    
+    xi, xj : array_like, float
+        x values to integrate between    
+    
+    See also
+    --------
+
+    
+    """
+    
+    x1 = np.asarray(x1)
+    x2 = np.asarray(x2)
+    y1 = np.asarray(y1)
+    y2 = np.asarray(y2)
+    xi = np.atleast_1d(xi)
+    xj = np.atleast_1d(xj)    
+    
+    x_for_interp = np.zeros(len(x1)+1)
+    x_for_interp[:-1] = x1[:]
+    x_for_interp[-1] = x2[-1]
+    
+    
+    (segment_both, segment_xi_only, segment_xj_only, segments_between) = segments_between_xi_and_xj(x_for_interp, xi, xj)
+        
+    yi = interp_x1_x2_y1_y2(x1,x2,y1,y2,xi, choose_max = True)
+    yj = interp_x1_x2_y1_y2(x1,x2,y1,y2,xj, choose_max = False)        
+          
+    
+    A = np.zeros(len(xi))      
+    for i in range(len(xi)):        
+        for layer in segment_both[i]:
+            A[i] += (yi[i] + yj[i]) * 0.5 * (xj[i] - xi[i])
+        for layer in segment_xi_only[i]:
+            A[i] += (yi[i] + y2[layer]) * 0.5 * (x2[layer] - xi[i])            
+        for layer in segments_between[i]:
+            A[i] += (y1[layer] + y2[layer]) * 0.5 * (x2[layer] - x1[layer])
+        for layer in segment_xj_only[i]:
+            A[i] += (y1[layer] + yj[i]) * 0.5 * (xj[i] - x1[layer])            
+    return A
+    
+    
+    
+    
+def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
+    """average of x1_x2_y1_y2 data between xi and xj"
+    
+    
+    calculates array A[len(xi)]
+    
+    Parameters
+    ----------
+    x1, y1 : array_like, float
+        x and y values at start of each segment
+    x2, y2 : array_like, float
+        x and y values at end of each segment (note x1[1:]==x2[:-1])    
+    xi, xj : array_like, float
+        x values to integrate between    
+    
+    See also
+    --------
+    integrate_x1_x2_y1_y2_between_xi_xj : integration is intermediate step for average calculation
+    
+    """
+    
+    
+    xi = np.atleast_1d(xi)
+    xj = np.atleast_1d(xj)    
+    
+    return integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj) / (xj - xi)
+    
+    
+def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, xbj, achoose_max=False):
+    """average the x1_x2_y1_y2 part between xbi, and xbj of f(a, b) which is defined as g(a)*h(b) where g(a) is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
+    
+    Does little calculation, mostly calls other functions
+    calculates array A[len(xbi), len(xai)]
+    Parameters
+    ----------
+    xa, ya : 1d array_like, float
+        x and y values of x_y part of interpolation function
+    x1b, y1b : array_like, float
+        x and y values at start of each segment for x1_x2_y1_y2 part of 
+        interpolation function 
+    x2b, y2b : array_like, float
+        x and y values at end of each segment for x1_x2_y1_y2 part of 
+        interpolation function  (note x1[1:]==x2[:-1])
+    xai : array_like, float
+        x values to interpolate at for x_y part
+    xbi, xbj : array_like, float
+        x values to average between for the x1_x2_y1_y2 part
+    achoose_max : ``boolean``, optional
+        if False (default), if xai falls on boundary of segments choose the 
+        minimum segment to interpolate within.    
+    
+    See also
+    --------
+    interp_x_y : interpolate the x_y part
+    avg_x1_x2_y1_y2_between_xi_xj : average the x1_x2_y1_y2 part between xbi, xbj
+    
+    
+    """
+    
+    yai = interp_x_y(xa, ya, xai, choose_max=achoose_max)    
+    ybi = avg_x1_x2_y1_y2_between_xi_xj(x1b, x2b, y1b, y2b, xbi, xbj)    
+    return ybi[:, np.newaxis] * yai[np.newaxis,:]
+    
+def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a,x2a,y1a,y2a,x1b,x2b,y1b,y2b,xi,xj):
+    """integrate between xi, xj the multiplication of two x1_x2_y1_y2 funcitons
+    
+    calculates array A[len(xi)]    
+    currently works only for x1a==x1b, x2a==x2b
+    Parameters    
+    ----------
+    x1a, y1a : array_like, float
+        x and y values at start of each segment 2nd x1_x2_y1_y2 part of 
+        function 
+    x2a, y2a : array_like, float
+        x and y values at end of each segment for 2nd x1_x2_y1_y2 part of 
+        function  (note x1[1:]==x2[:-1])
+    x1b, y1b : array_like, float
+        x and y values at start of each segment 2nd x1_x2_y1_y2 part of 
+        function 
+    x2b, y2b : array_like, float
+        x and y values at end of each segment for 2nd x1_x2_y1_y2 part of 
+        function  (note x1[1:]==x2[:-1])
+    xi, xj : array_like, float
+        x values to average between
+        
+        
+    
+    """
+
+    x1a = np.asarray(x1a)
+    x2a = np.asarray(x2a)
+    y1a = np.asarray(y1a)
+    y2a = np.asarray(y2a)
+    x1b = np.asarray(x1b)
+    x2b = np.asarray(x2b)
+    y1b = np.asarray(y1b)
+    y2b = np.asarray(y2b)
+    
+    xi = np.atleast_1d(xi)
+    xj = np.atleast_1d(xj)    
+    
+    x_for_interp = np.zeros(len(x1a)+1)
+    x_for_interp[:-1] = x1a[:]
+    x_for_interp[-1] = x2a[-1]
+    
+    
+    (segment_both, segment_xi_only, segment_xj_only, segments_between) = segments_between_xi_and_xj(x_for_interp, xi, xj)
+        
+#    yi = interp_x1_x2_y1_y2(x1,x2,y1,y2,xi, choose_max = True)
+#    yj = interp_x1_x2_y1_y2(x1,x2,y1,y2,xj, choose_max = False)        
+          
+    
+    A = np.zeros(len(xi))      
+    for i in range(len(xi)):        
+        for seg in segment_both[i]:
+            A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xi[i]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xj[i]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xi[i]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xj[i]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xi[i] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xj[i]
+        for seg in segment_xi_only[i]:
+            A[i] += (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x2a[seg]**3 - (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xi[i]**3 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x2a[seg]**2 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xi[i]**2 + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x2a[seg] - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xi[i]          
+        for seg in segments_between[i]:
+            A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x1a[seg]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x2a[seg]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x1a[seg]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x2a[seg]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x1a[seg] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x2a[seg]
+        for seg in segment_xj_only[i]:
+            A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x1a[seg]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xj[i]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x1a[seg]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xj[i]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x1a[seg] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xj[i]
+            
+    return A
+
+def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa,ya,x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False):
+    """interpolate the xa_ya part at xai, and integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between xbi, and xbj of f(a, b, c) which is defined as g(a)*h(b)*h(c) where g(a) is defined with x_y data and h(b) and h(c) is defined by x1_x2_y1_y2 data
+    
+    Does little calculation, mostly calls other functions
+    calculates array A[len(xbi), len(xai)]
+    Parameters
+    ----------
+    xa, ya : 1d array_like, float
+        x and y values of x_y part of interpolation function
+    x1b, y1b : array_like, float
+        x and y values at start of each segment 1st x1_x2_y1_y2 part of 
+        function 
+    x2b, y2b : array_like, float
+        x and y values at end of each segment for 1st x1_x2_y1_y2 part of 
+        function  (note x1[1:]==x2[:-1])
+    x1c, y1c : array_like, float
+        x and y values at start of each segment 2nd x1_x2_y1_y2 part of 
+        function 
+    x2c, y2c : array_like, float
+        x and y values at end of each segment for 2nd x1_x2_y1_y2 part of 
+        function  (note x1[1:]==x2[:-1])
+    xai, array_like, float
+        x values to interpolate the xc_yc part at
+    xbi, xbj : array_like, float
+        x values to integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between    
+    achoose_max : ``boolean``, optional
+        if False (default), if xai falls on boundary of segments choose the 
+        minimum segment to interpolate within.    
+    
+    See also
+    --------
+           
+    
+    """
+    
+    yai = interp_x_y(xa, ya, xai, choose_max=achoose_max)    
+    ybi = integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1b, x2b, y1b, y2b, x1c, x2c, y1c, y2c, xbi, xbj)    
+    return ybi[:, np.newaxis] * yai[np.newaxis,:]
     
     
 if __name__ == '__main__':
-    print(interp_xa_ya_multipy_x1b_x2b_y1b_y2b(**{'xa':[0,1.0] , 'ya':[1,2], 'x1b':[4], 'x2b':[5], 'y1b':[2], 'y2b':[4],'xai':[0,0.5,1], 'xbi':[4, 4.5]}))
+    print(avg_x_y_between_xi_xj(
+                        **{'x':[0,1] , 'y':[1,2],                            
+                           'xi':0, 'xj':1}))
+    #print(interp_xa_ya_multipy_x1b_x2b_y1b_y2b(**{'xa':[0,1.0] , 'ya':[1,2], 'x1b':[4], 'x2b':[5], 'y1b':[2], 'y2b':[4],'xai':[0,0.5,1], 'xbi':[4, 4.5]}))
     #print(strictly_increasing([0,  0.5,  1,  1.5,  2]))
     #print(non_increasing_and_non_decreasing_parts([0,  0.5,  1,  1.5,  2]))
     #print (force_strictly_increasing([0, 0.5, 1, 0.75, 1.5, 2], keep_end_points=True))

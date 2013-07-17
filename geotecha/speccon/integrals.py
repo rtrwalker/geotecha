@@ -669,7 +669,7 @@ def dim1sin(m, z):
 
 
 def dim1sin_avg_between(m, z):
-    """calc integrate(sin(m*z), (z, z1, z2)) for each combination of m and [z1,z2]
+    """calc integrate(sin(m*z), (z, z1, z2))/(z2-z1) for each combination of m and [z1,z2]
     
     calculates array A[len(z), len(m)]
     

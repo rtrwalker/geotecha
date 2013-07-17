@@ -55,6 +55,15 @@ from geotecha.piecewise.piecewise_linear_1d import interp_x1_x2_y1_y2
 from geotecha.piecewise.piecewise_linear_1d import interp_x_y
 from geotecha.piecewise.piecewise_linear_1d import remove_superfluous_from_x_y
 from geotecha.piecewise.piecewise_linear_1d import interp_xa_ya_multipy_x1b_x2b_y1b_y2b
+from geotecha.piecewise.piecewise_linear_1d import avg_x_y_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import integrate_x_y_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import avg_x1_x2_y1_y2_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import integrate_x1_x2_y1_y2_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between
+from geotecha.piecewise.piecewise_linear_1d import integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between
+from geotecha.piecewise.piecewise_linear_1d import xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+
+
 
 class test_linear_piecewise(object):
     """Some piecewise distributions for testing"""
@@ -507,11 +516,345 @@ class test_linear_piecewise(object):
                         **{'xa':[0,1] , 'ya':[1,2], 
                            'x1b':[4], 'x2b':[5], 'y1b':[2], 'y2b':[4],
                            'xai':[0,0.5,1], 'xbi':[4, 4.5]}), 
-                    [[2,3],[3,4.5],[4,6]]
+                    [[2,3,4],[3,4.5,6]]#[[2,3],[3,4.5],[4,6]]                    
                     ))                
                     
+    def test_integrate_x_y_between_xi_xj(self):
+        """test_integrate_x_y_between_xi_xj"""
+        #integrate_x_y_between_xi_xj(x, y, xi, xj)
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1] , 'y':[1,2],                            
+                           'xi':0, 'xj':1}), 
+                    [1.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1,2] , 'y':[2,3,2],                            
+                           'xi':0, 'xj':2}), 
+                    [5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1,2,3] , 'y':[3,4,3,4],                            
+                           'xi':0, 'xj':3}), 
+                    [10.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1,2,3] , 'y':[3,4,3,4],                            
+                           'xi':[0,0,0], 'xj':[1,2,3]}), 
+                    [3.5,7,10.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1,1,2] , 'y':[5,5,6,6],                            
+                           'xi':0, 'xj':1}), 
+                    [5.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1,1,2] , 'y':[5,5,6,6],                            
+                           'xi':1, 'xj':2}), 
+                    [6.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1,1,2] , 'y':[5,5,6,6],                            
+                           'xi':0, 'xj':2}), 
+                    [11.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x_y_between_xi_xj(
+                        **{'x':[0,1.5,2,4] , 'y':[0,1,2,3],                            
+                           'xi':1, 'xj':3}), 
+                    [3.416666666667]
+                    )))
+                    
+    def test_avg_x_y_between_xi_xj(self):
+        """test_avg_x_y_between_xi_xj"""
+        #avg_x_y_between_xi_xj(x, y, xi, xj)
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,1] , 'y':[1,2],                            
+                           'xi':0, 'xj':1}), 
+                    [1.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,1,2] , 'y':[2,3,2],                            
+                           'xi':0, 'xj':2}), 
+                    [2.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,1,2,3] , 'y':[3,4,3,4],                            
+                           'xi':0, 'xj':3}), 
+                    [3.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,1,2,3] , 'y':[3,4,3,4],                            
+                           'xi':[0,0,0], 'xj':[1,2,3]}), 
+                    [3.5,3.5,3.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,1,1,2] , 'y':[5,5,6,6],                            
+                           'xi':0, 'xj':1}), 
+                    [5.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,1,1,2] , 'y':[5,5,6,6],                            
+                           'xi':1, 'xj':2}), 
+                    [6.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,1,1,2] , 'y':[5,5,6,6],                            
+                           'xi':0, 'xj':2}), 
+                    [5.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x_y_between_xi_xj(
+                        **{'x':[0,0.75,1,2] , 'y':[0,1,2,3],                            
+                           'xi':0.5, 'xj':1.5}), 
+                    [1.70833333333]
+                    )))
+
+    def test_integrate_x1_x2_y1_y2_between_xi_xj(self):
+        """test_integrate_x1_x2_y1_y2_between_xi_xj"""
+        #integrate_x1_x2_y1_y2_between_xi_xj(x1,x2,y1,y1, xi, xj)
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0],'x2':[1],'y1':[1], 'y2':[2],
+                           'xi':0, 'xj':1}), 
+                    [1.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[2,3], 'y2':[3,2],
+                           'xi':0, 'xj':2}), 
+                    [5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1,2],'x2':[1,2,3],'y1':[3,4,3], 'y2':[4,3,4],
+                           'xi':0, 'xj':3}), 
+                    [10.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1,2],'x2':[1,2,3],'y1':[3,4,3], 'y2':[4,3,4],                            
+                           'xi':[0,0,0], 'xj':[1,2,3]}), 
+                    [3.5,7,10.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[5,6], 'y2':[5,6],
+                           'xi':0, 'xj':1}), 
+                    [5.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[5,6], 'y2':[5,6],                            
+                           'xi':1, 'xj':2}), 
+                    [6.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[5,6], 'y2':[5,6],
+                           'xi':0, 'xj':2}), 
+                    [11.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    integrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1.5,2],'x2':[1.5,2,4],'y1':[0,1,2], 'y2':[1,2,3],
+                           'xi':1, 'xj':3}), 
+                    [3.416666666667]
+                    )))
+                    
+    def test_avg_x1_x2_y1_y2_between_xi_xj(self):
+        """test_avg_x1_x2_y1_y2_between_xi_xj"""
+        #avg_x1_x2_y1_y2_between_xi_xj(x1,x2,y1,y1, xi, xj)
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0],'x2':[1],'y1':[1], 'y2':[2],                       
+                           'xi':0, 'xj':1}), 
+                    [1.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[2,3], 'y2':[3,2],
+                           'xi':0, 'xj':2}), 
+                    [2.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1,2],'x2':[1,2,3],'y1':[3,4,3], 'y2':[4,3,4],                         
+                           'xi':0, 'xj':3}), 
+                    [3.5]
+                    )))                    
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1,2],'x2':[1,2,3],'y1':[3,4,3], 'y2':[4,3,4],                 
+                           'xi':[0,0,0], 'xj':[1,2,3]}), 
+                    [3.5,3.5,3.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[5,6], 'y2':[5,6],                      
+                           'xi':0, 'xj':1}), 
+                    [5.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[5,6], 'y2':[5,6],                     
+                           'xi':1, 'xj':2}), 
+                    [6.0]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1],'x2':[1,2],'y1':[5,6], 'y2':[5,6],                         
+                           'xi':0, 'xj':2}), 
+                    [5.5]
+                    )))
+        ok_(all(map(np.allclose, 
+                    avg_x1_x2_y1_y2_between_xi_xj(
+                        **{'x1':[0,1.5,2],'x2':[1.5,2,4],'y1':[0,1,2], 'y2':[1,2,3],
+                           'xi':1, 'xj':3}), 
+                    [1.70833333333]
+                    )))
                     
                     
+    def test_xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(self):
+        """test_xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between"""
+        #xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, xbj, achoose_max=False):
+        ok_(all(map(np.allclose, 
+                    xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(
+                        **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                           'x1b':[0,1,2],'x2b':[1,2,3],'y1b':[3,4,3], 'y2b':[4,3,4],                 
+                           'xai':[0.5, 1, 1.5, 2],
+                           'xbi':[0,0,0], 'xbj':[1,2,3]
+                           }),                     
+                    [[1.75, 3.5, 8.75, 10.5],
+                     [1.75, 3.5, 8.75, 10.5],
+                     [1.75, 3.5, 8.75, 10.5]]                     
+                    )))
+        ok_(all(map(np.allclose, 
+                    xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(
+                        **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                           'x1b':[0,1,2],'x2b':[1,2,3],'y1b':[3,4,3], 'y2b':[4,3,4],                 
+                           'xai':[0.5, 1, 1.5, 2],
+                           'xbi':[0,0,0], 'xbj':[1,2,3], 'achoose_max':True
+                           }), 
+                     [[1.75, 7, 8.75, 10.5],
+                     [1.75, 7, 8.75, 10.5],
+                     [1.75, 7, 8.75, 10.5]]
+                    )))
+
+
+    def test_integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(self):
+        """test_integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between"""
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[0.5],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[1],                                            
+                           'xi':[0], 'xj':[0.5]
+                           }),                     
+                    [0.5]))
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[0.5],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[2], 'y2b':[2],                                            
+                           'xi':[0], 'xj':[0.5]
+                           }),                     
+                    [1.0]))
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[0.5],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[2], 'y2b':[2],                                            
+                           'xi':[0,0], 'xj':[0.5, 0.25]
+                           }),                     
+                    [1.0, 0.5]))                            
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'xi':[0], 'xj':[1]
+                           }),                     
+                    [1.5]))                    
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'xi':[0], 'xj':[1]
+                           }),                     
+                    [1.5]))
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'xi':[0.25], 'xj':[0.75]
+                           }),                     
+                    [0.75]))       
+        #[0,0.4] a(x) = 1, b(x)=2, [0.4,1] a(x)=1, b(x)=4                    
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0,0.4],'x2a':[0.4,1],'y1a':[1,1], 'y2a':[1,1],                 
+                           'x1b':[0,0.4],'x2b':[0.4,1],'y1b':[2,4], 'y2b':[2,4],                                            
+                           'xi':[0], 'xj':[1.0]
+                           }),                     
+                    [3.2]))              
+        #[0,1] a(x) = x, b(x)=1-x
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[1],'y1a':[0], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[1],'y1b':[1], 'y2b':[0],                                            
+                           'xi':[0.2], 'xj':[0.4]
+                           }),                     
+                    [0.041333333]))
+        
+        #[0,0.4] a(x) = 1+x, b(x)=2-x, [0.4,1] a(x)=x, b(x)=1-x
+        ok_(np.allclose( 
+                    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0,0.4],'x2a':[0.4,1],'y1a':[1,0.4], 'y2a':[1.4,1],                 
+                           'x1b':[0,0.4],'x2b':[0.4,1],'y1b':[2,0.6], 'y2b':[1.6,0],                                            
+                           'xi':[0], 'xj':[1]
+                           }),                     
+                    [0.9666666667]))                            
+                    
+    def test_xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(self):
+        """test_xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between"""
+        #xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa,ya,x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False)
+        ok_(np.allclose( 
+                    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                        **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[1],                 
+                           'x1c':[0],'x2c':[0.5],'y1c':[2], 'y2c':[2],
+                           'xai':[0.5, 1, 1.5, 2],                                           
+                           'xbi':[0,0], 'xbj':[0.5, 0.25],
+                            'achoose_max': False
+                           }),                     
+                    [[1*0.5,1*1,1*2.5,1*3],
+                     [0.5*0.5,0.5*1,0.5*2.5,0.5*3]]))
+        ok_(np.allclose( 
+                    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                        **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[1],                 
+                           'x1c':[0],'x2c':[0.5],'y1c':[2], 'y2c':[2],
+                           'xai':[0.5, 1, 1.5, 2],                                           
+                           'xbi':[0,0], 'xbj':[0.5, 0.25],
+                            'achoose_max': True
+                           }),                     
+                    [[1*0.5,1*2,1*2.5,1*3],
+                     [0.5*0.5,0.5*2,0.5*2.5,0.5*3]]))
+                   
+        #xc_yc_multiply_integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(xc,yc,x1a,x2a,y1a,y2a, x1b, x2b, y1b, y2b, xci,xai,xaj, cchoose_max=False)           
+        #integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a,x2a,y1a,y2a,x1b,x2b,y1b,y2b,xi,xj)
+
+                        
         #interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, achoose_max=False, bchoose_max=True):                    
 #        self.two_steps = {'x': [0,  0,  1,  1,  2],
 #                          'y': [0, 10, 10, 30, 30]}

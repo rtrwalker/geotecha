@@ -749,8 +749,7 @@ def dim1sin_a_linear_between():
     
     Performs integrations of `sin(mi * z) * a(z)` 
     between [z1, z2] where a(z) is a piecewise linear functions of z.  
-    Performs integrations of `sin(mi * z) * a(z) *b(z)` 
-    between [z1, z2] where a(z) is a piecewise linear functions of z.  
+      
     calculates array A[len(z), len(m)]
     
     Paste the resulting code (at least the loops) into `dim1sin_a_linear_between`.
@@ -836,6 +835,101 @@ def dim1sin_a_linear_between():
     fn = text % (both, z1_only, between, z2_only)
     
     return fn    
+    
+def dim1_ab_linear_between():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `a(z) * b(z)` 
+    between [z1, z2] where a(z) is a piecewise linear functions of z.      
+    calculates array A[len(z)]
+    
+    Paste the resulting code (at least the loops) into `piecewise_linear_1d.integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between`.
+    
+    Notes
+    -----    
+    The `dim1sin_a_linear_between`, :math:`A`, is given by:    
+        
+    .. math:: \\mathbf{A}_{i}=\\int_{z_1}^z_2{{a\\left(z\\right)}{b\\left(z\\right)}\\,dz}
+    
+    where :math:`a\\left(z\\right)` is a piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+        
+    """
+
+
+#    Because this integration goes into piecewise_linear_1d rather than speccon.integrals I have had to use a separate map funciton to massage the variable names into a naming convention consistent with piecewise_linear_1d (this is m2 below).
+#    As such don't base anything off this funciton unless you know what you are doing
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
+    sympy.var('z1, z2')        
+    
+    z1 = sympy.tensor.IndexedBase('z1')
+    z2 = sympy.tensor.IndexedBase('z2')
+    i = sympy.tensor.Idx('i')
+    j = sympy.tensor.Idx('j')
+
+
+    sympy.var('x1a, x2a, y1a, y2a, x1b, x2b, y1b, y2b')
+    seg = sympy.tensor.Idx('seg')    
+    x1a = sympy.tensor.IndexedBase('x1a')    
+    x2a = sympy.tensor.IndexedBase('x2a')    
+    y1a = sympy.tensor.IndexedBase('y1a')    
+    y2a = sympy.tensor.IndexedBase('y2a')    
+    y1b = sympy.tensor.IndexedBase('y1b')    
+    y2b = sympy.tensor.IndexedBase('y2b')    
+    xi = sympy.tensor.IndexedBase('xi')
+    xj = sympy.tensor.IndexedBase('xj')
+    #mp2 = {'zb[layer]': x2a[seg]}
+    mp2 = [(mp['zbot'], x2a[seg]),
+           (mp['ztop'], x1a[seg]),
+           (mp['abot'], y2a[seg]),
+           (mp['atop'], y1a[seg]),
+           (mp['bbot'], y2b[seg]),
+           (mp['btop'], y1b[seg]),
+           (z1[i], xi[i]),
+           (z2[i], xj[i])]
+    #phi_j = sympy.sin(mj * z)
+    
+    f = sympy.integrate(p['a'] * p['b'], z)
+    
+    both = f.subs(z, z2[i]) - f.subs(z, z1[i])
+    both = both.subs(mp).subs(mp2)
+    
+    between = f.subs(z, mp['zbot']) - f.subs(z, mp['ztop'])
+    between = between.subs(mp).subs(mp2)
+    
+    z1_only = f.subs(z, mp['zbot']) - f.subs(z, z1[i])
+    z1_only = z1_only.subs(mp).subs(mp2)
+    
+    z2_only = f.subs(z, z2[i]) - f.subs(z, mp['ztop'])
+    z2_only = z2_only.subs(mp).subs(mp2)
+           
+    text = """A = np.zeros(len(xi))      
+    for i in range(len(xi)):        
+        for seg in segment_both[i]:
+            A[i] += %s
+        for seg in segment_xi_only[i]:
+            A[i] += %s          
+        for seg in segments_between[i]:
+            A[i] += %s
+        for seg in segment_xj_only[i]:
+            A[i] += %s
+            
+    return A"""
+    
+        
+    fn = text % (both, z1_only, between, z2_only)
+    
+    return fn 
+    
+        
+    fn = text % (both, xi_only, between, xj_only)
+    
+    return fn       
 if __name__ == '__main__':
     #print(generate_gamma_code())
     print('#'*65)
@@ -850,7 +944,8 @@ if __name__ == '__main__':
     #print(dim1sin_D_aDb_linear())    
     #print(EDload_linear())
     #print(Eload_linear())
-    print(dim1sin_a_linear_between())
+    #print(dim1sin_a_linear_between())
+    print(dim1_ab_linear_between())
     pass
         
     
