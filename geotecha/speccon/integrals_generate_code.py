@@ -331,7 +331,7 @@ def dim1sin_D_aDf_linear():
         
     .. math:: \\mathbf{A}_{i,j,\\text{layer}}=F\\left(z_b\\right)-F\\left(z_t\\right)
     
-    TODO: explain why dirac integrations disapera at end points because in this case it will always be sin(mx)*cos(mx) and so always be zero.
+    TODO: explain why dirac integrations disapear at end points because in this case it will always be sin(mx)*cos(mx) and so always be zero.
     
     """
             
@@ -929,7 +929,161 @@ def dim1_ab_linear_between():
         
     fn = text % (both, xi_only, between, xj_only)
     
-    return fn       
+    return fn 
+
+
+def dim1sin_D_aDf_linear_v2():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * D[a(z) * D[sin(mj * z),z],z]` 
+    between [0, 1] where a(z) i piecewise linear functions of z.  
+    Code is generated that will produce a square array with the appropriate 
+    integrals at each location
+    
+    Paste the resulting code (at least the loops) into `dim1sin_D_aDf_linear`.
+    
+    Notes
+    -----    
+    The `dim1sin_D_aDf_linear` matrix, :math:`A` is given by:
+    
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right)\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+    
+    The integration requires some explanation.  The difficultly arises because 
+    piecewise linear :math:`a\\left(z\\right)` is defined using step functions at 
+    the top and bottom of each layer; those step functions when differentiated 
+    yield dirac-delta or impulse functions which must be handled specially 
+    when integrating against the spectral basis functions.  The graph below
+    shows what happens when the :math:`a\\left(z\\right) distribution is 
+    differentiated for one layer.
+    
+    ::
+        
+        y(x)
+        ^
+        |                                                                        
+        |                            yb                                            
+        |                          /|                                              
+        |                         / |                                              
+        |                        /  |                                              
+        |                       /   |                                           
+        |                      /    |                                              
+        |                   yt|     |                                              
+        |                     |     |                                              
+        0--------------------xt----xb------------------------1------>x
+        
+    Differentiate:
+    
+    ::
+        
+        y'(x)
+        ^
+        |                                                                        
+        |                     y(xt) * Dirac(x - xt)                                                   
+        |                     ^                                                   
+        |                     |                                                   
+        |                     |     |                                              
+        |                     |     |                                           
+        |               y'(xt)|-----|                                              
+        |                     |     |                                              
+        |                     |     v - y(xb) * Dirac(x - xb)                                                                                                
+        0--------------------xt----xb------------------------1------>x
+    
+    With sympy/sage I've found it easier to perform the indefinite integrals 
+    first  and then sub in the bounds of integration. That is, the integral 
+    of f between a and b is F(b)-F(a) where F is the anti-derivative of f.
+    
+    
+    The general expression for :math:`{A}` is:
+    
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right)\\phi_i\\,dz}
+        :label: full
+        
+    Expanding out the integrals in :eq:`full` yields:
+        
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}+\\int_{0}^1{\\frac{d{a\\left(z\\right)}}{dZ}\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}
+    
+    Considering a single layer and separating the layer boundaries from the behaviour within a layer gives:
+        
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=\\int_{z_t}^{z_b}{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int_{z_t}^{z_b}{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}+\\int_{0}^{1}{{a\\left(z\\right)}\\delta\\left(z-z_t\\right)\\frac{d\\phi_j}{dz}\\phi_i\\,dz}-\\int_{0}^{1}{{a\\left(z\\right)}\\delta\\left(z-z_b\\right)\\frac{d\\phi_j}{dz}\\phi_i\\,dz}
+    
+    Performing the dirac delta integrations:
+        
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=\\int_{z_t}^{z_b}{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int_{z_t}^{z_b}{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}+\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z_t}-\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z_b}
+    
+    Now, to get it in the form of F(zb)-F(zt) we only take the zb part of the dirac integration:
+        
+    .. math:: F\\left(z\\right)=\\int{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}-\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z}
+    
+    Finally we get:
+        
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=F\\left(z_b\\right)-F\\left(z_t\\right)
+    
+    TODO: explain why dirac integrations disapear at end points because in this case it will always be sin(mx)*cos(mx) and so always be zero.
+    
+    """
+            
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a'])
+    
+    phi_i = sympy.sin(mi * z)
+    phi_j = sympy.sin(mj * z)    
+    
+    #fdiag = (sympy.integrate(p['a'] * sympy.diff(phi_i, z, 2) * phi_i, z))
+    #fdiag += (sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi_i, z) * phi_i,z))
+    fdiag = -sympy.integrate((p['a'] * sympy.diff(phi_i, z) * sympy.diff(phi_i,z)),z)
+        # note the 'negative' for the diff (a) part is because the step fn 
+        #at the top and bottom of the layer yields a dirac function that is 
+        #positive at ztop and negative at zbot. It works because definite 
+        #integral of f between ztop and zbot is F(ztop)- F(zbot). 
+        #i.e. I've created the indefininte integral such that when i sub 
+        #in ztop and zbot in the next step i get the correct contribution 
+        #for the step functions at ztop and zbot            
+    fdiag = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
+    fdiag = fdiag.subs(mp)
+        
+    #foff = (sympy.integrate(p['a'] * sympy.diff(phi_j, z, 2) * phi_i, z))
+    #foff += (sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi_j, z) * phi_i,z))
+    foff = -sympy.integrate((p['a'] * sympy.diff(phi_j, z) * sympy.diff(phi_i,z)),z)
+    foff = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
+    foff = foff.subs(mp)
+    
+    text = """def dim1sin_D_aDf_linear(m, at, ab, zt, zb):
+    import numpy as np
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    A = np.zeros([neig, neig], float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            A[i, i] += %s
+        for i in range(neig-1):
+            for j in range(i + 1, neig):
+                A[i, j] += %s                
+                
+    #A is symmetric
+    for i in range(neig - 1):        
+        for j in range(i + 1, neig):
+            A[j, i] = A[i, j]                
+    
+    return A"""
+    
+        
+    fn = text % (fdiag, foff)
+        
+    return fn      
 if __name__ == '__main__':
     #print(generate_gamma_code())
     print('#'*65)
@@ -945,7 +1099,9 @@ if __name__ == '__main__':
     #print(EDload_linear())
     #print(Eload_linear())
     #print(dim1sin_a_linear_between())
-    print(dim1_ab_linear_between())
+    #print(dim1_ab_linear_between())
+    #print(dim1sin_D_aDf_linear())
+    print(dim1sin_D_aDf_linear_v2())
     pass
         
     

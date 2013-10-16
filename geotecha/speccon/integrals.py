@@ -271,7 +271,77 @@ def dim1sin_D_aDf_linear(m, at, ab, zt, zb):
     
     return A
     
+def dim1sin_D_aDf_linear_v2(m, at, ab, zt, zb):
+    """Generate code to calculate spectral method integrations
     
+    Performs integrations of `sin(mi * z) * D[a(z) * D[sin(mj * z),z],z]` 
+    between [0, 1] where a(z) i piecewise linear functions of z.  
+    Calulation of integrals is performed at each element of a square symmetric 
+    matrix (size depends on size of `m`)
+            
+    Parameters
+    ----------
+    m : ``list`` of ``float``
+        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
+    at : ``list`` of ``float``
+        property at top of each layer
+    ab : ``list`` of ``float``
+        property at bottom of each layer       
+    zt : ``list`` of ``float``
+        normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
+    zb : ``list`` of ``float``
+        normalised depth or z-coordinate at bottom of each layer. `zt[-1]` = 1
+             
+    Returns
+    -------
+    A : numpy.ndarray
+        returns a square symmetric matrix, size determined by size of `m`
+        
+    See Also
+    --------
+    m_from_sin_mx : used to generate 'm' input parameter
+    geotecha.speccon.integrals_generate_code.dim1sin_abf_linear : sympy
+    integrations to produce the code to this function.
+    
+    Notes
+    -----    
+    The `dim1sin_D_aDf_linear` matrix, :math:`A` is given by:
+    
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right)\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively."""
+        
+    from math import sin, cos
+    
+    from math import sin, cos
+    
+    neig = len(m)
+    nlayers = len(zt)
+    
+    A = np.zeros([neig, neig], float)        
+    for layer in range(nlayers):
+        for i in range(neig):
+            A[i, i] += -m[i]**2*((4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*cos(m[i]*zb[layer])**2 - (4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*cos(m[i]*zb[layer])**2 + 2*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zb[layer]*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) - 2*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zb[layer]*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) + m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zb[layer]**2*sin(m[i]*zb[layer])**2 + m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])**2 - m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zb[layer]**2*sin(m[i]*zb[layer])**2 - m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])**2 + 2*zb[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) + 2*zb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zb[layer]*sin(m[i]*zb[layer])**2 + 2*zb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zb[layer]*cos(m[i]*zb[layer])**2 - 2*zt[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*cos(m[i]*zb[layer])*sin(m[i]*zb[layer]) - 2*zt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zb[layer]*sin(m[i]*zb[layer])**2 - 2*zt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zb[layer]*cos(m[i]*zb[layer])**2) + m[i]**2*((4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*cos(m[i]*zt[layer])**2 - (4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*cos(m[i]*zt[layer])**2 + 2*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zt[layer]*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) - 2*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zt[layer]*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) + m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zt[layer]**2*sin(m[i]*zt[layer])**2 + m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])**2 - m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zt[layer]**2*sin(m[i]*zt[layer])**2 - m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])**2 + 2*zb[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) + 2*zb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zt[layer]*sin(m[i]*zt[layer])**2 + 2*zb[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*at[layer]*zt[layer]*cos(m[i]*zt[layer])**2 - 2*zt[layer]*m[i]*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*cos(m[i]*zt[layer])*sin(m[i]*zt[layer]) - 2*zt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zt[layer]*sin(m[i]*zt[layer])**2 - 2*zt[layer]*m[i]**2*(4*zb[layer]*m[i]**2 - 4*zt[layer]*m[i]**2)**(-1)*ab[layer]*zt[layer]*cos(m[i]*zt[layer])**2)
+        for i in range(neig-1):
+            for j in range(i + 1, neig):
+                A[i, j] += -m[j]*m[i]*(m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zb[layer])*cos(m[j]*zb[layer]) - m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zb[layer])*cos(m[j]*zb[layer]) + m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zb[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) - m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zb[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) + 2*m[j]*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*sin(m[i]*zb[layer])*sin(m[j]*zb[layer]) - 2*m[j]*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*sin(m[i]*zb[layer])*sin(m[j]*zb[layer]) - m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zb[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer]) + m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zb[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer]) + m[j]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zb[layer])*cos(m[j]*zb[layer]) - m[j]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zb[layer])*cos(m[j]*zb[layer]) - m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zb[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) + m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zb[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) + m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zb[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer]) - m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zb[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer]) + zb[layer]*m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) - zb[layer]*m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer]) - zb[layer]*m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) + zb[layer]*m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer]) - zt[layer]*m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) + zt[layer]*m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer]) + zt[layer]*m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[j]*zb[layer])*sin(m[i]*zb[layer]) - zt[layer]*m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zb[layer])*sin(m[j]*zb[layer])) + m[j]*m[i]*(m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zt[layer])*cos(m[j]*zt[layer]) - m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zt[layer])*cos(m[j]*zt[layer]) + m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zt[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) - m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zt[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) + 2*m[j]*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*sin(m[i]*zt[layer])*sin(m[j]*zt[layer]) - 2*m[j]*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*sin(m[i]*zt[layer])*sin(m[j]*zt[layer]) - m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zt[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]) + m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zt[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]) + m[j]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zt[layer])*cos(m[j]*zt[layer]) - m[j]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zt[layer])*cos(m[j]*zt[layer]) - m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zt[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) + m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zt[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) + m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*zt[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]) - m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*zt[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]) + zb[layer]*m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) - zb[layer]*m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]) - zb[layer]*m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) + zb[layer]*m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*at[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]) - zt[layer]*m[i]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) + zt[layer]*m[j]*m[i]**2*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]) + zt[layer]*m[j]**2*m[i]*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[j]*zt[layer])*sin(m[i]*zt[layer]) - zt[layer]*m[j]**3*(zb[layer]*m[i]**4 - 2*zb[layer]*m[j]**2*m[i]**2 + zb[layer]*m[j]**4 - zt[layer]*m[i]**4 + 2*zt[layer]*m[j]**2*m[i]**2 - zt[layer]*m[j]**4)**(-1)*ab[layer]*cos(m[i]*zt[layer])*sin(m[j]*zt[layer]))                
+                
+    #A is symmetric
+    for i in range(neig - 1):        
+        for j in range(i + 1, neig):
+            A[j, i] = A[i, j]                
+    
+    return A
 def dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb):
     """Create matrix of spectral integrations
     

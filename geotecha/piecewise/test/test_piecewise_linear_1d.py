@@ -26,6 +26,10 @@ from nose.tools.trivial import assert_raises
 from nose.tools.trivial import ok_
 from nose.tools.trivial import assert_false
 from nose.tools.trivial import assert_equal
+#from nose.tools.trivial import assertSequenceEqual
+import unittest
+    
+
 
 from math import pi
 import numpy as np
@@ -63,7 +67,9 @@ from geotecha.piecewise.piecewise_linear_1d import xa_ya_multipy_avg_x1b_x2b_y1b
 from geotecha.piecewise.piecewise_linear_1d import integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between
 from geotecha.piecewise.piecewise_linear_1d import xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
 
-
+from geotecha.piecewise.piecewise_linear_1d import convert_x_y_to_x1_x2_y1_y2
+from geotecha.piecewise.piecewise_linear_1d import PolyLine
+from geotecha.piecewise.piecewise_linear_1d import polyline_make_x_common
 
 class test_linear_piecewise(object):
     """Some piecewise distributions for testing"""
@@ -395,7 +401,31 @@ class test_linear_piecewise(object):
                     convert_x1_x2_y1_y2_to_x_y(**{'x1': [0.0, 0.3], 'y1': [1,1], 'x2':[0.3, 1], 'y2': [5,2]}), 
                     ([0,0.3, 0.3, 1], [1,5,1,2])
                     ))) 
+    
+    def test_convert_x_y_to_x1_x2_y1_y2(self):
+        """test_convert_x_y_to_x1_x2_y1_y2"""
+        #convert_x_y_to_x1_x2_y1_y2(x,y):
+        assert_raises(ValueError, convert_x_y_to_x1_x2_y1_y2,
+                       **{'x': [0.0, 0.3, 0.7], 'y': [1, 1]})             
+        ok_(all(map(np.allclose, 
+                    convert_x_y_to_x1_x2_y1_y2(**{'x':[0,1], 'y':[1,3]}),                     
+                    ([0.0],[1],[1],[3])
+                    )))            
                     
+        ok_(all(map(np.allclose, 
+                    convert_x_y_to_x1_x2_y1_y2(**{'x':[0,0.3,1], 'y':[1,1,1]}), 
+                    ([0.0, 0.3], [0.3, 1], [1,1], [1,1])
+                    )))
+        
+        ok_(all(map(np.allclose, 
+                    convert_x_y_to_x1_x2_y1_y2(**{'x':[0,0.3,1], 'y':[1,1,2]}), 
+                    ([0.0, 0.3], [0.3, 1],[1,1],[1,2])
+                    )))
+        ok_(all(map(np.allclose, 
+                    convert_x_y_to_x1_x2_y1_y2(**{'x':[0,0.3, 0.3, 1], 'y':[1,5,1,2]}), 
+                    ([0.0, 0.3],[0.3, 1],[1,1],[5,2])
+                    )))              
+                       
     def test_interp_x1_x2_y1_y2(self):                    
         "test_interp_x1_x2_y1_y2"
         ok_(np.allclose(interp_x1_x2_y1_y2(**{'x1': [0.0], 'y1': [10], 'x2':[1], 'y2': [20], 'xi': 0.5}),
@@ -484,6 +514,11 @@ class test_linear_piecewise(object):
                     remove_superfluous_from_x_y(**{'x': [0.0, 0.0, 0, 0.0], 'y': [0,1,2,4]}), 
                     ([0.0,0.0], [0,4])
                     )))
+                    
+        ok_(all(map(np.allclose, 
+                    remove_superfluous_from_x_y(**{'x': [0.0, 0.0, 0, 0.0], 'y': [0,1,5,3]}), 
+                    ([0.0,0.0], [0,3])
+                    )))                    
             
     def test_interp_xa_ya_multipy_x1b_x2b_y1b_y2b(self):
         """test_interp_xa_ya_multipy_x1b_x2b_y1b_y2b"""
@@ -851,12 +886,255 @@ class test_linear_piecewise(object):
                     [[1*0.5,1*2,1*2.5,1*3],
                      [0.5*0.5,0.5*2,0.5*2.5,0.5*3]]))
                    
+
+def test_PolyLine():
+    #define with x and y
+    ok_(np.allclose(PolyLine([0,1],[3,4]).xy, 
+                    [[0,3],[1,4]]                    
+                    ))
+    ok_(np.allclose(PolyLine([0,1],[3,4]).x, 
+                    [0,1]                    
+                    ))
+    ok_(np.allclose(PolyLine([0,1],[3,4]).y, 
+                    [3,4]                    
+                    ))                     
+    ok_(all(map(np.allclose, PolyLine([0,1],[3,4]).x1_x2_y1_y2, 
+                    [[0],[1],[3],[4]]                    
+                    )))
+
+    #define with xy
+    ok_(np.allclose(PolyLine([[0, 3],[1, 4]]).xy, 
+                    [[0,3],[1,4]]                    
+                    ))
+    ok_(np.allclose(PolyLine([[0, 3],[1, 4]]).x, 
+                    [0,1]                    
+                    ))
+    ok_(np.allclose(PolyLine([[0, 3],[1, 4]]).y, 
+                    [3,4]                    
+                    ))                     
+    ok_(all(map(np.allclose, PolyLine([[0, 3],[1, 4]]).x1_x2_y1_y2, 
+                    [[0],[1],[3],[4]]                    
+                    )))
+                    
+    #define with x1, x2, y1, y2
+    ok_(np.allclose(PolyLine([0],[1],[3],[4]).xy, 
+                    [[0,3],[1,4]]                    
+                    ))
+    ok_(np.allclose(PolyLine([0],[1],[3],[4]).x, 
+                    [0,1]                    
+                    ))
+    ok_(np.allclose(PolyLine([0],[1],[3],[4]).y, 
+                    [3,4]                    
+                    ))                     
+    ok_(all(map(np.allclose, PolyLine([0],[1],[3],[4]).x1_x2_y1_y2, 
+                    [[0],[1],[3],[4]]                    
+                    )))                    
+
+    #scalar addtion
+    ok_(np.allclose((0 + PolyLine([0,1],[3,4])).xy, 
+                    [[0,3],[1,4]]                    
+                    ))
+    ok_(np.allclose((2.5 + PolyLine([0,1],[3,4])).xy, 
+                    [[0,5.5],[1,6.5]]                    
+                    ))             
+    ok_(np.allclose((PolyLine([0,1],[3,4]) + 2.5).xy, 
+                    [[0,5.5],[1,6.5]]                    
+                    ))                
+    #scalar subtraction
+    ok_(np.allclose((2.5 - PolyLine([0,1],[3,4])).xy, 
+                    [[0,-0.5],[1, -1.5]]                    
+                    ))    
+    ok_(np.allclose((PolyLine([0,1],[3,4])-2.5).xy, 
+                    [[0,0.5],[1, 1.5]]                    
+                    ))                        
+    #scalar multiplication
+    ok_(np.allclose((2 * PolyLine([0,1],[3,4])).xy, 
+                    [[0,6],[1, 8]]                    
+                    ))                    
+    ok_(np.allclose((PolyLine([0,1],[3,4]) * 2).xy, 
+                    [[0,6],[1, 8]]                    
+                    )) 
+    #scalar_division                            
+    ok_(np.allclose((2 / PolyLine([0,1],[3,4])).xy, 
+                    [[0,2/3],[1, 1/2]]                    
+                    ))                    
+    ok_(np.allclose((PolyLine([0,1],[3,4]) /2).xy, 
+                    [[0,1.5],[1, 2]]                    
+                    ))
+
+                       
+    #addition of PolyLines
+    ok_(np.allclose((PolyLine([0,1],[3,4]) + PolyLine([0,1],[1,2])).xy, 
+                    [[0,4],[1, 6]]                    
+                    ))
+                    
+    ok_(np.allclose((PolyLine([0,1], [2,2]) + PolyLine([0,0.5,0.5,0.6,0.6,1], [0,0,1,1,0,0])).xy, 
+                    [[0,2],
+                     [0.5,2],
+                     [0.5,3],
+                     [0.6,3],
+                     [0.6,2],
+                     [1, 2]]                     
+                    ))
+    ok_(np.allclose((PolyLine([0,1,2], [0,1,0]) + PolyLine([0,1,2], [1,0,1])).xy, 
+                    [[0,1],
+                     [1,1],
+                     [2,1]]                     
+                    ))
+    ok_(np.allclose((PolyLine([0,1,2], [0,1,0]) + PolyLine([0,1+1e-9,2], [1,0,1])).xy, 
+                    [[0,1],
+                     [1,1],
+                     [2,1]]                     
+                    ))       
+                    
+    ok_(np.allclose((PolyLine([0,1,2], [0,1,0]) + PolyLine([0,1+1e-8,2], [1,0,1])).xy, 
+                    [[0,1],
+                     [1,1],
+                     [2,1]]                     
+                    )) 
+    ok_(np.allclose((PolyLine([0,1,2], [0,1,0]) + PolyLine([0,1-1e-8,2], [1,0,1])).xy, 
+                    [[0,1],
+                     [1,1],
+                     [2,1]]                     
+                    ))
+    ok_(np.allclose((PolyLine([0,1,2], [0,1,0]) + PolyLine([0,1+1e-3,2], [1,0,1])).xy, 
+                    [[0,1],
+                     [1,1+1e-3],
+                     [1+1e-3,1-1e-3] ,  
+                     [2,1]]                     
+                    ))
+
+
+    ok_(np.allclose((PolyLine([0,1,1,2], [0,0,1,1]) + PolyLine([0,1,1,2], [0,0,2,3])).xy, 
+                    [[0,0],
+                     [1,0],
+                     [1,3],  
+                     [2,4]]                     
+                    ))
+    #dirty
+    ok_(np.allclose((PolyLine([0,1,1+1e-6,2], [0,0,1,1]) + PolyLine([0,1,1,2], [0,0,2,3])).xy, 
+                    [[0,0],
+                     [1,0],
+                     [1,3],  
+                     [2,4]]                     
+                    ))
+    ok_(np.allclose((PolyLine([0,1,1+1e-3,2], [0,0,1,1]) + PolyLine([0,1,1,2], [0,0,2,3])).xy, 
+                    [[0,0],
+                     [1,0],
+                     [1,2],
+                     [1.001,3.001],  
+                     [2,4]]                     
+                    ))                    
+    #reverse                              
+    ok_(np.allclose((PolyLine([0,1,1+1e-6,2][::-1], [0,0,1,1][::-1]) + PolyLine([0,1,1,2][::-1], [0,0,2,3][::-1])).xy, 
+                    [[0,0],
+                     [1,0],
+                     [1,3],  
+                     [2,4]]                     
+                    ))
+    ok_(np.allclose((PolyLine([0,1,1+1e-3,2][::-1], [0,0,1,1][::-1]) + PolyLine([0,1,1,2][::-1], [0,0,2,3][::-1])).xy, 
+                    [[0,0],
+                     [1,0],
+                     [1,2],
+                     [1.001,3.001],
+                     [2,4]]                     
+                    ))                                                      
+
+    ok_(np.allclose((PolyLine([0,1,1+1e-6,2], [0,0,1,1]) - PolyLine([0,1,1,2], [0,0,2,3])).xy, 
+                    [[0,0],
+                     [1,0],
+                     [1,-1],  
+                     [2,-2]]                     
+                    ))
+    ok_(np.allclose((PolyLine([0,1,1+1e-3,2], [0,0,1,1]) - PolyLine([0,1,1,2], [0,0,2,3])).xy, 
+                    [[0,0],
+                     [1,0],
+                     [1,-2],
+                     [1.001,-1.001],  
+                     [2,-2]]                     
+                    ))
+
+    #equality
+    ok_(PolyLine([0,1],[3,4])==PolyLine([0,1],[3,4]))
+    ok_(PolyLine([0,1],[3,4])==PolyLine([0,1],[3+1e-10,4]))
+    assert_false(PolyLine([0,1],[3,4])==PolyLine([0,1],[3,8])) 
+
+class test_polyline_make_x_common(unittest.TestCase):    
+    
+    def test_two_in_two_out(self):
+        self.assertSequenceEqual(
+                 polyline_make_x_common(PolyLine([[0,1],[3,4]]), PolyLine([[0,1],[3,4]])),
+                 (PolyLine([[0,1],[3,4]]), PolyLine([[0,1],[3,4]]))
+                 )
+                 
+    def test_1(self):
+        self.assertSequenceEqual([1,2,3],[1,2,3])
+    
+    def test_one_in_one_out(self):
+        assert_equal(polyline_make_x_common(PolyLine([[0,1],[3,4]])),
+                 PolyLine([[0,1],[3,4]]))
+                   
+    def test_one_in_one_out(self):
+        assert_equal(polyline_make_x_common(PolyLine([[0,1],[3,4]])),
+                 PolyLine([[0,1],[3,4]]))
+                 
+    def test_one_in_one_out_rtol(self):
+        assert_equal(polyline_make_x_common(PolyLine([[0,1+1e-10],[3,4]])),
+                 PolyLine([[0,1],[3,4]]))
+
+    def test_many(self):
+        self.assertSequenceEqual(
+                 polyline_make_x_common(PolyLine([0,1],[3,4]), PolyLine([0,0.5],[5,5])),
+                 (PolyLine([0,0.5,1],[3,3.5,4]), PolyLine([0,0.5,1],[5,5,5]))
+                 )      
+        self.assertSequenceEqual(
+                 polyline_make_x_common(PolyLine([0,0,2],[3,4,5]), 
+                                        PolyLine([0,0.5],[5,5])),
+                 (PolyLine([ 0.,   0.,   0.5,  2. ],[ 3.,    4.  ,  4.25 , 5.  ]),
+                  PolyLine([0,0.5,2],[5,5,5]))
+                 )
+                 
+        self.assertSequenceEqual(
+                 polyline_make_x_common(PolyLine([0,1], [1,2]),
+                                        PolyLine([0,0.5,0.5,0.6,0.6,1], [0,0,1,1,0,0])),
+                         (PolyLine([0.0, 0.5, 0.6, 1.0],[1.0, 1.5, 1.6, 2.0]),
+                          PolyLine([0.0, 0.5, 0.5, 0.6, 0.6, 1.0],[0.0, 0.0, 1.0, 1.0, 0.0, 0.0]))
+                 )         
+
+        self.assertSequenceEqual(
+                 polyline_make_x_common(PolyLine([0,1,2], [0,1,0]),PolyLine([0,1+1e-3,2], [1,0,1])),
+                         (PolyLine([0.0, 1.0, 1.001, 2.0],[0.0, 1.0, 0.999, 0.0]),
+                          PolyLine([0.0, 1.0, 1.001, 2.0],[1.0, 0.001, 0.0, 1.0]))
+                 ) 
+                 
+        self.assertSequenceEqual(
+                 polyline_make_x_common(PolyLine([0,1], [1,2]),
+                                        PolyLine([0,1,2,4], [0,6,5,7]), 
+                                        PolyLine([0.5,2], [1,7])),
+                         (PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[1.0, 1.5, 2.0, 2.0, 2.0]),
+                             PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[0.0, 3.0, 6.0, 5.0, 7.0]),
+                             PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[1.0, 1.0, 3.0, 7.0, 7.0]))
+                 )   
+
+        self.assertSequenceEqual(
+                 polyline_make_x_common(PolyLine([0,1][::-1], [1,2][::-1]),
+                                        PolyLine([0,1,2,4][::-1], [0,6,5,7][::-1]), 
+                                        PolyLine([0.5,2][::-1], [1,7][::-1])),
+                         (PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[1.0, 1.5, 2.0, 2.0, 2.0]),
+                             PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[0.0, 3.0, 6.0, 5.0, 7.0]),
+                             PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[1.0, 1.0, 3.0, 7.0, 7.0]))
+                 )                 
+
+                 
+#    ok_(np.allclose((PolyLine([0,1],[3,4]) + PolyLine([0,1],[1,2])).xy, 
+#                    [[0,4],[1, 6]]                    
+#                    ))                                  
         #xc_yc_multiply_integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(xc,yc,x1a,x2a,y1a,y2a, x1b, x2b, y1b, y2b, xci,xai,xaj, cchoose_max=False)           
         #integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a,x2a,y1a,y2a,x1b,x2b,y1b,y2b,xi,xj)
 
                         
         #interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, achoose_max=False, bchoose_max=True):                    
-#        self.two_steps = {'x': [0,  0,  1,  1,  2],
+#        self.two_steps = {'x': [0,  0,  1,  1,  2] ,
 #                          'y': [0, 10, 10, 30, 30]}
 #        self.two_steps_reverse = {'x': [0,  0,  -1,  -1,  -2],
 #                                  'y': [0, 10,  10,  30,  30]}

@@ -22,6 +22,10 @@ from __future__ import print_function, division
 
 import numpy as np
 import math
+import sys
+import matplotlib.pyplot as plt
+import copy
+import operator
 #import operator
 #import numbers
 
@@ -861,7 +865,7 @@ def convert_x_y_to_x1_x2_y1_y2(x, y):
     segs = np.where(x[:-1]!=x[1:])[0]
     
     
-    return x[segs]
+    
     x1 = x[segs]
     x2 = x[segs+1]
     y1 = y[segs]
@@ -1377,11 +1381,429 @@ def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa
     ybi = integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1b, x2b, y1b, y2b, x1c, x2c, y1c, y2c, xbi, xbj)    
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
     
+class PolyLine(object):
+    """a line is a series of x y points"""
+    def __init__(self, *args):
+               
+        if not len(args) in [1,2,4]:
+            #For the following error consider subclassing exception as per http://stackoverflow.com/a/1964247/2530083
+            raise TypeError('%d args given; Line can only be initialized with '
+                '1, 2, or 4 args: 1 (x-y coords), 2 (x-coords, y-coords), or '
+                '4 (x1-coords, x2-coords, y1-coords, y2-coords)' % len(args))
+        self._xy = None
+        self._x = None
+        self._y = None
+        self._x1 = None
+        self._x2 = None
+        self._y1 = None
+        self._y2 = None
+        self.atol = 1e-5
+        self.rtol = 1e-8
+        
+        if len(args)==1: 
+            #args[0] is an 2d array of n xy data points; shape=(n,2)
+            self._xy = np.asarray(args[0], dtype=float)            
+
+            if ((self._xy.ndim != 2) or 
+                (self._xy.shape[0] < 2) or 
+                (self._xy.shape[1] != 2)):
+                raise TypeError('x_y data must be 2d array_like with shape '
+                    '(n, 2) with n >= 2.  Yours has shape '
+                    '(%d, %d).' % self._xy.shape)
+            return
+            
+        if len(args)==2: 
+            #args[0] and args[1] are 1d arrays of n x and y data points
+            if ((len(args[0]) != len(args[1])) or
+                (len(args[0]) < 2) or 
+                (len(args[1]) < 2)):
+                raise TypeError('x and y must be of same length with at least two values. len(x)=%d, len(y)=%d' % (len(args[0]), len(args[1])))
+                
+            self._xy = np.empty([len(args[0]), 2], dtype=float)  
+            self._xy[:, 0]=args[0][:]
+            self._xy[:, 1]=args[1][:]            
+            self._x = self._xy[:, 0]
+            self._y = self._xy[:, 1]                        
+            return
+            
+        if len(args)==4:
+            #data is in segments with
+            #args[0] and args[1] are 1d arrays of n x values at start and end of the n segments
+            #args[2] and args[3] are 1d arrays of n y values at start and end of the n segments
+            if len(set(map(len, args))) != 1:
+                raise TypeError('x1, x2, y1, y2 must have same length. '
+                    'You have lengths [%d, %d, %d, %d]' % tuple(map(len, args)))
+                    
+            self._x1 = np.asarray(args[0], dtype=float)
+            self._x2 = np.asarray(args[1], dtype=float)
+            self._y1 = np.asarray(args[2], dtype=float)
+            self._y2 = np.asarray(args[3], dtype=float)                                    
+            return
+            
+    @property
+    def xy(self):
+        """Get the xy values."""
+        if self._xy is None:                
+            x, y = convert_x1_x2_y1_y2_to_x_y(self.x1, self.x2, self.y1, self.y2)
+            self._xy = np.empty([len(x), 2], dtype=float)
+            self._xy[:,0] = x
+            self._xy[:,1] = y            
+        return self._xy
+        
+    @property
+    def x1_x2_y1_y2(self):
+        """Get the x1_x2_y1_y2 values"""
+        if self._x1 is None: 
+            self._x1, self._x2, self._y1, self._y2 = convert_x_y_to_x1_x2_y1_y2(self.x, self.y)                                 
+        return self._x1, self._x2, self._y1, self._y2
+   
+    @property
+    def x(self):
+        """Get the x values of xy data."""
+        if self._x is None:                
+            if self._xy is None:
+                self.xy
+            self._x = self._xy[:, 0]                        
+        return self._x
+        
+    @property
+    def y(self):
+        """Get the y values of xy data."""
+        if self._y is None:                
+            if self._xy is None:
+                self.xy
+            self._y = self._xy[:, 1]                        
+        return self._y
+
+    @property
+    def x1(self):
+        """Get the x1 values of x1_x2_y1_y2 data."""                                             
+        return self.x1_x2_y1_y2[0]
+    @property
+    def x2(self):
+        """Get the x2 values of x1_x2_y1_y2 data."""                                             
+        return self.x1_x2_y1_y2[1]
+    @property
+    def y1(self):
+        """Get the y1 values of x1_x2_y1_y2 data."""                                             
+        return self.x1_x2_y1_y2[2]
+    @property
+    def y2(self):
+        """Get the y2 values of x1_x2_y1_y2 data."""                                             
+        return self.x1_x2_y1_y2[3]
+    
+    def __str__(self):
+        return str(self.xy)
+        
+    def __add__(self, other):        
+        return self._add_substract(other, op = operator.add)
+    def __radd__(self, other):        
+        return self._add_substract(other, op = operator.add)
+    
+    def __sub__(self, other):        
+        return self._add_substract(other, op = operator.sub)
+    def __rsub__(self, other):        
+        return self._add_substract(other, op = operator.sub).__mul__(-1)
+
+    def __mul__(self, other):
+        if isinstance(other, PolyLine):
+            raise TypeError('cannot multiply two PolyLines together.  You will get a quadratic that I cannot handle')
+            sys.exit(0)
+        try:
+            a = copy.deepcopy(self)                       
+            a.xy #ensure xy has been initialized
+            a._xy[:,1] *= other            
+        except TypeError:
+            print("unsupported operand type(s) for *: 'PolyLine' and '%s'" % other.__class__.__name__)
+            sys.exit(0)
+        return a          
+    def __rmul__(self,other):
+        return self.__mul__(other)
+        
+    def __truediv__(self, other):
+        if isinstance(other, PolyLine):
+            raise TypeError('cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
+            sys.exit(0)
+        try:
+            a = copy.deepcopy(self)                       
+            a.xy #ensure xy has been initialized
+            a._xy[:,1] /= other            
+        except TypeError:
+            print("unsupported operand type(s) for /: 'PolyLine' and '%s'" % other.__class__.__name__)
+            sys.exit(0)
+        return a          
+    def __rtruediv__(self, other):
+        if isinstance(other, PolyLine):
+            raise TypeError('cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
+            sys.exit(0)
+        try:
+            a = copy.deepcopy(self) 
+            a.xy #ensure xy has been initialized                      
+            a._xy[:,1] = other/a._xy[:,1]            
+        except TypeError:
+            print("unsupported operand type(s) for /: 'PolyLine' and '%s'" % other.__class__.__name__)
+            sys.exit(0)
+        return a   
+        return self.__mul__(other)
+    def __eq__(self, other):
+        if len(self.xy)!=len(other.xy):
+            return False
+        else:
+            return np.allclose(self.xy, other.xy, rtol=self.rtol, atol=self.atol)
+    def __ne__(self, other):
+        return not self.__eq__(other)
+        
+    def _add_substract(self, other, op = operator.add):
+        """addition or subtraction"""
+        
+        mp = {operator.add: operator.iadd, operator.sub: operator.isub}        
+        iop = mp[op]                
+        
+        if isinstance(other, PolyLine):
+
+            if ((not (non_increasing(self.x) or non_decreasing(self.x))) or 
+                (not (non_increasing(other.x) or non_decreasing(other.x)))):
+                raise TypeError('Your PolyLines have switchbacks in them; cannot add together.')
+                sys.exit(0)
+                
+            
+            #1. reverse values if decreasing
+            if not is_initially_increasing(self.x):
+                xa = self.x[::-1]
+                ya = self.y[::-1]
+            else:
+                xa = self.x[:]
+                ya = self.y[:]                
+            if not is_initially_increasing(other.x):
+                xb = other.x[::-1]
+                yb = other.y[::-1]
+            else:
+                xb = other.x[:]
+                yb = other.y[:]
+            
+            xa, ya = remove_superfluous_from_x_y(xa, ya)
+            xb, yb = remove_superfluous_from_x_y(xb, yb)            
+
+            
+            
+            data= np.zeros([len(xa)+len(xb),4])
+            data[:len(xa), 0]= xa[:]
+            data[:len(xa), 1]= ya[:]
+            data[:len(xa), 2]= 0 #line
+            data[:len(xa), 3]= np.arange(len(xa)) #orig position
+            data[len(xa):, 0]= xb[:]
+            data[len(xa):, 1]= yb[:]
+            data[len(xa):, 2]= 1 #line
+            data[len(xa):, 3]= np.arange(len(xb)) #orig position
+            
+            data = data[np.lexsort((data[:,3],data[:,2],data[:,0]))]
+            
+            
+            pnts = []
+            xnow =np.nan
+            start = 0
+            stop = 0
+            
+            i=0
+            while i < len(data):
+                x = data[i, 0]
+                #ind = np.where(np.abs(data[:,0] - xnow) < (self.atol + self.rtol * np.abs(xnow)))[0]
+                ind = abs(data[:,0] - x) < (self.atol + self.rtol * abs(x))
+            
+                j = np.where((ind) & (data[:, 2] == 0))[0]            
+                if len(j) > 0:
+                    #use point a line point
+                    y1 = data[j[0], 1]
+                    y1_= data[j[-1],1]
+                else: #interpolate
+                    y1 = interp_x_y(xa, ya, x, choose_max=False)
+                    y1_= y1
+                 
+                j = np.where((ind) & (data[:, 2] == 1))[0] 
+                if len(j) > 0:
+                    #use point a line point
+                    y2 = data[j[0], 1]
+                    y2_= data[j[-1],1]
+                else: #interpolate
+                    y2 = interp_x_y(xb, yb, x, choose_max=False)
+                    y2_= y2
+                                        
+                y = op(y1, y2)
+                y_ = op(y1_, y2_)
+                pnts.append([x, y])
+                if abs(y - y_)> (self.atol + self.rtol * abs(y_)):
+                    pnts.append([x, y_])                        
+                
+                i= np.nonzero(ind)[0][-1]+1
+                
+            return PolyLine(pnts)
+
+        
+        try:
+            a = copy.deepcopy(self)           
+            #a._xy[:,1] += other
+            
+            a.xy #ensure xy has been initialized
+            iop(a._xy[:,1], other)            
+        except TypeError:
+            print("unsupported operand type(s) for +: 'PolyLine' and '%s'" % other.__class__.__name__)
+            sys.exit(0)
+        return a
+
+def polyline_make_x_common(*p_lines):
+    """add points to multiple PolyLine's so that each have matching x1_x2 intevals
+    
+    Parameters
+    ----------
+    p_lines: PloyLine
+        one or more instances of PolyLine 
+        
+    Returns
+    -------
+    out : tuple of PolyLine
+        same number of Polyline's as p_lines
+        
+    """
+    
+    xa=[]
+    ya=[]    
+    
+    for i, line in enumerate(p_lines):
+        if not isinstance(line, PolyLine):
+            raise TypeError("p_lines[%d] is not a PolyLine" % i)
+            sys.exit(0)
+        if not (non_increasing(line.x) or non_decreasing(line.x)):
+                raise TypeError('PolyLine #%d has switchbacks.' % i)
+                sys.exit(0)           
+                        
+        if not is_initially_increasing(line.x):
+            xa.append(line.x[::-1])
+            ya.append(line.y[::-1])
+        else:
+            xa.append(line.x[:])
+            ya.append(line.y[:])
+            
+    if len(p_lines)==1: 
+        return p_lines[0]
+
+    data= np.zeros([sum(map(len,xa)),4])
+    start = 0            
+    for i, x in enumerate(xa):
+        stop = start + len(x)
+        data[start:stop, 0]= x[:]
+        data[start:stop, 1]= ya[i][:]
+        data[start:stop, 2]= i #line
+        data[start:stop, 3]= np.arange(len(x)) #orig position        
+        start = stop
+        
+    data = data[np.lexsort((data[:,3],data[:,2],data[:,0]))]
+    
+    
+    pnts = [[] for i in xa]
+    xnow =np.nan
+    start = 0
+    stop = 0
+    
+    atol = p_lines[0].atol
+    rtol = p_lines[0].rtol
+
+    i=0
+    while i < len(data):
+        x = data[i, 0]
+        #ind = np.where(np.abs(data[:,0] - xnow) < (self.atol + self.rtol * np.abs(xnow)))[0]
+        ind = abs(data[:,0] - x) < (atol + rtol * abs(x))# find all x values close to current x
+        for k in range(len(xa)):
+            
+            j = np.where((ind) & (data[:, 2] == k))[0]            
+            if len(j) > 0:
+                #use point a line point
+                y1 = data[j[0], 1]
+                y1_= data[j[-1],1]
+            else: #interpolate
+                y1 = interp_x_y(xa[k], ya[k], x, choose_max=False)
+                y1_= y1
+            pnts[k].append([x,y1])
+            if abs(y1 - y1_)> (atol + rtol * abs(y1_)):
+                pnts[k].append([x, y1_])
+                
+        i = np.nonzero(ind)[0][-1]+1
+    return tuple(map(PolyLine, pnts))        
+        
+                            
+    
+
+                
+
     
 if __name__ == '__main__':
-    print(avg_x_y_between_xi_xj(
-                        **{'x':[0,1] , 'y':[1,2],                            
-                           'xi':0, 'xj':1}))
+#    a = PolyLine([0,1],[3,4])
+#    print(polyline_make_x_common(a,a,a)==(a,a,a))
+#    
+#    a,b = polyline_make_x_common(PolyLine([0,0,2],[3,4,5]), PolyLine([0,0.5],[5,5]))
+#    a,b = polyline_make_x_common(PolyLine([0,1], [2,2]),PolyLine([0,0.5,0.5,0.6,0.6,1], [0,0,1,1,0,0]))
+#    print(list(a.x), list(a.y))
+#    print('cccc')
+#    print(list(b.x),list(b.y))
+#    print(a.x1_x2_y1_y2)
+#    print('ccc')
+#    print(b.x1_x2_y1_y2)
+    
+    
+    ppp=[PolyLine([0,1], [1,2]),PolyLine([0,0.5,0.5,0.6,0.6,1], [0,0,1,1,0,0])]
+    ppp=[PolyLine([0,1,2], [0,1,0]),PolyLine([0,1+1e-3,2], [1,0,1])]
+    
+    ppp=[PolyLine([0,1], [1,2]),PolyLine([0,1,2,4], [0,6,5,7]), PolyLine([0.5,2], [1,7])]
+    ppp2 = polyline_make_x_common(*ppp)
+    out = []
+    for i, (p,p2) in enumerate(zip(ppp,ppp2)):
+        
+        plt.plot(p.x, p.y, label='b',marker='o',markersize=12, mfc='none',mec='r')    
+        plt.plot(p2.x, p2.y, label='a',marker='s',markersize=8, mfc='none',mec='b')
+        out.append('PolyLine(%s,%s)' % (list(p2.x),list(p2.y)))
+        
+    print('('+',\n '.join(out)+')')
+    plt.show()
+    
+#    print((PolyLine([0,1,1+1e-3,2][::-1], [0,0,1,1][::-1]) + PolyLine([0,1,1,2][::-1], [0,0,2,3][::-1])).xy)
+#    print((PolyLine([0,1,1+1e-3,2], [0,0,1,1]) + PolyLine([0,1,1,2], [0,0,2,3])).xy    )
+#    #print((2.5 - PolyLine([0,1],[3,4])).xy)   
+#    a = PolyLine([[1,2],[2,4],[5,6]])    
+#    b = PolyLine([1,2],[2,3],[5,8],[8,4])
+#    c = PolyLine([1,2,3],[4,5,6])    
+#    
+#    s1 = a+b
+#    print(a.xy)    
+#    print (a.x)
+#    print (a.y)
+#    
+#    plt.plot(b.x, b.y, label='b',marker='o',markersize=8, mfc='none',mec='r')    
+#    plt.plot(a.x, a.y, label='a',marker='o',markersize=8, mfc='none',mec='b')    
+#    plt.plot(s1.x, s1.y,label='a+b',marker='s',markersize=8, mfc='none',mec='g')
+#    
+#    plt.legend()
+#    plt.show()
+#    print(a.xy)
+#    print(a.x)
+#    print(a.y)
+#    print(a.x1_x2_y1_y2)
+#    print(b.x1_x2_y1_y2)    
+#    
+#    print(b.x)
+#    print(b.y)
+#    print(b.xy)
+#    
+#    print(c.xy)
+#    print(c.x)
+#    print(c.y)
+#    print(c.x1_x2_y1_y2)
+#    print(a+b)   
+#    print((a+b).xy)
+#    print(isinstance(a, PolyLine))
+#    print((a+'cat').xy)
+    #a = Line(1,2,3)
+#    print(avg_x_y_between_xi_xj(
+#                        **{'x':[0,1] , 'y':[1,2],                            
+#                           'xi':0, 'xj':1}))
     #print(interp_xa_ya_multipy_x1b_x2b_y1b_y2b(**{'xa':[0,1.0] , 'ya':[1,2], 'x1b':[4], 'x2b':[5], 'y1b':[2], 'y2b':[4],'xai':[0,0.5,1], 'xbi':[4, 4.5]}))
     #print(strictly_increasing([0,  0.5,  1,  1.5,  2]))
     #print(non_increasing_and_non_decreasing_parts([0,  0.5,  1,  1.5,  2]))

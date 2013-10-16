@@ -32,7 +32,17 @@ import numpy as np
 
 from geotecha.piecewise.geometry import xyz_from_pts
 from geotecha.piecewise.geometry import eqn_of_plane
+from geotecha.piecewise.geometry import replace_x0_and_x1_to_vect
+from geotecha.piecewise.geometry import polygon_area
+from geotecha.piecewise.geometry import polygon_centroid
 
+def test_replace_x0_and_x1_to_vect():
+    """test for replace_x0_and_x1_to_vect"""
+    
+    assert_equal(replace_x0_and_x1_to_vect('x0'),'x[:-1]')
+    assert_equal(replace_x0_and_x1_to_vect('x0 + x1 + y0'),'x[:-1] + x[1:] + y[:-1]')
+    assert_equal(replace_x0_and_x1_to_vect('f0', ['f']), 'f[:-1]')
+    
 
 class test_geometry(object):
     """Some shapes for testing"""
@@ -83,4 +93,18 @@ class test_geometry(object):
                     eqn_of_plane(self.shp['3D tri']),
                     [[0.20739,-0.82956,0.51848],-1.8665],
                     ))) #http://tutorial.math.lamar.edu/Classes/CalcIII/EqnsOfPlanes.aspx                       
+    def test_polygon_area(self):
+        """test some polygon_area"""
+
+        assert_almost_equal(polygon_area(self.shp['unit square']),1)
+        assert_almost_equal(polygon_area(self.shp['right tri']),0.5)
+        assert_almost_equal(polygon_area(self.shp['octahedral tri']),0.8660254)                    
+        assert_almost_equal(polygon_area(self.shp['3D tri']),4.82182538)        
+    
+    def test_polygon_centroid(self):
+        """test some polygon_centroid"""
+        
+        ok_(np.allclose(polygon_centroid(self.shp['unit square']),[0.5,0.5,0]))
+        ok_(np.allclose(polygon_centroid(self.shp['right tri']),[1/3.0,1/3.0,0]))
+        ok_(np.allclose(polygon_centroid(self.shp['octahedral tri']),[1/3.0,1/3.0,1/3.0]))
         

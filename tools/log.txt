@@ -1,0 +1,521 @@
+******************
+Install geotecha python module and run nosetests
+by Rohan Walker, May 2013
+******************
+
+C:\Users\Rohan Walker\Documents\GitHub\geotecha\tools>cd "C:\Users\Rohan Walker\Documents\GitHub\geotecha" 
+
+C:\Users\Rohan Walker\Documents\GitHub\geotecha>python setup.py install 
+running install
+running bdist_egg
+running egg_info
+writing geotecha.egg-info\PKG-INFO
+writing top-level names to geotecha.egg-info\top_level.txt
+writing dependency_links to geotecha.egg-info\dependency_links.txt
+reading manifest file 'geotecha.egg-info\SOURCES.txt'
+reading manifest template 'MANIFEST.in'
+writing manifest file 'geotecha.egg-info\SOURCES.txt'
+installing library code to build\bdist.win32\egg
+running install_lib
+running build_py
+creating build
+creating build\lib
+creating build\lib\geotecha
+copying geotecha\__init__.py -> build\lib\geotecha
+creating build\lib\tools
+copying tools\delete_files_ending_in_tilde.py -> build\lib\tools
+copying tools\generate_api_documentation.py -> build\lib\tools
+copying tools\IPython_latex_scratchpad.py -> build\lib\tools
+copying tools\IPython_open_in_this_folder.py -> build\lib\tools
+copying tools\__init__.py -> build\lib\tools
+creating build\lib\geotecha\piecewise
+copying geotecha\piecewise\geometry.py -> build\lib\geotecha\piecewise
+copying geotecha\piecewise\piecewise_linear_1d.py -> build\lib\geotecha\piecewise
+copying geotecha\piecewise\__init__.py -> build\lib\geotecha\piecewise
+creating build\lib\geotecha\speccon
+copying geotecha\speccon\integrals.py -> build\lib\geotecha\speccon
+copying geotecha\speccon\integrals_generate_code.py -> build\lib\geotecha\speccon
+copying geotecha\speccon\__init__.py -> build\lib\geotecha\speccon
+creating build\lib\geotecha\piecewise\test
+copying geotecha\piecewise\test\test_geometry.py -> build\lib\geotecha\piecewise\test
+copying geotecha\piecewise\test\test_piecewise_linear_1d.py -> build\lib\geotecha\piecewise\test
+copying geotecha\piecewise\test\__init__.py -> build\lib\geotecha\piecewise\test
+creating build\lib\geotecha\speccon\test
+copying geotecha\speccon\test\dim1sin_test_data_gen.py -> build\lib\geotecha\speccon\test
+copying geotecha\speccon\test\test_integrals.py -> build\lib\geotecha\speccon\test
+copying geotecha\speccon\test\__init__.py -> build\lib\geotecha\speccon\test
+creating build\bdist.win32
+creating build\bdist.win32\egg
+creating build\bdist.win32\egg\geotecha
+creating build\bdist.win32\egg\geotecha\piecewise
+copying build\lib\geotecha\piecewise\geometry.py -> build\bdist.win32\egg\geotecha\piecewise
+copying build\lib\geotecha\piecewise\piecewise_linear_1d.py -> build\bdist.win32\egg\geotecha\piecewise
+creating build\bdist.win32\egg\geotecha\piecewise\test
+copying build\lib\geotecha\piecewise\test\test_geometry.py -> build\bdist.win32\egg\geotecha\piecewise\test
+copying build\lib\geotecha\piecewise\test\test_piecewise_linear_1d.py -> build\bdist.win32\egg\geotecha\piecewise\test
+copying build\lib\geotecha\piecewise\test\__init__.py -> build\bdist.win32\egg\geotecha\piecewise\test
+copying build\lib\geotecha\piecewise\__init__.py -> build\bdist.win32\egg\geotecha\piecewise
+creating build\bdist.win32\egg\geotecha\speccon
+copying build\lib\geotecha\speccon\integrals.py -> build\bdist.win32\egg\geotecha\speccon
+copying build\lib\geotecha\speccon\integrals_generate_code.py -> build\bdist.win32\egg\geotecha\speccon
+creating build\bdist.win32\egg\geotecha\speccon\test
+copying build\lib\geotecha\speccon\test\dim1sin_test_data_gen.py -> build\bdist.win32\egg\geotecha\speccon\test
+copying build\lib\geotecha\speccon\test\test_integrals.py -> build\bdist.win32\egg\geotecha\speccon\test
+copying build\lib\geotecha\speccon\test\__init__.py -> build\bdist.win32\egg\geotecha\speccon\test
+copying build\lib\geotecha\speccon\__init__.py -> build\bdist.win32\egg\geotecha\speccon
+copying build\lib\geotecha\__init__.py -> build\bdist.win32\egg\geotecha
+creating build\bdist.win32\egg\tools
+copying build\lib\tools\delete_files_ending_in_tilde.py -> build\bdist.win32\egg\tools
+copying build\lib\tools\generate_api_documentation.py -> build\bdist.win32\egg\tools
+copying build\lib\tools\IPython_latex_scratchpad.py -> build\bdist.win32\egg\tools
+copying build\lib\tools\IPython_open_in_this_folder.py -> build\bdist.win32\egg\tools
+copying build\lib\tools\__init__.py -> build\bdist.win32\egg\tools
+byte-compiling build\bdist.win32\egg\geotecha\piecewise\geometry.py to geometry.pyc
+byte-compiling build\bdist.win32\egg\geotecha\piecewise\piecewise_linear_1d.py to piecewise_linear_1d.pyc
+byte-compiling build\bdist.win32\egg\geotecha\piecewise\test\test_geometry.py to test_geometry.pyc
+byte-compiling build\bdist.win32\egg\geotecha\piecewise\test\test_piecewise_linear_1d.py to test_piecewise_linear_1d.pyc
+byte-compiling build\bdist.win32\egg\geotecha\piecewise\test\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\egg\geotecha\piecewise\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\egg\geotecha\speccon\integrals.py to integrals.pyc
+byte-compiling build\bdist.win32\egg\geotecha\speccon\integrals_generate_code.py to integrals_generate_code.pyc
+byte-compiling build\bdist.win32\egg\geotecha\speccon\test\dim1sin_test_data_gen.py to dim1sin_test_data_gen.pyc
+byte-compiling build\bdist.win32\egg\geotecha\speccon\test\test_integrals.py to test_integrals.pyc
+byte-compiling build\bdist.win32\egg\geotecha\speccon\test\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\egg\geotecha\speccon\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\egg\geotecha\__init__.py to __init__.pyc
+byte-compiling build\bdist.win32\egg\tools\delete_files_ending_in_tilde.py to delete_files_ending_in_tilde.pyc
+byte-compiling build\bdist.win32\egg\tools\generate_api_documentation.py to generate_api_documentation.pyc
+byte-compiling build\bdist.win32\egg\tools\IPython_latex_scratchpad.py to IPython_latex_scratchpad.pyc
+byte-compiling build\bdist.win32\egg\tools\IPython_open_in_this_folder.py to IPython_open_in_this_folder.pyc
+byte-compiling build\bdist.win32\egg\tools\__init__.py to __init__.pyc
+installing package data to build\bdist.win32\egg
+running install_data
+copying LICENSE.txt -> build\bdist.win32\egg\
+copying README.rst -> build\bdist.win32\egg\
+creating build\bdist.win32\egg\EGG-INFO
+copying geotecha.egg-info\PKG-INFO -> build\bdist.win32\egg\EGG-INFO
+copying geotecha.egg-info\SOURCES.txt -> build\bdist.win32\egg\EGG-INFO
+copying geotecha.egg-info\dependency_links.txt -> build\bdist.win32\egg\EGG-INFO
+copying geotecha.egg-info\not-zip-safe -> build\bdist.win32\egg\EGG-INFO
+copying geotecha.egg-info\top_level.txt -> build\bdist.win32\egg\EGG-INFO
+creating 'dist\geotecha-0.1-py2.7.egg' and adding 'build\bdist.win32\egg' to it
+removing 'build\bdist.win32\egg' (and everything under it)
+Processing geotecha-0.1-py2.7.egg
+removing 'c:\python27\lib\site-packages\geotecha-0.1-py2.7.egg' (and everything under it)
+creating c:\python27\lib\site-packages\geotecha-0.1-py2.7.egg
+Extracting geotecha-0.1-py2.7.egg to c:\python27\lib\site-packages
+geotecha 0.1 is already the active version in easy-install.pth
+
+Installed c:\python27\lib\site-packages\geotecha-0.1-py2.7.egg
+Processing dependencies for geotecha==0.1
+Finished processing dependencies for geotecha==0.1
+
+C:\Users\Rohan Walker\Documents\GitHub\geotecha>python setup.py clean --all 
+running clean
+removing 'build\lib' (and everything under it)
+removing 'build\bdist.win32' (and everything under it)
+'build\scripts-2.7' does not exist -- can't clean it
+removing 'build'
+
+C:\Users\Rohan Walker\Documents\GitHub\geotecha>cd c:\ 
+
+c:\>nosetests geotecha -v 
+geotecha.piecewise.test.test_geometry.test_geometry.test_eqn_of_plane ... ok
+geotecha.piecewise.test.test_geometry.test_geometry.test_polygon_area ... ok
+geotecha.piecewise.test.test_geometry.test_geometry.test_polygon_centroid ... ok
+geotecha.piecewise.test.test_geometry.test_geometry.test_xyz_from_pts ... ok
+geotecha.piecewise.test.test_geometry.test_replace_x0_and_x1_to_vect ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_avg_x1_x2_y1_y2_between_xi_xj ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_avg_x_y_between_xi_xj ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_convert_x1_x2_y1_y2_to_x_y ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_convert_x_y_to_x1_x2_y1_y2 ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_force_non_decreasing ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_force_strictly_increasing ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_has_steps ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_integrate_x1_x2_y1_y2_between_xi_xj ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_integrate_x_y_between_xi_xj ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_interp_x1_x2_y1_y2 ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_interp_x_y ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_interp_xa_ya_multipy_x1b_x2b_y1b_y2b ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_non_decreasing ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_non_increasing ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_non_increasing_and_non_decreasing_parts ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_ramps_constants_steps ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_remove_superfluous_from_x_y ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_segment_containing_also_segments_less_than_xi ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_segment_containing_xi ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_segment_containing_xi_also_containing_xj ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_segments_between_xi_and_xj ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_segments_less_than_xi ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_start_index_of_constants ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_start_index_of_ramps ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_start_index_of_steps ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_strictly_decreasing ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_strictly_increasing ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_linear_piecewise.test_xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between ... ok
+geotecha.piecewise.test.test_piecewise_linear_1d.test_PolyLine ... ok
+geotecha.speccon.test.test_integrals.test_EDload_linear.test_cases(True, "failed test_test_EDload_linear EDload_linear, case: instantaneous load at 0\n{'eigs': array([  2.4674011,  22.2066099]), 'loadtim': array([0, 0]), 'tvals': array([-1,  0,  1]), 'loadmag': array([  0, 100])}\ncalculated:\n[[  0.00000000e+00   0.00000000e+00]\n [  1.00000000e+02   1.00000000e+02]\n [  8.48049725e+00   2.26877724e-08]]\nexpected:\n[[  0.00000000e+00   0.00000000e+00]\n [  1.00000000e+02   1.00000000e+02]\n [  8.48049725e+00   2.26877724e-08]]") ... ok
+geotecha.speccon.test.test_integrals.test_EDload_linear.test_cases(True, "failed test_test_EDload_linear EDload_linear, case: instantaneous load at 0, dT=2\n{'eigs': array([  1.23370055,  11.10330495]), 'loadtim': array([0, 0]), 'dT': 2.0, 'tvals': array([-1,  0,  1]), 'loadmag': array([  0, 100])}\ncalculated:\n[[  0.00000000e+00   0.00000000e+00]\n [  1.00000000e+02   1.00000000e+02]\n [  8.48049725e+00   2.26877724e-08]]\nexpected:\n[[  0.00000000e+00   0.00000000e+00]\n [  1.00000000e+02   1.00000000e+02]\n [  8.48049725e+00   2.26877724e-08]]") ... ok
+geotecha.speccon.test.test_integrals.test_EDload_linear.test_cases(True, "failed test_test_EDload_linear EDload_linear, case: two ramp loads\n{'eigs': array([  2.4674011,  22.2066099]), 'loadtim': array([ 0. ,  0.3,  0.5,  0.8]), 'tvals': array([-1. ,  0.1,  0.3,  0.4,  0.5,  0.7,  1. ]), 'loadmag': array([ 0, 40, 40, 80])}\ncalculated:\n[[  0.           0.        ]\n [ 11.81573975   5.35253639]\n [ 28.26137971   5.99654125]\n [ 22.08185185   0.65084865]\n [ 17.2535165    0.07064138]\n [ 31.58113168   5.93431865]\n [ 22.27796365   0.07064245]]\nexpected:\n[[  0.           0.        ]\n [ 11.81573975   5.35253639]\n [ 28.26137971   5.99654125]\n [ 22.08185185   0.65084865]\n [ 17.2535165    0.07064138]\n [ 31.58113168   5.93431865]\n [ 22.27796365   0.07064245]]") ... ok
+geotecha.speccon.test.test_integrals.test_Eload_linear.test_cases(True, "failed test_test_Eload_linear Eload_linear, case: instantaneous load at 0\n{'eigs': array([  2.4674011,  22.2066099]), 'loadtim': array([ 0,  0, 10]), 'tvals': array([-1,  0,  1]), 'loadmag': array([   0, -100, -100])}\ncalculated:\n[[  0.           0.        ]\n [  0.           0.        ]\n [-37.09145738  -4.50316372]]\nexpected:\n[[  0.           0.        ]\n [  0.           0.        ]\n [-37.09145696  -4.50316372]]") ... ok
+geotecha.speccon.test.test_integrals.test_Eload_linear.test_cases(True, "failed test_test_Eload_linear Eload_linear, case: instantaneous load at 0, dT=2\n{'eigs': array([  1.23370055,  11.10330495]), 'loadtim': array([ 0,  0, 10]), 'dT': 2.0, 'tvals': array([-1,  0,  1]), 'loadmag': array([   0, -100, -100])}\ncalculated:\n[[  0.           0.        ]\n [  0.           0.        ]\n [-37.09145738  -4.50316372]]\nexpected:\n[[  0.           0.        ]\n [  0.           0.        ]\n [-37.09145696  -4.50316372]]") ... ok
+geotecha.speccon.test.test_integrals.test_Eload_linear.test_cases(True, "failed test_test_Eload_linear Eload_linear, case: two ramp loads\n{'eigs': array([  2.4674011,  22.2066099]), 'loadtim': [0, 0.3, 0.5, 0.8, 10], 'tvals': [-1, 0.1, 0.3, 0.4, 0.5, 0.7, 1], 'loadmag': [0, -40, -40, -80, -80]}\ncalculated:\n[[  0.           0.        ]\n [ -0.61505751  -0.35938835]\n [ -4.75748361  -1.53123142]\n [ -7.26195192  -1.77195671]\n [ -9.21880253  -1.79808439]\n [-14.21963173  -2.73487706]\n [-23.39386018  -3.59934983]]\nexpected:\n[[0, 0], [-0.615057512497, -0.359388352313], [-4.75748360824, -1.53123141729], [-7.26195191556, -1.77195670654], [-9.21880252584, -1.79808438982], [-14.219631734, -2.7348770607], [-23.3938601792, -3.59934982888]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin.test_cases(True, "failed test_test_dim1sin dim1sin, case: 3 zs, 2 ms\n{'z': [0, 0.25, 1], 'm': array([ 1.57079633,  4.71238898])}\ncalculated:\n[[ 0.          0.        ]\n [ 0.38268343  0.92387953]\n [ 1.         -1.        ]]\nexpected:\n[[ 0.         0.       ]\n [ 0.382683   0.9238795]\n [ 1.        -1.       ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const, b const PTIB\n{'ab': [1], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.  0.]\nexpected:\n[ 0.  0.]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const, b const PTPB\n{'ab': [1], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.  0.]\nexpected:\n[ 0.  0.]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const, b linear within one layer PTIB\n{'ab': [1], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.  0.]\nexpected:\n[ 0.  0.]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const, b linear within one layer PTPB\n{'ab': [1], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.  0.]\nexpected:\n[ 0.  0.]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a linear within one layer, b linear within one layer PTIB\n{'ab': [2], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.63661977  0.21220659]\nexpected:\n[ 0.63661977  0.21220659]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a linear within one layer, b linear within one layer PTPB\n{'ab': [2], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.63661977  0.        ]\nexpected:\n[ 0.63661977  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const within two layers, b linear accross both layers PTIB\n{'ab': [1, 2], 'bb': [1.4, 2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 1.4], 'at': [1, 2], 'zt': [0, 0.4]}\ncalculated:\n[ 0.58778525  0.95105652]\nexpected:\n[ 0.58778525  0.95105652]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const within two layers, b linear accross both layers PTPB\n{'ab': [1, 2], 'bb': [1.4, 2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 1.4], 'at': [1, 2], 'zt': [0, 0.4]}\ncalculated:\n[ 0.95105652  0.58778525]\nexpected:\n[ 0.95105652  0.58778525]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a linear within two layers, b linear accross both layers PTIB\n{'ab': [1.4, 1.6], 'bb': [1.4, 2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 1.4], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[ 0.40150567 -0.16821602]\nexpected:\n[ 0.40150567 -0.16821602]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a linear within two layers, b linear accross both layers PTPB\n{'ab': [1.4, 1.6], 'bb': [1.4, 2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 1.4], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[ 0.25619717 -0.2351141 ]\nexpected:\n[ 0.25619717 -0.2351141 ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const, b linear  in two layers PTIB\n{'ab': [1, 1], 'bb': [1.4, 2.2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[ 0.58778525  0.95105652]\nexpected:\n[ 0.58778525  0.95105652]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDb_linear.test_cases(True, "failed test_test_dim1sin_D_aDb_linear dim1sin_D_aDb_linear, case: a const, b linear in two layers PTPB\n{'ab': [1, 1], 'bb': [1.4, 2.2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[ 0.95105652  0.58778525]\nexpected:\n[ 0.95105652  0.58778525]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const, PTIB\n{'zt': [0], 'ab': [1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ -1.23370055e+00  -9.86076132e-32]\n [ -9.86076132e-32  -1.11033050e+01]]\nexpected:\n[[ -1.23370055  -0.        ]\n [ -0.         -11.10330495]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const, PTPB\n{'zt': [0], 'ab': [1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ -4.93480220e+00  -7.69468277e-16]\n [ -7.69468277e-16  -1.97392088e+01]]\nexpected:\n[[ -4.9348022  -0.       ]\n [ -0.        -19.7392088]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const*2, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2], 'zb': [1]}\ncalculated:\n[[ -2.46740110e+00  -1.97215226e-31]\n [ -1.97215226e-31  -2.22066099e+01]]\nexpected:\n[[ -2.4674011  -0.       ]\n [ -0.        -22.2066099]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const*2, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2], 'zb': [1]}\ncalculated:\n[[ -9.86960440e+00  -1.53893655e-15]\n [ -1.53893655e-15  -3.94784176e+01]]\nexpected:\n[[ -9.8696044  -0.       ]\n [ -0.        -39.4784176]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[ -1.23370055e+00   4.44089210e-16]\n [  4.44089210e-16  -1.11033050e+01]]\nexpected:\n[[ -1.23370055  -0.        ]\n [ -0.         -11.10330495]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[ -4.93480220e+00  -3.55271368e-15]\n [ -3.55271368e-15  -1.97392088e+01]]\nexpected:\n[[ -4.9348022  -0.       ]\n [ -0.        -19.7392088]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const*2, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ -2.46740110e+00   8.88178420e-16]\n [  8.88178420e-16  -2.22066099e+01]]\nexpected:\n[[ -2.4674011  -0.       ]\n [ -0.        -22.2066099]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a const*2, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ -9.86960440e+00  -7.10542736e-15]\n [ -7.10542736e-15  -3.94784176e+01]]\nexpected:\n[[ -9.8696044  -0.       ]\n [ -0.        -39.4784176]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: 2 layers, a const within eachlayer, PTIB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ -1.60044186   1.46667115]\n [  1.46667115 -18.45775611]]\nexpected:\n[[ -1.60044186   1.46667116]\n [  1.46667116 -18.45775611]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: 2 layers, a const within eachlayer, PTPB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ -7.43403806   2.37230489]\n [  2.37230489 -33.07665017]]\nexpected:\n[[ -7.43403806   2.37230489]\n [  2.37230489 -33.07665017]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a linear within one layer, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ -1.60055083   0.75      ]\n [  0.75       -16.40495743]]\nexpected:\n[[ -1.60055083   0.75      ]\n [  0.75       -16.40495743]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: a linear within one layer, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ -7.4022033    2.22222222]\n [  2.22222222 -29.6088132 ]]\nexpected:\n[[ -7.4022033    2.22222222]\n [  2.22222222 -29.6088132 ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: 2 layers, a linear within eachlayer, PTIB\n{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[ -1.4538543    0.16333154]\n [  0.16333154 -13.46317696]]\nexpected:\n[[ -1.4538543    0.16333154]\n [  0.16333154 -13.463177  ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear.test_cases(True, "failed test_test_dim1sin_D_aDf_linear dim1sin_D_aDf_linear, case: 2 layers, a linear within eachlayer, PTPB\n{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[ -6.40250896   1.27330027]\n [  1.27330027 -24.27383666]]\nexpected:\n[[ -6.402509    1.2733003]\n [  1.2733003 -24.273837 ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, PTIB\n{'zt': [0], 'ab': [1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[  2.4674011   7.4022033]\n [  7.4022033  22.2066099]]\nexpected:\n[[ -1.23370055  -0.        ]\n [ -0.         -11.10330495]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, PTPB\n{'zt': [0], 'ab': [1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[  0.         39.4784176]\n [ 39.4784176   0.       ]]\nexpected:\n[[ -4.9348022  -0.       ]\n [ -0.        -19.7392088]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2], 'zb': [1]}\ncalculated:\n[[  4.9348022  14.8044066]\n [ 14.8044066  44.4132198]]\nexpected:\n[[ -2.4674011  -0.       ]\n [ -0.        -22.2066099]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2], 'zb': [1]}\ncalculated:\n[[  0.          78.95683521]\n [ 78.95683521   0.        ]]\nexpected:\n[[ -9.8696044  -0.       ]\n [ -0.        -39.4784176]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  2.4674011   7.4022033]\n [  7.4022033  22.2066099]]\nexpected:\n[[ -1.23370055  -0.        ]\n [ -0.         -11.10330495]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  0.         39.4784176]\n [ 39.4784176   0.       ]]\nexpected:\n[[ -4.9348022  -0.       ]\n [ -0.        -19.7392088]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  4.9348022  14.8044066]\n [ 14.8044066  44.4132198]]\nexpected:\n[[ -2.4674011  -0.       ]\n [ -0.        -22.2066099]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  0.          78.95683521]\n [ 78.95683521   0.        ]]\nexpected:\n[[ -9.8696044  -0.       ]\n [ -0.        -39.4784176]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a const within eachlayer, PTIB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  4.08233609   5.55165248]\n [  5.55165248  24.32715245]]\nexpected:\n[[ -1.60044186   1.46667116]\n [  1.46667116 -18.45775611]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a const within eachlayer, PTPB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ -8.92714104  54.28282421]\n [ 54.28282421 -13.63945783]]\nexpected:\n[[ -7.43403806   2.37230489]\n [  2.37230489 -33.07665017]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a linear within one layer, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[  2.4674011   7.4022033]\n [  7.4022033  22.2066099]]\nexpected:\n[[ -1.60055083   0.75      ]\n [  0.75       -16.40495743]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a linear within one layer, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ -9.8696044   59.21762641]\n [ 59.21762641 -39.4784176 ]]\nexpected:\n[[ -7.4022033    2.22222222]\n [  2.22222222 -29.6088132 ]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a linear within eachlayer, PTIB\n{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  1.82142711   8.14242363]\n [  8.14242363  21.35839288]]\nexpected:\n[[ -1.4538543    0.16333154]\n [  0.16333154 -13.463177  ]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a linear within eachlayer, PTPB\n{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[ -6.29874798  53.29586377]\n [ 53.29586377 -34.02263447]]\nexpected:\n[[ -6.402509    1.2733003]\n [  1.2733003 -24.273837 ]]") ... FAIL
+geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between.test_cases(True, "failed test_test_dim1sin_a_linear_between dim1sin_a_linear_between, case: 1 layer const a, 3 zs, 2 ms\n{'ab': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'at': [1], 'zt': [0], 'z': [[0, 1], [0.1, 0.2], [0.5, 1]]}\ncalculated:\n[[ 0.63661977  0.21220659]\n [ 0.02332054  0.06434555]\n [ 0.45015816 -0.15005272]]\nexpected:\n[[ 0.63661977  0.21220659]\n [ 0.02332054  0.06434555]\n [ 0.45015816 -0.15005272]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between.test_cases(True, "failed test_test_dim1sin_a_linear_between dim1sin_a_linear_between, case: 2 layer const a same in each layer, 3 zs, 2 ms\n{'ab': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'at': [1, 1], 'zt': [0, 0.4], 'z': [[0, 1], [0.1, 0.2], [0.5, 1]]}\ncalculated:\n[[ 0.63661977  0.21220659]\n [ 0.02332054  0.06434555]\n [ 0.45015816 -0.15005272]]\nexpected:\n[[ 0.63661977  0.21220659]\n [ 0.02332054  0.06434555]\n [ 0.45015816 -0.15005272]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between.test_cases(True, "failed test_test_dim1sin_a_linear_between dim1sin_a_linear_between, case: 3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.1, 0.3], PTIB\n{'ab': [1, 2, 3], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 0.6, 1], 'at': [1, 2, 3], 'zt': [0, 0.4, 0.6], 'z': [0.1, 0.3]}\ncalculated:\n[[ 0.06154956  0.15588103]]\nexpected:\n[ 0.06154956  0.15588103]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between.test_cases(True, "failed test_test_dim1sin_a_linear_between dim1sin_a_linear_between, case: 3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0, 0.4], PTIB\n{'ab': [1, 2, 3], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 0.6, 1], 'at': [1, 2, 3], 'zt': [0, 0.4, 0.6], 'z': [0, 0.4]}\ncalculated:\n[[ 0.12158356  0.27778203]]\nexpected:\n[ 0.12158356  0.27778203]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between.test_cases(True, "failed test_test_dim1sin_a_linear_between dim1sin_a_linear_between, case: 3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.5], PTIB\n{'ab': [1, 2, 3], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 0.6, 1], 'at': [1, 2, 3], 'zt': [0, 0.4, 0.6], 'z': [0.2, 0.5]}\ncalculated:\n[[ 0.22018128  0.3592619 ]]\nexpected:\n[ 0.22018128  0.3592619 ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between.test_cases(True, "failed test_test_dim1sin_a_linear_between dim1sin_a_linear_between, case: 3 layers, a linear = 1+x betwn[0,0.4] 0.6+x betw[0.4,0.6] 0.4+x betw[0.6,1], z = [0.2, 0.8], PTIB\n{'ab': [1.4, 1.2, 1.4], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 0.6, 1], 'at': [1, 1, 1], 'zt': [0, 0.4, 0.6], 'z': [0.2, 0.8]}\ncalculated:\n[[ 0.46983725  0.35938675]]\nexpected:\n[ 0.46983725  0.35938675]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_a_linear_between.test_cases(True, "failed test_test_dim1sin_a_linear_between dim1sin_a_linear_between, case: 3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.8], PTIB\n{'ab': [1, 2, 3], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 0.6, 1], 'at': [1, 2, 3], 'zt': [0, 0.4, 0.6], 'z': [0.2, 0.8]}\ncalculated:\n[[ 0.90451433  0.37237222]]\nexpected:\n[ 0.90451433  0.37237222]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b const PTIB\n{'ab': [1], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.63661977  0.21220659]\nexpected:\n[ 0.63661977  0.21220659]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b const PTPB\n{'ab': [1], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.63661977  0.        ]\nexpected:\n[ 0.63661977  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const*2,b const PTIB\n{'ab': [2], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [2], 'zt': [0]}\ncalculated:\n[ 1.27323954  0.42441318]\nexpected:\n[ 1.27323954  0.42441318]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const*2, b const PTPB\n{'ab': [2], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [2], 'zt': [0]}\ncalculated:\n[ 1.27323954  0.        ]\nexpected:\n[ 1.27323954  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b const*2 PTIB\n{'ab': [1], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [2], 'at': [1], 'zt': [0]}\ncalculated:\n[ 1.27323954  0.42441318]\nexpected:\n[ 1.27323954  0.42441318]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b const*2 PTPB\n{'ab': [1], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [2], 'at': [1], 'zt': [0]}\ncalculated:\n[ 1.27323954  0.        ]\nexpected:\n[ 1.27323954  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const*0.5, b const*2 PTIB\n{'ab': [0.5], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [2], 'at': [0.5], 'zt': [0]}\ncalculated:\n[ 0.63661977  0.21220659]\nexpected:\n[ 0.63661977  0.21220659]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const*0.5, b const*2 PTPB\n{'ab': [0.5], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [2], 'at': [0.5], 'zt': [0]}\ncalculated:\n[ 0.63661977  0.        ]\nexpected:\n[ 0.63661977  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const within 2 layers, b const PTIB\n{'ab': [1, 2], 'bb': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 2], 'zt': [0, 0.4]}\ncalculated:\n[ 1.15165599  0.14663115]\nexpected:\n[ 1.15166   0.146631]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const within 2 layers, b const PTPB\n{'ab': [1, 2], 'bb': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 2], 'zt': [0, 0.4]}\ncalculated:\n[ 1.05329282 -0.287914  ]\nexpected:\n[ 1.05329  -0.287914]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b const within 2 layers PTIB\n{'ab': [1, 1], 'bb': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 2], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[ 1.15165599  0.14663115]\nexpected:\n[ 1.15166   0.146631]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b const within 2 layers PTPB\n{'ab': [1, 1], 'bb': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 2], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[ 1.05329282 -0.287914  ]\nexpected:\n[ 1.05329  -0.287914]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a linear within one layer, b const PTIB\n{'ab': [2], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 1.04190451  0.16717495]\nexpected:\n[ 1.04190451  0.16717495]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a linear within one layer, b const PTPB\n{'ab': [2], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.95492966 -0.15915494]\nexpected:\n[ 0.95492966 -0.15915494]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b linear within one layer PTIB\n{'ab': [1], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 1.04190451  0.16717495]\nexpected:\n[ 1.04190451  0.16717495]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a const, b linear within one layer PTPB\n{'ab': [1], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 0.95492966 -0.15915494]\nexpected:\n[ 0.95492966 -0.15915494]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a and b linear witin one layer PTIB\n{'ab': [2], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 1.74173416  0.01296802]\nexpected:\n[ 1.74173416  0.01296802]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_ab_linear.test_cases(True, "failed test_test_dim1sin_ab_linear dim1sin_ab_linear, case: a and b linear witin one layer PTPB\n{'ab': [2], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[ 1.46254329 -0.47746483]\nexpected:\n[ 1.46254329 -0.47746483]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const PTIB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 0.63661977  0.21220659]\nexpected:\n[ 0.63661977  0.21220659]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const PTPB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1]}\ncalculated:\n[  6.36619772e-01  -5.55111512e-17]\nexpected:\n[ 0.63661977  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const*2,b const PTIB\n{'bt': [1], 'ab': [2], 'at': [2], 'bb': [1], 'zt': [0], 'cb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 1.27323954  0.42441318]\nexpected:\n[ 1.27323954  0.42441318]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const*2, b const PTPB\n{'bt': [1], 'ab': [2], 'at': [2], 'bb': [1], 'zt': [0], 'cb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1]}\ncalculated:\n[  1.27323954e+00  -1.11022302e-16]\nexpected:\n[ 1.27323954  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const*2 PTIB\n{'bt': [2], 'ab': [1], 'at': [1], 'bb': [2], 'zt': [0], 'cb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 1.27323954  0.42441318]\nexpected:\n[ 1.27323954  0.42441318]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const*2 PTPB\n{'bt': [2], 'ab': [1], 'at': [1], 'bb': [2], 'zt': [0], 'cb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1]}\ncalculated:\n[  1.27323954e+00  -1.11022302e-16]\nexpected:\n[ 1.27323954  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const, c const*2 PTIB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [2]}\ncalculated:\n[ 1.27323954  0.42441318]\nexpected:\n[ 1.27323954  0.42441318]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const, c const*2 PTPB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [2]}\ncalculated:\n[  1.27323954e+00  -1.11022302e-16]\nexpected:\n[ 1.27323954  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const*0.4, b const*2, c const* 1.25 PTIB\n{'bt': [2], 'ab': [0.4], 'at': [0.4], 'bb': [2], 'zt': [0], 'cb': [1.25], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1.25]}\ncalculated:\n[ 0.63661977  0.21220659]\nexpected:\n[ 0.63661977  0.21220659]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const*0.5, b const*2 PTPB\n{'bt': [2], 'ab': [0.4], 'at': [0.4], 'bb': [2], 'zt': [0], 'cb': [1.25], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1.25]}\ncalculated:\n[ 0.63661977  0.        ]\nexpected:\n[ 0.63661977  0.        ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const within 2 layers, b const PTIB\n{'bt': [1, 1], 'ab': [1, 2], 'at': [1, 2], 'bb': [1, 1], 'zt': [0, 0.4], 'cb': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'ct': [1, 1]}\ncalculated:\n[ 1.15165599  0.14663115]\nexpected:\n[ 1.15166   0.146631]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const within 2 layers, b const PTPB\n{'bt': [1, 1], 'ab': [1, 2], 'at': [1, 2], 'bb': [1, 1], 'zt': [0, 0.4], 'cb': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'ct': [1, 1]}\ncalculated:\n[ 1.05329282 -0.287914  ]\nexpected:\n[ 1.05329  -0.287914]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const within 2 layers PTIB\n{'bt': [1, 2], 'ab': [1, 1], 'at': [1, 1], 'bb': [1, 2], 'zt': [0, 0.4], 'cb': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'ct': [1, 1]}\ncalculated:\n[ 1.15165599  0.14663115]\nexpected:\n[ 1.15166   0.146631]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const within 2 layers PTPB\n{'bt': [1, 2], 'ab': [1, 1], 'at': [1, 1], 'bb': [1, 2], 'zt': [0, 0.4], 'cb': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'ct': [1, 1]}\ncalculated:\n[ 1.05329282 -0.287914  ]\nexpected:\n[ 1.05329  -0.287914]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const, c const within 2 layers PTIB\n{'bt': [1, 1], 'ab': [1, 1], 'at': [1, 1], 'bb': [1, 1], 'zt': [0, 0.4], 'cb': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'ct': [1, 2]}\ncalculated:\n[ 1.15165599  0.14663115]\nexpected:\n[ 1.15166   0.146631]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const, c const within 2 layers PTPB\n{'bt': [1, 1], 'ab': [1, 1], 'at': [1, 1], 'bb': [1, 1], 'zt': [0, 0.4], 'cb': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'ct': [1, 2]}\ncalculated:\n[ 1.05329282 -0.287914  ]\nexpected:\n[ 1.05329  -0.287914]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a linear within one layer, b const PTIB\n{'bt': [1], 'ab': [2], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 1.04190451  0.16717495]\nexpected:\n[ 1.04190451  0.16717495]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a linear within one layer, b const PTPB\n{'bt': [1], 'ab': [2], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 0.95492966 -0.15915494]\nexpected:\n[ 0.95492966 -0.15915494]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b linear within one layer PTIB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [2], 'zt': [0], 'cb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 1.04190451  0.16717495]\nexpected:\n[ 1.04190451  0.16717495]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b linear within one layer PTPB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [2], 'zt': [0], 'cb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 0.95492966 -0.15915494]\nexpected:\n[ 0.95492966 -0.15915494]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const, c linear within one layer PTIB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 1.04190451  0.16717495]\nexpected:\n[ 1.0419045   0.16717495]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a const, b const, c linear within one layer PTPB\n{'bt': [1], 'ab': [1], 'at': [1], 'bb': [1], 'zt': [0], 'cb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 0.95492966 -0.15915494]\nexpected:\n[ 0.95492966 -0.15915494]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a and b and c linear witin one layer PTIB\n{'bt': [1], 'ab': [2], 'at': [1], 'bb': [2], 'zt': [0], 'cb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 2.96642864 -0.37334203]\nexpected:\n[ 2.9664286  -0.37334203]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abc_linear.test_cases(True, "failed test_test_dim1sin_abc_linear dim1sin_abc_linear, case: a and b linear witin one layer PTPB\n{'bt': [1], 'ab': [2], 'at': [1], 'bb': [2], 'zt': [0], 'cb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'ct': [1]}\ncalculated:\n[ 2.28426136 -1.08989595]\nexpected:\n[ 2.2842614 -1.089896 ]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const, PTIB\n{'ab': [1], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[  5.00000000e-01   3.89817183e-17]\n [  3.89817183e-17   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const, PTPB\n{'ab': [1], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[  5.00000000e-01  -1.23259516e-32]\n [ -1.23259516e-32   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const*2, PTIB\n{'ab': [2], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [2], 'zt': [0]}\ncalculated:\n[[  1.00000000e+00   7.79634367e-17]\n [  7.79634367e-17   1.00000000e+00]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const*2, PTPB\n{'ab': [2], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [2], 'zt': [0]}\ncalculated:\n[[  1.00000000e+00  -2.46519033e-32]\n [ -2.46519033e-32   1.00000000e+00]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const, 2 layers PTIB\n{'ab': [1, 1], 'bb': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[[  5.00000000e-01  -6.93889390e-17]\n [ -6.93889390e-17   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const, 2 layers, PTPB\n{'ab': [1, 1], 'bb': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[[  5.00000000e-01   1.94289029e-16]\n [  1.94289029e-16   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a 2 layers, const within each layer, PTIB\n{'ab': [1, 2], 'bb': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 2], 'zt': [0, 0.4]}\ncalculated:\n[[ 0.95136535 -0.10459088]\n [-0.10459088  0.76881702]]\nexpected:\n[[ 0.95136535 -0.10459088]\n [-0.10459088  0.76881702]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a 2 layers, const within each layer, PTPB\n{'ab': [1, 2], 'bb': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 2], 'zt': [0, 0.4]}\ncalculated:\n[[ 0.84677446 -0.18254832]\n [-0.18254832  0.76215866]]\nexpected:\n[[ 0.84677446 -0.18254832]\n [-0.18254832  0.76215866]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a linear within 1 layer, PTIB\n{'ab': [2], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[ 0.85132118 -0.10132118]\n [-0.10132118  0.76125791]]\nexpected:\n[[ 0.85132118 -0.10132118]\n [-0.10132118  0.76125791]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a linear within 1 layer, PTPB\n{'ab': [2], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[ 0.75       -0.09006327]\n [-0.09006327  0.75      ]]\nexpected:\n[[ 0.75       -0.09006327]\n [-0.09006327  0.75      ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b const, PTIB\n{'ab': [1], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[  5.00000000e-01   3.89817183e-17]\n [  3.89817183e-17   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b const, PTPB\n{'ab': [1], 'bb': [1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[  5.00000000e-01  -1.23259516e-32]\n [ -1.23259516e-32   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b const*2, PTIB\n{'ab': [2], 'bb': [1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [2], 'zt': [0]}\ncalculated:\n[[  1.00000000e+00   7.79634367e-17]\n [  7.79634367e-17   1.00000000e+00]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b const*2, PTPB\n{'ab': [1], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [2], 'at': [1], 'zt': [0]}\ncalculated:\n[[  1.00000000e+00  -2.46519033e-32]\n [ -2.46519033e-32   1.00000000e+00]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b const, 2 layers PTIB\n{'ab': [1, 1], 'bb': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[[  5.00000000e-01  -6.93889390e-17]\n [ -6.93889390e-17   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b const, 2 layers, PTPB\n{'ab': [1, 1], 'bb': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 1], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[[  5.00000000e-01   1.94289029e-16]\n [  1.94289029e-16   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b 2 layers, const within each layer, PTIB\n{'ab': [1, 1], 'bb': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [0.4, 1], 'bt': [1, 2], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[[ 0.95136535 -0.10459088]\n [-0.10459088  0.76881702]]\nexpected:\n[[ 0.95136535 -0.10459088]\n [-0.10459088  0.76881702]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b 2 layers, const within each layer, PTPB\n{'ab': [1, 1], 'bb': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [0.4, 1], 'bt': [1, 2], 'at': [1, 1], 'zt': [0, 0.4]}\ncalculated:\n[[ 0.84677446 -0.18254832]\n [-0.18254832  0.76215866]]\nexpected:\n[[ 0.84677446 -0.18254832]\n [-0.18254832  0.76215866]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b linear within 1 layer, PTIB\n{'ab': [1], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[ 0.85132118 -0.10132118]\n [-0.10132118  0.76125791]]\nexpected:\n[[ 0.85132118 -0.10132118]\n [-0.10132118  0.76125791]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: b linear within 1 layer, PTPB\n{'ab': [1], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[ 0.75       -0.09006327]\n [-0.09006327  0.75      ]]\nexpected:\n[[ 0.75       -0.09006327]\n [-0.09006327  0.75      ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const, b const cancel out, PTIB\n{'ab': [0.5], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [2], 'at': [0.5], 'zt': [0]}\ncalculated:\n[[  5.00000000e-01   3.89817183e-17]\n [  3.89817183e-17   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a const, b const cancel out, PTPB\n{'ab': [0.5], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [2], 'at': [0.5], 'zt': [0]}\ncalculated:\n[[  5.00000000e-01  -1.23259516e-32]\n [ -1.23259516e-32   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a linear in one layer, b linear in one layer, PTIB\n{'ab': [2], 'bb': [2], 'm': array([ 1.57079633,  4.71238898]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[ 1.47063022 -0.32929385]\n [-0.32929385  1.20044039]]\nexpected:\n[[ 1.4706302  -0.32929385]\n [-0.32929385  1.2004404 ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_abf_linear.test_cases(True, "failed test_test_dim1sin_abf_linear dim1sin_abf_linear, case: a linear in one layer, b linear in one layer, PTPB\n{'ab': [2], 'bb': [2], 'm': array([ 3.14159265,  6.28318531]), 'zb': [1], 'bt': [1], 'at': [1], 'zt': [0]}\ncalculated:\n[[ 1.14133637 -0.27018982]\n [-0.27018982  1.16033409]]\nexpected:\n[[ 1.1413364  -0.27018982]\n [-0.27018982  1.1603341 ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const, PTIB\n{'zt': [0], 'ab': [1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[  5.00000000e-01   3.89817183e-17]\n [  3.89817183e-17   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const, PTPB\n{'zt': [0], 'ab': [1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ 0.5  0. ]\n [ 0.   0.5]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const *2, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2], 'zb': [1]}\ncalculated:\n[[  1.00000000e+00   7.79634367e-17]\n [  7.79634367e-17   1.00000000e+00]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const *2, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2], 'zb': [1]}\ncalculated:\n[[ 1.  0.]\n [ 0.  1.]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  5.00000000e-01   2.77555756e-17]\n [  2.77555756e-17   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  5.00000000e-01   1.11022302e-16]\n [  1.11022302e-16   5.00000000e-01]]\nexpected:\n[[ 0.5  0. ]\n [ 0.   0.5]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const*2, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  1.00000000e+00   5.55111512e-17]\n [  5.55111512e-17   1.00000000e+00]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a const*2, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  1.00000000e+00   2.22044605e-16]\n [  2.22044605e-16   1.00000000e+00]]\nexpected:\n[[ 1.  0.]\n [ 0.  1.]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a 2 layers, const within each layer, PTIB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ 0.95136535 -0.10459088]\n [-0.10459088  0.76881702]]\nexpected:\n[[ 0.95136535 -0.10459088]\n [-0.10459088  0.76881702]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a 2 layers, const within each layer, PTPB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ 0.84677446 -0.18254832]\n [-0.18254832  0.76215866]]\nexpected:\n[[ 0.84677446 -0.18254832]\n [-0.18254832  0.76215866]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a linear within one layer, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ 0.85132118 -0.10132118]\n [-0.10132118  0.76125791]]\nexpected:\n[[ 0.85132118 -0.10132118]\n [-0.10132118  0.76125791]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_af_linear.test_cases(True, "failed test_test_dim1sin_af_linear dim1sin_af_linear, case: a linear within one layer, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ 0.75       -0.09006327]\n [-0.09006327  0.75      ]]\nexpected:\n[[ 0.75       -0.09006327]\n [-0.09006327  0.75      ]]") ... ok
+geotecha.speccon.test.test_integrals.test_dim1sin_avg_between.test_cases(True, "failed test_test_dim1sin_avg_between dim1sin_avg_between, case: 3 zs, 2 ms\n{'z': [[0, 1], [0.1, 0.2], [0.5, 1]], 'm': array([ 1.57079633,  4.71238898])}\ncalculated:\n[[ 0.63661977  0.21220659]\n [ 0.23320544  0.64345552]\n [ 0.90031632 -0.30010544]]\nexpected:\n[[ 0.63661977  0.21220659]\n [ 0.23320543  0.64345552]\n [ 0.90031632 -0.30010544]]") ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_bc0 ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_bc1 ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_cases(True, 'failed m_from_sin_mx.test_cases, case:\n(0, 0)\nm:\n3.14159265359\nexpected:\n3.14159') ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_cases(True, 'failed m_from_sin_mx.test_cases, case:\n(0, 1)\nm:\n1.57079632679\nexpected:\n1.5708') ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_cases(True, 'failed m_from_sin_mx.test_cases, case:\n(1, 0)\nm:\n6.28318530718\nexpected:\n6.28319') ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_cases(True, 'failed m_from_sin_mx.test_cases, case:\n(1, 1)\nm:\n4.71238898038\nexpected:\n4.71239') ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_cases(True, 'failed m_from_sin_mx.test_cases, case:\n(array([0, 1, 2, 3, 4, 5, 6]), 0)\nm:\n[  3.14159265   6.28318531   9.42477796  12.56637061  15.70796327\n  18.84955592  21.99114858]\nexpected:\n[3.14159, 6.28319, 9.42478, 12.56637, 15.70796, 18.84956, 21.99115]') ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_cases(True, 'failed m_from_sin_mx.test_cases, case:\n(array([0, 1, 2, 3, 4, 5, 6]), 1)\nm:\n[  1.57079633   4.71238898   7.85398163  10.99557429  14.13716694\n  17.27875959  20.42035225]\nexpected:\n[1.5708, 4.71239, 7.85398, 10.99557, 14.13717, 17.27876, 20.42035]') ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx.test_numpy ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx_bc_0v1 ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx_bc_1v1 ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx_bc_0v2 ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx_bc_1v2 ... ok
+geotecha.speccon.test.test_integrals.test_m_from_sin_mx_bad_boundary ... ok
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, PTIB\n{'zt': [0], 'ab': [1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[  2.4674011   7.4022033]\n [  7.4022033  22.2066099]]\nexpected:\n[[ -1.23370055  -0.        ]\n [ -0.         -11.10330495]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, PTIB
+{'zt': [0], 'ab': [1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}
+calculated:
+[[  2.4674011   7.4022033]
+ [  7.4022033  22.2066099]]
+expected:
+[[ -1.23370055  -0.        ]
+ [ -0.         -11.10330495]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, PTPB\n{'zt': [0], 'ab': [1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[  0.         39.4784176]\n [ 39.4784176   0.       ]]\nexpected:\n[[ -4.9348022  -0.       ]\n [ -0.        -19.7392088]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, PTPB
+{'zt': [0], 'ab': [1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}
+calculated:
+[[  0.         39.4784176]
+ [ 39.4784176   0.       ]]
+expected:
+[[ -4.9348022  -0.       ]
+ [ -0.        -19.7392088]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2], 'zb': [1]}\ncalculated:\n[[  4.9348022  14.8044066]\n [ 14.8044066  44.4132198]]\nexpected:\n[[ -2.4674011  -0.       ]\n [ -0.        -22.2066099]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, PTIB
+{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2], 'zb': [1]}
+calculated:
+[[  4.9348022  14.8044066]
+ [ 14.8044066  44.4132198]]
+expected:
+[[ -2.4674011  -0.       ]
+ [ -0.        -22.2066099]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2], 'zb': [1]}\ncalculated:\n[[  0.          78.95683521]\n [ 78.95683521   0.        ]]\nexpected:\n[[ -9.8696044  -0.       ]\n [ -0.        -39.4784176]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, PTPB
+{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2], 'zb': [1]}
+calculated:
+[[  0.          78.95683521]
+ [ 78.95683521   0.        ]]
+expected:
+[[ -9.8696044  -0.       ]
+ [ -0.        -39.4784176]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  2.4674011   7.4022033]\n [  7.4022033  22.2066099]]\nexpected:\n[[ -1.23370055  -0.        ]\n [ -0.         -11.10330495]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, 2 layers, PTIB
+{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}
+calculated:
+[[  2.4674011   7.4022033]
+ [  7.4022033  22.2066099]]
+expected:
+[[ -1.23370055  -0.        ]
+ [ -0.         -11.10330495]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  0.         39.4784176]\n [ 39.4784176   0.       ]]\nexpected:\n[[ -4.9348022  -0.       ]\n [ -0.        -19.7392088]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const, 2 layers, PTPB
+{'zt': [0, 0.4], 'ab': [1, 1], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}
+calculated:
+[[  0.         39.4784176]
+ [ 39.4784176   0.       ]]
+expected:
+[[ -4.9348022  -0.       ]
+ [ -0.        -19.7392088]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, 2 layers, PTIB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  4.9348022  14.8044066]\n [ 14.8044066  44.4132198]]\nexpected:\n[[ -2.4674011  -0.       ]\n [ -0.        -22.2066099]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, 2 layers, PTIB
+{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [2, 2], 'zb': [0.4, 1]}
+calculated:
+[[  4.9348022  14.8044066]
+ [ 14.8044066  44.4132198]]
+expected:
+[[ -2.4674011  -0.       ]
+ [ -0.        -22.2066099]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, 2 layers, PTPB\n{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  0.          78.95683521]\n [ 78.95683521   0.        ]]\nexpected:\n[[ -9.8696044  -0.       ]\n [ -0.        -39.4784176]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a const*2, 2 layers, PTPB
+{'zt': [0, 0.4], 'ab': [2, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [2, 2], 'zb': [0.4, 1]}
+calculated:
+[[  0.          78.95683521]
+ [ 78.95683521   0.        ]]
+expected:
+[[ -9.8696044  -0.       ]
+ [ -0.        -39.4784176]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a const within eachlayer, PTIB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[  4.08233609   5.55165248]\n [  5.55165248  24.32715245]]\nexpected:\n[[ -1.60044186   1.46667116]\n [  1.46667116 -18.45775611]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a const within eachlayer, PTIB
+{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 2], 'zb': [0.4, 1]}
+calculated:
+[[  4.08233609   5.55165248]
+ [  5.55165248  24.32715245]]
+expected:
+[[ -1.60044186   1.46667116]
+ [  1.46667116 -18.45775611]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a const within eachlayer, PTPB\n{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 2], 'zb': [0.4, 1]}\ncalculated:\n[[ -8.92714104  54.28282421]\n [ 54.28282421 -13.63945783]]\nexpected:\n[[ -7.43403806   2.37230489]\n [  2.37230489 -33.07665017]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a const within eachlayer, PTPB
+{'zt': [0, 0.4], 'ab': [1, 2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 2], 'zb': [0.4, 1]}
+calculated:
+[[ -8.92714104  54.28282421]
+ [ 54.28282421 -13.63945783]]
+expected:
+[[ -7.43403806   2.37230489]
+ [  2.37230489 -33.07665017]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a linear within one layer, PTIB\n{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}\ncalculated:\n[[  2.4674011   7.4022033]\n [  7.4022033  22.2066099]]\nexpected:\n[[ -1.60055083   0.75      ]\n [  0.75       -16.40495743]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a linear within one layer, PTIB
+{'zt': [0], 'ab': [2], 'm': array([ 1.57079633,  4.71238898]), 'at': [1], 'zb': [1]}
+calculated:
+[[  2.4674011   7.4022033]
+ [  7.4022033  22.2066099]]
+expected:
+[[ -1.60055083   0.75      ]
+ [  0.75       -16.40495743]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a linear within one layer, PTPB\n{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}\ncalculated:\n[[ -9.8696044   59.21762641]\n [ 59.21762641 -39.4784176 ]]\nexpected:\n[[ -7.4022033    2.22222222]\n [  2.22222222 -29.6088132 ]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: a linear within one layer, PTPB
+{'zt': [0], 'ab': [2], 'm': array([ 3.14159265,  6.28318531]), 'at': [1], 'zb': [1]}
+calculated:
+[[ -9.8696044   59.21762641]
+ [ 59.21762641 -39.4784176 ]]
+expected:
+[[ -7.4022033    2.22222222]
+ [  2.22222222 -29.6088132 ]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a linear within eachlayer, PTIB\n{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[  1.82142711   8.14242363]\n [  8.14242363  21.35839288]]\nexpected:\n[[ -1.4538543    0.16333154]\n [  0.16333154 -13.463177  ]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a linear within eachlayer, PTIB
+{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 1.57079633,  4.71238898]), 'at': [1, 1], 'zb': [0.4, 1]}
+calculated:
+[[  1.82142711   8.14242363]
+ [  8.14242363  21.35839288]]
+expected:
+[[ -1.4538543    0.16333154]
+ [  0.16333154 -13.463177  ]]
+
+======================================================================
+FAIL: geotecha.speccon.test.test_integrals.test_dim1sin_D_aDf_linear_v2.test_cases(False, "failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a linear within eachlayer, PTPB\n{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}\ncalculated:\n[[ -6.29874798  53.29586377]\n [ 53.29586377 -34.02263447]]\nexpected:\n[[ -6.402509    1.2733003]\n [  1.2733003 -24.273837 ]]")
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "C:\Python27\lib\site-packages\nose\case.py", line 197, in runTest
+    self.test(*self.arg)
+AssertionError: failed test_test_dim1sin_D_aDf_linear_v2 dim1sin_D_aDf_linear_v2, case: 2 layers, a linear within eachlayer, PTPB
+{'zt': [0, 0.4], 'ab': [1.4, 1.6], 'm': array([ 3.14159265,  6.28318531]), 'at': [1, 1], 'zb': [0.4, 1]}
+calculated:
+[[ -6.29874798  53.29586377]
+ [ 53.29586377 -34.02263447]]
+expected:
+[[ -6.402509    1.2733003]
+ [  1.2733003 -24.273837 ]]
+
+----------------------------------------------------------------------
+Ran 183 tests in 1.254s
+
+FAILED (failures=14)
+Press any key to continue . . . 
