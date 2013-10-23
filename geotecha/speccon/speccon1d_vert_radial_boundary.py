@@ -27,6 +27,7 @@ import geotecha.speccon.integrals as integ
 import sys, imp
 import textwrap
 import numpy as np
+import matplotlib.pyplot as plt
 
 try:
     #for python 2 to 3 stuff see http://python3porting.com/stdlib.html
@@ -56,7 +57,108 @@ def make_module_from_text(reader):
     return mymodule
 
 class speccon1d(object):
-    """1d consolidation with vertical and radial drainage, surcharge and vacuum, varying boundary conditions"""
+    """
+    speccon1d(reader)
+    
+    1d consolidation with:
+    
+    - vertical and radial drainage (radial drainage uses the eta method)
+    - material properties that are constant in time but piecewsie linear with 
+      depth
+      
+      - vertical permeability
+      - horizontal permeability
+      - lumped drain parameter eta
+      - volume compressibilty  
+      
+    - surcharge and vacuum loading
+    
+      - distribution with depth does not change over time
+      - magnitude varies piecewise linear with time
+      - multiple loads can be superposed
+      
+    - pore pressure boundary conditions at top and bottom vary piecewise 
+      linear with time
+    - calculates
+    
+      - excess pore pressure at depth
+      - average excess pore pressure between depths
+      - settlement between depths
+              
+    
+    
+    
+    
+    Parameters
+    ----------
+    reader : object that can be run with exec to produce a module
+        reader can be for examplestring, fileobject, StringIO.`reader` 
+        should contain an statements such as H = 1, drn=0 corresponding to the 
+        attributes listed below.  The user should pick an appropriate
+        combination of attributes for their analysis.  e.g. don't put dTh=, 
+        kh=, et=, if you are not modelling radial drainage        
+            
+    Attributes
+    ----------
+    H : float, optional
+        total height of soil profile. default = 1.0
+    drn : {0, 1}, optional
+        drainage boundary condition. default = 0
+        0 = Pervious top pervious bottom (PTPB)
+        1 = Pervious top impoervious bottom (PTIB)
+    dT : float, optional
+        convienient time factor multiplier. default = 1.0
+    neig: int, optional
+        number of series terms to use in solution. default = 2
+    dTv: float, optional
+        vertical reference time factor multiplier.  dTv is calculated with 
+        the chosen reference values of kz and mv: dTv = kz /(mv*gamw) / H ^ 2 
+    dTh : float, optional
+        horizontal reference time factor multiplier.  dTh is calculated with 
+        the reference values of kh, et, and mv: dTh = kh / (mv * gamw) * et
+    mv : PolyLine, optional
+        normalised volume compressibility PolyLine(depth, mv)
+    kh : PolyLine, optional
+        normalised horizontal permeability PolyLine(depth, kh) 
+    kz : PolyLine , optional
+        normalised vertical permeability PolyLine(depth, kz) 
+    et : PolyLine, optional
+        normalised vertical drain parameter PolyLine(depth, et). 
+        et = 2 / (mu * re^2) where mu is smear-zone/geometry parameter and re
+        is radius of influence of vertical drain     
+    surz : list of Polyline, optional
+        surcharge variation with depth. PolyLine(depth, multiplier)
+    vacz : list of Polyline, optinal
+        vacuum variation with depth. PolyLine(depth, multiplier)
+    surm : list of Polyline, optional
+        surcharge magnitude variation with time. PolyLine(time, magnitude)
+    vacm : list of Polyline, optional
+        vacuum magnitude variation with time. Polyline(time, magnitude)
+    topm : list of Polyline, optional
+        top p.press variation with time. Polyline(time, magnitude)
+    botm : list of Polyline, optional
+        bottom p.press variation with time. Polyline(time, magnitude)    
+    porz : list_like of float, optional
+        normalised z to calc pore pressure at    
+    avpz : list of two element list of float, optional
+        nomalised zs to calc average pore pressure between
+    setz : list of two element list of float, optional
+        normalised depths to calculate normalised settlement between. 
+        e.g. surface settlement would be [[0, 1]]
+    outt : list of float
+        times to calculate output at
+        
+    
+    References
+    ----------  
+    All based on work by Dr Rohan Walker [1]_, [2]_, [3]_, [4]_
+    
+    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW, Australia: University of Wollongong.
+    .. [2] Walker, R., and B. Indraratna. 2009. 'Consolidation Analysis of a Stratified Soil with Vertical and Horizontal Drainage Using the Spectral Method'. Geotechnique 59 (5) (January): 439-449. doi:10.1680/geot.2007.00019.
+    .. [3] Walker, Rohan, Buddhima Indraratna, and Nagaratnam Sivakugan. 2009. 'Vertical and Radial Consolidation Analysis of Multilayered Soil Using the Spectral Method'. Journal of Geotechnical and Geoenvironmental Engineering 135 (5) (May): 657-663. doi:10.1061/(ASCE)GT.1943-5606.0000075.
+    .. [4] Walker, Rohan T. 2011. Vertical Drain Consolidation Analysis in One, Two and Three Dimensions'. Computers and Geotechnics 38 (8) (December): 1069-1077. doi:10.1016/j.compgeo.2011.07.006.
+
+    """
     def __init__(self,reader=None):
 
 
@@ -189,6 +291,8 @@ class speccon1d(object):
         self.check_z_limits(self._should_have_same_z_limits)
         self.check_len_pairs(self._should_have_same_len_pairs)
         self.make_m()
+        
+        
     def check_list_inputs(self, check_list):                
         """puts non-lists in a list"""
         
@@ -211,7 +315,7 @@ class speccon1d(object):
                     break
                 else:
                     a = g(v).x[0]
-                    print(a)
+                    
                     zcheck = np.array([g(v).x[0], g(v).x[-1]])
                     zstr = v
                     break
@@ -296,6 +400,7 @@ class speccon1d(object):
         
     def make_psi(self):
         """make kv, kh, et dependant psi matrix
+        
         Parameters
         ----------
         None
@@ -320,25 +425,21 @@ class speccon1d(object):
         self.psi = np.zeros((self.neig, self.neig))           
         #kv part
         if sum([v is None for v in [self.kz, self.dTv]])==0:            
-            self.psi-= integ.dim1sin_D_aDf_linear(self.m, self.kz.y1, self.kz.y2, self.kz.x1, self.kz.x2)
+            self.psi -= self.dTv / self.dT * integ.dim1sin_D_aDf_linear(self.m, self.kz.y1, self.kz.y2, self.kz.x1, self.kz.x2)
         #kh & et part
         if sum([v is None for v in [self.kh, self.et, self.dTh]])==0:
             kh, et = pwise.polyline_make_x_common(self.kh, self.et)
-            self.psi += integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
+            self.psi += self.dTh / self.dT * integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
         self.psi[np.abs(self.psi)<1e-8]=0.0
         return        
         
 
     def make_eigs_and_v(self):
         """make Igam_psi, v and eigs, and Igamv
-        
-        Parameters
-        ----------
-        None
-        
-        Returns
-        -------
-        None
+
+        Finds the eigenvalues, `self.eigs`, and eigenvectors, `self.v` of 
+        inverse(gam)*psi.  Once found the matrix inverse(gamma*v), `self.Igamv`
+        is determined.
         
         Notes
         -----
@@ -361,44 +462,299 @@ class speccon1d(object):
         self.Igamv=np.linalg.inv(np.dot(self.gam,self.v))                
         return
 
-
-    def make_emat_surcharge(self):
-        """make the surcharge loading matrices"""
+    def make_E_Igamv_the(self):
+        """sum contributions from all loads
         
-        self.Esurcharge = np.zeros((neigs,len(self.outt)))
-        if not self.surz is None:
+        Calculates all contributions to E*inverse(gam*v)*theta part of solution
+        u=phi*vE*inverse(gam*v)*theta. i.e. surcharge, vacuum, top and bottom 
+        pore pressure boundary conditions. `make_load_matrices will create 
+        `self.E_Igamv_the`.  `self.E_Igamv_the`  is an array
+        of size (neig, len(outt)). So the columns are the column array 
+        E*inverse(gam*v)*theta calculated at each output time.  This will allow
+        us later to do u = phi*v*self.E_Igamv_the 
+        
+        See also
+        --------
+        make_E_Igamv_the_surcharge :  surchage contribution
+        make_E_Igamv_the_vacuum : vacuum contribution
+        make_E_Igamv_the_top : top boundary pore pressure contribution
+        make_E_Igamv_the_bot : bottom boundary pore pressure contribution        
+        
+        """
+        self.E_Igamv_the = np.zeros((self.neig,len(self.outt)))
+        if sum([v is None for v in [self.surz, self.surm]])==0:
+            self.make_E_Igamv_the_surcharge()
+            self.E_Igamv_the += self.E_Igamv_the_surcharge
+        if sum([v is None for v in [self.vacz, self.vacm, self.et, self.kh,self.dTh]])==0:
+            if self.dTh!=0:
+                self.make_E_Igamv_the_vacuum()
+                self.E_Igamv_the += self.E_Igamv_the_vacuum
+        if not self.topm is None:
+            self.make_E_Igamv_the_top()
+            self.E_Igamv_the += self.E_Igamv_the_top
+            if self.drn==1:
+                self.E_Igamv_the += self.E_Igamv_the_bot
+        
+        if self.drn ==0 and not self.botm is None: #when drn==1 then self.E_Igamv_the_bot has already been created in make_E_Igamv_the_top()
+            self.make_E_Igamv_the_bot()                    
+            self.E_Igamv_the += self.E_Igamv_the_bot
+            
+        return
+                    
+            
+        
+
+    def make_E_Igamv_the_surcharge(self):
+        """make the surcharge loading matrices
+        
+        Make the E*inverse(gam*v)*theta part of solution u=phi*vE*inverse(gam*v)*theta. 
+        The contribution of each surcharge load is added and put in 
+        `self.E_Igamv_the_surcharge`. `self.E_Igamv_the_surcharge` is an array
+        of size (neig, len(outt)). So the columns are the column array 
+        E*inverse(gam*v)*theta calculated at each output time.  This will allow
+        us later to do u = phi*v*self.E_Igamv_the_surcharge
+        
+        Notes
+        -----        
+        Assuming the load are formulated as the product of separate time and depth 
+        dependant functions:
+        
+        .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+        
+        the solution to the consolidation equation using the spectral method has 
+        the form:
+        
+        .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
+        
+        `make_E_Igamv_the_surcharge` will create `self.E_Igamv_the_surcharge` which is 
+        the :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}` 
+        part of the solution for all surcharge loads
+        
+        """
+        
+        self.E_Igamv_the_surcharge = np.zeros((self.neig,len(self.outt)))
+        if sum([v is None for v in [self.surz, self.surm]])==0:
             for mag_vs_depth, mag_vs_time in zip(self.surz, self.surm):
-                mv, mag_vs_depth = pwise.polyline_make_x_common(self.mv, self.surz)           
+                mv, mag_vs_depth = pwise.polyline_make_x_common(self.mv, mag_vs_depth)           
                 
                 theta = integ.dim1sin_ab_linear(self.m, mv.y1, mv.y2, mag_vs_depth.y1, mag_vs_depth.y2, mv.x1, mv.x2)
-                Esur = integ.EDload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs,self.outt, self.dT)
-    
+                Esur = integ.EDload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs, self.outt, self.dT)
+
     
                 #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta) 
                 #and np.dot(theta, Igamv) will give differetn 1d arrays.  
                 #Basically np.dot(Igamv, theta) gives us what we want i.e. 
                 #theta was treated as a column array.  The alternative 
                 #np.dot(theta, Igamv) would have treated theta as a row vector.
-                self.Esurcharge += (Esur*np.dot(self.Igamv, theta)).T
+                self.E_Igamv_the_surcharge += (Esur*np.dot(self.Igamv, theta)).T
         return
 
-    def make_emat_vacuum(self):
-        """make the vacuum loading matrices"""
+    def make_E_Igamv_the_vacuum(self):
+        """make the vacuum loading matrices
         
-        self.Evacuum = np.zeros((neigs, len(self.outt)))
+        Make the E*inverse(gam*v)*theta part of solution u=phi*vE*inverse(gam*v)*theta. 
+        The contribution of each vacuum load is added and put in 
+        `self.E_Igamv_the_vacuum`. `self.E_Igamv_the_vacuum` is an array
+        of size (neig, len(outt)). So the columns are the column array 
+        E*inverse(gam*v)*theta calculated at each output time.  This will allow
+        us later to do u = phi*v*self.E_Igamv_the_vacuum
         
-        if (not self.vacz is None) and (self.dTh != 0.0):
-            for mag_vs_depth, mag_vs_time in zip(self.vacz, self.vacm):
-                et, kh, mag_vs_depth = pwise.polyline_make_x_common(self.et, self.kh, self.vacz)           
-                
-                theta = integ.dim1sin_abc_linear(self.m, et.y1, et.y2, kh.y1, kh.y2, mag_vs_depth.y1, mag_vs_depth.y2, et.x1, et.x2)
-                Evac = integ.Eload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs, self.outt, self.dT)        
-                
-                self.Evacuum += (Evac * np.dot(self.Igamv, theta)).T
-        self.make_gam()
+        Notes
+        -----        
+        Assuming the load are formulated as the product of separate time and depth 
+        dependant functions:
+        
+        .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+        
+        the solution to the consolidation equation using the spectral method has 
+        the form:
+        
+        .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
+        
+        `make_E_Igamv_the_surcharge` will create `self.E_Igamv_the_surcharge` which is 
+        the :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}` 
+        part of the solution for all surcharge loads
+        
+        """
+        
+        
+        self.E_Igamv_the_vacuum = np.zeros((self.neig, len(self.outt)))
+        
+        if sum([v is None for v in [self.vacz, self.vacm, self.et, self.kh,self.dTh]])==0:
+            if self.dTh!=0:
+                for mag_vs_depth, mag_vs_time in zip(self.vacz, self.vacm):
+                    et, kh, mag_vs_depth = pwise.polyline_make_x_common(self.et, self.kh, mag_vs_depth)           
+                    
+                    theta = integ.dim1sin_abc_linear(self.m, et.y1, et.y2, kh.y1, kh.y2, mag_vs_depth.y1, mag_vs_depth.y2, et.x1, et.x2)
+                    Evac = integ.Eload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs, self.outt, self.dT)        
+                    
+                    self.E_Igamv_the_vacuum += (Evac * np.dot(self.Igamv, theta)).T
         return
 
+    def make_E_Igamv_the_top(self):
+        """make the top pore pressure boundary condition loading matrices
+        
+        Make the E*inverse(gam*v)*theta part of solution u=phi*vE*inverse(gam*v)*theta. 
+        The contribution of each top pore pressure boundary condition load is 
+        added and put in 
+        `self.E_Igamv_the_top`. `self.E_Igamv_the_top` is an array
+        of size (neig, len(outt)). So the columns are the column array 
+        E*inverse(gam*v)*theta calculated at each output time.  This will allow
+        us later to do u = phi*v*self.E_Igamv_the_top.
+        
+        Note that if self.drn==1, PTIB then self.botm=self.topm so 
+        `self.E_Igamv_the_top` will also be created here.
+        
+        Notes
+        -----        
+        Assuming the load are formulated as the product of separate time and depth 
+        dependant functions:
+        
+        .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+        
+        the solution to the consolidation equation using the spectral method has 
+        the form:
+        
+        .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
+        
+        `make_E_Igamv_the_top` will create `self.E_Igamv_the_top` which is 
+        the :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}` 
+        part of the solution for all surcharge loads
+        
+        """
+        
+        self.E_Igamv_the_top = np.zeros((self.neig,len(self.outt)))
+        if self.drn==1:
+            self.E_Igamv_the_bot = np.zeros((self.neig,len(self.outt)))
+            
+        if not self.topm is None:
+            for mag_vs_time in self.topm:                
+                mv = self.mv
+                #1. from mv*du/dt
+                theta = integ.dim1sin_ab_linear(self.m, mv.y1, mv.y2, 1 - mv.x2, 1-mv.x1, mv.x1, mv.x2)                
+                Etop = integ.EDload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs, self.outt, self.dT)                            
+                self.E_Igamv_the_top -= (Etop*np.dot(self.Igamv, theta)).T
+                if self.drn==1:
+                    theta = integ.dim1sin_ab_linear(self.m, mv.y1, mv.y2, mv.x1, mv.x2, mv.x1, mv.x2)                                        
+                    self.E_Igamv_the_bot -= (Etop*np.dot(self.Igamv, theta)).T 
+                
+                #2. from dTh*et*kh*u
+                if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
+                    if self.dTh!=0:
+                        et, kh = pwise.polyline_make_x_common(self.et, self.kh) 
+                        theta = self.dTh / self.dT * integ.dim1sin_abc_linear(self.m, et.y1, et.y2, kh.y1, kh.y2, 1 - et.x2, 1 - et.x1, et.x1, et.x2)                
+                        Etop = integ.Eload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs, self.outt, self.dT)            
+                        self.E_Igamv_the_top -= (Etop*np.dot(self.Igamv, theta)).T
+                        if self.drn==1:
+                            theta = self.dTh / self.dT * integ.dim1sin_abc_linear(self.m, et.y1, et.y2, kh.y1, kh.y2, et.x1, et.x2, et.x1, et.x2)                
+                            self.E_Igamv_the_bot -= (Etop*np.dot(self.Igamv, theta)).T
+                        
+                #3. from dTv * D[kz * D[u,z], z]
+                if sum([v is None for v in [self.kh, self.dTv]])==0:
+                    if self.dTv!=0:                        
+                        kv = self.kv
+                        theta = self.dTv / self.dT * integ.dim1sin_D_aDb_linear(self.m, kv.y1, kv.y2, 1-kv.x2, 1-kv.x1,kv.x1, kv.x2)        
+                        self.E_Igamv_the_top += (Etop*np.dot(self.Igamv, theta)).T                                    
+                        if self.drn==1:
+                            theta = self.dTv / self.dT * integ.dim1sin_D_aDb_linear(self.m, kv.y1, kv.y2, kv.x1, kv.x2,kv.x1, kv.x2)        
+                            self.E_Igamv_the_top += (Etop*np.dot(self.Igamv, theta)).T                    
+        return
+        
+    def make_E_Igamv_the_bot(self):
+        """make the top pore pressure boundary condition loading matrices
+        
+        Make the E*inverse(gam*v)*theta part of solution u=phi*vE*inverse(gam*v)*theta. 
+        The contribution of each top pore pressure boundary condition load is 
+        added and put in 
+        `self.E_Igamv_the_bot`. `self.E_Igamv_the_bot` is an array
+        of size (neig, len(outt)). So the columns are the column array 
+        E*inverse(gam*v)*theta calculated at each output time.  This will allow
+        us later to do u = phi*v*self.E_Igamv_the_bot
+        
+        Note that if self.drn==1, PTIB then self.botm=self.topm so 
+        `self.E_Igamv_the_top` calculated in `make_E_Igamv_the_top`.
+        
+        Notes
+        -----        
+        Assuming the load are formulated as the product of separate time and depth 
+        dependant functions:
+        
+        .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+        
+        the solution to the consolidation equation using the spectral method has 
+        the form:
+        
+        .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
+        
+        `make_E_Igamv_the_top` will create `self.E_Igamv_the_bot` which is 
+        the :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}` 
+        part of the solution for all surcharge loads
+        
+        See also
+        --------
+        make_E_Igamv_the_top : if self.drn==1, PTIB then `self.botm`=`self.topm` so 
+        `self.E_Igamv_the_top` is calculated in `make_E_Igamv_the_top`
+        
+        """
+        
+        self.E_Igamv_the_bot = np.zeros((self.neig,len(self.outt)))
+        if not self.topm is None:
+            for mag_vs_time in self.botm:                
+                mv = self.mv
+                #1. from mv*du/dt
+                theta = integ.dim1sin_ab_linear(self.m, mv.y1, mv.y2, mv.x1, mv.x2, mv.x1, mv.x2)                
+                Ebot = integ.EDload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs, self.outt, self.dT)                            
+                self.E_Igamv_the_top -= (Ebot*np.dot(self.Igamv, theta)).T
+                
+                #2. from dTh*et*kh*u
+                if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
+                    if self.dTh!=0:
+                        et, kh = pwise.polyline_make_x_common(self.et, self.kh) 
+                        theta = self.dTh / self.dT * integ.dim1sin_abc_linear(self.m, et.y1, et.y2, kh.y1, kh.y2, et.x1, et.x2, et.x1, et.x2)                
+                        Ebot = integ.Eload_linear(mag_vs_time.x, mag_vs_time.y, self.eigs, self.outt, self.dT)            
+                        self.E_Igamv_the_top -= (Ebot*np.dot(self.Igamv, theta)).T
 
+                #3. from dTv * D[kz * D[u,z], z]   
+                if sum([v is None for v in [self.kh, self.dTv]])==0:
+                    if self.dTv!=0:             
+                        kv = self.kv
+                        theta = self.dTv / self.dT * integ.dim1sin_D_aDb_linear(self.m, kv.y1, kv.y2, kv.x2, kv.x2,kv.x1, kv.x2)                
+                        self.E_Igamv_the_top += (Ebot*np.dot(self.Igamv, theta)).T                                    
+        return   
+    def make_output(self):
+        """make all output"""
+        
+        if not self.porz is None:
+            self.make_por()
+        if not self.avpz is None:
+            self.make_avp()
+        if not self.set is None:
+            self.set        
+        return
+        
+    def make_por(self):
+        """make the por pressure output"""
+
+                
+        phi = integ.dim1sin(self.m, self.porz)
+        phi_v = np.dot(phi, self.v)
+
+
+        self.por = np.dot(phi_v, self.E_Igamv_the)
+        #top part                
+        
+        if hasattr(self,'E_Igamv_the_top'):
+            for mag_vs_time in self.topm:
+                
+                self.por += pwise.interp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time.x, mag_vs_time.y, [0], [1], [1], [0], self.outt, self.porz)
+                if self.drn==1:
+                    #bottom part
+                    self.por += pwise.interp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time.x, mag_vs_time.y, [0], [1], [0], [1], self.outt, self.porz)                                            
+        #bot part           
+        if self.drn==0 and hasattr(self,'E_Igamv_the_bot'):
+            for mag_vs_time in self.botm:
+                self.por += pwise.interp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time.x, mag_vs_time.y, [0], [1], [0], [1], self.outt, self.porz)
+                            
 
 def program(reader, writer):
     """run speccon1d_vert_radial_boundary program
@@ -459,7 +815,7 @@ if __name__ == '__main__':
     drn = 0 
     dT = 1 
     #dTh = 1
-    dTv = 1
+    dTv = 0.1
     neig = 3
         
     mv = PolyLine([0,1], [1,1])
@@ -468,10 +824,10 @@ if __name__ == '__main__':
     #et = PolyLine([0,1], [1,1])
     surz = PolyLine([0,1], [1,1]) 
     #vacz = PolyLine([0,1], [1,1])
-    surm = PolyLine([0,1,10], [0,1,1])
-    #vacm = PolyLine([0,0.4,10], [0,-0.2,-0.2])
-    topm = None
-    botm = None
+    surm = PolyLine([0,0,3], [0,1,1])
+    #vacm = PolyLine([0,0.4,3], [0,-0.2,-0.2])
+    topm = PolyLine([0,0.0,3], [0,0.5,0.5])
+    botm = PolyLine([0,0.00,3], [0,-0.1,-0.1])
     
     porz = np.linspace(0,1,20)
     #port = np.linspace(0,10,20)
@@ -479,7 +835,7 @@ if __name__ == '__main__':
     #avpt = port
     setz = [[0,1],[0, 0.5]]
     #sett = port
-    outt = np.linspace(0,10,20)
+    outt = np.linspace(0,3,10)
     """)    
 #    writer = StringIO()
 #    program(my_code, writer)
@@ -487,13 +843,29 @@ if __name__ == '__main__':
     #a = calculate_normalised(my_code)
     a = speccon1d(my_code)
     a.make_gam()    
-    print(a.gam)
+    #print(a.gam)
     a.make_psi()
-    print(a.psi)
+    #print(a.psi)
     a.make_eigs_and_v()
-    print(a.eigs)        
-    print(a.v)
-    
+    #print(a.eigs)        
+    #print(a.v)
+    a.make_E_Igamv_the()
+    #print(a.E_Igamv_the)
+    a.make_por()
+    #print(a.por)
+    print(len(a.outt))
+    print(a.por.shape)
+    plt.plot(a.por, a.porz)
+    plt.xlabel('Pore pressure')
+    plt.ylabel('Normalised depth, Z')
+    plt.gca().invert_yaxis()
+    plt.show()
+#    for i, p in enumerate(a.por.T):
+#    
+#        print(a.outt[i])        
+#        plt.plot(p, a.porz)
+#        
+#    plt.show()
     
     
     

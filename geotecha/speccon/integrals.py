@@ -3831,7 +3831,7 @@ def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     -----
     
     Assuming the load are formulated as the product of separate time and depth 
-    dependant functions i.e.   
+    dependant functions:
     
     .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
     
@@ -3839,7 +3839,7 @@ def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     the form:
     
     .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
-                    
+                     
     The matrix :math:`E` is a time dependent diagonal matrix due to time 
     dependant loadings.  The version of :math:`E` calculated here in 
     `EDload_linear` is from loading terms in the governing equation that are 
@@ -3850,27 +3850,34 @@ def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
 
     where
     
-     :math:`\\lambda_i` is the `ith` eigenvalue of the problem
-     :math:`dT` is a time factor for numerical convienience
-     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the 
-    loading function.
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,      
+     :math:`dT` is a time factor for numerical convienience,      
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
     
-    When the time dependant loading term :math: `\\sigma\\left(\\tau\\right)` is 
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is 
     piecewise in time. The contribution of each load segment is found by:
     
-    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^t_f{\\frac{d{\\sigma\\left(\\tau\\right)}}{d\\tau}{\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{\\frac{d{\\sigma\\left(\\tau\\right)}}{d\\tau}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
     
     where
-    :math:`t_s = `\\min\\left[t,t_{increment\\:start\\right]`
-    :math:`t_f = `\\min\\left[t,t_{increment\\:end\\right]`
+    
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
 
-    (note that this function, rather than use :math:`t_s` and :math:`t_f`, 
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`EDload_linear`, rather than use :math:`t_s` and 
+    :math:`t_f`, 
     explicitly finds increments that the current time falls in, falls after, 
-    and falls before and treates each case on it's own).
+    and falls before and treates each case on it's own.)
     
     Each :math:`t` value of interest requires a separate diagonal matrix 
-    :math:`E`.  To use space more efficiently and to easily facilitate i In order to facilitate some numpy braodcasting
-    
+    :math:`E`.  To use space more efficiently and to facilitate numpy 
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of 
+    array :math:`A` returned by `EDload_linear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+        
     """
     
     
@@ -3939,9 +3946,57 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     Notes
     -----
     
-    TODO: equations etc.
+    Assuming the load are formulated as the product of separate time and depth 
+    dependant functions:
     
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+    
+    the solution to the consolidation equation using the spectral method has 
+    the form:
+    
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+                     
+    The matrix :math:`E` is a time dependent diagonal matrix due to time 
+    dependant loadings.  The version of :math:`E` calculated here in 
+    `Eload_linear` is from loading terms in the governing equation that are NOT 
+    differentiated wrt :math:`t`.  
+    The diagonal elements of :math:`E` are given by:
+    
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{{\\sigma\\left(\\tau\\right)}{\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+    
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,      
+     :math:`dT` is a time factor for numerical convienience,      
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+    
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is 
+    piecewise in time. The contribution of each load segment is found by:
+    
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{{\\sigma\\left(\\tau\\right)}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+    
+    where
+    
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`EDload_linear`, rather than use :math:`t_s` and 
+    :math:`t_f`, 
+    explicitly finds increments that the current time falls in, falls after, 
+    and falls before and treates each case on it's own.)
+    
+    Each :math:`t` value of interest requires a separate diagonal matrix 
+    :math:`E`.  To use space more efficiently and to facilitate numpy 
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of 
+    array :math:`A` returned by `EDload_linear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+        
     """
+    
+    
     
     from math import exp
     
