@@ -22,6 +22,9 @@ import numpy as np
 import numbers
 from geotecha.piecewise.piecewise_linear_1d import segment_containing_also_segments_less_than_xi
 from geotecha.piecewise.piecewise_linear_1d import segments_between_xi_and_xj
+import geotecha.piecewise.piecewise_linear_1d as pwise
+from geotecha.piecewise.piecewise_linear_1d import PolyLine
+
 
 def m_from_sin_mx(i, boundary=0):
     """Sine series eigenvalue of boundary value problem on [0, 1]
@@ -52,7 +55,18 @@ def m_from_sin_mx(i, boundary=0):
         raise ValueError('boundary = %s; must be 0 or 1.' % (boundary))
         
     return pi * (i + 1 - boundary / 2.0)
+
+def pdim1sin_af_linear(m, a):
+    """wrapper for dim1sin_af_linear with PolyLine input        
     
+    See also
+    --------
+    dim1sin_af_linear 
+    
+    """
+        
+    return dim1sin_af_linear(m, a.y1, a.y2, a.x1, a.x2)
+        
 def dim1sin_af_linear(m, at, ab, zt, zb):
     """Create matrix of spectral integrations
         
@@ -290,6 +304,16 @@ def dim1sin_af_linear(m, at, ab, zt, zb):
     
     return A
     
+def pdim1sin_abf_linear(m, a, b):
+    """wrapper for dim1sin_abf_linear with PolyLine input        
+    
+    See also
+    --------
+    dim1sin_abf_linear
+    
+    """
+    a, b = pwise.polyline_make_x_common(a,b)
+    return dim1sin_abf_linear(m, a.y1, a.y2, b.y1, b.y2, a.x1, a.x2)
     
 def dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb):
     """Create matrix of spectral integrations
@@ -2287,7 +2311,16 @@ def dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb):
     
     return A    
     
+def pdim1sin_D_aDf_linear(m, a):
+    """wrapper for dim1sin_D_aDf_linear with PolyLine input        
     
+    See also
+    --------
+    dim1sin_D_aDf_linear
+    
+    """
+    
+    return dim1sin_D_aDf_linear(m, a.y1, a.y2, a.x1, a.x2)    
     
 def dim1sin_D_aDf_linear(m, at, ab, zt, zb):
     """Generate code to calculate spectral method integrations
@@ -2553,6 +2586,17 @@ def dim1sin_D_aDf_linear(m, at, ab, zt, zb):
             A[j, i] = A[i, j]                
     
     return A
+
+def pdim1sin_D_aDf_linear_v2(m, a):
+    """wrapper for dim1sin_D_aDf_linear_v2 with PolyLine input        
+    
+    See also
+    --------
+    dim1sin_D_aDf_linear_v2
+    
+    """
+    #a, b = pwise.polyline_make_x_common(a,b)
+    return dim1sin_D_aDf_linear_v2(m, a.y1, a.y2, a.x1, a.x2)
     
 def dim1sin_D_aDf_linear_v2(m, at, ab, zt, zb):
     """Generate code to calculate spectral method integrations
@@ -2807,6 +2851,18 @@ def dim1sin_D_aDf_linear_v2(m, at, ab, zt, zb):
             A[j, i] = A[i, j]                
     
     return A
+
+def pdim1sin_ab_linear(m, a, b):
+    """wrapper for dim1sin_ab_linear with PolyLine input        
+    
+    See also
+    --------
+    dim1sin_ab_linear
+    
+    """
+    a, b = pwise.polyline_make_x_common(a,b)
+    return dim1sin_ab_linear(m, a.y1, a.y2, b.y1, b.y2, a.x1, a.x2)
+    
 def dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb):
     """Create matrix of spectral integrations
     
@@ -2990,6 +3046,17 @@ def dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb):
     
     return A
 
+def pdim1sin_abc_linear(m, a, b, c):
+    """wrapper for dim1sin_abc_linear with PolyLine input        
+    
+    See also
+    --------
+    dim1sin_abc_linear
+    
+    """
+    a, b, c = pwise.polyline_make_x_common(a,b,c)
+    return dim1sin_abc_linear(m, a.y1, a.y2, b.y1, b.y2,c.y1, c.y2, a.x1, a.x2)
+    
 def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb):
     """Create matrix of spectral integrations
     
@@ -3709,7 +3776,18 @@ def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb):
                 zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*cos(m[i]*zt[layer]))
     
     return A
-
+    
+def pdim1sin_D_aDb_linear(m, a, b):
+    """wrapper for dim1sin_D_aDb_linear with PolyLine input        
+    
+    See also
+    --------
+    dim1sin_D_aDb_linear
+    
+    """
+    a, b = pwise.polyline_make_x_common(a,b)
+    return dim1sin_D_aDb_linear(m, a.y1, a.y2, b.y1, b.y2, a.x1, a.x2)
+    
 def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb):
     """Create matrix of spectral integrations
     
@@ -3792,7 +3870,16 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb):
     return A       
     
     
+def pEDload_linear(m, a, eigs, tvals, dT=1.0):
+    """wrapper for EDload_linear with PolyLine input        
     
+    See also
+    --------
+    EDload_linear
+    
+    """
+    
+    return EDload_linear(m, a.x, a.y, eigs, tvals, dT=1.0)    
     
 
 def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
@@ -3910,6 +3997,18 @@ def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
                     loadtim[k])**(-1)/(dT*eig) - exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] -
                     loadmag[k])*(loadtim[k + 1] - loadtim[k])**(-1)/(dT*eig))
     return A    
+
+
+def pEload_linear(m, a, eigs, tvals, dT=1.0):
+    """wrapper for Eload_linear with PolyLine input        
+    
+    See also
+    --------
+    Eload_linear
+    
+    """
+    
+    return Eload_linear(m, a.x, a.y, eigs, tvals, dT=1.0)
     
 def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
     """Generate code to perform time integration for spectral methods
@@ -4122,6 +4221,17 @@ def dim1sin_avg_between(m, z):
     
     return (cos(a*mm)-cos(b*mm))/mm/(b-a)
 
+def pdim1sin_a_linear_between(m, a, z):
+    """wrapper for dim1sin_a_linear_between with PolyLine input        
+    
+    See also
+    --------
+    dim1sin_a_linear_between 
+    
+    """
+        
+    return dim1sin_a_linear_between(m, a.y1, a.y2, a.x1, a.x2, z)
+    
 def dim1sin_a_linear_between(m, at, ab, zt, zb, z):
     """calc integrate(a(z) * sin(m*z), (z, z1, z2)) for each combination of m and [z1,z2]
     

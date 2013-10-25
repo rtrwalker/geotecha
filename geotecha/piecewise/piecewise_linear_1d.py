@@ -873,8 +873,19 @@ def convert_x_y_to_x1_x2_y1_y2(x, y):
     
     return x1, x2, y1, y2
     
+def pinterp_x1_x2_y1_y2(a, xi, **kwargs):
+    """wrapper for interp_x1_x2_y1_y2 to allow PolyLine inputs
     
-def interp_x1_x2_y1_y2(x1,x2,y1,y2,xi, choose_max = False):
+    See also
+    --------
+    interp_x1_x2_y1_y2
+    
+    """
+    
+    return interp_x1_x2_y1_y2(a.x1,a.x2,a.y1,a.y2, xi, **kwargs)
+
+        
+def interp_x1_x2_y1_y2(x1,x2,y1,y2, xi, choose_max = False):
     """interpoolate x1_x2_y1_y2 data
     
     x1_x2_y1_y2 data is defined by x1[1:]==x2[:-1]
@@ -937,6 +948,17 @@ def interp_x1_x2_y1_y2(x1,x2,y1,y2,xi, choose_max = False):
                 A[i]=y2[-1]
     
     return A
+
+def pinterp_x_y(a, xi, **kwargs):
+    """wrapper for interp_x_y to accept PolyLine inputs
+    
+    See also
+    --------
+    interp_x_y
+    
+    """
+    
+    return interp_x_y(a.x, a.y, xi, **kwargs)
     
 def interp_x_y(x,y,xi, choose_max = False):
     """interpoolate x, y data
@@ -999,6 +1021,7 @@ def interp_x_y(x,y,xi, choose_max = False):
     return A    
 
 
+        
 def remove_superfluous_from_x_y(x,y, atol=1e-08):
     """Remove points that are on a line between other points
     
@@ -1058,7 +1081,16 @@ def remove_superfluous_from_x_y(x,y, atol=1e-08):
             
     return x[ikeep], y[ikeep]
     
+def pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(a, b, xai, xbi, **kwargs):
+    """wrapper for interp_xa_ya_multipy_x1b_x2b_y1b_y2b to use PolyLine inputs
     
+    See also
+    --------
+    interp_xa_ya_multipy_x1b_x2b_y1b_y2b
+    
+    """
+    
+    return interp_xa_ya_multipy_x1b_x2b_y1b_y2b(a.x, a.y, b.x1, b.x2, b.y1, b.y2, xai, xbi,**kwargs)    
     
 def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, achoose_max=False, bchoose_max=True):
     """interpolate where f(a, b) defined as g(a)*h(b) where g(a) is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
@@ -1098,7 +1130,19 @@ def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, a
     
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
-
+def pavg_x_y_between_xi_xj(a, xi, xj):
+    """wrapper for avg_x_y_between_xi_xj to allow polyline inputs
+    
+    See also
+    --------
+    avg_x_y_between_xi_xj
+    
+    
+    """
+    
+    return avg_x_y_between_xi_xj(a.x, a.y, xi, xj)
+    
+    
 def avg_x_y_between_xi_xj(x, y, xi, xj):
     """find average between xi and xj of x_y
     
@@ -1123,6 +1167,16 @@ def avg_x_y_between_xi_xj(x, y, xi, xj):
     
     return integrate_x_y_between_xi_xj(x, y, xi, xj) / (xj - xi)
 
+def pintegrate_x_y_between_xi_xj(a, xi, xj):
+    """wrapper for integrate_x_y_between_xi_xj to allow PolyLine inputs
+    
+    See also
+    --------
+    integrate_x_y_between_xi_xj
+    
+    """
+    
+    return integrate_x_y_between_xi_xj(a.x, a.y, xi, xj)
 def integrate_x_y_between_xi_xj(x, y, xi, xj):
     """integrate x_y data between xi and xj"
     
@@ -1163,6 +1217,18 @@ def integrate_x_y_between_xi_xj(x, y, xi, xj):
         for layer in segment_xj_only[i]:
             A[i] += (y[layer] + yj[i]) * 0.5 * (xj[i] - x[layer])
     return A
+
+
+def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj):
+    """wrapper for integrate_x1_x2_y1_y2_between_xi_xj to allow PolyLine inputs
+    
+    See also
+    --------
+    integrate_x1_x2_y1_y2_between_xi_xj
+    
+    """
+    
+    return integrate_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj)
     
 def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     """integrate x1_x2_y1_y2 data between xi and xj"
@@ -1214,8 +1280,16 @@ def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
             A[i] += (y1[layer] + yj[i]) * 0.5 * (xj[i] - x1[layer])            
     return A
     
+def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj):
+    """wrapper for avg_x1_x2_y1_y2_between_xi_xj to use PolyLine inputs
     
+    See also
+    --------
+    avg_x1_x2_y1_y2_between_xi_xj
     
+    """
+    
+    return avg_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj)
     
 def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     """average of x1_x2_y1_y2 data between xi and xj"
@@ -1244,12 +1318,24 @@ def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     
     return integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj) / (xj - xi)
     
+
+def pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a,b, xai, xbi, xbj, **kwargs):
+    """wrapper for xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between to have PolyLine inputs
+    
+    See also
+    --------
+    xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between
+    
+    """
+    
+    return xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a.x,a.y,b.x1, b.x2, b.y1, b.y2, xai, xbi, xbj, **kwargs)
     
 def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, xbj, achoose_max=False):
     """average the x1_x2_y1_y2 part between xbi, and xbj of f(a, b) which is defined as g(a)*h(b) where g(a) is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
     
     Does little calculation, mostly calls other functions
     calculates array A[len(xbi), len(xai)]
+    
     Parameters
     ----------
     xa, ya : 1d array_like, float
@@ -1279,8 +1365,19 @@ def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, x
     yai = interp_x_y(xa, ya, xai, choose_max=achoose_max)    
     ybi = avg_x1_x2_y1_y2_between_xi_xj(x1b, x2b, y1b, y2b, xbi, xbj)    
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
+
+def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a,b,xi,xj):
+    """wrapper for integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between to allow PolyLine inputs
+
+    See also
+    --------
+    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between
     
-def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a,x2a,y1a,y2a,x1b,x2b,y1b,y2b,xi,xj):
+    """
+    a, b = polyline_make_x_common(a, b)
+    return integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a.x1,a.x2,a.y1,a.y2,b.x1,b.x2,b.y1,b.y2,xi,xj)    
+    
+def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a, y1a,y2a,x1b,x2b,y1b,y2b,xi,xj):
     """integrate between xi, xj the multiplication of two x1_x2_y1_y2 funcitons
     
     calculates array A[len(xi)]    
@@ -1303,7 +1400,9 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a,x2a,y1a,y2a,x
         x values to average between
         
         
-    
+    Notes
+    -----
+    TODO: I think this only works if the two distributions have the same z values?? not sure
     """
 
     x1a = np.asarray(x1a)
@@ -1315,6 +1414,10 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a,x2a,y1a,y2a,x
     y1b = np.asarray(y1b)
     y2b = np.asarray(y2b)
     
+    if (not np.allclose(x1a, x1b)) or (not np.allclose(x2a, x2b)): #they may be different sizes        
+        raise ValueError ("x values are different; they must be the same: \nx1a = {0}\nx1b = {1}\nx2a = {2}\nx2b = {3}".format(x1a,x1b, x2a, x2b))        
+        #sys.exit(0)
+        
     xi = np.atleast_1d(xi)
     xj = np.atleast_1d(xj)    
     
@@ -1341,7 +1444,16 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a,x2a,y1a,y2a,x
             A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x1a[seg]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xj[i]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x1a[seg]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xj[i]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x1a[seg] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xj[i]
             
     return A
-
+def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a,b,c, xai,xbi,xbj, **kwargs):
+    """wrapper for xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input
+    
+    See also
+    --------
+    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+    """
+    b, c = polyline_make_x_common(b, c)
+    return xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a.x,a.y,b.x1,b.x2,b.y1,b.y2, c.x1, c.x2, c.y1, c.y2, xai,xbi,xbj, **kwargs)
+    
 def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa,ya,x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False):
     """interpolate the xa_ya part at xai, and integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between xbi, and xbj of f(a, b, c) which is defined as g(a)*h(b)*h(c) where g(a) is defined with x_y data and h(b) and h(c) is defined by x1_x2_y1_y2 data
     
@@ -1748,21 +1860,31 @@ if __name__ == '__main__':
 #    print('ccc')
 #    print(b.x1_x2_y1_y2)
     
-    
-    ppp=[PolyLine([0,1], [1,2]),PolyLine([0,0.5,0.5,0.6,0.6,1], [0,0,1,1,0,0])]
-    ppp=[PolyLine([0,1,2], [0,1,0]),PolyLine([0,1+1e-3,2], [1,0,1])]
-    
-    ppp=[PolyLine([0,1], [1,2]),PolyLine([0,1,2,4], [0,6,5,7]), PolyLine([0.5,2], [1,7])]
-    ppp2 = polyline_make_x_common(*ppp)
-    out = []
-    for i, (p,p2) in enumerate(zip(ppp,ppp2)):
-        
-        plt.plot(p.x, p.y, label='b',marker='o',markersize=12, mfc='none',mec='r')    
-        plt.plot(p2.x, p2.y, label='a',marker='s',markersize=8, mfc='none',mec='b')
-        out.append('PolyLine(%s,%s)' % (list(p2.x),list(p2.y)))
-        
-    print('('+',\n '.join(out)+')')
-    plt.show()
+    print(pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'a': PolyLine([0],[1],[1],[1]),                 
+                           'b': PolyLine([0],[0.5],[1],[2]),                                            
+                           'xi':[0.25], 'xj':[0.75]
+                           }))
+    print(integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'xi':[0.25], 'xj':[0.75]
+                           }))                           
+                           
+#    ppp=[PolyLine([0,1], [1,2]),PolyLine([0,0.5,0.5,0.6,0.6,1], [0,0,1,1,0,0])]
+#    ppp=[PolyLine([0,1,2], [0,1,0]),PolyLine([0,1+1e-3,2], [1,0,1])]
+#    
+#    ppp=[PolyLine([0,1], [1,2]),PolyLine([0,1,2,4], [0,6,5,7]), PolyLine([0.5,2], [1,7])]
+#    ppp2 = polyline_make_x_common(*ppp)
+#    out = []
+#    for i, (p,p2) in enumerate(zip(ppp,ppp2)):
+#        
+#        plt.plot(p.x, p.y, label='b',marker='o',markersize=12, mfc='none',mec='r')    
+#        plt.plot(p2.x, p2.y, label='a',marker='s',markersize=8, mfc='none',mec='b')
+#        out.append('PolyLine(%s,%s)' % (list(p2.x),list(p2.y)))
+#        
+#    print('('+',\n '.join(out)+')')
+#    plt.show()
     
 #    print((PolyLine([0,1,1+1e-3,2][::-1], [0,0,1,1][::-1]) + PolyLine([0,1,1,2][::-1], [0,0,2,3][::-1])).xy)
 #    print((PolyLine([0,1,1+1e-3,2], [0,0,1,1]) + PolyLine([0,1,1,2], [0,0,2,3])).xy    )

@@ -71,6 +71,18 @@ from geotecha.piecewise.piecewise_linear_1d import convert_x_y_to_x1_x2_y1_y2
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 from geotecha.piecewise.piecewise_linear_1d import polyline_make_x_common
 
+from geotecha.piecewise.piecewise_linear_1d import pinterp_x1_x2_y1_y2
+from geotecha.piecewise.piecewise_linear_1d import pinterp_x_y
+from geotecha.piecewise.piecewise_linear_1d import pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b
+from geotecha.piecewise.piecewise_linear_1d import pavg_x_y_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import pintegrate_x_y_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import pavg_x1_x2_y1_y2_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import pintegrate_x1_x2_y1_y2_between_xi_xj
+from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between
+from geotecha.piecewise.piecewise_linear_1d import pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between
+from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+
+
 class test_linear_piecewise(object):
     """Some piecewise distributions for testing"""
         
@@ -451,7 +463,11 @@ class test_linear_piecewise(object):
                         [10]))
         ok_(np.allclose(interp_x1_x2_y1_y2(**{'x1': [1], 'y1': [10], 'x2':[0], 'y2': [20], 'xi': -5}),
                         [20]))
-                        
+    def test_pinterp_x1_x2_y1_y2(self):                    
+        "test_pinterp_x1_x2_y1_y2"
+        ok_(np.allclose(pinterp_x1_x2_y1_y2(**{'a': PolyLine([0.0], [1],[10],[20]), 'xi': [0.5, 2 ,-5]}),
+                        [15,20,10]))
+                       
     def test_interp_x_y(self):
         """test_interp_x_y"""
         #interp_x_y(x,y,xi, choose_max = False)
@@ -478,6 +494,12 @@ class test_linear_piecewise(object):
                         [20]))                
         ok_(np.allclose(interp_x_y(**{'x': [1,0.5,0.5,0], 'y': [100,40,30,10], 'xi': [0.25,0.5,0.75]}),
                         [20,40,70]))                
+    def test_pinterp_x_y(self):
+        """test_pinterp_x_y"""
+        #interp_x_y(x,y,xi, choose_max = False)
+        
+        ok_(np.allclose(pinterp_x_y(**{'a': PolyLine([0,0.5,0.5,1],[10,30,40,100]), 'xi': 0.5, 'choose_max':False}),
+                        [30]))                   
                         
     def test_remove_superfluous_from_x_y(self):
         """test_remove_superfluous_from_x_y"""
@@ -552,8 +574,20 @@ class test_linear_piecewise(object):
                            'x1b':[4], 'x2b':[5], 'y1b':[2], 'y2b':[4],
                            'xai':[0,0.5,1], 'xbi':[4, 4.5]}), 
                     [[2,3,4],[3,4.5,6]]#[[2,3],[3,4.5],[4,6]]                    
-                    ))                
-                    
+                    ))   
+        #TODO: do some tests with the keyword arguments, check others.
+    def test_pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(self):
+        """test_pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b"""
+        #pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(a,,xai, xbi, achoose_max=False, bchoose_max=True):
+
+        ok_(np.allclose( 
+                    pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(
+                        **{'a': PolyLine([0,1],[1,2]),
+                           'b': PolyLine([4],[5],[2],[4]),
+                           'xai':[0,0.5,1], 'xbi':[4, 4.5]}), 
+                    [[2,3,4],[3,4.5,6]]#[[2,3],[3,4.5],[4,6]]                    
+                    )) 
+                      
     def test_integrate_x_y_between_xi_xj(self):
         """test_integrate_x_y_between_xi_xj"""
         #integrate_x_y_between_xi_xj(x, y, xi, xj)
@@ -605,6 +639,17 @@ class test_linear_piecewise(object):
                            'xi':1, 'xj':3}), 
                     [3.416666666667]
                     )))
+    
+    def test_pintegrate_x_y_between_xi_xj(self):
+        """test_pintegrate_x_y_between_xi_xj"""
+        #pintegrate_x_y_between_xi_xj(a, xi, xj)
+        
+        ok_(all(map(np.allclose, 
+                    pintegrate_x_y_between_xi_xj(
+                        **{'a': PolyLine([0,1.5,2,4] ,[0,1,2,3]),                            
+                           'xi':1, 'xj':3}), 
+                    [3.416666666667]
+                    )))                
                     
     def test_avg_x_y_between_xi_xj(self):
         """test_avg_x_y_between_xi_xj"""
@@ -657,7 +702,16 @@ class test_linear_piecewise(object):
                            'xi':0.5, 'xj':1.5}), 
                     [1.70833333333]
                     )))
-
+    def test_pavg_x_y_between_xi_xj(self):
+        """test_pavg_x_y_between_xi_xj"""
+        #pavg_x_y_between_xi_xj(a, xi, xj)
+        
+        ok_(all(map(np.allclose, 
+                    pavg_x_y_between_xi_xj(
+                        **{'a': PolyLine([0,0.75,1,2] , [0,1,2,3]),                            
+                           'xi':0.5, 'xj':1.5}), 
+                    [1.70833333333]
+                    )))
     def test_integrate_x1_x2_y1_y2_between_xi_xj(self):
         """test_integrate_x1_x2_y1_y2_between_xi_xj"""
         #integrate_x1_x2_y1_y2_between_xi_xj(x1,x2,y1,y1, xi, xj)
@@ -709,7 +763,17 @@ class test_linear_piecewise(object):
                            'xi':1, 'xj':3}), 
                     [3.416666666667]
                     )))
-                    
+
+    def test_pintegrate_x1_x2_y1_y2_between_xi_xj(self):
+        """test_pintegrate_x1_x2_y1_y2_between_xi_xj"""
+        #pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj)
+        
+        ok_(all(map(np.allclose, 
+                    pintegrate_x1_x2_y1_y2_between_xi_xj(
+                        **{'a': PolyLine([0,1.5,2],[1.5,2,4],[0,1,2],[1,2,3]),
+                           'xi':1, 'xj':3}), 
+                    [3.416666666667]
+                    )))                    
     def test_avg_x1_x2_y1_y2_between_xi_xj(self):
         """test_avg_x1_x2_y1_y2_between_xi_xj"""
         #avg_x1_x2_y1_y2_between_xi_xj(x1,x2,y1,y1, xi, xj)
@@ -789,7 +853,21 @@ class test_linear_piecewise(object):
                      [1.75, 7, 8.75, 10.5]]
                     )))
 
-
+    def test_pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(self):
+        """test_pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between"""
+        #pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a, b, xai, xbi, xbj, achoose_max=False):
+        ok_(all(map(np.allclose, 
+                    pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(
+                        **{'a': PolyLine([0,1,1,2],[0,1,2,3]),
+                           'b': PolyLine([0,1,2],[1,2,3],[3,4,3],[4,3,4]),                 
+                           'xai':[0.5, 1, 1.5, 2],
+                           'xbi':[0,0,0], 'xbj':[1,2,3], 'achoose_max':True
+                           }), 
+                     [[1.75, 7, 8.75, 10.5],
+                     [1.75, 7, 8.75, 10.5],
+                     [1.75, 7, 8.75, 10.5]]
+                    )))
+                    
     def test_integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(self):
         """test_integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between"""
         ok_(np.allclose( 
@@ -816,24 +894,30 @@ class test_linear_piecewise(object):
         ok_(np.allclose( 
                     integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
                         **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
-                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'x1b':[0],'x2b':[1],'y1b':[1], 'y2b':[2],                                            
                            'xi':[0], 'xj':[1]
                            }),                     
                     [1.5]))                    
         ok_(np.allclose( 
                     integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
                         **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
-                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'x1b':[0],'x2b':[1],'y1b':[1], 'y2b':[2],                                            
                            'xi':[0], 'xj':[1]
                            }),                     
                     [1.5]))
         ok_(np.allclose( 
                     integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
                         **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
-                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'x1b':[0],'x2b':[1],'y1b':[1], 'y2b':[2],                                            
                            'xi':[0.25], 'xj':[0.75]
                            }),                     
-                    [0.75]))       
+                    [0.75])) 
+                   
+        assert_raises(ValueError,integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between,
+                          **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],                 
+                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],                                            
+                           'xi':[0.25], 'xj':[0.75]})
+                           
         #[0,0.4] a(x) = 1, b(x)=2, [0.4,1] a(x)=1, b(x)=4                    
         ok_(np.allclose( 
                     integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
@@ -859,7 +943,32 @@ class test_linear_piecewise(object):
                            'xi':[0], 'xj':[1]
                            }),                     
                     [0.9666666667]))                            
+    def test_pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(self):
+        """test_pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between"""
+
+        ok_(np.allclose( 
+                    pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'a': PolyLine([0],[1],[1],[1]),                 
+                           'b': PolyLine([0],[1],[1],[2]),                                            
+                           'xi':[0.25], 'xj':[0.75]
+                           }),                     
+                    [0.75])) 
+        ok_(np.allclose( 
+                    pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'a': PolyLine([0],[1],[1],[1]),                 
+                           'b': PolyLine([0],[0.5],[1],[2]),                                            
+                           'xi':[0.25], 'xj':[0.75]
+                           }),                     
+                    [0.9375])) 
                     
+        ok_(np.allclose( 
+                    pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+                        **{'a': PolyLine([0,0.5],[0.5,1],[1,1],[1,1]),                 
+                           'b': PolyLine([0],[1],[1],[2]),                                            
+                           'xi':[0.25], 'xj':[0.75]
+                           }),                     
+                    [0.75]))
+                       
     def test_xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(self):
         """test_xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between"""
         #xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa,ya,x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False)
@@ -885,7 +994,30 @@ class test_linear_piecewise(object):
                            }),                     
                     [[1*0.5,1*2,1*2.5,1*3],
                      [0.5*0.5,0.5*2,0.5*2.5,0.5*3]]))
-                   
+        assert_raises(ValueError, xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between,
+                      **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                           'x1b':[0],'x2b':[1],'y1b':[1], 'y2b':[1],                 
+                           'x1c':[0],'x2c':[9],'y1c':[2], 'y2c':[2],
+                           'xai':[0.5, 1, 1.5, 2],                                           
+                           'xbi':[0,0], 'xbj':[0.5, 0.25],
+                            'achoose_max': True
+                           })
+                           
+    def test_pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(self):
+        """test_pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between"""
+        #pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a, b, c, xai,xbi,xbj, achoose_max=False)
+        ok_(np.allclose( 
+                    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                        **{'a': PolyLine([0,1,1,2],[0,1,2,3]),
+                           'b': PolyLine([0],[0.5],[1],[1]),                 
+                           'c': PolyLine([0],[0.5],[2],[2]),
+                           'xai':[0.5, 1, 1.5, 2],                                           
+                           'xbi':[0,0], 'xbj':[0.5, 0.25],
+                            'achoose_max': False
+                           }),                     
+                    [[1*0.5,1*1,1*2.5,1*3],
+                     [0.5*0.5,0.5*1,0.5*2.5,0.5*3]]))
+                  
 
 def test_PolyLine():
     #define with x and y

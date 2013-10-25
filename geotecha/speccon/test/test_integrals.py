@@ -27,9 +27,12 @@ from nose.tools.trivial import ok_
 
 from math import pi
 import numpy as np
+from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
+from geotecha.speccon.integrals import m_from_sin_mx
 from geotecha.speccon.integrals import dim1sin
 from geotecha.speccon.integrals import dim1sin_avg_between
+
 from geotecha.speccon.integrals import dim1sin_a_linear_between
 from geotecha.speccon.integrals import dim1sin_af_linear
 from geotecha.speccon.integrals import dim1sin_ab_linear
@@ -38,10 +41,18 @@ from geotecha.speccon.integrals import dim1sin_abf_linear
 from geotecha.speccon.integrals import dim1sin_D_aDb_linear
 from geotecha.speccon.integrals import dim1sin_D_aDf_linear
 from geotecha.speccon.integrals import dim1sin_D_aDf_linear_v2
-from geotecha.speccon.integrals import m_from_sin_mx
 from geotecha.speccon.integrals import Eload_linear
 from geotecha.speccon.integrals import EDload_linear
-
+from geotecha.speccon.integrals import pdim1sin_a_linear_between
+from geotecha.speccon.integrals import pdim1sin_af_linear
+from geotecha.speccon.integrals import pdim1sin_ab_linear
+from geotecha.speccon.integrals import pdim1sin_abc_linear
+from geotecha.speccon.integrals import pdim1sin_abf_linear
+from geotecha.speccon.integrals import pdim1sin_D_aDb_linear
+from geotecha.speccon.integrals import pdim1sin_D_aDf_linear
+from geotecha.speccon.integrals import pdim1sin_D_aDf_linear_v2
+from geotecha.speccon.integrals import pEload_linear
+from geotecha.speccon.integrals import pEDload_linear
 
 
 
@@ -235,6 +246,19 @@ class test_dim1sin_af_linear(base_t_ester):
              np.array([[0.750000000000001, -9.00632743487448E-02],[-9.00632743487448E-02, 0.750000000000001]])]
             ]
             
+class test_pdim1sin_af_linear(base_t_ester):
+    """loop through and test the pdim1sin_af_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_af_linear, prefix = self.__class__.__name__)        
+        self.gamma_isotropic = np.array([[0.5, 0], [0, 0.5]])
+        
+        self.cases = [                                    
+            #from speccon vba : debug.Print ("[[" & gammat(1,1) & ", " & gammat(1,2) & "],[" & gammat(2,1) & ", " & gammat(2,2) & "]]")
+            ['a linear within one layer, PTIB', 
+             {'m': self.PTIB, 'a': PolyLine([0],[1],[1],[2])}, 
+             np.array([[0.851321183642337, -0.101321183642336],[-0.101321183642336, 0.761257909293592]])]
+            
+            ]            
 
 
 
@@ -363,7 +387,25 @@ class test_dim1sin_abf_linear(base_t_ester):
              
             ]
 
-
+class test_pdim1sin_abf_linear(base_t_ester):
+    """loop through and test the pdim1sin_abf_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_abf_linear, prefix = self.__class__.__name__)                
+        self.iso = np.array([[0.5, 0], [0, 0.5]])        
+        self.cases = [     
+             
+            
+            
+            ['a linear in one layer, b linear in one layer, PTIB', 
+             {'m': self.PTIB, 'a': PolyLine([0],[1],[1],[2]),'b': PolyLine([0],[1], [1],[2])},  
+             np.array([[1.4706302, -0.32929385], [-0.32929385, 1.2004404]])],
+            
+            ['a linear in one layer, b linear in one layer, PTIB', 
+             {'m': self.PTIB, 'a': PolyLine([0,0.5],[0.5,1],[1, 1.5],[1.5, 2]),'b': PolyLine([0],[1], [1],[2])},  
+             np.array([[1.4706302, -0.32929385], [-0.32929385, 1.2004404]])]
+            
+             
+            ]
 
 class test_dim1sin_D_aDf_linear(base_t_ester):
     """loop through and test the dim1sin_D_aDf_linear cases with np.allclose"""
@@ -424,6 +466,21 @@ class test_dim1sin_D_aDf_linear(base_t_ester):
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6]},
              np.array([[-6.4025090, 1.2733003], [1.2733003, -24.273837]])],
             ]
+            
+class test_pdim1sin_D_aDf_linear(base_t_ester):
+    """loop through and test the pdim1sin_D_aDf_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_D_aDf_linear, prefix = self.__class__.__name__)                
+        self.iso_PTIB = (-0.5) * np.array([[(np.pi/2.0)**2.0, 0], [0, (3.0*np.pi/2.0)**2.0]])
+        self.iso_PTPB = (-0.5) * np.array([[(np.pi)**2.0, 0], [0, (2.0*np.pi)**2.0]])        
+        
+        self.cases = [     
+                        
+            ['2 layers, a linear within eachlayer, PTIB', 
+             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1.4, 1.6])},
+             np.array([[-1.4538543, 0.16333154], [0.16333154, -13.463177]])]            
+            ]
+            
 class test_dim1sin_D_aDf_linear_v2(base_t_ester):
     """loop through and test the dim1sin_D_aDf_linear_v2 cases with np.allclose"""
     def __init__(self):
@@ -482,9 +539,24 @@ class test_dim1sin_D_aDf_linear_v2(base_t_ester):
             ['2 layers, a linear within eachlayer, PTPB',
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6]},
              np.array([[-6.4025090, 1.2733003], [1.2733003, -24.273837]])],
-            ]            
+            ]   
+
+class test_pdim1sin_D_aDf_linear_v2(base_t_ester):
+    """loop through and test the pdim1sin_D_aDf_linear_v2 cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_D_aDf_linear_v2, prefix = self.__class__.__name__)                
+        self.iso_PTIB = (-0.5) * np.array([[(np.pi/2.0)**2.0, 0], [0, (3.0*np.pi/2.0)**2.0]])
+        self.iso_PTPB = (-0.5) * np.array([[(np.pi)**2.0, 0], [0, (2.0*np.pi)**2.0]])        
+        
+        self.cases = [     
+                        
+            ['2 layers, a linear within eachlayer, PTIB', 
+             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1.4, 1.6])},
+             np.array([[-1.4538543, 0.16333154], [0.16333154, -13.463177]])]            
+            ] 
+            
 class test_dim1sin_ab_linear(base_t_ester):
-    """A suite of tests for the make_thesig function"""
+    """loop through and test the dim1sin_ab_linear cases with np.allclose"""
     def __init__(self):
         base_t_ester.__init__(self, dim1sin_ab_linear, prefix = self.__class__.__name__)                
         
@@ -556,6 +628,26 @@ class test_dim1sin_ab_linear(base_t_ester):
             ['a and b linear witin one layer PTPB', 
              {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
              np.array([(5*pi**2-4)/pi**3, -3/(2*pi)])],                                     
+            ]
+
+class test_pdim1sin_ab_linear(base_t_ester):
+    """loop through and test the pdim1sin_ab_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_ab_linear, prefix = self.__class__.__name__)                
+        
+        self.iso_PTIB = np.array([2/pi, 2/(3*pi)])
+        self.iso_PTPB = np.array([2/pi, 0.0])
+        
+        
+        self.cases = [            
+            
+            
+            ['a and b linear witin one layer PTIB', 
+             {'m': self.PTIB,'a': PolyLine([0],[1],[1],[2]),'b': PolyLine([0],[1],[1],[2])}, 
+             np.array([(2*(-8+8*pi+pi**2))/pi**3, (2*(-8-24*pi+9*pi**2))/(27*pi**3)])],
+            ['a and b linear witin one layer PTIB', 
+             {'m': self.PTIB,'a': PolyLine([0,0.5],[0.5,1],[1, 1.5],[1.5,2]),'b': PolyLine([0],[1],[1],[2])}, 
+             np.array([(2*(-8+8*pi+pi**2))/pi**3, (2*(-8-24*pi+9*pi**2))/(27*pi**3)])]                         
             ]
 
 class test_dim1sin_abc_linear(base_t_ester):
@@ -655,6 +747,28 @@ class test_dim1sin_abc_linear(base_t_ester):
              np.array([2.2842614, -1.0898960])],                                     
             ]
                                     
+class test_pdim1sin_abc_linear(base_t_ester):
+    """A suite of tests for the pdim1sin_abc_linear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_abc_linear, prefix = self.__class__.__name__)                
+        
+        self.iso_PTIB = np.array([2/pi, 2/(3*pi)])
+        self.iso_PTPB = np.array([2/pi, 0.0])
+        
+        
+        self.cases = [                        
+             
+            ['a and b and c linear witin one layer PTIB', 
+             {'m': self.PTIB,'a': PolyLine([0],[1],[1],[2]),
+             'b': PolyLine([0],[1],[1],[2]),
+             'c': PolyLine([0],[1],[1],[2])}, 
+             np.array([2.9664286, -0.37334203])],
+            ['a and b and c linear witin one layer PTIB', 
+             {'m': self.PTIB,'a': PolyLine([0, 0.5],[0.5,1],[1,1.5],[1.5,2]),
+             'b': PolyLine([0],[1],[1],[2]),
+             'c': PolyLine([0],[1],[1],[2])}, 
+             np.array([2.9664286, -0.37334203])],                                     
+            ]
                                     
                                     
                                     
