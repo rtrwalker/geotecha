@@ -56,7 +56,7 @@ def m_from_sin_mx(i, boundary=0):
         
     return pi * (i + 1 - boundary / 2.0)
 
-def pdim1sin_af_linear(m, a):
+def pdim1sin_af_linear(m, a, **kwargs):
     """wrapper for dim1sin_af_linear with PolyLine input        
     
     See also
@@ -65,7 +65,7 @@ def pdim1sin_af_linear(m, a):
     
     """
         
-    return dim1sin_af_linear(m, a.y1, a.y2, a.x1, a.x2)
+    return dim1sin_af_linear(m, a.y1, a.y2, a.x1, a.x2, **kwargs)
         
 def dim1sin_af_linear(m, at, ab, zt, zb):
     """Create matrix of spectral integrations

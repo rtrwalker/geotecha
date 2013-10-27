@@ -1130,7 +1130,7 @@ def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, a
     
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
-def pavg_x_y_between_xi_xj(a, xi, xj):
+def pavg_x_y_between_xi_xj(a, xi, xj, **kwargs):
     """wrapper for avg_x_y_between_xi_xj to allow polyline inputs
     
     See also
@@ -1140,7 +1140,7 @@ def pavg_x_y_between_xi_xj(a, xi, xj):
     
     """
     
-    return avg_x_y_between_xi_xj(a.x, a.y, xi, xj)
+    return avg_x_y_between_xi_xj(a.x, a.y, xi, xj, **kwargs)
     
     
 def avg_x_y_between_xi_xj(x, y, xi, xj):
@@ -1167,7 +1167,7 @@ def avg_x_y_between_xi_xj(x, y, xi, xj):
     
     return integrate_x_y_between_xi_xj(x, y, xi, xj) / (xj - xi)
 
-def pintegrate_x_y_between_xi_xj(a, xi, xj):
+def pintegrate_x_y_between_xi_xj(a, xi, xj, **kwargs):
     """wrapper for integrate_x_y_between_xi_xj to allow PolyLine inputs
     
     See also
@@ -1176,7 +1176,7 @@ def pintegrate_x_y_between_xi_xj(a, xi, xj):
     
     """
     
-    return integrate_x_y_between_xi_xj(a.x, a.y, xi, xj)
+    return integrate_x_y_between_xi_xj(a.x, a.y, xi, xj, **kwargs)
 def integrate_x_y_between_xi_xj(x, y, xi, xj):
     """integrate x_y data between xi and xj"
     
@@ -1219,7 +1219,7 @@ def integrate_x_y_between_xi_xj(x, y, xi, xj):
     return A
 
 
-def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj):
+def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
     """wrapper for integrate_x1_x2_y1_y2_between_xi_xj to allow PolyLine inputs
     
     See also
@@ -1228,7 +1228,7 @@ def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj):
     
     """
     
-    return integrate_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj)
+    return integrate_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj, **kwargs)
     
 def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     """integrate x1_x2_y1_y2 data between xi and xj"
@@ -1280,7 +1280,7 @@ def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
             A[i] += (y1[layer] + yj[i]) * 0.5 * (xj[i] - x1[layer])            
     return A
     
-def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj):
+def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
     """wrapper for avg_x1_x2_y1_y2_between_xi_xj to use PolyLine inputs
     
     See also
@@ -1289,7 +1289,7 @@ def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj):
     
     """
     
-    return avg_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj)
+    return avg_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj, **kwargs)
     
 def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     """average of x1_x2_y1_y2 data between xi and xj"
@@ -1366,7 +1366,7 @@ def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, x
     ybi = avg_x1_x2_y1_y2_between_xi_xj(x1b, x2b, y1b, y2b, xbi, xbj)    
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
-def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a,b,xi,xj):
+def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a,b,xi,xj, **kwargs):
     """wrapper for integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between to allow PolyLine inputs
 
     See also
@@ -1375,7 +1375,7 @@ def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a,b,xi,xj):
     
     """
     a, b = polyline_make_x_common(a, b)
-    return integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a.x1,a.x2,a.y1,a.y2,b.x1,b.x2,b.y1,b.y2,xi,xj)    
+    return integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a.x1,a.x2,a.y1,a.y2,b.x1,b.x2,b.y1,b.y2,xi,xj, **kwargs)    
     
 def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a, y1a,y2a,x1b,x2b,y1b,y2b,xi,xj):
     """integrate between xi, xj the multiplication of two x1_x2_y1_y2 funcitons
