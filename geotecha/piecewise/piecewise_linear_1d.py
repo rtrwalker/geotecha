@@ -1139,7 +1139,7 @@ def pavg_x_y_between_xi_xj(a, xi, xj, **kwargs):
     
     
     """
-    
+
     return avg_x_y_between_xi_xj(a.x, a.y, xi, xj, **kwargs)
     
     
@@ -1175,8 +1175,10 @@ def pintegrate_x_y_between_xi_xj(a, xi, xj, **kwargs):
     integrate_x_y_between_xi_xj
     
     """
-    
+
     return integrate_x_y_between_xi_xj(a.x, a.y, xi, xj, **kwargs)
+    
+
 def integrate_x_y_between_xi_xj(x, y, xi, xj):
     """integrate x_y data between xi and xj"
     
@@ -1229,6 +1231,7 @@ def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
     """
     
     return integrate_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj, **kwargs)
+    
     
 def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     """integrate x1_x2_y1_y2 data between xi and xj"
@@ -1291,6 +1294,7 @@ def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
     
     return avg_x1_x2_y1_y2_between_xi_xj(a.x1, a.x2, a.y1, a.y2, xi, xj, **kwargs)
     
+    
 def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     """average of x1_x2_y1_y2 data between xi and xj"
     
@@ -1330,6 +1334,8 @@ def pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a,b, xai, xbi, xbj, **kwargs):
     
     return xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a.x,a.y,b.x1, b.x2, b.y1, b.y2, xai, xbi, xbj, **kwargs)
     
+    
+    
 def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, xbj, achoose_max=False):
     """average the x1_x2_y1_y2 part between xbi, and xbj of f(a, b) which is defined as g(a)*h(b) where g(a) is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
     
@@ -1368,14 +1374,17 @@ def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, x
 
 def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a,b,xi,xj, **kwargs):
     """wrapper for integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between to allow PolyLine inputs
-
+    
     See also
     --------
     integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between
     
     """
+    
     a, b = polyline_make_x_common(a, b)
     return integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a.x1,a.x2,a.y1,a.y2,b.x1,b.x2,b.y1,b.y2,xi,xj, **kwargs)    
+    
+    
     
 def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a, y1a,y2a,x1b,x2b,y1b,y2b,xi,xj):
     """integrate between xi, xj the multiplication of two x1_x2_y1_y2 funcitons
@@ -1444,16 +1453,53 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a, y1a,y2a
             A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x1a[seg]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xj[i]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x1a[seg]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xj[i]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x1a[seg] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xj[i]
             
     return A
-def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a,b,c, xai,xbi,xbj, **kwargs):
-    """wrapper for xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input
+
+
+def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(a,b,c, xai,xbi,xbj, **kwargs):
+    """wrapper for xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input.
+        
+    Notes
+    -----
+    `a` and `b` can be lists that will be superposed.  This is not available in 
+    the original function
     
     See also
     --------
     xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
-    """
-    b, c = polyline_make_x_common(b, c)
-    return xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a.x,a.y,b.x1,b.x2,b.y1,b.y2, c.x1, c.x2, c.y1, c.y2, xai,xbi,xbj, **kwargs)
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : similar polyline wrapper but no superposition
     
+    """
+    
+#    b, c = polyline_make_x_common(b, c)
+#    return xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a.x,a.y,b.x1,b.x2,b.y1,b.y2, c.x1, c.x2, c.y1, c.y2, xai,xbi,xbj, **kwargs)        
+    
+    if not isinstance(a,list):
+        a = [a]
+    if not isinstance(b, list):
+        b = [b]
+    if len(a)!=len(b):
+        raise ValueError("a and b must be lengths of equal length. len(a) = {0}, len(b) = {1}".format(len(a), len(b)))
+        
+    out = np.zeros((len(xbi), len(xai)))
+    for aa, bb in zip(a,b):
+        bb, cc = polyline_make_x_common(bb, c)
+        out += xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(aa.x,aa.y,bb.x1,bb.x2,bb.y1,bb.y2, cc.x1, cc.x2, cc.y1, cc.y2, xai,xbi,xbj, **kwargs)        
+    return out
+    
+def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a,b,c, xai,xbi,xbj, **kwargs):
+    """wrapper for xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input
+        
+    See also
+    --------
+    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+    
+    """
+
+    b, c = polyline_make_x_common(b, c)
+    return xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a.x,a.y,b.x1,b.x2,b.y1,b.y2, c.x1, c.x2, c.y1, c.y2, xai,xbi,xbj, **kwargs)    
+       
+       
+
 def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa,ya,x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False):
     """interpolate the xa_ya part at xai, and integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between xbi, and xbj of f(a, b, c) which is defined as g(a)*h(b)*h(c) where g(a) is defined with x_y data and h(b) and h(c) is defined by x1_x2_y1_y2 data
     

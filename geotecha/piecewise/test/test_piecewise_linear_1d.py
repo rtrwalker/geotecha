@@ -82,6 +82,7 @@ from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multipy_avg_x1b_x2b_y1
 from geotecha.piecewise.piecewise_linear_1d import pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between
 from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
 
+from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super
 
 class test_linear_piecewise(object):
     """Some piecewise distributions for testing"""
@@ -1017,6 +1018,21 @@ class test_linear_piecewise(object):
                            }),                     
                     [[1*0.5,1*1,1*2.5,1*3],
                      [0.5*0.5,0.5*1,0.5*2.5,0.5*3]]))
+                     
+    def test_pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(self):
+        """test_pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super"""
+        #pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a, b, c, xai,xbi,xbj, achoose_max=False)
+        ok_(np.allclose( 
+                    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(
+                        **{'a': [PolyLine([0,1,1,2],[0,1,2,3]), PolyLine([0,1,1,2],[0,1,2,3])],
+                           'b': [PolyLine([0],[0.5],[0.5],[0.5]),PolyLine([0,0.2],[0.2,0.5],[0.5,0.5],[0.5,0.5])],                 
+                           'c': PolyLine([0],[0.5],[2],[2]),
+                           'xai':[0.5, 1, 1.5, 2],                                           
+                           'xbi':[0,0], 'xbj':[0.5, 0.25],
+                            'achoose_max': False
+                           }),                     
+                    [[1*0.5,1*1,1*2.5,1*3],
+                     [0.5*0.5,0.5*1,0.5*2.5,0.5*3]]))                         
                   
 
 def test_PolyLine():

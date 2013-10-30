@@ -43,6 +43,7 @@ from geotecha.speccon.integrals import dim1sin_D_aDf_linear
 from geotecha.speccon.integrals import dim1sin_D_aDf_linear_v2
 from geotecha.speccon.integrals import Eload_linear
 from geotecha.speccon.integrals import EDload_linear
+
 from geotecha.speccon.integrals import pdim1sin_a_linear_between
 from geotecha.speccon.integrals import pdim1sin_af_linear
 from geotecha.speccon.integrals import pdim1sin_ab_linear
@@ -773,7 +774,7 @@ class test_pdim1sin_abc_linear(base_t_ester):
                                     
                                     
 class test_dim1sin_D_aDb_linear(base_t_ester):
-    """A suite of tests for the make_thesig function"""
+    """A suite of tests for the dim1sin_D_aDb_linear function"""
     def __init__(self):
         base_t_ester.__init__(self, dim1sin_D_aDb_linear, prefix = self.__class__.__name__)                
         self.zero = np.zeros(2)
@@ -825,9 +826,26 @@ class test_dim1sin_D_aDb_linear(base_t_ester):
              np.array([0.95105652, 0.58778525])],
                                                 
             ]                                    
+class test_pdim1sin_D_aDb_linear(base_t_ester):
+    """A suite of tests for the pdim1sin_D_aDb_linear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_D_aDb_linear, prefix = self.__class__.__name__)                
+        self.zero = np.zeros(2)
+        
+        
+        
+        self.cases = [            
             
+            
+            ['a const, b linear  in two layers PTIB', 
+             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1, 1]),'b': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1.4, 2.2])},
+             np.array([0.58778525, 0.95105652])]
+            
+                                                
+            ]       
+                 
 class test_EDload_linear(base_t_ester):
-    """A suite of tests for the make_thesig function"""
+    """A suite of tests for the EDload_linear function"""
     def __init__(self):
         base_t_ester.__init__(self, EDload_linear, prefix = self.__class__.__name__)                
         self.eigs = np.array([2.46740110027, 22.2066099025])        
@@ -858,9 +876,35 @@ class test_EDload_linear(base_t_ester):
             
                                                 
             ]             
+
+class test_pEDload_linear(base_t_ester):
+    """A suite of tests for the pEDload_linear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, pEDload_linear, prefix = self.__class__.__name__)                
+        self.eigs = np.array([2.46740110027, 22.2066099025])        
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #Eload_linear(loadtim, loadmag, eigs, tvals)
+        
+        
+        self.cases = [            
+            
+
+            ['two ramp loads', 
+             {'a': PolyLine(np.array([0, 0.3, 0.5, 0.8]), np.array([0, 40, 40, 80])), 'eigs': self.eigs, 'tvals': np.array([-1,0.1, 0.3, 0.4, 0.5, 0.7, 1])}, 
+             np.array([[0, 0],
+                       [11.8157397503, 5.35253639003],
+                       [28.2613797105, 5.9965412459],
+                       [22.0818518534, 0.650848653927],
+                       [17.2535165046, 0.0706413835822],
+                       [31.5811316808, 5.9343186486],
+                       [22.2779636541, 0.0706424476152],                       
+                       ])],
+            
+                                                
+            ]             
             
 class test_Eload_linear(base_t_ester):
-    """A suite of tests for the make_thesig function"""
+    """A suite of tests for the Eload_linear function"""
     def __init__(self):
         base_t_ester.__init__(self, Eload_linear, prefix = self.__class__.__name__)                
         self.eigs = np.array([2.46740110027, 22.2066099025])        
@@ -891,6 +935,33 @@ class test_Eload_linear(base_t_ester):
             
                                                 
             ]
+
+
+class test_pEload_linear(base_t_ester):
+    """A suite of tests for the pEload_linear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, pEload_linear, prefix = self.__class__.__name__)                
+        self.eigs = np.array([2.46740110027, 22.2066099025])        
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #Eload_linear(loadtim, loadmag, eigs, tvals)
+        
+        
+        self.cases = [            
+                        
+            ['two ramp loads', 
+             {'a': PolyLine([0, 0.3, 0.5, 0.8, 10], [0, -40, -40, -80, -80]), 'eigs': self.eigs, 'tvals': [-1,0.1, 0.3, 0.4, 0.5, 0.7, 1]}, 
+              [[0, 0],
+               [-0.615057512497, -0.359388352313],
+               [-4.75748360824, -1.53123141729],
+               [-7.26195191556, -1.77195670654],
+               [-9.21880252584, -1.79808438982],
+               [-14.219631734, -2.7348770607],
+               [-23.3938601792, -3.59934982888],                       
+               ]],
+            
+                                                
+            ]
+
                                                 
 class test_dim1sin(base_t_ester):
     """A suite of tests for the dim1sin function"""
@@ -953,3 +1024,17 @@ class test_dim1sin_a_linear_between(base_t_ester):
              {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.2, 0.8]}, 
              np.array([0.904514325378385, 0.372372215462563])],
             ]           
+            
+class test_pdim1sin_a_linear_between(base_t_ester):
+    """A suite of tests for the pdim1sin_a_linear_between function"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_a_linear_between, prefix = self.__class__.__name__)                
+                            
+        self.cases = [            
+            
+
+ 
+            ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.8], PTIB', 
+             {'m': self.PTIB,'a': PolyLine([0,0.4,0.6],[0.4,0.6,1],[1, 2, 3], [1, 2, 3]), 'z': [0.2, 0.8]}, 
+             np.array([0.904514325378385, 0.372372215462563])],
+            ]                     
