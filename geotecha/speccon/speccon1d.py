@@ -30,8 +30,106 @@ import sys, imp
 import textwrap
 import numpy as np
 import matplotlib.pyplot as plt
+import geotecha.inputoutput.inputoutput as inputoutput
 
+class Speccon1d(object):
+    """solve 1D parabolic partial differential equation using spectral method
+    
+    """
+    
+    def __init__(self, reader = None):                        
+        self._setup()
+        
+        inputoutput.initialize_objects_attributes(self, 
+                                                  self._attributes, 
+                                                  self._attribute_defaults,
+                                                  not_found_value = None)        
+        
+        self._input_text = None
+        if not reader is None:
+            if isinstance(reader, str):
+                self._input_text = reader
+            else:
+                self._input_text = reader.read()
+                
+            inputoutput.copy_attributes_from_text_to_object(reader,self, 
+                self._attributes, self._attribute_defaults, 
+                not_found_value = None)
 
+            
+    def _setup(self):        
+        # to be overridden in subclasses
+        self._attribute_defaults = dict()
+        self._attributes = []
+        
+        self._attributes_that_should_be_lists= []
+        self._attributes_that_should_have_same_x_limits = []
+        self._attributes_that_should_have_same_len_pairs = []
+        
+        self._zero_or_all = []            
+        self._at_least_one = []
+                                          
+        self._one_implies_others = []            
+    
+    def check_all(self):
+        """perform checks on attributes
+        
+        Notes
+        -----
+        
+        See also
+        --------                        
+        geotecha.inputoutput.inputoutput.check_attribute_combinations
+        geotecha.inputoutput.inputoutput.check_attribute_is_list
+        geotecha.inputoutput.inputoutput.check_attribute_PolyLines_have_same_x_limits        
+        geotecha.inputoutput.inputoutput.check_attribute_pairs_have_equal_length
+        
+        """        
+        
+       
+        inputoutput.check_attribute_combinations(self,
+                                                 self._zero_or_all,
+                                                 self._at_least_one,
+                                                 self._one_implies_others)        
+        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)                        
+        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)        
+        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
+        
+        return
+
+    def make_all(self):
+        """run checks, make all arrays, make output
+        
+        Generally run this after attributes have been entered
+        
+        See also
+        --------
+        check_all
+        make_time_independent_arrays
+        make_time_dependent_arrays
+        make_output
+        
+        """
+        self.check_all()
+        self.make_time_independent_arrays()
+        self.make_time_dependent_arrays()
+        self.make_output()
+        
+        return        
+        
+    def make_time_independent_arrays(self):
+        """make all time-independent arrays. To be overridden in subclasses"""               
+        pass    
+
+    def make_time_dependent_arrays(self):
+        """make all time-independent arrays. To be overridden in subclasses"""               
+        pass    
+        
+    def make_output(self):
+        """make all output. To be overridden in subclasses"""               
+        pass    
+    
+    
 def dim1sin_f(m, outz, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_time=None):
     """assemble output u(Z,t) = phi * v_E_Igam_v_the + utop(t) * (1-Z) + ubot(t)*Z
     

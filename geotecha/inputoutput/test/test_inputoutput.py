@@ -200,6 +200,6 @@ def test_code_for_explicit_attribute_initialization():
     
     assert_equal(code_for_explicit_attribute_initialization('a b c'.split(), {'a': 3,'b': 6}, None), 'self.a = 3\nself.b = 6\nself.c = None\n')
     assert_equal(code_for_explicit_attribute_initialization('a b c'.split(), {'a': 3,'b': 6}, None, not_found_value='sally'), "self.a = 3\nself.b = 6\nself.c = 'sally'\n")
-    assert_equal(code_for_explicit_attribute_initialization('a b c'.split(), {'a': 3,'b': 6}), 'self.a = self._attribute_defaults.get(a, None)\nself.b = self._attribute_defaults.get(b, None)\nself.c = None\n')
+    assert_equal(code_for_explicit_attribute_initialization('a b c'.split(), {'a': 3,'b': 6}), "self.a = self._attribute_defaults.get('a', None)\nself.b = self._attribute_defaults.get('b', None)\nself.c = None\n")
     
     

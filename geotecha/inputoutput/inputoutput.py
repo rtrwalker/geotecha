@@ -239,7 +239,7 @@ def check_attribute_combinations(obj, zero_or_all=[], at_least_one=[], one_impli
             raise ValueError('Either zero or all of the following variables must be defined: ' + ', '.join(check))
             
     for check in at_least_one:
-        if sum([not g(v) is None for v in check])==0:
+        if not any([not g(v) is None for v in check]):
             if len(check)==1:
                 raise ValueError('Need the following variable: ' + ', '.join(check))
             else:
@@ -249,7 +249,7 @@ def check_attribute_combinations(obj, zero_or_all=[], at_least_one=[], one_impli
         if len(check)<=1:
             raise ValueError("each member of 'one_implies_others' must be a list with at least two elements.  Member {0} is {1}".format(i,', '.join(check)))
         if not g(check[0]) is None:
-            if sum([not g(v) is None for v in check[1:]]) != (len(check)-1):
+            if not all([not g(v) is None for v in check[1:]]):
                 raise ValueError('If {0} is defined then the following variables must also be defined: '.format(check[0]) + ', '.join(check[1:]))
             
     return
@@ -353,7 +353,7 @@ def code_for_explicit_attribute_initialization(
                     v2 = "'{0}'".format(v2)
                 out+='{0} = {1}.get({2}, {3})\n'.format('.'.join([object_name, v]), 
                     '.'.join([object_name, defaults_name]),
-                     v, 
+                     "'{}'".format(v), 
                      v2)
             else:
                 v2 = not_found_value
@@ -364,24 +364,24 @@ def code_for_explicit_attribute_initialization(
                 
 
             
-                
-#b = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 'yes1.01' }
-#a = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()                
-#print(code_for_explicit_attribute_initialization(a,b, None, not_found_value='sally'))
+if __name__=='__main__':
+    b = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 'yes1.01' }
+    a = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()                
+    print(code_for_explicit_attribute_initialization(a,b, not_found_value=None))
         
         
-print(code_for_explicit_attribute_initialization(a,b, None, not_found_value='sally'))        
-#def code_for_explicit_attribute_initialization(
-#        attributes=[],
-#        defaults={},
-#        defaults_name = '_attribute_defaults',
-#        object_name = 'self',        
-#        not_found_value = None):
-a = 'a b c'.split
-b = {'a': 3,'b': 6}
-c = None
-d=self
-e = None
+#print(code_for_explicit_attribute_initialization(a,b, None, not_found_value='sally'))        
+##def code_for_explicit_attribute_initialization(
+##        attributes=[],
+##        defaults={},
+##        defaults_name = '_attribute_defaults',
+##        object_name = 'self',        
+##        not_found_value = None):
+#a = 'a b c'.split
+#b = {'a': 3,'b': 6}
+#c = None
+#d=self
+#e = None
             
     
 

@@ -43,7 +43,7 @@ except ImportError:
 
 
 
-class speccon1d_vr(object):
+class speccon1d_vr(speccon1d.Speccon1d):
     """
     speccon1d(reader)
     
@@ -138,7 +138,8 @@ class speccon1d_vr(object):
         top p.press variation with time. Polyline(time, magnitude)
     bot_vs_time : list of Polyline, optional
         bottom p.press variation with time. Polyline(time, magnitude).
-        When drn=1, i.e. PTIB bot_vs_time is equivilent to saying D[u(1,t), Z] = bot_vs_time
+        When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying 
+        D[u(1,t), Z] = bot_vs_time
     ppress_z : list_like of float, optional
         normalised z to calc pore pressure at    
     avg_ppress_z_pairs : list of two element list of float, optional
@@ -163,10 +164,8 @@ class speccon1d_vr(object):
     
     Notes
     -----
-
     governing equation:
-
-    .. math     
+    
     
     
     References
@@ -179,112 +178,82 @@ class speccon1d_vr(object):
     .. [4] Walker, Rohan T. 2011. Vertical Drain Consolidation Analysis in One, Two and Three Dimensions'. Computers and Geotechnics 38 (8) (December): 1069-1077. doi:10.1016/j.compgeo.2011.07.006.
 
     """
-    def __init__(self,reader=None):
-
-
-        self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0 }
-        #self._attributes = 'H drn dT neig dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z port avg_ppress_z_pairs avpt settlement_z_pairs sett'.split()        
+              
+    def _setup(self):
+        self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0 }        
         self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()        
         
         self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time'.split()
         self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
         self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time'.split() #pairs that should have the same length
         
+        self._zero_or_all = [
+            'dTh kh et'.split(),
+            'dTv kv'.split(),
+            'surcharge_vs_depth surcharge_vs_time'.split(),
+            'vacuum_vs_depth vacuum_vs_time'.split()]
+        self._at_least_one = [
+            ['mv'],
+            'dTh dTv'.split(),
+            'kh kv'.split(),
+            'surcharge_vs_time vacuum_vs_time top_vs_time bot_vs_time'.split(),
+            ['tvals'],
+            'ppress_z avg_ppress_z_pairs settlement_z_pairs'.split()]
+                                          
+        self._one_implies_others = [
+            'vacuum_vs_time dTh kh et'.split(),
+            'vacuum_vs_depth dTh kh et'.split()]
         
-#        #if you don't care about autocomplete for the parameters you can use this loop 
-#        for v in self._attributes:
-#            self.__setattr__(v, self._attribute_defaults.get(v, None))
-                   
-        self.H = self._attribute_defaults.get('H')               
-        self.drn = self._attribute_defaults.get('drn')
-        self.dT = self._attribute_defaults.get('dT')
-        self.neig = self._attribute_defaults.get('neig')        
-        self.mvref = self._attribute_defaults.get('mvref')
-        self.kvref = self._attribute_defaults.get('kvref')
-        self.khref = self._attribute_defaults.get('khref')
-        self.etref = self._attribute_defaults.get('etref')
+        #these explicit initializations are just to make coding easier
+        self.H = self._attribute_defaults.get('H', None)
+        self.drn = self._attribute_defaults.get('drn', None)
+        self.dT = self._attribute_defaults.get('dT', None)
+        self.neig = self._attribute_defaults.get('neig', None)
+        self.mvref = self._attribute_defaults.get('mvref', None)
+        self.kvref = self._attribute_defaults.get('kvref', None)
+        self.khref = self._attribute_defaults.get('khref', None)
+        self.etref = self._attribute_defaults.get('etref', None)
         self.dTh = None
         self.dTv = None
-                    
-        self.mv = None #normalised volume compressibility PolyLine(depth, mv)
-        self.kh = None #normalised horizontal permeability PolyLine(depth, kh) 
-        self.kv = None #normalised vertical permeability PolyLine(depth, kv) 
-        self.et = None #normalised vertical drain parameter PolyLine(depth, et) 
-
-        self.surcharge_vs_depth = None #surcharge list of PolyLine(depth, multiplier)
-        self.vacuum_vs_depth = None #vacuum list of PolyLine(depth, multiplier)
-        self.surcharge_vs_time = None #surcharge list of PolyLine(time, magnitude)
-        self.vacuum_vs_time = None #vacuum list of Polyline(time, magnitude)
-        self.top_vs_time = None #top p.press list of Polyline(time, magnitude)
-        self.bot_vs_time = None #bot p.press list of Polyline(time, magnitude)
+        self.mv = None
+        self.kh = None
+        self.kv = None
+        self.et = None
+        self.surcharge_vs_depth = None
+        self.surcharge_vs_time = None
+        self.vacuum_vs_depth = None
+        self.vacuum_vs_time = None
+        self.top_vs_time = None
+        self.bot_vs_time = None
+        self.ppress_z = None
+        self.avg_ppress_z_pairs = None
+        self.settlement_z_pairs = None
+        self.tvals = None
         
-        self.ppress_z = None #normalised z to calc pore pressure at
-        #self.port = None #times to calc pore pressure at
-        self.avg_ppress_z_pairs = None #nomalised zs to calc average pore pressure between
-        #self.avpt = None #times to calc average pore pressure at
-        self.settlement_z_pairs = None #normalised depths to calculate normalised settlement between    
-        #self.sett = None #times to calc normalised settlement at
-        self.tvals = None        
+        return        
+                
         
-        self.text = None
-        if not reader is None:
-            inputoutput.copy_attributes_from_text_to_object(reader,self, 
-                self._attributes, self._attribute_defaults, 
-                not_found_value = None)
-            #self._grab_input_from_text(reader)
-            
-        #self._m = None            
-    
-
-    def check_all(self):
-        """perform all checks
-        
-        See also
-        --------                        
-        self._check_for_input_errors : check for a variety of input errors
-        self._check_list_inputs : for inputs that should be lists puts 
-        non-lists in a list                
-        self._check_z_limits : checks that all depth dependant matrices have 
-        the same z-limits        
-        self._check_len_pairs : checks that each load has a depth dependent 
-        part and a corresponding time dependent part
-        
-        """        
-        
-        self._check_for_input_errors()
-#        self._check_list_inputs(self._attributes_that_should_be_lists) 
-        
-        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)        
-        
-#        self._check_z_limits(self._attributes_that_should_have_same_x_limits)
-        
-        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)
-#        self._check_len_pairs(self._attributes_that_should_have_same_len_pairs)
-        
-        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
-        
-        return
-        
-    def make_all(self):
-        """run checks, make all arrays, make output
-        
-        Generally run this after input is in place (either through 
-        initializing the class with a reader/text/fileobject or 
-        through some other means)
-        
-        See also
-        --------
-        check_all
-        make_time_independent_arrays
-        make_time_dependent_arrays
-        make_output
-        """
-        self.check_all()
-        self.make_time_independent_arrays()
-        self.make_time_dependent_arrays()
-        self.make_output()
-        
-        return
+#    def make_all(self):
+#        """run checks, make all arrays, make output
+#        
+#        Generally run this after input is in place (either through 
+#        initializing the class with a reader/text/fileobject or 
+#        through some other means)
+#        
+#        See also
+#        --------
+#        check_all
+#        make_time_independent_arrays
+#        make_time_dependent_arrays
+#        make_output
+#        
+#        """
+#        
+#        self.check_all()
+#        self.make_time_independent_arrays()
+#        self.make_time_dependent_arrays()
+#        self.make_output()        
+#        return
         
     def make_time_independent_arrays(self):
         """make all time independent arrays
@@ -318,9 +287,11 @@ class speccon1d_vr(object):
         self.make_E_Igamv_the()
         
         """
+        
         self.make_E_Igamv_the()
         self.v_E_Igamv_the=np.dot(self.v, self.E_Igamv_the)
         return
+        
     def make_output(self):
         """make all output"""
         
@@ -331,7 +302,6 @@ class speccon1d_vr(object):
         if not self.settlement_z_pairs is None:                      
             self._make_set()        
         return
-        
         
     def _make_m(self):
         """make the basis function eigenvalues                
@@ -349,116 +319,6 @@ class speccon1d_vr(object):
         self.m = integ.m_from_sin_mx(np.arange(self.neig), self.drn)         
         return
           
-    def _check_for_input_errors(self):
-        """checks for various input inconsistencies"""
-        
-        
-        #bad material prop input errors  
-        if self.mv is None:
-            raise ValueError('No mv values given. '); sys.exit(0)    
-        if self.dTh is None and self.dTv is None:
-            raise ValueError('Neither dTv or dTh are defined. Need at least one'); sys.exit(0)
-        if self.kh is None and self.kv is None:
-            raise ValueError('Neither kh and kv are defined. Need at least one'); sys.exit(0)        
-        if sum([v is None for v in [self.dTh, self.kh, self.et]]) in [1,2]:
-            raise ValueError('dTh, kh, or et is not defined, need all three to model radial drainage/vacuum'); sys.exit(0)    
-        if sum([v is None for v in [self.dTv, self.kv]])==1:
-            raise ValueError('dTv or kv is not defined, need both to model vertical drainage.'); sys.exit(0)        
-        
-        
-            
-        #bad load input errors
-        if sum([v is None for v in [self.surcharge_vs_depth, self.surcharge_vs_time]]) == 1:
-            raise ValueError('surcharge_vs_depth or surcharge_vs_time is not defined, need both to model surcharge'); sys.exit(0)        
-        if sum([v is None for v in [self.vacuum_vs_depth, self.vacuum_vs_time]]) == 1:
-            raise ValueError('vacuum_vs_depth or vacuum_vs_time is not defined, need both to model vacuum'); sys.exit(0)
-#        if self.drn==1 and not (self.bot_vs_time is None):
-#            raise ValueError('bot_vs_time is meaningless when bottom is impervious (drn=1).  remove drn or change drn to 1'); sys.exit(0)
-        if sum([v is None for v in [self.surcharge_vs_depth, self.surcharge_vs_time, self.vacuum_vs_depth, self.vacuum_vs_time, self.top_vs_time, self.bot_vs_time]])==6:
-            raise ValueError('surcharge_vs_depth, surcharge_vs_time, vacuum_vs_depth, vacuum_vs_time, top_vs_time, and bot_vs_time not defined.  i.e. no loadings specified.'); sys.exit(0)        
-        if (sum([v is None for v in [self.vacuum_vs_depth, self.vacuum_vs_time]])==0) and (sum([v is None for v in [self.dTh, self.kh, self.et]])>0):
-            raise ValueError('vacuum_vs_depth, vacuum_vs_time, defined but one or more of dTh, kh, et not defined.  To model vacuum need dTh, kh and et'); sys.exit(0)        
-            
-        #bad output specifying errors    
-#        if sum([v is None for v in [self.ppress_z, self.port]])==1:
-#            raise ValueError('ppress_z or port is not defined, need both to output pore pressure at depth'); sys.exit(0)    
-#        if sum([v is None for v in [self.avg_ppress_z_pairs, self.avpt]])==1:
-#            raise ValueError('avg_ppress_z_pairs or avpt is not defined, need both to output average pore pressure'); sys.exit(0)            
-#        if sum([v is None for v in [self.settlement_z_pairs, self.sett]])==1:
-#            raise ValueError('settlement_z_pairs or sett is not defined, need both to output settlement'); sys.exit(0)        
-#        if sum([v is None for v in [self.ppress_z, self.port, self.avg_ppress_z_pairs, self.avpt,self.settlement_z_pairs, self.sett]])==6:
-#            raise ValueError('ppress_z, port, avg_ppress_z_pairs, avpt, settlement_z_pairs, and sett not specified.  i.e. no output specified.'); sys.exit(0)
-        if self.tvals is None:
-            raise ValueError('tvals not specified.  i.e. no output.'); sys.exit(0)                        
-        if sum([v is None for v in [self.ppress_z, self.avg_ppress_z_pairs, self.settlement_z_pairs]])==3:            
-            raise ValueError('ppress_z, avg_ppress_z_pairs, settlement_z_pairs and not specified.  i.e. no output specified.'); sys.exit(0)            
-    
-    
-           
-#    def _grab_input_from_text(self, reader):
-#        """grabs input parameters from fileobject, StringIO, text"""
-#        #self.text = reader.read()
-#        
-#        inp = inputoutput.make_module_from_text(reader)
-#        
-#        for v in self._attributes:
-#            self.__setattr__(v, inp.__dict__.get(v,self._attribute_defaults.get(v, None)))                
-                        
-#    def _check_list_inputs(self, check_list):                
-#        """puts non-lists in a list"""
-#        
-#        g = self.__getattribute__
-#        for v in check_list:
-#            if not g(v) is None:
-#                if not isinstance(g(v), list):
-#                    self.__setattr__(v,[g(v)])                
-                
-#    def _check_z_limits(self, check_list):
-#        """checks that members of check_list have same z limits"""
-#        g = self.__getattribute__
-#        
-#        #find first z values
-#        for v in check_list:
-#            if not g(v) is None:                
-#                if isinstance(g(v), list):
-#                    zcheck = np.array([g(v)[0].x[0], g(v)[0].x[-1]])                   
-#                    zstr = v
-#                    break
-#                else:
-#                    a = g(v).x[0]
-#                    
-#                    zcheck = np.array([g(v).x[0], g(v).x[-1]])
-#                    zstr = v
-#                    break
-#        
-#        for v in check_list:
-#            if not g(v) is None:                
-#                if isinstance(g(v), list):
-#                    for j, u in enumerate(g(v)):
-#                        if not np.allclose([u.x[0], u.x[-1]], zcheck):                             
-#                            raise ValueError('All upper and lower z limits must be the same.  Check ' + v + ' and ' + zstr + '.'); sys.exit(0)                                                                
-#                else:
-#                    if not np.allclose([g(v).x[0], g(v).x[-1]], zcheck):
-#                        raise ValueError('All upper and lower z limits must be the same.  Check ' + v + ' and ' + zstr + '.'); sys.exit(0)                                                                
-#                        
-        
-#        zs = [(g(v).x[0], g(v).x[-1]) for v in check_list if g(v) is not None]
-#        print(zs)
-#        if zs.count(zs[0])!=len(zs):
-#            raise ValueError(','.join(check_list) + " must all have the same start and end z values (usually 0 and 1)."); sys.exit(0)
-
-
-#    def _check_len_pairs(self, check_list):
-#        """checks pairs of parameters that hsould have the same length"""
-#
-#        g = self.__getattribute__
-#        
-#        # for iterating in chuncks see http://stackoverflow.com/a/434328/2530083
-#        for v1, v2 in [check_list[pos:pos + 2] for pos in xrange(0, len(check_list), 2)]:
-#            if not g(v1) is None and not g(v2) is None:
-#                if len(g(v1)) != len(g(v2)):
-#                    raise ValueError("%s has %d elements, %s has %d elements.  They should have the same number of elements." % (v1,len(g(v1)), v2, len(g(v2))))
-
     def _make_m(self):
         """make the basis function eigenvalues
         
@@ -472,6 +332,7 @@ class speccon1d_vr(object):
         for :math:`i = 1\:to\:neig-1`
         
         """
+        
         if sum(v is None for v in[self.neig, self.drn])!=0:
             raise ValueError('neig and/or drn is not defined')
         self.m = integ.m_from_sin_mx(np.arange(self.neig), self.drn)         
@@ -531,7 +392,6 @@ class speccon1d_vr(object):
             self.psi += self.dTh / self.dT * integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
         self.psi[np.abs(self.psi)<1e-8]=0.0
         return        
-        
 
     def _make_eigs_and_v(self):
         """make Igam_psi, v and eigs, and Igamv
@@ -551,14 +411,12 @@ class speccon1d_vr(object):
         .. math:: \\left(\\mathbf{\\Gamma}^{-1}\\mathbf{\\Psi}\\right)        
         
         """
+                
+        Igam_psi = np.dot(np.linalg.inv(self.gam), self.psi)                
         
-        #Igam_psi = gam.inverse()*psi
-        Igam_psi = np.dot(np.linalg.inv(self.gam), self.psi)
-        #self.Igam_psi = 
+        self.eigs, self.v = np.linalg.eig(Igam_psi)        
         
-        self.eigs, self.v = np.linalg.eig(Igam_psi)
-        
-        self.Igamv=np.linalg.inv(np.dot(self.gam,self.v))                
+        self.Igamv = np.linalg.inv(np.dot(self.gam, self.v))                
         return
 
     def make_E_Igamv_the(self):
@@ -591,16 +449,9 @@ class speccon1d_vr(object):
                 self.E_Igamv_the += self.E_Igamv_the_vacuum                                                        
         if not self.top_vs_time is None or not self.bot_vs_time is None:
             self._make_E_Igamv_the_BC()
-            self.E_Igamv_the += self.E_Igamv_the_BC
-        
-                       
+            self.E_Igamv_the += self.E_Igamv_the_BC       
         return
-                    
-            
-        
 
-
-    
     def _make_E_Igamv_the_surcharge(self):
         """make the surcharge loading matrices
         
@@ -628,8 +479,7 @@ class speccon1d_vr(object):
         part of the solution for all surcharge loads
         
         """
-        
-        #self.E_Igamv_the_surcharge = np.zeros((self.neig,len(self.tvals)))        
+                       
         self.E_Igamv_the_surcharge  = speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m, self.eigs, self.mv, self.surcharge_vs_depth, self.surcharge_vs_time,self.tvals, self.Igamv, self.dT)        
         return
 
@@ -661,14 +511,14 @@ class speccon1d_vr(object):
         
         """
         
-        
-        #self.E_Igamv_the_vacuum = np.zeros((self.neig, len(self.tvals)))
-        self.E_Igamv_the_vacuum= self.dTh*speccon1d.dim1sin_E_Igamv_the_abmag_bilinear(self.m, self.eigs, self.kh, self.et, 
-                                                                        self.vacuum_vs_depth, self.vacuum_vs_time, self.tvals, self.Igamv, self.dT)
-       
+        self.E_Igamv_the_vacuum = self.dTh*speccon1d.dim1sin_E_Igamv_the_abmag_bilinear(self.m, self.eigs, self.kh, self.et, 
+                                                                        self.vacuum_vs_depth, self.vacuum_vs_time, self.tvals, self.Igamv, self.dT)       
         return
-    def _make_E_Igamv_the_BC(self):
         
+    def _make_E_Igamv_the_BC(self):
+        """make the boundary condition loading matrices
+        
+        """
         self.E_Igamv_the_BC = np.zeros((self.neig, len(self.tvals)))        
         self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)        
         
@@ -679,7 +529,6 @@ class speccon1d_vr(object):
             if self.dTv!=0:                                
                 self.E_Igamv_the_BC += self.dTv / self.dT * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
         return          
-    
         
     def _make_por(self):
         """make the pore pressure output
@@ -699,10 +548,8 @@ class speccon1d_vr(object):
         
         """
         
-
         self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals, self.v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time)
-
-                
+        return
         
     def _make_avp(self):                            
         """calculate average pore pressure
@@ -721,9 +568,7 @@ class speccon1d_vr(object):
         """
         
         self.avp=speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs, self.tvals, self.v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time)
-        
-        
-
+        return        
         
     def _make_set(self):        
         """calculate settlement
@@ -743,17 +588,18 @@ class speccon1d_vr(object):
         .. math:: \\overline{\\rho}\\left(\\left({Z_1,Z_2}\\right),t\\right)=\\int_{Z_1}^{Z_2}{m_v\\left({Z}\\right)\\sigma\\left({Z,t}\\right)\\,dZ}+\\int_{Z_1}^{Z_2}{m_v\\left({Z}\\right)\\left({\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}+u_{top}\\left({t}\\right)\\left({1-Z}\\right)+u_{bot}\\left({t}\\right)\\left({Z}\\right)}\\right)\\,dZ}
                                         
         """
+        
         z1 = np.asarray(self.settlement_z_pairs)[:,0]
         z2 = np.asarray(self.settlement_z_pairs)[:,1]
         self.set=-speccon1d.dim1sin_integrate_af(self.m, self.settlement_z_pairs, self.tvals, 
                                        self.v_E_Igamv_the, 
-                                        self.drn, self.mv, self.top_vs_time, self.bot_vs_time)
-        
+                                        self.drn, self.mv, self.top_vs_time, self.bot_vs_time)    
         self.set+=pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(self.surcharge_vs_time, self.surcharge_vs_depth, self.mv, self.tvals, z1,z2,achoose_max=True)            
-        self.set *= self.H * self.mvref
-
-                                      
+        self.set *= self.H * self.mvref                        
         return
+
+
+
 
 
 
