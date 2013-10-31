@@ -24,7 +24,12 @@ import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
 
-import sys, imp
+import geotecha.inputoutput.inputoutput as inputoutput
+
+import geotecha.speccon.speccon1d as speccon1d
+
+
+import sys
 import textwrap
 import numpy as np
 import matplotlib.pyplot as plt
@@ -36,27 +41,9 @@ try:
 except ImportError:
     from StringIO import StringIO
 
-def make_module_from_text(reader):
-    """make a module from file,StringIO, text etc
-    
-    Parameters
-    ----------
-    reader : file_like object
-        object to get text from
-    
-    Returns
-    -------
-    m: module
-        text as module
-        
-    """
-    #for making module out of strings/files see http://stackoverflow.com/a/7548190/2530083    
-    
-    mymodule = imp.new_module('mymodule') #may need to randomise the name
-    exec reader in mymodule.__dict__    
-    return mymodule
 
-class speccon1d(object):
+
+class speccon1d_vr(object):
     """
     speccon1d(reader)
     
@@ -195,27 +182,27 @@ class speccon1d(object):
     def __init__(self,reader=None):
 
 
-        self._parameter_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0 }
-        #self._parameters = 'H drn dT neig dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z port avg_ppress_z_pairs avpt settlement_z_pairs sett'.split()        
-        self._parameters = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()        
+        self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0 }
+        #self._attributes = 'H drn dT neig dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z port avg_ppress_z_pairs avpt settlement_z_pairs sett'.split()        
+        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()        
         
-        self._should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time'.split()
-        self._should_have_same_z_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
-        self._should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time'.split() #pairs that should have the same length
+        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time'.split()
+        self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
+        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time'.split() #pairs that should have the same length
         
         
 #        #if you don't care about autocomplete for the parameters you can use this loop 
-#        for v in self._parameters:
-#            self.__setattr__(v, self._parameter_defaults.get(v, None))
+#        for v in self._attributes:
+#            self.__setattr__(v, self._attribute_defaults.get(v, None))
                    
-        self.H = self._parameter_defaults.get('H')               
-        self.drn = self._parameter_defaults.get('drn')
-        self.dT = self._parameter_defaults.get('dT')
-        self.neig = self._parameter_defaults.get('neig')        
-        self.mvref = self._parameter_defaults.get('mvref')
-        self.kvref = self._parameter_defaults.get('kvref')
-        self.khref = self._parameter_defaults.get('khref')
-        self.etref = self._parameter_defaults.get('etref')
+        self.H = self._attribute_defaults.get('H')               
+        self.drn = self._attribute_defaults.get('drn')
+        self.dT = self._attribute_defaults.get('dT')
+        self.neig = self._attribute_defaults.get('neig')        
+        self.mvref = self._attribute_defaults.get('mvref')
+        self.kvref = self._attribute_defaults.get('kvref')
+        self.khref = self._attribute_defaults.get('khref')
+        self.etref = self._attribute_defaults.get('etref')
         self.dTh = None
         self.dTv = None
                     
@@ -241,7 +228,10 @@ class speccon1d(object):
         
         self.text = None
         if not reader is None:
-            self._grab_input_from_text(reader)
+            inputoutput.copy_attributes_from_text_to_object(reader,self, 
+                self._attributes, self._attribute_defaults, 
+                not_found_value = None)
+            #self._grab_input_from_text(reader)
             
         #self._m = None            
     
@@ -262,9 +252,16 @@ class speccon1d(object):
         """        
         
         self._check_for_input_errors()
-        self._check_list_inputs(self._should_be_lists)        
-        self._check_z_limits(self._should_have_same_z_limits)
-        self._check_len_pairs(self._should_have_same_len_pairs)
+#        self._check_list_inputs(self._attributes_that_should_be_lists) 
+        
+        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)        
+        
+#        self._check_z_limits(self._attributes_that_should_have_same_x_limits)
+        
+        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)
+#        self._check_len_pairs(self._attributes_that_should_have_same_len_pairs)
+        
+        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
         
         return
         
@@ -398,67 +395,69 @@ class speccon1d(object):
     
     
            
-    def _grab_input_from_text(self, reader):
-        """grabs input parameters from fileobject, StringIO, text"""
-        #self.text = reader.read()
-        
-        inp = make_module_from_text(reader)
-        
-        for v in self._parameters:
-            self.__setattr__(v, inp.__dict__.get(v,self._parameter_defaults.get(v, None)))                
+#    def _grab_input_from_text(self, reader):
+#        """grabs input parameters from fileobject, StringIO, text"""
+#        #self.text = reader.read()
+#        
+#        inp = inputoutput.make_module_from_text(reader)
+#        
+#        for v in self._attributes:
+#            self.__setattr__(v, inp.__dict__.get(v,self._attribute_defaults.get(v, None)))                
                         
-    def _check_list_inputs(self, check_list):                
-        """puts non-lists in a list"""
-        
-        g = self.__getattribute__
-        for v in check_list:
-            if not g(v) is None:
-                if not isinstance(g(v), list):
-                    self.__setattr__(v,[g(v)])                
+#    def _check_list_inputs(self, check_list):                
+#        """puts non-lists in a list"""
+#        
+#        g = self.__getattribute__
+#        for v in check_list:
+#            if not g(v) is None:
+#                if not isinstance(g(v), list):
+#                    self.__setattr__(v,[g(v)])                
                 
-    def _check_z_limits(self, check_list):
-        """checks that members of check_list have same z limits"""
-        g = self.__getattribute__
-        
-        #find first z values
-        for v in check_list:
-            if not g(v) is None:                
-                if isinstance(g(v), list):
-                    zcheck = np.array([g(v)[0].x[0], g(v)[0].x[-1]])                   
-                    zstr = v
-                    break
-                else:
-                    a = g(v).x[0]
-                    
-                    zcheck = np.array([g(v).x[0], g(v).x[-1]])
-                    zstr = v
-                    break
-        
-        for v in check_list:
-            if not g(v) is None:                
-                if isinstance(g(v), list):
-                    for j, u in enumerate(g(v)):
-                        if not np.allclose([u.x[0], u.x[-1]], zcheck):                             
-                            raise ValueError('All upper and lower z limits must be the same.  Check ' + v + ' and ' + zstr + '.'); sys.exit(0)                                                                
-                else:
-                    if not np.allclose([g(v).x[0], g(v).x[-1]], zcheck):
-                        raise ValueError('All upper and lower z limits must be the same.  Check ' + v + ' and ' + zstr + '.'); sys.exit(0)                                                                
-                        
+#    def _check_z_limits(self, check_list):
+#        """checks that members of check_list have same z limits"""
+#        g = self.__getattribute__
+#        
+#        #find first z values
+#        for v in check_list:
+#            if not g(v) is None:                
+#                if isinstance(g(v), list):
+#                    zcheck = np.array([g(v)[0].x[0], g(v)[0].x[-1]])                   
+#                    zstr = v
+#                    break
+#                else:
+#                    a = g(v).x[0]
+#                    
+#                    zcheck = np.array([g(v).x[0], g(v).x[-1]])
+#                    zstr = v
+#                    break
+#        
+#        for v in check_list:
+#            if not g(v) is None:                
+#                if isinstance(g(v), list):
+#                    for j, u in enumerate(g(v)):
+#                        if not np.allclose([u.x[0], u.x[-1]], zcheck):                             
+#                            raise ValueError('All upper and lower z limits must be the same.  Check ' + v + ' and ' + zstr + '.'); sys.exit(0)                                                                
+#                else:
+#                    if not np.allclose([g(v).x[0], g(v).x[-1]], zcheck):
+#                        raise ValueError('All upper and lower z limits must be the same.  Check ' + v + ' and ' + zstr + '.'); sys.exit(0)                                                                
+#                        
         
 #        zs = [(g(v).x[0], g(v).x[-1]) for v in check_list if g(v) is not None]
 #        print(zs)
 #        if zs.count(zs[0])!=len(zs):
 #            raise ValueError(','.join(check_list) + " must all have the same start and end z values (usually 0 and 1)."); sys.exit(0)
-    def _check_len_pairs(self, check_list):
-        """checks pairs of parameters that hsould have eth same length"""
 
-        g = self.__getattribute__
-        
-        # for iterating in chuncks see http://stackoverflow.com/a/434328/2530083
-        for v1, v2 in [check_list[pos:pos + 2] for pos in xrange(0, len(check_list), 2)]:
-            if not g(v1) is None and not g(v2) is None:
-                if len(g(v1)) != len(g(v2)):
-                    raise ValueError("%s has %d elements, %s has %d elements.  They should have the same number of elements." % (v1,len(g(v1)), v2, len(g(v2))))
+
+#    def _check_len_pairs(self, check_list):
+#        """checks pairs of parameters that hsould have the same length"""
+#
+#        g = self.__getattribute__
+#        
+#        # for iterating in chuncks see http://stackoverflow.com/a/434328/2530083
+#        for v1, v2 in [check_list[pos:pos + 2] for pos in xrange(0, len(check_list), 2)]:
+#            if not g(v1) is None and not g(v2) is None:
+#                if len(g(v1)) != len(g(v2)):
+#                    raise ValueError("%s has %d elements, %s has %d elements.  They should have the same number of elements." % (v1,len(g(v1)), v2, len(g(v2))))
 
     def _make_m(self):
         """make the basis function eigenvalues
@@ -631,7 +630,7 @@ class speccon1d(object):
         """
         
         #self.E_Igamv_the_surcharge = np.zeros((self.neig,len(self.tvals)))        
-        self.E_Igamv_the_surcharge  = dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m, self.eigs, self.mv, self.surcharge_vs_depth, self.surcharge_vs_time,self.tvals, self.Igamv, self.dT)        
+        self.E_Igamv_the_surcharge  = speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m, self.eigs, self.mv, self.surcharge_vs_depth, self.surcharge_vs_time,self.tvals, self.Igamv, self.dT)        
         return
 
     def _make_E_Igamv_the_vacuum(self):
@@ -664,21 +663,21 @@ class speccon1d(object):
         
         
         #self.E_Igamv_the_vacuum = np.zeros((self.neig, len(self.tvals)))
-        self.E_Igamv_the_vacuum= self.dTh*dim1sin_E_Igamv_the_abmag_bilinear(self.m, self.eigs, self.kh, self.et, 
+        self.E_Igamv_the_vacuum= self.dTh*speccon1d.dim1sin_E_Igamv_the_abmag_bilinear(self.m, self.eigs, self.kh, self.et, 
                                                                         self.vacuum_vs_depth, self.vacuum_vs_time, self.tvals, self.Igamv, self.dT)
        
         return
     def _make_E_Igamv_the_BC(self):
         
         self.E_Igamv_the_BC = np.zeros((self.neig, len(self.tvals)))        
-        self.E_Igamv_the_BC -= dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)        
+        self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)        
         
         if sum([v is None for v in [self.et, self.kh,self.dTh]])==0:
             if self.dTh!=0:                
-                self.E_Igamv_the_BC -= self.dTh / self.dT * dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)                
+                self.E_Igamv_the_BC -= self.dTh / self.dT * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)                
         if sum([v is None for v in [self.kv,self.dTv]])==0:
             if self.dTv!=0:                                
-                self.E_Igamv_the_BC += self.dTv / self.dT * dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+                self.E_Igamv_the_BC += self.dTv / self.dT * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
         return          
     
         
@@ -701,7 +700,7 @@ class speccon1d(object):
         """
         
 
-        self.por= dim1sin_f(self.m, self.ppress_z, self.tvals, self.v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time)
+        self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals, self.v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time)
 
                 
         
@@ -721,7 +720,7 @@ class speccon1d(object):
                                         
         """
         
-        self.avp=dim1sin_avgf(self.m, self.avg_ppress_z_pairs, self.tvals, self.v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time)
+        self.avp=speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs, self.tvals, self.v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time)
         
         
 
@@ -746,7 +745,7 @@ class speccon1d(object):
         """
         z1 = np.asarray(self.settlement_z_pairs)[:,0]
         z2 = np.asarray(self.settlement_z_pairs)[:,1]
-        self.set=-dim1sin_integrate_af(self.m, self.settlement_z_pairs, self.tvals, 
+        self.set=-speccon1d.dim1sin_integrate_af(self.m, self.settlement_z_pairs, self.tvals, 
                                        self.v_E_Igamv_the, 
                                         self.drn, self.mv, self.top_vs_time, self.bot_vs_time)
         
@@ -757,716 +756,6 @@ class speccon1d(object):
         return
 
 
-def dim1sin_f(m, outz, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_time=None):
-    """assemble output u(Z,t) = phi * v_E_Igam_v_the + utop(t) * (1-Z) + ubot(t)*Z
-    
-    Basically calculates the phi part for each tvals value, then dot product
-    with v_E_Igamv_the.  Then account for non-zero boundary conditions by 
-    adding utop(t)*(1-Z) and ubot(t)*Z parts for each outz, tvals pair
-    
-    
-    Parameters
-    ----------
-        
-    
-    Notes
-    -----
-    
-    
-    """
-    
-    phi = integ.dim1sin(m, outz)
-    u = np.dot(phi, v_E_Igamv_the)    
-    #top part
-    if not top_vs_time is None:        
-        for mag_vs_time in top_vs_time:
-            if drn==1: 
-                u += pwise.pinterp_x_y(mag_vs_time, tvals, choose_max=True)                                            
-            else:
-                u += pwise.pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time, PolyLine([0], [1], [1], [0]), tvals, outz, achoose_max=True)  
-    #bot part           
-    if not bot_vs_time is None:
-        for mag_vs_time in bot_vs_time:
-            u += pwise.pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time, PolyLine([0], [1], [0], [1]), tvals, outz, achoose_max=True)          
-    return u 
-
-def dim1sin_avgf(m, z, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_time=None):
-    """Average u between Z1 and Z;: u(Z,t) = phi * v_E_Igam_v_the + utop(t) * (1-Z) + ubot(t)*Z
-    
-    Basically calculates the average phi part for each tvals value, then dot product
-    with v_E_Igamv_the.  Then account for non-zero boundary conditions by 
-    adding average of utop(t)*(1-Z) and average of ubot(t)*Z parts for each 
-    avgz, tvals pair.
-    
-    
-    Parameters
-    ----------
-        
-    
-    Notes
-    -----
-    
-    
-    """
-    
-    phi = integ.dim1sin_avg_between(m, z)
-    
-
-    avg = np.dot(phi, v_E_Igamv_the)
-                   
-    z1 = np.asarray(z)[:,0]
-    z2 = np.asarray(z)[:,1]
-    
-    #top part                                 
-    if not top_vs_time is None:
-        for mag_vs_time in top_vs_time:                            
-            if drn==1:
-                #bottom part
-                avg += pwise.pinterp_x_y(mag_vs_time, tvals, choose_max=True)
-            else:                                                            
-                avg += pwise.pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(mag_vs_time,
-                                                                        PolyLine([0], [1], [1], [0]),
-                                                                        tvals, z1, z2, achoose_max=True)                                                                                                                
-    #botom part           
-    if not bot_vs_time is None:
-        for mag_vs_time in bot_vs_time:
-            avg += pwise.pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(mag_vs_time,
-                                                                        PolyLine([0], [1], [0], [1]),
-                                                                        tvals, z1,z2, achoose_max=True)                                                                             
-
-    return avg    
-
-
-
-
-def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None, bot_vs_time=None):
-    """Integrate between Z1 and Z2: a(Z)*(phi * v_E_Igam_v_the + utop(t) * (1-Z) + ubot(t)*Z)
-        
-    
-    
-    Parameters
-    ----------
-        
-    
-    Notes
-    -----
-    
-    
-    """
-    
-    
-    z1 = np.array(z)[:,0]
-    z2 = np.array(z)[:,1]            
-    #a*u part
-    phi = integ.pdim1sin_a_linear_between(m, a, z)
-    
-    out = np.dot(phi, v_E_Igamv_the)    
-                                                   
-    #top part                        
-    if not top_vs_time is None:
-        for mag_vs_time in top_vs_time:                            
-            if drn==1:                                
-                out += pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
-                    mag_vs_time,
-                    a,
-                    PolyLine(a.x1, a.x2, np.ones_like(a.x1), np.ones_like(a.x2)),
-                    tvals, z1, z2, achoose_max=True)  
-            else:
-                out += pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
-                    mag_vs_time,
-                    a,
-                    PolyLine(a.x1, a.x2, 1-a.x1, 1-a.x2),
-                    tvals, z1, z2, achoose_max=True)
-                                                        
-                                                                                                                                
-    #bot part           
-    if not bot_vs_time is None:
-        for mag_vs_time in bot_vs_time:
-            out += pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
-                    mag_vs_time,
-                    a,
-                    PolyLine(a.x1, a.x2, a.x1, a.x2),
-                    tvals, z1, z2, achoose_max=True) 
-    #self.set *= self.H * self.mvref                                
-    return out
-    
-def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, a, mag_vs_depth, mag_vs_time, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix for a(z)*D[mag(z, t), t] where mag is bilinear in depth and time
-    
-    Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta. 
-    The contribution of each `mag_vs_time`-`mag_vs_depth` pair are superposed. 
-    The result is an array
-    of size (neig, len(tvals)). So the columns are the column array 
-    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-    us later to do u = phi*v*E_Igamv_the
-
-    Uses sin(m*z) in the calculation of theta.
-    
-    Parameters
-    ----------
-    m : ``list`` of ``float``
-        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
-    eigs : 1d numpy.ndarray
-        list of eigenvalues
-    a : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        loading term is mv*D[sigma(z, t), t] so a would be mv.
-    mag_vs_depth : list of PolyLine
-        Piecewise linear magnitude  vs depth.
-    mag_vs_time : list of PolyLine
-        Piecewise linear magnitude vs time
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
-    dT : ``float``, optional
-        time factor multiple (default = 1.0)        
-    
-    Returns
-    -------
-    E_Igamv_the: ndarray
-        loading matrix        
-    
-    Notes
-    -----        
-    Assuming the loads are formulated as the product of separate time and depth 
-    dependant functions: 
-    
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
-    
-    the solution to the consolidation equation using the spectral method has 
-    the form:
-    
-    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
-    
-    In this instance :math:`\\sigma\\left({Z}\\right)` 
-    and :math:`\\sigma\\left({t}\\right)` are piecewise linear in depth and 
-    time (hence the 'bilinear' in the function name).
-    
-    `dim1sin_E_Igamv_the_aDmagDt_bilinear` will calculate  
-    :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}` 
-    for terms with the form:
-    
-    .. math:: a\\left({z}\\right)\\frac{\\partial\\sigma\\left({Z,t}\\right)}{\\partial t}
-    
-    where :math:`a\\left(z\\right)` is a piecewise linear function 
-    w.r.t. :math:`z`
-    
-    """
-    
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
-    
-    
-    if sum([v is None for v in [mag_vs_depth, mag_vs_time]])==0:
-        
-        for mag_vs_t, mag_vs_z in zip(mag_vs_time, mag_vs_depth):
-            a, mag_vs_z = pwise.polyline_make_x_common(a, mag_vs_z)                      
-            theta = integ.pdim1sin_ab_linear(m, a, mag_vs_z) 
-            E = integ.pEDload_linear(mag_vs_t, eigs, tvals, dT)                                   
-
-            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta) 
-            #and np.dot(theta, Igamv) will give differetn 1d arrays.  
-            #Basically np.dot(Igamv, theta) gives us what we want i.e. 
-            #theta was treated as a column array.  The alternative 
-            #np.dot(theta, Igamv) would have treated theta as a row vector.
-            E_Igamv_the += (E*np.dot(Igamv, theta)).T
-            
-    return E_Igamv_the
-
-
-def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, a,b, mag_vs_depth, mag_vs_time, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix for a(z)*b(z)*D[mag(z, t), t] where mag is bilinear in depth and time
-    
-    Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta. 
-    The contribution of each `mag_vs_time`-`mag_vs_depth` pair are superposed. 
-    The result is an array
-    of size (neig, len(tvals)). So the columns are the column array 
-    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-    us later to do u = phi*v*E_Igamv_the
-
-    Uses sin(m*z) in the calculation of theta.
-    
-    Parameters
-    ----------
-    m : ``list`` of ``float``
-        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
-    eigs : 1d numpy.ndarray
-        list of eigenvalues
-    a : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        loading term is mv*D[sigma(z, t), t] so a would be mv.
-    b : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation vacuum term is 
-         kh*et*w(z,t) so a would be `kh`, `b` would be `et`
-    mag_vs_depth : list of PolyLine
-        Piecewise linear magnitude  vs depth.
-    mag_vs_time : list of PolyLine
-        Piecewise linear magnitude vs time
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
-    dT : ``float``, optional
-        time factor multiple (default = 1.0)        
-    
-    Returns
-    -------
-    E_Igamv_the: ndarray
-        loading matrix        
-    
-    Notes
-    -----        
-    Assuming the loads are formulated as the product of separate time and depth 
-    dependant functions: 
-    
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
-    
-    the solution to the consolidation equation using the spectral method has 
-    the form:
-    
-    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
-    
-    In this instance :math:`\\sigma\\left({Z}\\right)` 
-    and :math:`\\sigma\\left({t}\\right)` are piecewise linear in depth and 
-    time (hence the 'bilinear' in the function name).
-    
-    `dim1sin_E_Igamv_the_abDmagDt_bilinear` will calculate  
-    :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}` 
-    for terms with the form:
-    
-    .. math:: a\\left({z}\\right)b\\left({z}\\right)\\frac{\\partial\\sigma\\left({Z,t}\\right)}{\\partial t}
-    
-    where :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)` are 
-    piecewise linear functions w.r.t. :math:`z`.
-    
-    
-    """
-    
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
-    
-    
-    if sum([v is None for v in [mag_vs_depth, mag_vs_time]])==0:
-        
-        for mag_vs_t, mag_vs_z in zip(mag_vs_time, mag_vs_depth):
-            a, b , mag_vs_z = pwise.polyline_make_x_common(a, b, mag_vs_z)                      
-            theta = integ.pdim1sin_abc_linear(m, a, b, mag_vs_z) 
-            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)                                   
-
-            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta) 
-            #and np.dot(theta, Igamv) will give differetn 1d arrays.  
-            #Basically np.dot(Igamv, theta) gives us what we want i.e. 
-            #theta was treated as a column array.  The alternative 
-            #np.dot(theta, Igamv) would have treated theta as a row vector.
-            E_Igamv_the += (E*np.dot(Igamv, theta)).T
-            
-    return E_Igamv_the
-
-#def dim1sin_E_Igamv_the_aDfDt_bilinear(m, eigs, a, mag_vs_depth, mag_vs_time, tvals, Igamv, dT=1.0):
-#    """Loading dependant E_Igamv_the matrix for a(z)*D[u(z, t), t] where mag is bilinear in depth and time
-#    
-#    Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta. 
-#    The contribution of each `mag_vs_time`-`mag_vs_depth` pair are superposed. 
-#    The result is an array
-#    of size (neig, len(tvals)). So the columns are the column array 
-#    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-#    us later to do u = phi*v*E_Igamv_the
-#
-#    Uses sin(m*z) in the calculation of theta.
-#    
-#    Parameters
-#    ----------
-#    m : ``list`` of ``float``
-#        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
-#    eigs : 1d numpy.ndarray
-#        list of eigenvalues
-#    a : PolyLine
-#        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-#        loading term is mv*D[sigma(z, t), t] so a would be mv.
-#    mag_vs_depth : list of PolyLine
-#        Piecewise linear magnitude  vs depth.
-#    mag_vs_time : list of PolyLine
-#        Piecewise linear magnitude vs time
-#    tvals : 1d numpy.ndarray`
-#        list of time values to calculate integral at
-#    dT : ``float``, optional
-#        time factor multiple (default = 1.0)        
-#    
-#    Returns
-#    -------
-#    E_Igamv_the: ndarray
-#        loading matrix        
-#    
-#    Notes
-#    -----        
-#    Assuming the loads are formulated as the product of separate time and depth 
-#    dependant functions: 
-#    
-#    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
-#    
-#    the solution to the consolidation equation using the spectral method has 
-#    the form:
-#    
-#    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
-#    
-#    In this instance :math:`\\sigma\\left({Z}\\right)` 
-#    and :math:`\\sigma\\left({t}\\right)` are piecewise linear in depth and 
-#    time (hence the 'bilinear' in the function name).
-#    
-#    `dim1sin_E_Igamv_the_aDmagDt_bilinear` will calculate  
-#    :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}` 
-#    for terms with the form:
-#    
-#    .. math:: a\\left({z}\\right)\\frac{\\partial\\sigma\\left({Z,t}\\right)}{\\partial t}
-#    
-#    where :math:`a\\left(z\\right)` is a piecewise linear function 
-#    w.r.t. :math:`z`
-#    
-#    """
-#    
-#    E_Igamv_the = np.zeros((len(m), len(tvals)))
-#    
-#    
-#    if sum([v is None for v in [mag_vs_depth, mag_vs_time]])==0:
-#        
-#        for mag_vs_t, mag_vs_z in zip(mag_vs_time, mag_vs_depth):
-#            a, mag_vs_z = pwise.polyline_make_x_common(a, mag_vs_z)                      
-#            theta = integ.pdim1sin_ab_linear(m, a, mag_vs_z) 
-#            E = integ.pEDload_linear(mag_vs_t, eigs, tvals, dT)                                   
-#
-#            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta) 
-#            #and np.dot(theta, Igamv) will give differetn 1d arrays.  
-#            #Basically np.dot(Igamv, theta) gives us what we want i.e. 
-#            #theta was treated as a column array.  The alternative 
-#            #np.dot(theta, Igamv) would have treated theta as a row vector.
-#            E_Igamv_the += (E*np.dot(Igamv, theta)).T
-#            
-#    return E_Igamv_the
-
-def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*D[u(z, t), t] for non_zero top and bottom boundary conditions
-    
-    When accounting for non-zero boundary conditions we homogenise the 
-    governing equation by letting u(Z,t) = v(Z,t) + utop(t)*(1-Z) + ubot(t)*Z 
-    and solving for v(Z, t).  This function calculates the 
-    E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta. 
-    For the terms that arise by subbing the BC's into terms like a(z)*D[u(Z,t), t]
-    
-    The contribution of each `mag_vs_time` are superposed. 
-    The result is an array
-    of size (neig, len(tvals)). So the columns are the column array 
-    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-    us later to do v(Z,t) = phi*v*E_Igamv_the
-
-    Uses sin(m*z) in the calculation of theta.
-    
-    Parameters
-    ----------
-    drn : [0,1]
-        drainage condition,
-        0 = Pervious top pervious bottom (PTPB)
-        1 = Pervious top impoervious bottom (PTIB)
-    m : ``list`` of ``float``
-        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
-    eigs : 1d numpy.ndarray
-        list of eigenvalues
-    a : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        loading term is mv*D[sigma(z, t), t] so a would be mv.
-    top_vs_time : list of PolyLine
-        Piecewise linear magnitude  vs time for the top boundary.
-    bot_vs_time : list of PolyLine
-        Piecewise linear magnitude vs time for the bottom boundary.
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
-    dT : ``float``, optional
-        time factor multiple (default = 1.0)        
-    
-    Returns
-    -------
-    E_Igamv_the: ndarray
-        loading matrix        
-    
-    Notes
-    -----        
-    Assuming the loads are formulated as the product of separate time and depth 
-    dependant functions: 
-    
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
-    
-    the solution to the consolidation equation using the spectral method has 
-    the form:
-    
-    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
-    
-    
-    when we consider non-zero boundary conditions, additional loading terms are
-    created when we sub in the following into the original governing equation.
-    
-    .. math:: u\\left({Z,t}\\right)=v\\left({Z,t}\\right) + u_{top}\\left({t}\\right)\\left({1-Z}\\right)
-    
-    Two additional loading terms are created with each substitution, one 
-    for the top boundary condition and one for the bottom boundary condition.
-    
-    This function calculates :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
-    when substitutions are made in 
-    terms of the following form:
-    
-    
-    .. math:: a\\left({z}\\right)\\frac{\\partial u}{\\partial t}
-    
-    It is assumed that :math:`u_{top}\\left({t}\\right)` and 
-    :math:`u_{bot}\\left({t}\\right)` are piecewise linear
-    in time, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)` 
-    is a piecewise linear function w.r.t. :math:`z`
-        
-    
-    """
-    
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
-    
-    
-    
-    
-    if not a is None:
-        if drn==1:
-            zdist = PolyLine(a.x1,a.x2, np.ones_like(a.x1), np.ones_like(a.x2))
-            #bot_vs_time=None
-        else:
-            zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
-                            
-        if not top_vs_time is None:       
-            theta = integ.pdim1sin_ab_linear(m, a, zdist)            
-            for top_vs_t in top_vs_time:                                        
-                E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT)                        
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
-                
-                    
-        if not bot_vs_time is None:       
-            theta = integ.pdim1sin_ab_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))                        
-            for bot_vs_t in bot_vs_time:                                                        
-                E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT)                        
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
-            
-    #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta) 
-    #and np.dot(theta, Igamv) will give differetn 1d arrays.  
-    #Basically np.dot(Igamv, theta) gives us what we want i.e. 
-    #theta was treated as a column array.  The alternative 
-    #np.dot(theta, Igamv) would have treated theta as a row vector.            
-    return E_Igamv_the
-  
-def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
-    
-    When accounting for non-zero boundary conditions we homogenise the 
-    governing equation by letting u(Z,t) = v(Z,t) + utop(t)*(1-Z) + ubot(t)*Z 
-    and solving for v(Z, t).  This function calculates the 
-    E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta. 
-    For the terms that arise by subbing the BC's into terms like a(z)*b(z)*u(Z,t)
-    
-    The contribution of each `mag_vs_time` are superposed. 
-    The result is an array
-    of size (neig, len(tvals)). So the columns are the column array 
-    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-    us later to do v(Z,t) = phi*v*E_Igamv_the
-
-    Uses sin(m*z) in the calculation of theta.
-    
-    Parameters
-    ----------
-    drn : [0,1]
-        drainage condition,
-        0 = Pervious top pervious bottom (PTPB)
-        1 = Pervious top impoervious bottom (PTIB)
-    m : ``list`` of ``float``
-        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
-    eigs : 1d numpy.ndarray
-        list of eigenvalues
-    a : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        radial draiange term is dTh*kh*et*U(Z,t) `a` would be kh.
-    b : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        radial draiange term is dTh* kh*et*U(Z,t) so `b` would be et
-    top_vs_time : list of PolyLine
-        Piecewise linear magnitude  vs time for the top boundary.
-    bot_vs_time : list of PolyLine
-        Piecewise linear magnitude vs time for the bottom boundary.
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
-    dT : ``float``, optional
-        time factor multiple (default = 1.0)        
-    
-    Returns
-    -------
-    E_Igamv_the: ndarray
-        loading matrix        
-    
-    Notes
-    -----        
-    Assuming the loads are formulated as the product of separate time and depth 
-    dependant functions: 
-    
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
-    
-    the solution to the consolidation equation using the spectral method has 
-    the form:
-    
-    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
-    
-    
-    when we consider non-zero boundary conditions, additional loading terms are
-    created when we sub in the following into the original governing equation.
-    
-    .. math:: u\\left({Z,t}\\right)=v\\left({Z,t}\\right) + u_{top}\\left({t}\\right)\\left({1-Z}\\right)
-    
-    Two additional loading terms are created with each substitution, one 
-    for the top boundary condition and one for the bottom boundary condition.
-    
-    This function calculates :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
-    when substitutions are made in 
-    terms of the following form:    
-    
-    .. math:: a\\left({z}\\right)b\\left({z}\\right)u\\left({Z,t}\\right)
-    
-    It is assumed that :math:`u_{top}\\left({t}\\right)` and 
-    :math:`u_{bot}\\left({t}\\right)` are piecewise linear
-    in time, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)` 
-    and :math:`b\\left(z\\right)` are piecewise linear functions w.r.t. :math:`z`.
-          
-    
-    """
-    
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
-        
-    if sum([v is None for v in [a, b]]) == 0:
-        a, b = pwise.polyline_make_x_common(a, b)                
-        if drn==1:
-            zdist = PolyLine(a.x1,a.x2, np.ones_like(a.x1), np.ones_like(a.x2))
-            #bot_vs_time=None
-        else:
-            zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
-                            
-        if not top_vs_time is None:       
-            theta = integ.pdim1sin_abc_linear(m, a,b, zdist)            
-            for top_vs_t in top_vs_time:                                        
-                E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)                        
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
-                                    
-        if not bot_vs_time is None:       
-            theta = integ.pdim1sin_abc_linear(m, a, b, PolyLine(a.x1,a.x2,a.x1,a.x2))            
-            for bot_vs_t in bot_vs_time:                                        
-                E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)                        
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
-            
-    #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta) 
-    #and np.dot(theta, Igamv) will give differetn 1d arrays.  
-    #Basically np.dot(Igamv, theta) gives us what we want i.e. 
-    #theta was treated as a column array.  The alternative 
-    #np.dot(theta, Igamv) would have treated theta as a row vector.            
-    return E_Igamv_the
-    
-def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix that arise from homogenising D[a(z)*D[u(z, t),z],z] for non_zero top and bottom boundary conditions
-    
-    When accounting for non-zero boundary conditions we homogenise the 
-    governing equation by letting u(Z,t) = v(Z,t) + utop(t)*(1-Z) + ubot(t)*Z 
-    and solving for v(Z, t).  This function calculates the 
-    E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta. 
-    For the terms that arise by subbing the BC's into terms like a(z)*b(z)*u(Z,t)
-    
-    The contribution of each `mag_vs_time` are superposed. 
-    The result is an array
-    of size (neig, len(tvals)). So the columns are the column array 
-    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-    us later to do v(Z,t) = phi*v*E_Igamv_the
-
-    Uses sin(m*z) in the calculation of theta.
-    
-    Parameters
-    ----------
-    drn : [0,1]
-        drainage condition,
-        0 = Pervious top pervious bottom (PTPB)
-        1 = Pervious top impoervious bottom (PTIB)
-    m : ``list`` of ``float``
-        eigenvlaues of BVP. generate with geotecca.speccon.m_from_sin_mx
-    eigs : 1d numpy.ndarray
-        list of eigenvalues
-    a : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        radial draiange term is D[kv(z)*D[u(Z,t), Z],Z] so `a` would be kv.    
-    top_vs_time : list of PolyLine
-        Piecewise linear magnitude  vs time for the top boundary.
-    bot_vs_time : list of PolyLine
-        Piecewise linear magnitude vs time for the bottom boundary.
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
-    dT : ``float``, optional
-        time factor multiple (default = 1.0)        
-    
-    Returns
-    -------
-    E_Igamv_the: ndarray
-        loading matrix        
-    
-    Notes
-    -----        
-    Assuming the loads are formulated as the product of separate time and depth 
-    dependant functions: 
-    
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
-    
-    the solution to the consolidation equation using the spectral method has 
-    the form:
-    
-    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta} 
-    
-    
-    when we consider non-zero boundary conditions, additional loading terms are
-    created when we sub in the following into the original governing equation.
-    
-    .. math:: u\\left({Z,t}\\right)=v\\left({Z,t}\\right) + u_{top}\\left({t}\\right)\\left({1-Z}\\right)
-    
-    Two additional loading terms are created with each substitution, one 
-    for the top boundary condition and one for the bottom boundary condition.
-    
-    This function calculates :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
-    when substitutions are made in 
-    terms of the following form:    
-    
-    .. math:: \\frac{\\partial}{\\partial Z}\\left({a\\left({Z}\\right)\\frac{\\partial u\\left({Z,t}\\right)}{\\partial Z}}\\right)
-    
-    It is assumed that :math:`u_{top}\\left({t}\\right)` and 
-    :math:`u_{bot}\\left({t}\\right)` are piecewise linear
-    in time, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)` 
-    is a piecewise linear functions w.r.t. :math:`z`.
-          
-    
-    """
-    
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
-        
-    if not a is None:                 
-        if drn==1:
-            zdist = PolyLine(a.x1,a.x2, np.ones_like(a.x1), np.ones_like(a.x2))
-            #bot_vs_time=None
-        else:
-            zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
-                            
-        if not top_vs_time is None:       
-            theta = integ.pdim1sin_D_aDb_linear(m, a, zdist)            
-            for top_vs_t in top_vs_time:                                                        
-                E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)                        
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
-                                    
-        if not bot_vs_time is None:       
-            theta = integ.pdim1sin_D_aDb_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))            
-            for bot_vs_t in bot_vs_time:                                        
-                E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)                        
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
-            
-    #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta) 
-    #and np.dot(theta, Igamv) will give differetn 1d arrays.  
-    #Basically np.dot(Igamv, theta) gives us what we want i.e. 
-    #theta was treated as a column array.  The alternative 
-    #np.dot(theta, Igamv) would have treated theta as a row vector.            
-    return E_Igamv_the
 
 
          
@@ -1521,7 +810,21 @@ def program(reader, writer):
 #
 #yyy(mymodule)
 
+
+class A(object):
+    def __init__(self):
+        self.a1 = 1
+        self.b = 'a3'
+        
+        self.__setattr__('a2', 2)
+        self.__setattr__(self.b, 3)
+        
 if __name__ == '__main__':
+
+    
+
+    
+    
     my_code = textwrap.dedent("""\
     from geotecha.piecewise.piecewise_linear_1d import PolyLine
     import numpy as np
@@ -1560,7 +863,7 @@ if __name__ == '__main__':
 #    program(my_code, writer)
 #    print('writer\n%s' % writer.getvalue())
     #a = calculate_normalised(my_code)
-    a = speccon1d(my_code)
+    a = speccon1d_vr(my_code)
     a.make_all()
 #    a._make_gam()    
 #    #print(a.gam)
