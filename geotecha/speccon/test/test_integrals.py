@@ -179,19 +179,39 @@ class base_t_ester(object):
         self.PTIB = np.array([ pi / 2.0,  3.0 * pi / 2.0])        
         self.cases = []#each element should be [desc, fixture, result]
         self.prefix = prefix
+        self.implementation = None
+        
     def test_cases(self):   
         """loop through and test make_fn cases with np.allclose"""
-        for desc, fixture, result in self.cases:            
-            res = self.fn(**fixture)
-            check = np.allclose(res, result)
-            msg = """\
+
+        if not self.implementation is None:
+            for i in self.implementation:
+                for desc, fixture, result in self.cases:
+                    fixture['implementation'] = i
+                            
+                    res = self.fn(**fixture)
+                    check = np.allclose(res, result)
+                    msg = """\
 failed test_%s, case: %s
 %s
 calculated:
 %s
 expected:
 %s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
-            yield ok_, check, msg 
+                    yield ok_, check, msg 
+                                
+        else:
+            for desc, fixture, result in self.cases:                            
+                res = self.fn(**fixture)
+                check = np.allclose(res, result)
+                msg = """\
+failed test_%s, case: %s
+%s
+calculated:
+%s
+expected:
+%s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
+                yield ok_, check, msg 
             
             
 class test_dim1sin_af_linear(base_t_ester):
@@ -199,7 +219,7 @@ class test_dim1sin_af_linear(base_t_ester):
     def __init__(self):
         base_t_ester.__init__(self, dim1sin_af_linear, prefix = self.__class__.__name__)        
         self.gamma_isotropic = np.array([[0.5, 0], [0, 0.5]])
-        
+        self.implementation = ['scalar','vectorized','python']
         self.cases = [            
             
             ['a const, PTIB', 

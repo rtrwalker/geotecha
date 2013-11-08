@@ -677,7 +677,7 @@ if __name__ == '__main__':
     H = 1.0 
     drn = 1 
     dT = 1 
-    #dTh = 0#100
+    dTh = 100
     dTv = 0.1
     neig = 20
 
@@ -688,14 +688,14 @@ if __name__ == '__main__':
     etref = 1.0                
     
     mv = PolyLine([0,1], [1,1])
-    #kh = PolyLine([0,1], [1,1])
+    kh = PolyLine([0,1], [1,1])
     kv = PolyLine([0,1], [1,1])
-    #et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
+    et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
     surcharge_vs_depth = PolyLine([0,1], [1,1]) 
     surcharge_vs_time = PolyLine([0,0.1,3], [0,1,1])    
-    #vacuum_vs_depth = PolyLine([0,1], [1,1])    
-    #vacuum_vs_time = PolyLine([0,0.4,3], [0,-0.2,-0.2])
-    #top_vs_time = PolyLine([0,0.0,3], [0,0.5,0.5])
+    vacuum_vs_depth = PolyLine([0,1], [1,1])    
+    vacuum_vs_time = PolyLine([0,0.4,3], [0,-0.2,-0.2])
+    top_vs_time = PolyLine([0,0.0,3], [0,0.5,0.5])
     #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
     bot_vs_time = PolyLine([0,0.0,3], [0,-2,-2])
     
@@ -725,7 +725,7 @@ if __name__ == '__main__':
 #    print(len(a.tvals))
     #print(a.por.shape)
     
-    if True:
+    if False:
         plt.plot(a.por, a.ppress_z)
         plt.xlabel('Pore pressure')
         plt.ylabel('Normalised depth, Z')

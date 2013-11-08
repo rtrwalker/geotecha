@@ -18,9 +18,59 @@
 
 from __future__ import division, print_function
 
-import imp
 import numpy as np
 import textwrap
+import imp
+from sympy.printing.fcode import FCodePrinter
+
+def fcode_one_large_expr(expr, prepend=None, **settings):
+    """fortran friendly printing of sympy expression ignoring any loops/indexed
+    
+    The normal FcodePrinter.doprint method will try to figure out what fortran 
+    loops you need by looking for indexed expressions.  Sometimes you just want
+    to change square brackets [] to parenteses () and wrap/indent the code for
+    fortran with appropriate line continuations. `fcode_one_large_expr` 
+    can do that for you. You will have to write your own fortran do loops.
+        
+    Parameters
+    ----------
+    expr: sympy expression
+        a single large sympy expression
+    prepend : string
+        a string to prepend to your fortran code.  Assuming you age 
+        going to cut and paste into a fortran routine `prepend` should be 
+        correct fortran format.  (note you do not need an initial indent 
+        for your prepend it will be put in for you). e.g. 
+        prepend = 'a(i, i) = a(i, i) + '.   
+    settings:
+        see `fcode` docs
+        
+    Returns
+    -------
+    out : str
+        fortran ready code that can be copy and pasted into a fortran routine
+        
+    See also
+    --------
+    sympy.printing.fcode : contains all the functionality
+    
+    """    
+    
+    
+    printer = FCodePrinter(settings)
+    
+    if printer._settings['source_format'] == 'fixed': 
+        #FCodePrinter.indent_code uses ''.join to combine lines.  Should it be
+        # '\n'.join ? This is my work around:    
+        printer._lead_cont = '&\n      ' #+ printer._lead_cont     
+    expr = printer.parenthesize(expr, 50)        
+    
+    if not prepend is None:
+        expr = prepend + expr
+        
+    return printer.indent_code(expr)
+    
+    
 
 def make_module_from_text(reader):
     """make a module from file,StringIO, text etc
@@ -38,7 +88,7 @@ def make_module_from_text(reader):
     """
     #for making module out of strings/files see http://stackoverflow.com/a/7548190/2530083    
     
-    mymodule = imp.new_module('mymodule') #may need to randomise the name
+    mymodule = imp.new_module('mymodule') #may need to randomise the name; not sure
     exec reader in mymodule.__dict__    
     return mymodule
     
