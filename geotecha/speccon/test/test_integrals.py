@@ -219,7 +219,7 @@ class test_dim1sin_af_linear(base_t_ester):
     def __init__(self):
         base_t_ester.__init__(self, dim1sin_af_linear, prefix = self.__class__.__name__)        
         self.gamma_isotropic = np.array([[0.5, 0], [0, 0.5]])
-        self.implementation = ['scalar','vectorized','python']
+        self.implementation = ['scalar','vectorized','fortran']
         self.cases = [            
             
             ['a const, PTIB', 
@@ -288,6 +288,7 @@ class test_dim1sin_abf_linear(base_t_ester):
     def __init__(self):
         base_t_ester.__init__(self, dim1sin_abf_linear, prefix = self.__class__.__name__)                
         self.iso = np.array([[0.5, 0], [0, 0.5]])        
+        self.implementation = ['scalar','vectorized','fortran']
         self.cases = [     
              
             #a
@@ -434,7 +435,7 @@ class test_dim1sin_D_aDf_linear(base_t_ester):
         base_t_ester.__init__(self, dim1sin_D_aDf_linear, prefix = self.__class__.__name__)                
         self.iso_PTIB = (-0.5) * np.array([[(np.pi/2.0)**2.0, 0], [0, (3.0*np.pi/2.0)**2.0]])
         self.iso_PTPB = (-0.5) * np.array([[(np.pi)**2.0, 0], [0, (2.0*np.pi)**2.0]])        
-        
+        self.implementation = ['scalar','vectorized','fortran']
         self.cases = [     
             
             ['a const, PTIB', 
@@ -583,7 +584,7 @@ class test_dim1sin_ab_linear(base_t_ester):
         
         self.iso_PTIB = np.array([2/pi, 2/(3*pi)])
         self.iso_PTPB = np.array([2/pi, 0.0])
-        
+        self.implementation = ['scalar','vectorized','fortran']
         
         self.cases = [            
             
@@ -678,7 +679,7 @@ class test_dim1sin_abc_linear(base_t_ester):
         
         self.iso_PTIB = np.array([2/pi, 2/(3*pi)])
         self.iso_PTPB = np.array([2/pi, 0.0])
-        
+        self.implementation = ['scalar','vectorized','fortran']
         
         self.cases = [                        
             #a
@@ -798,7 +799,7 @@ class test_dim1sin_D_aDb_linear(base_t_ester):
     def __init__(self):
         base_t_ester.__init__(self, dim1sin_D_aDb_linear, prefix = self.__class__.__name__)                
         self.zero = np.zeros(2)
-        
+        #self.implementation = ['scalar','vectorized','fortran']
         
         
         self.cases = [            

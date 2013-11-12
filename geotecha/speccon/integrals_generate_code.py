@@ -457,11 +457,11 @@ def dim1sin_abc_linear():
     Code is generated that will produce a 1d array with the appropriate 
     integrals at each location.
     
-    Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
+    Paste the resulting code (at least the loops) into `dim1sin_abc_linear`.
     
     Notes
     -----    
-    The `dim1sin_ab_linear` which should be treated as a column vector, 
+    The `dim1sin_abc_linear` which should be treated as a column vector, 
     :math:`A` is given by:    
         
     .. math:: \\mathbf{A}_{i}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}{c\\left(z\\right)}\\phi_i\\,dz}
@@ -515,7 +515,7 @@ def dim1sin_D_aDb_linear():
     Code is generated that will produce a 1d array with the appropriate 
     integrals at each location.
     
-    Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
+    Paste the resulting code (at least the loops) into `dim1sin_D_aDb_linear`.
     
     Notes
     -----    
@@ -550,18 +550,18 @@ def dim1sin_D_aDb_linear():
     fcol = fcol.subs(mp)
     
     
-    layer = sympy.tensor.Idx('layer')
-    
     ffirst = -p['a']*sympy.diff(p['b'], z) * phi_i
     ffirst = ffirst.subs(z, mp['ztop'])
     ffirst = ffirst.subs(mp)
-    ffirst = ffirst.subs(layer, 0)
-    
+    ffirst = ffirst.subs(list(sympy.tensor.get_indices(mp['ztop'])[0])[0], 0)
+                      
     flast = p['a']*sympy.diff(p['b'], z) * phi_i
     flast = flast.subs(z, mp['zbot'])
     flast = flast.subs(mp)
-    flast = flast.subs(layer, -1)
-        
+    flast=flast.subs(list(sympy.tensor.get_indices(mp['ztop'])[0])[0], -1)
+
+    fends = ffirst + flast
+            
     text = """def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb):
     import numpy as np
     from math import sin, cos
@@ -575,12 +575,12 @@ def dim1sin_D_aDb_linear():
             A[i] += %s
     
     for i in range(neig):
-        A[i] += %s + %s
+        A[i] += %s
     
     return A"""
     
         
-    fn = text % (fcol, ffirst, flast)
+    fn = text % (fcol, fends)
     return fn
 
 
@@ -1145,7 +1145,7 @@ def dim1sin_af_linear_vectorize():
 
     diag =  np.diag_indices_from(A)
     triu = np.triu_indices(neig, k = 1)
-    tril = np.tril_indices(neig, k = -1)
+    tril = (triu[1], triu[0])
     
     mi = m[:, np.newaxis]    
     A[diag] = np.sum({0}, axis=1)
@@ -1251,6 +1251,12 @@ def dim1sin_af_linear_implementations():
     
     Paste the resulting code (at least the loops) into `dim1sin_af_linear`.
     
+    Creates 3 implementations:
+     - 'scalar', python loops (slowest)
+     - 'vectorized', numpy (much faster than scalar)
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+       
     Returns
     -------
     fn: string
@@ -1298,10 +1304,10 @@ def dim1sin_af_linear_implementations():
     foff_vector = foff_vector.subs(mpv)    
     
     text_python = """def dim1sin_af_linear(m, at, ab, zt, zb, implementation='vectorized'):
-    import numpy as np
-    import math
-    import geotecha.speccon.ext_integrals as ext_integ
-
+       
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+        
     m = np.asarray(m)
     at = np.asarray(at)
     ab = np.asarray(ab)
@@ -1326,8 +1332,13 @@ def dim1sin_af_linear_implementations():
         for i in range(neig - 1):        
             for j in range(i + 1, neig):
                 A[j, i] = A[i, j]
+                
     elif implementation == 'fortran':
-        A = ext_integ.dim1sin_af_linear(m, at, ab, zt, zb)       
+        try:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_af_linear(m, at, ab, zt, zb)       
+        except ImportError:
+            A = dim1sin_af_linear(m, at, ab, zt, zb, implementation='vectorized')                           
                 
     else:#default is 'vectorized' using numpy
         sin = np.sin
@@ -1336,7 +1347,7 @@ def dim1sin_af_linear_implementations():
         
         diag =  np.diag_indices(neig)
         triu = np.triu_indices(neig, k = 1)
-        tril = np.tril_indices(neig, k = -1)
+        tril = (triu[1], triu[0])
         
         mi = m[:, np.newaxis]    
         A[diag] = np.sum({2}, axis=1)
@@ -1396,6 +1407,872 @@ def dim1sin_af_linear_implementations():
         
     return fn, fn2
 
+def dim1sin_abf_linear_implementations():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * a(z) *b(z) * sin(mj * z)` 
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.  
+    Code is generated that will produce a square array with the appropriate 
+    integrals at each location
+    
+    Paste the resulting code (at least the loops) into `dim1sin_abf_linear`.
+
+    Creates 3 implementations:
+     - 'scalar', python loops (slowest)
+     - 'vectorized', numpy (much faster than scalar)
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+       
+    Returns
+    -------
+    fn: string
+        Python code. with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2: string
+        Fortran code.  needs to be compiled with f2py    
+    
+    Notes
+    -----
+    The `dim1sin_abf_linear` matrix, :math:`A` is given by:
+        
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\phi_i\\phi_j\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+    
+    """    
+    
+    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a', 'b'])
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a','b'])
+    
+    phi_i = sympy.sin(mi * z)
+    phi_j = sympy.sin(mj * z)    
+    
+    fdiag = sympy.integrate(p['a'] * p['b'] * phi_i * phi_i, z)        
+    fdiag_loops = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
+    fdiag_loops = fdiag_loops.subs(mp)
+    fdiag_vector = fdiag.subs(z, mpv['zbot']) - fdiag.subs(z, mpv['ztop'])
+    fdiag_vector = fdiag_vector.subs(mpv)    
+    
+    foff = sympy.integrate(p['a'] * p['b'] * phi_j * phi_i, z)  
+    foff_loops = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
+    foff_loops = foff_loops.subs(mp)
+    foff_vector = foff.subs(z, mpv['zbot']) - foff.subs(z, mpv['ztop'])
+    foff_vector = foff_vector.subs(mpv)    
+    
+    text_python = """def dim1sin_abf_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectorized'):
+       
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+        
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    bt = np.asarray(bt)
+    bb = np.asarray(bb)    
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)    
+    
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos                
+        A = np.zeros([neig, neig], float)
+        nlayers = len(zt)                                
+        for layer in range(nlayers):
+            for i in range(neig):
+                A[i, i] += ({0})
+            for i in range(neig-1):
+                for j in range(i + 1, neig):
+                    A[i, j] += ({1})                
+                    
+        #A is symmetric
+        for i in range(neig - 1):        
+            for j in range(i + 1, neig):
+                A[j, i] = A[i, j]
+                
+    elif implementation == 'fortran':
+        try:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb)       
+        except ImportError:
+            A = dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')                           
+                
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros([neig, neig], float)        
+        
+        diag =  np.diag_indices(neig)
+        triu = np.triu_indices(neig, k = 1)
+        tril = (triu[1], triu[0])
+        
+        mi = m[:, np.newaxis]    
+        A[diag] = np.sum({2}, axis=1)
+            
+        mi = m[triu[0]][:, np.newaxis]
+        mj = m[triu[1]][:, np.newaxis]
+        A[triu] = np.sum({3}, axis=1)
+        #A is symmetric
+        A[tril] = A[triu]
+               
+    return A"""
+    
+    
+#    note the the i=j part in the fortran loop  below is because 
+#      I changed the loop order from layer, i,j to layer, j,i which is 
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """      SUBROUTINE dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb, a, neig, nlayers) 
+        USE types
+        IMPLICIT NONE     
+        
+        INTEGER, intent(in) :: neig        
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,zt,zb
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: at
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: ab
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: bt
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: bb
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: zt
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: zb
+        REAL(DP), intent(out), dimension(0:neig-1, 0:neig-1) :: a
+        INTEGER :: i , j, layer
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          DO j = 0, neig-1
+              i=j
+{0}
+            DO i = j+1, neig-1
+{1}
+            END DO
+          END DO
+        END DO
+
+        DO j = 0, neig -2
+          DO i = j + 1, neig-1
+            a(j,i) = a(i, j)
+          END DO
+        END DO
+                    
+      END SUBROUTINE"""
+
+    
+    
+    
+    
+    fn = text_python.format(tw(fdiag_loops,5), tw(foff_loops,6), tw(fdiag_vector,3), tw(foff_vector,3))        
+    fn2 = text_fortran.format(fcode_one_large_expr(fdiag_loops, prepend='a(i, i) = a(i, i) + '),
+                 fcode_one_large_expr(foff_loops, prepend='a(i, j) = a(i, j) + '))
+        
+    return fn, fn2
+
+def dim1sin_D_aDf_linear_implementations():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * D[a(z) * D[sin(mj * z),z],z]` 
+    between [0, 1] where a(z) i piecewise linear functions of z.  
+    Code is generated that will produce a square array with the appropriate 
+    integrals at each location
+    
+    Paste the resulting code (at least the loops) into `dim1sin_D_aDf_linear`.
+    
+    Creates 3 implementations:
+     - 'scalar', python loops (slowest)
+     - 'vectorized', numpy (much faster than scalar)
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+       
+    Returns
+    -------
+    fn: string
+        Python code. with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2: string
+        Fortran code.  needs to be compiled with f2py
+        
+    Notes
+    -----    
+    The `dim1sin_D_aDf_linear` matrix, :math:`A` is given by:
+    
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right)\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+    
+    The integration requires some explanation.  The difficultly arises because 
+    piecewise linear :math:`a\\left(z\\right)` is defined using step functions at 
+    the top and bottom of each layer; those step functions when differentiated 
+    yield dirac-delta or impulse functions which must be handled specially 
+    when integrating against the spectral basis functions.  The graph below
+    shows what happens when the :math:`a\\left(z\\right) distribution is 
+    differentiated for one layer.
+    
+    ::
+        
+        y(x)
+        ^
+        |                                                                        
+        |                            yb                                            
+        |                          /|                                              
+        |                         / |                                              
+        |                        /  |                                              
+        |                       /   |                                           
+        |                      /    |                                              
+        |                   yt|     |                                              
+        |                     |     |                                              
+        0--------------------xt----xb------------------------1------>x
+        
+    Differentiate:
+    
+    ::
+        
+        y'(x)
+        ^
+        |                                                                        
+        |                     y(xt) * Dirac(x - xt)                                                   
+        |                     ^                                                   
+        |                     |                                                   
+        |                     |     |                                              
+        |                     |     |                                           
+        |               y'(xt)|-----|                                              
+        |                     |     |                                              
+        |                     |     v - y(xb) * Dirac(x - xb)                                                                                                
+        0--------------------xt----xb------------------------1------>x
+    
+    With sympy/sage I've found it easier to perform the indefinite integrals 
+    first  and then sub in the bounds of integration. That is, the integral 
+    of f between a and b is F(b)-F(a) where F is the anti-derivative of f.
+    
+    
+    The general expression for :math:`{A}` is:
+    
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right)\\phi_i\\,dz}
+        :label: full
+        
+    Expanding out the integrals in :eq:`full` yields:
+        
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dZ^2}\\phi_i\\,dZ}+\\int_{0}^1{\\frac{d{a\\left(z\\right)}}{dZ}\\frac{d\\phi_j}{dZ}\\phi_i\\,dZ}
+    
+    Considering a single layer and separating the layer boundaries from the behaviour within a layer gives:
+        
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=\\int_{z_t}^{z_b}{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int_{z_t}^{z_b}{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}+\\int_{0}^{1}{{a\\left(z\\right)}\\delta\\left(z-z_t\\right)\\frac{d\\phi_j}{dz}\\phi_i\\,dz}-\\int_{0}^{1}{{a\\left(z\\right)}\\delta\\left(z-z_b\\right)\\frac{d\\phi_j}{dz}\\phi_i\\,dz}
+    
+    Performing the dirac delta integrations:
+        
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=\\int_{z_t}^{z_b}{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int_{z_t}^{z_b}{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}+\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z_t}-\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z_b}
+    
+    Now, to get it in the form of F(zb)-F(zt) we only take the zb part of the dirac integration:
+        
+    .. math:: F\\left(z\\right)=\\int{{a\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\phi_i\\,dZ}+\\int{\\frac{d{a\\left(z\\right)}}{dz}\\frac{d\\phi_j}{dz}\\phi_i\\,dz}-\\left.{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\phi_i\\right|_{z=z}
+    
+    Finally we get:
+        
+    .. math:: \\mathbf{A}_{i,j,\\text{layer}}=F\\left(z_b\\right)-F\\left(z_t\\right)
+    
+    TODO: explain why dirac integrations disapear at end points because in this case it will always be sin(mx)*cos(mx) and so always be zero.
+    
+    """
+    
+#    NOTE: remember that fortran does not distinguish between upper and lower
+#        case.  When f2py wraps a fortran function with upper case letters then 
+#        upper case letters will be converted to lower case. e.g. Therefore when 
+#        calling a fortran function called if fortran fn is 
+#        'dim1sin_D_aDf_linear' f2py will wrap it as 'dim1sin_d_adf_linear'
+        
+    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a'])
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a'])
+    
+    phi_i = sympy.sin(mi * z)
+    phi_j = sympy.sin(mj * z)    
+    
+    fdiag = (sympy.integrate(p['a'] * sympy.diff(phi_i, z, 2) * phi_i, z))
+    fdiag += (sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi_i, z) * phi_i,z))
+    fdiag -= (p['a'] * sympy.diff(phi_i, z) * phi_i)     
+    fdiag_loops = fdiag.subs(z, mp['zbot']) - fdiag.subs(z, mp['ztop'])
+    fdiag_loops = fdiag_loops.subs(mp)
+    fdiag_vector = fdiag.subs(z, mpv['zbot']) - fdiag.subs(z, mpv['ztop'])
+    fdiag_vector = fdiag_vector.subs(mpv)    
+    
+    foff = (sympy.integrate(p['a'] * sympy.diff(phi_j, z, 2) * phi_i, z))
+    foff += (sympy.integrate(sympy.diff(p['a'], z) * sympy.diff(phi_j, z) * phi_i,z))
+    foff -= (p['a'] * sympy.diff(phi_j, z) * phi_i)  
+    foff_loops = foff.subs(z, mp['zbot']) - foff.subs(z, mp['ztop'])
+    foff_loops = foff_loops.subs(mp)
+    foff_vector = foff.subs(z, mpv['zbot']) - foff.subs(z, mpv['ztop'])
+    foff_vector = foff_vector.subs(mpv)    
+    
+    text_python = """def dim1sin_D_aDf_linear(m, at, ab, zt, zb, implementation='vectorized'):
+       
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+        
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)    
+    
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos                
+        A = np.zeros([neig, neig], float)
+        nlayers = len(zt)                                
+        for layer in range(nlayers):
+            for i in range(neig):
+                A[i, i] += ({0})
+            for i in range(neig-1):
+                for j in range(i + 1, neig):
+                    A[i, j] += ({1})                
+                    
+        #A is symmetric
+        for i in range(neig - 1):        
+            for j in range(i + 1, neig):
+                A[j, i] = A[i, j]
+                
+    elif implementation == 'fortran':
+        try:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_D_aDf_linear(m, at, ab, zt, zb)       
+        except ImportError:
+            A = dim1sin_D_aDf_linear(m, at, ab, zt, zb, implementation='vectorized')                           
+                
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros([neig, neig], float)        
+        
+        diag =  np.diag_indices(neig)
+        triu = np.triu_indices(neig, k = 1)
+        tril = (triu[1], triu[0])
+        
+        mi = m[:, np.newaxis]    
+        A[diag] = np.sum({2}, axis=1)
+            
+        mi = m[triu[0]][:, np.newaxis]
+        mj = m[triu[1]][:, np.newaxis]
+        A[triu] = np.sum({3}, axis=1)
+        #A is symmetric
+        A[tril] = A[triu]
+               
+    return A"""
+    
+    
+#    note the the i=j part in the fortran loop  below is because 
+#      I changed the loop order from layer, i,j to layer, j,i which is 
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """      SUBROUTINE dim1sin_D_aDf_linear(m, at, ab, zt, zb, a, neig, nlayers) 
+        USE types
+        IMPLICIT NONE     
+        
+        INTEGER, intent(in) :: neig        
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: ab
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: zt
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: zb
+        REAL(DP), intent(out), dimension(0:neig-1, 0:neig-1) :: a
+        INTEGER :: i , j, layer
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          DO j = 0, neig-1
+              i=j
+{0}
+            DO i = j+1, neig-1
+{1}
+            END DO
+          END DO
+        END DO
+
+        DO j = 0, neig -2
+          DO i = j + 1, neig-1
+            a(j,i) = a(i, j)
+          END DO
+        END DO
+                    
+      END SUBROUTINE"""
+
+    
+    
+    
+    
+    fn = text_python.format(tw(fdiag_loops,5), tw(foff_loops,6), tw(fdiag_vector,3), tw(foff_vector,3))        
+    fn2 = text_fortran.format(fcode_one_large_expr(fdiag_loops, prepend='a(i, i) = a(i, i) + '),
+                 fcode_one_large_expr(foff_loops, prepend='a(i, j) = a(i, j) + '))
+        
+    return fn, fn2
+
+def dim1sin_ab_linear_implementations():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * a(z) * b(z)` 
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.  
+    Code is generated that will produce a 1d array with the appropriate 
+    integrals at each location.
+    
+    Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
+    
+    Notes
+    -----    
+    The `dim1sin_ab_linear` which should be treated as a column vector, 
+    :math:`A` is given by:    
+        
+    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+        
+    """
+    
+    
+    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a', 'b'])
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a','b'])
+    
+    phi_i = sympy.sin(mi * z)
+
+    
+    fcol = sympy.integrate(p['a'] * p['b'] * phi_i, z)        
+    fcol_loops = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
+    fcol_loops = fcol_loops.subs(mp)
+    fcol_vector = fcol.subs(z, mpv['zbot']) - fcol.subs(z, mpv['ztop'])
+    fcol_vector = fcol_vector.subs(mpv)    
+                
+    text_python = """def dim1sin_ab_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectorized'):
+       
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+        
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    bt = np.asarray(bt)
+    bb = np.asarray(bb)    
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)    
+    
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos                
+        A = np.zeros(neig, float)
+        nlayers = len(zt)
+        for layer in range(nlayers):
+            for i in range(neig):
+                A[i] += ({0})                                        
+                
+    elif implementation == 'fortran':
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)        
+#        try:
+#            import geotecha.speccon.ext_integrals as ext_integ
+#            A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)       
+#        except ImportError:
+#            A = dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')                           
+                
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros(neig, float)                
+        
+        mi = m[:, np.newaxis]    
+        A[:] = np.sum({1}, axis=1)
+                    
+               
+    return A"""
+    
+    
+#    note the the i=j part in the fortran loop  below is because 
+#      I changed the loop order from layer, i,j to layer, j,i which is 
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """      SUBROUTINE dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, a, neig, nlayers) 
+        USE types
+        IMPLICIT NONE     
+        
+        INTEGER, intent(in) :: neig        
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,zt,zb
+        REAL(DP), intent(out), dimension(0:neig-1) :: a
+        INTEGER :: i, layer
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          DO i = 0, neig-1
+{0}
+          END DO         
+        END DO    
+                    
+      END SUBROUTINE"""
+
+    
+    
+    
+    
+    fn = text_python.format(tw(fcol_loops,5), tw(fcol_vector,3))        
+    fn2 = text_fortran.format(fcode_one_large_expr(fcol_loops, prepend='a(i) = a(i) + '))
+        
+    return fn, fn2
+
+def dim1sin_abc_linear_implementations():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * a(z) * b(z) * c(z)` 
+    between [0, 1] where a(z), b(z), c(z) are piecewise linear functions of z.  
+    Code is generated that will produce a 1d array with the appropriate 
+    integrals at each location.
+    
+    Paste the resulting code (at least the loops) into `dim1sin_abc_linear`.
+    
+    Creates 3 implementations:
+     - 'scalar', python loops (slowest)
+     - 'vectorized', numpy (much faster than scalar)
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+       
+    Returns
+    -------
+    fn: string
+        Python code. with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2: string
+        Fortran code.  needs to be compiled with f2py    
+    
+    Notes
+    -----    
+    The `dim1sin_abc_linear` which should be treated as a column vector, 
+    :math:`A` is given by:    
+        
+    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}{c\\left(z\\right)}\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)`, and 
+    :math:`c\\left(z\\right)` are piecewise linear functions 
+    w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+        
+    """    
+    
+    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a', 'b', 'c'])
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a','b', 'c'])
+    
+    phi_i = sympy.sin(mi * z)
+
+    
+    fcol = sympy.integrate(p['a'] * p['b'] * p['c'] * phi_i, z)        
+    fcol_loops = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
+    fcol_loops = fcol_loops.subs(mp)
+    fcol_vector = fcol.subs(z, mpv['zbot']) - fcol.subs(z, mpv['ztop'])
+    fcol_vector = fcol_vector.subs(mpv)
+     
+                
+    text_python = """def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb, implementation='vectorized'):
+       
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+        
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    bt = np.asarray(bt)
+    bb = np.asarray(bb)    
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)    
+    
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos                
+        A = np.zeros(neig, float)
+        nlayers = len(zt)
+        for layer in range(nlayers):
+            for i in range(neig):
+                A[i] += ({0})
+                
+    elif implementation == 'fortran':
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb)        
+#        try:
+#            import geotecha.speccon.ext_integrals as ext_integ
+#            A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb)       
+#        except ImportError:
+#            A = dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb, implementation='vectorized')                           
+                
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros(neig, float)                
+        
+        mi = m[:, np.newaxis]    
+        A[:] = np.sum({1}, axis=1)
+                    
+               
+    return A"""
+    
+    
+#    note the the i=j part in the fortran loop  below is because 
+#      I changed the loop order from layer, i,j to layer, j,i which is 
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """      SUBROUTINE dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb, a, neig, nlayers) 
+        USE types
+        IMPLICIT NONE     
+        
+        INTEGER, intent(in) :: neig        
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,ct,cb, zt,zb
+        REAL(DP), intent(out), dimension(0:neig-1) :: a
+        INTEGER :: i, layer
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          DO i = 0, neig-1
+{0}
+          END DO         
+        END DO    
+                    
+      END SUBROUTINE"""
+
+    
+    
+    
+    
+    fn = text_python.format(tw(fcol_loops,5), tw(fcol_vector,3))        
+    fn2 = text_fortran.format(fcode_one_large_expr(fcol_loops, prepend='a(i) = a(i) + '))
+        
+    return fn, fn2
+
+def dim1sin_D_aDb_linear_implementations():
+    """Generate code to calculate spectral method integrations
+    
+    Performs integrations of `sin(mi * z) * D[a(z) * D[b(z), z], z]` 
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.  
+    Code is generated that will produce a 1d array with the appropriate 
+    integrals at each location.
+    
+    Paste the resulting code (at least the loops) into `dim1sin_D_aDb_linear`.
+    
+    Creates 3 implementations:
+     - 'scalar', python loops (slowest)
+     - 'vectorized', numpy (much faster than scalar)
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+       
+    Returns
+    -------
+    fn: string
+        Python code. with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2: string
+        Fortran code.  needs to be compiled with f2py        
+    
+    Notes
+    -----    
+    The `dim1sin_D_aDb_linear` which should be treated as a column vector, 
+    :math:`A` is given by:    
+        
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d}{dz}{b\\left(z\\right)}\\right)\\phi_i\\,dz}
+    
+    where the basis function :math:`\\phi_i` is given by:    
+    
+    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise 
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+        
+    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of 
+    each layer respectively.
+    
+    TODO: explain why the dirac integrations at 0 and 1 must be omitted i.e. not for all cases do they not contribute only.    
+    
+    """
+           
+    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
+    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a', 'b'])
+    
+    phi_i = sympy.sin(mi * z)
+    
+    fcol = sympy.integrate(sympy.diff(p['a'],z) * sympy.diff(p['b'],z) * phi_i, z)
+    fcol -= p['a']*sympy.diff(p['b'], z) * phi_i        
+    fcol_loops = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
+    fcol_loops = fcol_loops.subs(mp)
+    fcol_vector = fcol.subs(z, mpv['zbot']) - fcol.subs(z, mpv['ztop'])
+    fcol_vector = fcol_vector.subs(mpv)
+    
+    
+    ffirst = -p['a']*sympy.diff(p['b'], z) * phi_i
+    ffirst = ffirst.subs(z, mp['ztop'])
+    ffirst_loops = ffirst.subs(mp)
+    ffirst_loops = ffirst_loops.subs(list(sympy.tensor.get_indices(mp['ztop'])[0])[0], 0)
+                      
+    flast = p['a']*sympy.diff(p['b'], z) * phi_i
+    flast = flast.subs(z, mp['zbot'])
+    flast_loops = flast.subs(mp)
+    nlayers = sympy.tensor.Idx('nlayers')
+    flast_loops=flast_loops.subs(list(sympy.tensor.get_indices(mp['ztop'])[0])[0], nlayers - 1)
+
+
+    fends_loops = ffirst_loops + flast_loops
+    
+    mp.pop('mi')
+    mp.pop('mj')
+    
+    
+    ffirst_vector = ffirst.subs(mp)
+    ffirst_vector = ffirst_vector.subs(list(sympy.tensor.get_indices(mp['ztop'])[0])[0], 0)
+                      
+    flast_vector= flast.subs(mp)
+    flast_vector=flast_vector.subs(list(sympy.tensor.get_indices(mp['ztop'])[0])[0], -1)
+    
+    fends_vector = ffirst_vector + flast_vector
+        
+#    text = """def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb):
+#    import numpy as np
+#    from math import sin, cos
+#    
+#    neig = len(m)
+#    nlayers = len(zt)
+#    
+#    A = np.zeros(neig, float)        
+#    for layer in range(nlayers):
+#        for i in range(neig):
+#            A[i] += %s
+#    
+#    for i in range(neig):
+#        A[i] += %s
+#    
+#    return A"""                
+            
+
+                
+    text_python = """def dim1sin_D_aDb_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectorized'):
+       
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+        
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    bt = np.asarray(bt)
+    bb = np.asarray(bb)    
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)    
+    
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos                
+        A = np.zeros(neig, float)
+        nlayers = len(zt)
+        for layer in range(nlayers):
+            for i in range(neig):
+                A[i] += ({0})                                        
+        
+        for i in range(neig):
+            A[i] += ({1})                                        
+    elif implementation == 'fortran':
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.dim1sin_d_adb_linear(m, at, ab, bt, bb, zt, zb)        
+#        try:
+#            import geotecha.speccon.ext_integrals as ext_integ
+#            A = ext_integ.dim1sin_d_adb_linear(m, at, ab, bt, bb, zt, zb)       
+#        except ImportError:
+#            A = dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')                           
+                
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros(neig, float)                
+        
+        mi = m[:, np.newaxis]    
+        A[:] = np.sum({2}, axis=1)
+        mi = m                    
+        A[:]+= ({3})
+    return A"""
+    
+    
+#    note the the i=j part in the fortran loop  below is because 
+#      I changed the loop order from layer, i,j to layer, j,i which is 
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """      SUBROUTINE dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, a, neig, nlayers) 
+        USE types
+        IMPLICIT NONE     
+        
+        INTEGER, intent(in) :: neig        
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,zt,zb
+        REAL(DP), intent(out), dimension(0:neig-1) :: a
+        INTEGER :: i, layer
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          DO i = 0, neig-1
+{0}
+          END DO         
+        END DO    
+        
+        DO i = 0, neig-1
+{1}
+        END DO         
+                    
+      END SUBROUTINE"""
+
+    
+    
+    
+    
+    fn = text_python.format(tw(fcol_loops,5), tw(fends_loops,4), tw(fcol_vector,3), tw(fends_vector,3))        
+    fn2 = text_fortran.format(fcode_one_large_expr(fcol_loops, prepend='a(i) = a(i) + '),
+                              fcode_one_large_expr(fends_loops, prepend='a(i) = a(i) + '))
+        
+    return fn, fn2
+    
+
 def tw(text, indents=3, width=100, break_long_words=False):
     """rough text wrapper for long sympy expressions
     
@@ -1449,9 +2326,15 @@ if __name__ == '__main__':
     #print(dim1sin_D_aDf_linear_v2())
     #print(dim1sin_af_linear_vectorize())
     #print(dim1sin_af_linear_fortran())
-    for i in dim1sin_af_linear_implementations():
+#    for i in dim1sin_af_linear_implementations():
+#    for i in dim1sin_abf_linear_implementations():
+#    for i in dim1sin_D_aDf_linear_implementations():        
+#    for i in dim1sin_ab_linear_implementations():        
+#    for i in dim1sin_abc_linear_implementations():        
+    for i in dim1sin_D_aDb_linear_implementations():        
         print(i)
         print('#'*35)
+    #print(dim1sin_D_aDb_linear())
     pass
         
     

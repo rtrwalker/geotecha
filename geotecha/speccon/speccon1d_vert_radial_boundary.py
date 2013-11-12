@@ -160,7 +160,11 @@ class speccon1d_vr(speccon1d.Speccon1d):
     set : ndarray, only present if settlement_z_pairs is input
         settlement between depths coreespoinding to `settlement_z_pairs` and 
         times corresponding to `tvals`.  This is an output array of size (len(avg_ppress_z_pairs), len(tvals))
-    
+    implementation: ['scalar', 'vectorized','fortran'], optional
+        where possible use the `implementation`, implementation.  'scalar'=
+        python loops (slowest), 'vectorized' = numpy (fast), 'fortran' = 
+        fortran extension (fastest).  Note only some functions have multiple
+        implementations.
     
     Notes
     -----
@@ -180,8 +184,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
     """
               
     def _setup(self):
-        self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0 }        
-        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()        
+        self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0, 'implementation': 'vectorized' }        
+        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation'.split()        
         
         self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time'.split()
         self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
@@ -274,9 +278,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
         
         self._make_m()
         self._make_gam()
-        self._make_psi()
+        self._make_psi()    
         self._make_eigs_and_v()
-                        
+        
         return
 
     def make_time_dependent_arrays(self):
@@ -362,8 +366,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
         
 
         """
-                  
-        self.gam = integ.dim1sin_af_linear(self.m,self.mv.y1, self.mv.y2, self.mv.x1, self.mv.x2)
+#        self.gam = integ.dim1sin_af_linear(self.m,self.mv.y1, self.mv.y2, self.mv.x1, self.mv.x2)                  
+        self.gam = integ.pdim1sin_af_linear(self.m,self.mv, implementation=self.implementation)
         self.gam[np.abs(self.gam)<1e-8]=0.0
         return
         
@@ -385,11 +389,13 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.psi = np.zeros((self.neig, self.neig))           
         #kv part
         if sum([v is None for v in [self.kv, self.dTv]])==0:            
-            self.psi -= self.dTv / self.dT * integ.dim1sin_D_aDf_linear(self.m, self.kv.y1, self.kv.y2, self.kv.x1, self.kv.x2)
+#            self.psi -= self.dTv / self.dT * integ.dim1sin_D_aDf_linear(self.m, self.kv.y1, self.kv.y2, self.kv.x1, self.kv.x2)
+            self.psi -= self.dTv / self.dT * integ.pdim1sin_D_aDf_linear(self.m, self.kv, implementation=self.implementation)
         #kh & et part
         if sum([v is None for v in [self.kh, self.et, self.dTh]])==0:
             kh, et = pwise.polyline_make_x_common(self.kh, self.et)
-            self.psi += self.dTh / self.dT * integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
+#            self.psi += self.dTh / self.dT * integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
+            self.psi += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m,self.kh,self.et, implementation=self.implementation)
         self.psi[np.abs(self.psi)<1e-8]=0.0
         return        
 
@@ -703,7 +709,10 @@ if __name__ == '__main__':
     avg_ppress_z_pairs = [[0,1],[0, 0.2]]
     settlement_z_pairs = [[0,1],[0, 0.5]]
     #tvals = np.linspace(0,3,10)
-    tvals = [0,0.05,0.1]+list(np.linspace(0.2,3,5))
+    tvals = [0,0.05,0.1]+list(np.linspace(0.2,3,30))
+    implementation='scalar'
+    implementation='vectorized'
+    #implementation='fortran'
     """)    
 #    writer = StringIO()
 #    program(my_code, writer)
@@ -725,7 +734,7 @@ if __name__ == '__main__':
 #    print(len(a.tvals))
     #print(a.por.shape)
     
-    if False:
+    if True:
         plt.plot(a.por, a.ppress_z)
         plt.xlabel('Pore pressure')
         plt.ylabel('Normalised depth, Z')
@@ -737,7 +746,7 @@ if __name__ == '__main__':
         plt.ylabel('Average pore pressure')
         #plt.gca().invert_yaxis()
         plt.show()
-        print(a.set)
+#        print(a.set)
         plt.plot(a.tvals, a.set.T)
         plt.xlabel('Time')
         plt.ylabel('settlement')
