@@ -18,7 +18,7 @@
 """
 
 from __future__ import division, print_function
-
+import ast
 from nose import with_setup
 from nose.tools.trivial import assert_almost_equal
 from nose.tools.trivial import assert_raises
@@ -40,10 +40,14 @@ from geotecha.inputoutput.inputoutput import check_attribute_pairs_have_equal_le
 from geotecha.inputoutput.inputoutput import check_attribute_combinations
 from geotecha.inputoutput.inputoutput import initialize_objects_attributes
 from geotecha.inputoutput.inputoutput import code_for_explicit_attribute_initialization
+from geotecha.inputoutput.inputoutput import object_members
+from geotecha.inputoutput.inputoutput import SyntaxChecker
 class EmptyClass(object):
     """empty class for assigning attributes fot object testing"""
     def __init__(self):
-        pass
+        pass                                                 
+    
+    
 
 def test_make_module_from_text():
     """test for make_module_from_text function"""
@@ -55,6 +59,12 @@ def test_make_module_from_text():
     ok_(isinstance(make_module_from_text(reader), type(textwrap)))
     
     assert_equal(make_module_from_text(reader).a, 2)
+        
+    assert_raises(SyntaxError,make_module_from_text,
+                  reader, 
+                  syntax_checker=SyntaxChecker())
+    
+    
     
 
 def test_copy_attributes_between_objects():
@@ -202,4 +212,37 @@ def test_code_for_explicit_attribute_initialization():
     assert_equal(code_for_explicit_attribute_initialization('a b c'.split(), {'a': 3,'b': 6}, None, not_found_value='sally'), "self.a = 3\nself.b = 6\nself.c = 'sally'\n")
     assert_equal(code_for_explicit_attribute_initialization('a b c'.split(), {'a': 3,'b': 6}), "self.a = self._attribute_defaults.get('a', None)\nself.b = self._attribute_defaults.get('b', None)\nself.c = None\n")
     
+
+def test_object_members():
+    """test for object_members function"""
+    import math  
+    ok_(set(['acos', 'acosh', 'asin', 'asinh', 'atan', 'atan2', 'atanh', 
+                 'ceil', 'copysign', 'cos', 'cosh', 'degrees', 'erf', 'erfc', 
+                 'exp', 'expm1', 'fabs', 'factorial', 'floor', 'fmod', 
+                 'frexp', 'fsum', 'gamma', 'hypot', 'isinf', 'isnan', 'ldexp', 
+                 'lgamma', 'log', 'log10', 'log1p', 'modf', 'pow', 'radians', 
+                 'sin', 'sinh', 'sqrt', 'tan', 'tanh', 'trunc']).issubset(
+                 set(object_members(math, 'routine', join=False))))
+
+
+def test_SyntaxChecker():
+    """test for SytaxChecker class"""
     
+    syntax_checker=SyntaxChecker(['ast','builtin','numpy','PolyLine'])
+    
+            
+    assert_raises(SyntaxError, syntax_checker.visit,
+                  ast.parse('import math', mode='exec'))
+                  
+    assert_raises(SyntaxError, syntax_checker.visit,
+                  ast.parse('from math import cos', mode='exec'))
+    
+    assert_raises(SyntaxError, syntax_checker.visit,                  
+                  ast.parse('eval(44*2)', mode='exec'))
+                                    
+    assert_raises(SyntaxError, syntax_checker.visit,                  
+                  ast.parse('exec "a=34"', mode='exec')) 
+                  
+    assert_raises(SyntaxError, syntax_checker.visit,                  
+                  ast.parse("""[x for x in ().__class__.__bases__[0].__subclasses__() 
+           if x.__name__ == 'Popen'][0](['ls', '-la']).wait()""", mode='exec'))                  

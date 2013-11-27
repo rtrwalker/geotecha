@@ -17,12 +17,560 @@
 """some input output stuff and checking stuff"""
 
 from __future__ import division, print_function
-
-import numpy as np
-import textwrap
+import __builtin__
+import sys
+import ast
 import imp
+import textwrap
+import inspect
+import numpy as np
+from geotecha.piecewise.piecewise_linear_1d import PolyLine
 from sympy.printing.fcode import FCodePrinter
+import multiprocessing
+import time
 
+class SyntaxChecker(ast.NodeVisitor):
+    """
+    
+    SyntaxChecker(allow=[])
+    
+    `SyntaxChecker` provide functionality to check syntax of string using the
+    ast module.  Basically white-list allowable functions and attributes.  A
+    SyntaxError will be raised if any code is found that is not allowed.
+    
+    Parameters
+    ----------
+    allow : list of str
+        list of SyntaxChecker 'allow' methods to call. Default = [].
+        e.g. allow=['ast', 'numpy'] will call self.allow_ast(), 
+        self.allow_numpy()
+    
+    Attributes
+    ----------
+    allowed_functions: dict
+        A dictionary of allowable functions. e.g. allowed_functions['cos'] = 
+        math.cos would permit the use of 'cos' from the math module.  
+        allowed_functions['math'] = math would allow use of the math 
+        module (note to allow things like 'math.sin' you would also have to 
+        add 'sin' to the allowable_attributes).  Adding functions one by one 
+        can be cumbersome; see the 'allow_<some_name>' methods for bulk adding
+        of common functionality.
+    allowed_node_types: dict
+        Dictionary of allowable ast node names.  
+        e.g. allowed_node_types['Name'] = ast.Name would allow ast.Name nodes.
+        typically use SytaxChecker.allow_ast to allow a reasonable set of ast
+        nodes
+    allowed_attributes: set of string
+        set of allowable attributes.  e.g. you have already allowed the math 
+        module with allowed_functions['math'] = math.  
+        allowable_attributes.add('tan') will allow use of math.tan(34) etc.  
+        Note that the attribute 'tan' could now be used as an attribute for 
+        any of the functions in allowed_functions even though this may not 
+        make any logical sense.  i.e. it will pass the SyntaxChecker but would 
+        fail if the code was executed. Adding attributes one by one 
+        can be cumbersome; see the 'allow_<some_name>' methods for bulk adding
+        of common functionality.        
+    safe_names: dict
+        dictionary of safe names. 
+        default = {'True': True, 'False': False, 'None': None}
+    print_each_node: bool
+        print out each node when they are visited.  default=False. Note that 
+        nodes may be printed twice, once for a generic visit and once for a 
+        specific visit such as visit_Name, visit_Attribute etc.
+        
+    Methods
+    -------
+    allow_ast():
+        Allow a subset of ast node types.
+    allow_builtin():
+        Allow a subset of __builtins__ functions
+    allow_numpy
+        Allow a subset of numpy functionality via np.funtion syntax
+    allow_PolyLine
+        Allow PolyLine class from geotecha.piecewise.piecewise_linear_1d                            
+    
+    See also
+    --------
+    ast.NodeVisitor: parent class.  Descriptions of python syntax grammar
+    object_members: easily print a string of an objects routines for use in
+        a 'allow_<some_name>' methods.
+        
+    Notes
+    -----
+    If subclassing new 'allow_<some_name>' methods can be written to bulk add
+    allowable functions and attributes.
+    
+    Examples
+    --------
+    >>> syntax_checker = SyntaxChecker(allow=['ast', 'builtin', 'numpy'])        
+    >>> tree = ast.parse('a=np.cos(0.5)', mode='exec')        
+    >>> syntax_checker.visit(tree)
+    
+    >>> syntax_checker = SyntaxChecker(allow=['ast', 'builtin', 'numpy'])        
+    >>> tree = ast.parse('a=cos(0.5)', mode='exec')        
+    >>> syntax_checker.visit(tree)
+    Traceback (most recent call last):
+        ...
+    SyntaxError: cos is not an allowed function!
+    
+    """
+    #resources that helped in making this:
+    #http://stackoverflow.com/questions/1515357/simple-example-of-how-to-use-ast-nodevisitor
+    #http://stackoverflow.com/questions/10661079/restricting-pythons-syntax-to-execute-user-code-safely-is-this-a-safe-approach
+    #http://stackoverflow.com/questions/12523516/using-ast-and-whitelists-to-make-pythons-eval-safe
+    #http://docs.python.org/2/library/ast.html#abstract-grammar
+    #http://eli.thegreenplace.net/2009/11/28/python-internals-working-with-python-asts/
+    
+    def __init__(self, allow=[]):
+        """Initialize a SyntaxChecker object
+        
+        Parameters
+        ----------
+        allow : list of str
+            list of SyntaxChecker 'allow' methods to call. Default = [].
+            e.g. allow=['ast', 'numpy'] will call self.allow_ast(), self.allow_numpy()          
+            
+        """
+        
+        #super(SyntaxChecker, self).__init__() # not sure if I need this
+        
+        self.allowed_functions = dict()        
+        self.allowed_node_types = dict()
+        self.allowed_attributes = set()
+        self.safe_names = {'True': True, 'False': False, 'None': None}#dict()
+        self.print_each_node = False
+        for v in allow:
+            s='allow_{0}'.format(v)
+            if hasattr(self,s):                
+                getattr(self, 'allow_{0}'.format(v))()
+            else:
+                raise AttributeError("'SyntaxChecker' object has no attribute "
+            "'{0}'. i.e. '{1}' is not a valid member "
+            "of the allow list".format(s,v))            
+            
+    def visit_Call(self, node):
+        """Custom visit a 'Call' node"""
+        
+        if self.print_each_node:            
+            print('CALL:', ast.dump(node))                
+            
+        if hasattr(node.func,'id'):
+            if node.func.id not in self.allowed_functions:
+                raise SyntaxError("%s is not an allowed function!" % node.func.id)
+            else:
+                ast.NodeVisitor.generic_visit(self, node)
+        else:
+            ast.NodeVisitor.generic_visit(self, node)
+                
+            
+    def visit_Name(self, node):
+        """Custom visit a 'Name' node"""
+        
+        if self.print_each_node:            
+            print('NAME: ', ast.dump(node))
+            
+        if type(node.ctx).__name__=='Store':
+            self.allowed_attributes.add(node.id)            
+        elif type(node.ctx).__name__=='Load':        
+            if node.id not in self.safe_names and node.id not in self.allowed_functions and node.id not in self.allowed_attributes:
+                raise SyntaxError("cannot use %s as name, function, or attribute!" % node.id)
+                sys.exit(0)
+        ast.NodeVisitor.generic_visit(self, node)#  
+
+    def visit_Attribute(self, node):
+        """Custom visit an 'Attribute' node"""
+        
+        if self.print_each_node:            
+            print('ATTRIBUTE:', ast.dump(node))
+            
+        if node.attr not in self.allowed_functions and node.attr not in self.allowed_attributes:
+            raise SyntaxError("%s is not an allowed attribute!" % node.attr)
+            sys.exit(0)            
+        ast.NodeVisitor.generic_visit(self, node)
+    
+    def generic_visit(self, node):   
+        """Custom visit a generic node"""
+        if self.print_each_node:            
+            print('GENERIC: ', ast.dump(node))
+            
+        if type(node).__name__ not in self.allowed_node_types:
+            raise SyntaxError("%s is not allowed!"%type(node).__name__)
+            sys.exit(0)
+        else:
+            ast.NodeVisitor.generic_visit(self, node)   
+    
+    def _split_string_allow(self, s, add_to='attributes', fn_module=None):
+        """split a string and add items to allowed lists
+        
+        Adds items to self.allowed_attributes or self.allowed_functions
+        
+        Parameters
+        ----------
+        s : str
+            string containing items to allow
+        add_to: ['attributes', 'functions']
+            if add_to='attributes' items will be added to 
+            self.allowed_attributes.  If add_to='functions' the  items will be 
+            added to self.allowed_functions.
+        fn_module: module
+            module where functions are stored.  Only used when 
+            add_to='functions'
+            
+        """             
+        
+        in_list = ['attributes','functions']
+        if add_to not in in_list:
+            raise ValueError('add_to cannot be %s.  It must be one of [%s]' % 
+                ("'%s'"% add_to, ", ".join(["'%s'" % v for v in in_list])))                
+        if add_to=='functions':
+            for v in [a for a in s.split() if not a.startswith('#')]:                
+                self.allowed_functions[v] = getattr(fn_module, v)
+            return
+        if add_to=='attributes':            
+            for v in [a for a in s.split() if not a.startswith('#')]:             
+                self.allowed_attributes.add(v)
+        
+        return
+        
+    def allow_ast(self):
+        """Allow subset of ast node types"""
+        
+        #object_members(ast, 'class')
+        s=textwrap.dedent("""\
+            #AST Add And Assert Assign Attribute AugAssign AugLoad
+            AugStore BinOp BitAnd BitOr BitXor BoolOp Break Call
+            #ClassDef Compare Continue Del Delete Dict DictComp Div
+            Ellipsis Eq ExceptHandler #Exec Expr Expression ExtSlice
+            FloorDiv For FunctionDef GeneratorExp Global Gt GtE If
+            IfExp #Import #ImportFrom In Index Interactive Invert Is
+            IsNot LShift Lambda List ListComp Load Lt LtE Mod Module
+            Mult Name #NodeTransformer #NodeVisitor Not NotEq NotIn Num
+            Or Param Pass Pow Print RShift Raise Repr Return Set
+            SetComp Slice Store Str Sub Subscript Suite TryExcept
+            TryFinally Tuple UAdd USub UnaryOp While With Yield #alias
+            #arguments #boolop #cmpop #comprehension #excepthandler #expr
+            #expr_context #keyword #mod #operator #slice #stmt #unaryop
+            """)
+
+        for v in [a for a in s.split() if not a.startswith('#')]:             
+            self.allowed_node_types[v] = getattr(ast, v)
+
+        return
+
+    def allow_builtin(self):
+        """Allow subset of __builtins__ functions"""
+        
+        #object_members(__builtin__ , 'routine')
+        s=textwrap.dedent("""\
+            #__import__ abs all any apply bin #callable chr cmp
+            coerce compile #debugfile #delattr #dir divmod #eval
+            #evalsc #execfile filter format #getattr #globals hasattr
+            #hash hex id input #intern isinstance issubclass iter
+            len locals map max min next oct #open #open_in_spyder
+            ord pow print range raw_input reduce #reload repr
+            round #runfile #setattr sorted sum unichr #vars zip
+            """)
+        self._split_string_allow(s, add_to='functions', fn_module=__builtin__)            
+        
+        #object_members(__builtin__ , 'class')        
+        s=textwrap.dedent("""\
+            basestring bool #buffer bytearray bytes #classmethod
+            complex dict enumerate #file float frozenset int list
+            long #memoryview #object #property reversed set slice
+            #staticmethod str super tuple type unicode xrange
+            """)
+        self._split_string_allow(s, add_to='functions',fn_module=__builtin__)            
+        
+        #object_members(complex , 'routine')        
+        s=textwrap.dedent("""\
+            conjugate
+            """)
+        self._split_string_allow(s, add_to='attributes')         
+        
+        #object_members(dict , 'routine') 
+        s=textwrap.dedent("""\
+            copy fromkeys get has_key items iteritems iterkeys
+            itervalues keys pop popitem setdefault update values
+            viewitems viewkeys viewvalues
+            """)
+        self._split_string_allow(s, add_to='attributes')  
+            
+        #object_members(list , 'routine')        
+        s=textwrap.dedent("""
+            append count extend index
+            insert pop remove reverse sort
+            """)
+        self._split_string_allow(s, add_to='attributes')
+            
+        #object_members(str , 'routine')        
+        s=textwrap.dedent("""
+            capitalize center count decode encode endswith
+            expandtabs find format index isalnum isalpha isdigit
+            islower isspace istitle isupper join ljust lower
+            lstrip partition replace rfind rindex rjust
+            rpartition rsplit rstrip split splitlines startswith
+            strip swapcase title translate upper zfill
+            """)
+        self._split_string_allow(s, add_to='attributes')
+            
+        #object_members(float , 'routine')        
+        s=textwrap.dedent("""
+            as_integer_ratio conjugate fromhex hex
+            is_integer
+            """)
+        self._split_string_allow(s, add_to='attributes')                
+        
+        #object_members(set , 'routine')        
+        s=textwrap.dedent("""
+            add clear copy difference
+            difference_update discard intersection
+            intersection_update isdisjoint issubset issuperset
+            pop remove symmetric_difference
+            symmetric_difference_update union update
+            """)
+        self._split_string_allow(s, add_to='attributes') 
+        
+        #object_members(slice , 'routine')        
+        s=textwrap.dedent("""
+            indices
+            """)
+        self._split_string_allow(s, add_to='attributes') 
+        
+        #object_members(slice , 'routine')        
+        s=textwrap.dedent("""
+            indices
+            """)
+        self._split_string_allow(s, add_to='attributes')         
+        
+        return
+
+    def allow_numpy(self):        
+        """Allow a subset of numpy functionality via np.attribute syntax"""
+        
+        self.allowed_functions['np'] = np
+        
+        #object_members(np , 'routine')        
+        s=textwrap.dedent("""
+            add_docstring add_newdoc add_newdoc_ufunc alen all
+            allclose alltrue alterdot amax amin angle any append
+            apply_along_axis apply_over_axes arange argmax argmin
+            argsort argwhere around array array2string
+            array_equal array_equiv array_repr array_split
+            array_str asanyarray asarray asarray_chkfinite
+            ascontiguousarray asfarray asfortranarray asmatrix
+            asscalar atleast_1d atleast_2d atleast_3d average
+            bartlett base_repr bench binary_repr bincount
+            blackman bmat broadcast_arrays busday_count
+            busday_offset byte_bounds can_cast choose clip
+            column_stack common_type compare_chararrays compress
+            concatenate convolve copy copyto corrcoef correlate
+            count_nonzero cov cross cumprod cumproduct cumsum
+            datetime_as_string datetime_data delete deprecate
+            deprecate_with_doc diag diag_indices
+            diag_indices_from diagflat diagonal diff digitize
+            disp dot dsplit dstack ediff1d einsum empty
+            empty_like expand_dims extract eye
+            fastCopyAndTranspose fill_diagonal find_common_type
+            fix flatnonzero fliplr flipud frombuffer fromfile
+            fromfunction fromiter frompyfunc fromregex fromstring
+            fv genfromtxt get_array_wrap get_include
+            get_numarray_include get_printoptions getbuffer
+            getbufsize geterr geterrcall geterrobj gradient
+            hamming hanning histogram histogram2d histogramdd
+            hsplit hstack i0 identity imag in1d indices info
+            inner insert int_asbuffer interp intersect1d ipmt irr
+            is_busday isclose iscomplex iscomplexobj isfortran
+            isneginf isposinf isreal isrealobj isscalar issctype
+            issubclass_ issubdtype issubsctype iterable ix_
+            kaiser kron lexsort linspace load loads loadtxt
+            logspace lookfor mafromtxt mask_indices mat max
+            maximum_sctype may_share_memory mean median meshgrid
+            min min_scalar_type mintypecode mirr msort nan_to_num
+            nanargmax nanargmin nanmax nanmin nansum ndfromtxt
+            ndim nested_iters newbuffer nonzero nper npv
+            obj2sctype ones ones_like outer packbits pad
+            percentile piecewise pkgload place pmt poly polyadd
+            polyder polydiv polyfit polyint polymul polysub
+            polyval ppmt prod product promote_types ptp put
+            putmask pv rank rate ravel ravel_multi_index real
+            real_if_close recfromcsv recfromtxt repeat require
+            reshape resize restoredot result_type roll rollaxis
+            roots rot90 round round_ row_stack safe_eval save
+            savetxt savez savez_compressed sctype2char
+            searchsorted select set_numeric_ops set_printoptions
+            set_string_function setbufsize setdiff1d seterr
+            seterrcall seterrobj setxor1d shape show_config sinc
+            size sometrue sort sort_complex source split squeeze
+            std sum swapaxes take tensordot test tile trace
+            transpose trapz tri tril tril_indices
+            tril_indices_from trim_zeros triu triu_indices
+            triu_indices_from typename union1d unique unpackbits
+            unravel_index unwrap vander var vdot vsplit vstack
+            where who zeros zeros_like
+            """)            
+        self._split_string_allow(s, add_to='attributes')
+        
+        #object_members(np.ndarray , 'routine')        
+        s=textwrap.dedent("""
+            all any argmax
+            argmin argsort astype byteswap choose clip compress
+            conj conjugate copy cumprod cumsum diagonal dot dump
+            dumps fill flatten getfield item itemset max mean min
+            newbyteorder nonzero prod ptp put ravel repeat
+            reshape resize round searchsorted setfield setflags
+            sort squeeze std sum swapaxes take tofile tolist
+            tostring trace transpose var view
+            """)            
+        self._split_string_allow(s, add_to='attributes')
+        
+        self.allowed_attributes.add('math')
+        #object_members(np.math,'routine')
+        s=textwrap.dedent("""
+            acos acosh asin asinh atan atan2 atanh ceil copysign cos cosh
+            degrees erf erfc exp expm1 fabs factorial floor fmod frexp fsum
+            gamma hypot isinf isnan ldexp lgamma log log10 log1p modf pow
+            radians sin sinh sqrt tan tanh trunc
+            """)
+        self._split_string_allow(s, add_to='attributes')
+
+        #to find more numpy functionality to add try:
+        #object_members(np.polynomial,'routine')
+        #mem=object_members(np.polynomial,'class')
+        #object_members(np.polynomial.polynomial,'routine')
+               
+            
+    def allow_PolyLine(self):
+        """Allow PolyLine class from geotecha.piecewise.piecewise_linear_1d"""
+
+        self.allowed_functions['PolyLine']=PolyLine
+        
+        s=textwrap.dedent("""
+            x y  xy x1 x2 y1 y2 x1_x2_y1_y2
+            """)            
+        self._split_string_allow(s, add_to='attributes')
+        return
+           
+       
+def object_members(obj, info='function', join=True):
+    """get list of object members
+    
+    Parameters
+    ----------
+    obj: object
+        object to get members of
+    info: string, optional
+        type of members to gather.  Members will be gathered according to 
+        inspect.is<member_type>. e.g. info='function' will check in object for
+        inspect.isfunction. default = 'function'. e.g. 'method' 'function'
+        'routine' etc.
+    join: bool, optional
+        if join==True then list will be joined together into one large
+        space separated string.
+        
+    Returns
+    -------
+    members: list of str, or str
+        list of member names of specified types, or space separated names
+        i single string
+        
+    """
+    #useful resources
+    #http://www.andreas-dewes.de/en/2012/static-code-analysis-with-python/
+    
+    members = [i for i,j in 
+                inspect.getmembers(obj, getattr(inspect,'is%s' % info))]
+    if join:
+        members='\n'.join(textwrap.wrap(" ".join(members), 
+                                        break_long_words=False, width=65))
+    return members
+
+    
+def make_module_from_text(reader, syntax_checker=None):
+    """make a module from file, StringIO, text etc
+    
+    Parameters
+    ----------
+    reader: file_like object
+        object to get text from
+    syntax_checker: SyntaxChecker object, optional
+        specifies what syntax is allowed when executing the text 
+        within `reader`.  Default = None, which means that text will be 
+        executed with the all powerful all dangerous exec function.  Only use 
+        this option if you trust the input.
+            
+    Returns
+    -------
+    m: module
+        text as module
+        
+    See also
+    --------
+    SyntaxChecker: allow certain syntax
+    
+    Notes
+    -----
+    I suspect it is best if `reader` is a string. i.e reader can be pickled.
+    fileobjects may be cause issues if used with multiprocessing.process     
+            
+    """
+    
+    #useful resources:
+    #for making module out of strings/files see http://stackoverflow.com/a/7548190/2530083    
+    #http://old-blog.ooz.ie/2011/03/python-exec-module-in-namespace.html
+    #http://stackoverflow.com/questions/7969949/whats-the-difference-between-globals-locals-and-vars
+    #http://lucumr.pocoo.org/2011/2/1/exec-in-python/
+    #   see down bottom  for config stuff
+    #http://stackoverflow.com/a/2372145/2530083
+    #   limit namespace
+    
+    
+    mymodule = imp.new_module('mymodule') #may need to randomise the name; not sure
+
+    if syntax_checker is None:
+        exec reader in mymodule.__dict__
+        return mymodule
+        
+
+    if not isinstance(syntax_checker, SyntaxChecker):
+        raise TypeError('syntax_checker should be a SyntaxChecker instance.')                
+    
+    tree = ast.parse(reader, mode='exec')        
+    syntax_checker.visit(tree)
+    compiled = compile(tree, '<string>', "exec")            
+    mymodule.__dict__.update(syntax_checker.allowed_functions)                
+    exec compiled in mymodule.__dict__
+
+    return mymodule
+
+class print_all_nodes(ast.NodeVisitor):#http://stackoverflow.com/a/1515403/2530083
+    """Simple ast.NodeVisitor sub class that prints each node when visited
+    
+    Examples
+    --------
+    >>> text="a=[3,2]*2"    
+    >>> x=print_all_nodes()
+    >>> tree=ast.parse(text)
+    >>> x.visit(tree)
+     Module : Module(body=[Assign(targets=[Name(id='a', ctx=Store())], value=BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2)))])
+     Assign : Assign(targets=[Name(id='a', ctx=Store())], value=BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2)))
+     Name : Name(id='a', ctx=Store())
+     Store : Store()
+     BinOp : BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2))
+     List : List(elts=[Num(n=3), Num(n=2)], ctx=Load())
+     Num : Num(n=3)
+     Num : Num(n=2)
+     Load : Load()
+     Mult : Mult()
+     Num : Num(n=2)
+    """
+    
+    #useful resources
+    #http://stackoverflow.com/a/1515403/2530083
+    def generic_visit(self, node):        
+        print(" "*4, type(node).__name__,':', ast.dump(node))       
+        ast.NodeVisitor.generic_visit(self, node)
+        
+        
 def fcode_one_large_expr(expr, prepend=None, **settings):
     """fortran friendly printing of sympy expression ignoring any loops/indexed
     
@@ -68,29 +616,7 @@ def fcode_one_large_expr(expr, prepend=None, **settings):
     if not prepend is None:
         expr = prepend + expr
         
-    return printer.indent_code(expr)
-    
-    
-
-def make_module_from_text(reader):
-    """make a module from file,StringIO, text etc
-    
-    Parameters
-    ----------
-    reader : file_like object
-        object to get text from
-    
-    Returns
-    -------
-    m: module
-        text as module
-        
-    """
-    #for making module out of strings/files see http://stackoverflow.com/a/7548190/2530083    
-    
-    mymodule = imp.new_module('mymodule') #may need to randomise the name; not sure
-    exec reader in mymodule.__dict__    
-    return mymodule
+    return printer.indent_code(expr)    
     
 
 def copy_attributes_between_objects(from_object, to_object, attributes=[], defaults = dict(),  not_found_value = None):
@@ -415,9 +941,17 @@ def code_for_explicit_attribute_initialization(
 
             
 if __name__=='__main__':
-    b = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 'yes1.01' }
-    a = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()                
-    print(code_for_explicit_attribute_initialization(a,b, not_found_value=None))
+    
+               
+#    SyntaxChecker(['ast','builtin']).visit(ast.parse('import math', mode='exec'))
+    a="""[x for x in ().__class__.__bases__[0].__subclasses__() 
+               if x.__name__ == 'Popen'][0](['ls', '-la']).wait()"""
+    SyntaxChecker(['ast','builtin','numpy']).visit(ast.parse(a, mode='exec'))
+
+    
+#    b = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 'yes1.01' }
+#    a = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals'.split()                
+#    print(code_for_explicit_attribute_initialization(a,b, not_found_value=None))
         
         
 #print(code_for_explicit_attribute_initialization(a,b, None, not_found_value='sally'))        
