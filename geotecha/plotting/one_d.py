@@ -14,7 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""some one dimesional plottig stuff"""
+"""some one dimesional plottig stuff
+one d data is basically x-y data .
+    
+"""
 
 from __future__ import division, print_function
 
@@ -26,7 +29,7 @@ import brewer2mpl
 from itertools import cycle
 
 
-def rgb_shade(rgb, factor=1, black=1.0):
+def rgb_shade(rgb, factor=1, scaled=True):
     """apply shade (darken) to an rgb triplet
     
     If rgba tuple is given the 'a' value is not altered.
@@ -37,10 +40,10 @@ def rgb_shade(rgb, factor=1, black=1.0):
         triplet of rgb values.  Note can be an rgba value
     factor: float 
         between 0 and 1.
-        factor by which to shade.    
-    black: float
-        if rgb black is (255,255,255) then put black = 255. if rgb black
-        is (1.0,1.0,1.0) then put black=1.  default = 1.
+        factor by which to shade.  Default=1   
+    scaled: bool
+        if True then assumes RGB values aare scaled between 0, 1. If False 
+        rgb values are between 0 and 255.  default = True.
         
     Returns
     -------
@@ -51,15 +54,18 @@ def rgb_shade(rgb, factor=1, black=1.0):
     """
     
     
-    #from http://stackoverflow.com/a/6615053/2530083    
-
+    
+    #calc from http://stackoverflow.com/a/6615053/2530083    
+    if factor<0 or factor>1:
+        raise ValueError('factor must be between 0 and 1.  You have %g' % factor)
+        
     rgb_new = [v * factor for v in rgb[:3]]
     if len(rgb)==4:
         rgb_new.append(rgb[3])
         
     return tuple(rgb_new)
 
-def rgb_tint(rgb, factor=1, black=1.0):
+def rgb_tint(rgb, factor=0, scaled=True):
     """apply tint (lighten) to an rgb triplet
     
     If rgba tuple is given the 'a' value is not altered.
@@ -70,10 +76,10 @@ def rgb_tint(rgb, factor=1, black=1.0):
         triplet of rgb values.  Note can be an rgba value
     factor: float 
         between 0 and 1.
-        factor by which to tint.    
-    black: float
-        if rgb black is (255,255,255) then put black = 255. if rgb black
-        is (1.0,1.0,1.0) then put black=1.  default = 1.
+        factor by which to tint. default=0   
+    scaled: bool
+        if True then assumes RGB values aare scaled between 0, 1. If False 
+        rgb values are between 0 and 255.  default = True.
         
     Returns
     -------
@@ -82,11 +88,17 @@ def rgb_tint(rgb, factor=1, black=1.0):
         new tuple of rgb ( or rgba)
         
     """
+        
+    #calc from http://stackoverflow.com/a/6615053/2530083    
+    if factor<0 or factor>1:
+        raise ValueError('factor must be between 0 and 1.  You have %g' % factor)
     
-    
-    #from http://stackoverflow.com/a/6615053/2530083    
-
-    rgb_new = [v+(black-v) * factor for v in rgb[:3]]
+    if scaled:
+        black=1.0
+    else:
+        black=255
+        
+    rgb_new = [v + (black-v) * factor for v in rgb[:3]]
     if len(rgb)==4:
         rgb_new.append(rgb[3])
         
