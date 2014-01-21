@@ -140,6 +140,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
         bottom p.press variation with time. Polyline(time, magnitude).
         When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying
         D[u(1,t), Z] = bot_vs_time
+    fixed_ppress: list of float, optional
+        normalised z at which pore pressure is fixed.
     ppress_z : list_like of float, optional
         normalised z to calc pore pressure at
     avg_ppress_z_pairs : list of two element list of float, optional
@@ -164,14 +166,14 @@ class speccon1d_vr(speccon1d.Speccon1d):
         default = slice(None, None) i.e. use all the `tvals`.
     por : ndarray, only present if ppress_z is input
         calculated pore pressure at depths coreespoinding to `ppress_z` and times corresponding
-        to `tvals`.  This is an output array of size (len(ppress_z), len(tvals)).
+        to `tvals`.  This is an output array of size (len(ppress_z), len(tvals[ppress_z_tval_indexes])).
         por : ndarray
     avp : ndarray, only present if avg_ppress_z_pairs is input
         calculated average pore pressure between depths coreespoinding to `avg_ppress_z_pairs` and
-        times corresponding to `tvals`.  This is an output array of size (len(avg_ppress_z_pairs), len(tvals)).
+        times corresponding to `tvals`.  This is an output array of size (len(avg_ppress_z_pairs), len(tvals[avg_ppress_z_pairs_tval_indexes])).
     set : ndarray, only present if settlement_z_pairs is input
         settlement between depths coreespoinding to `settlement_z_pairs` and
-        times corresponding to `tvals`.  This is an output array of size (len(avg_ppress_z_pairs), len(tvals))
+        times corresponding to `tvals`.  This is an output array of size (len(avg_ppress_z_pairs), len(tvals[settlement_z_pairs_tval_indexes]))
     implementation: ['scalar', 'vectorized','fortran'], optional
         where possible use the `implementation`, implementation.  'scalar'=
         python loops (slowest), 'vectorized' = numpy (fast), 'fortran' =
@@ -197,9 +199,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
     def _setup(self):
         self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0, 'implementation': 'vectorized', 'ppress_z_tval_indexes': slice(None, None), 'avg_ppress_z_pairs_tval_indexes': slice(None, None), 'settlement_z_pairs_tval_indexes': slice(None, None) }
-        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes'.split()
+        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress'.split()
 
-        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time'.split()
+        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress'.split()
         self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
         self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time'.split() #pairs that should have the same length
 
@@ -245,6 +247,12 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.avg_ppress_z_pairs = None
         self.settlement_z_pairs = None
         self.tvals = None
+
+
+        self.ppress_z_tval_indexes = self._attribute_defaults.get('ppress_z_tval_indexes', None)
+        self.avg_ppress_z_pairs_tval_indexes = self._attribute_defaults.get('avg_ppress_z_pairs_tval_indexes', None)
+        self.settlement_z_pairs_tval_indexes = self._attribute_defaults.get('settlement_z_pairs_tval_indexes', None)
+        self.fixed_ppress = None
 
         return
 
@@ -408,7 +416,11 @@ class speccon1d_vr(speccon1d.Speccon1d):
             kh, et = pwise.polyline_make_x_common(self.kh, self.et)
 #            self.psi += self.dTh / self.dT * integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
             self.psi += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m,self.kh,self.et, implementation=self.implementation)
-        self.psi[np.abs(self.psi)<1e-8]=0.0
+        #fixed pore pressure part
+        if not self.fixed_ppress is None:
+            for (z, k, mag_vs_time) in self.fixed_ppress:
+                self.psi += k / self.dT * np.sin(self.m[:, np.newaxis] * z) * np.sin(self.m[np.newaxis, :] * z)
+        self.psi[np.abs(self.psi) < 1e-8]=0.0
         return
 
     def _make_eigs_and_v(self):
@@ -468,6 +480,10 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.top_vs_time is None or not self.bot_vs_time is None:
             self._make_E_Igamv_the_BC()
             self.E_Igamv_the += self.E_Igamv_the_BC
+        if not self.fixed_ppress is None:
+            self._make_E_Igamv_the_fixed_ppress()
+            self.E_Igamv_the +=self.E_Igamv_the_fixed_ppress
+
         return
 
     def _make_E_Igamv_the_surcharge(self):
@@ -533,6 +549,19 @@ class speccon1d_vr(speccon1d.Speccon1d):
                                                                         self.vacuum_vs_depth, self.vacuum_vs_time, self.tvals, self.Igamv, self.dT)
         return
 
+    def _make_E_Igamv_the_fixed_ppress(self):
+        """make the fixed pore pressure loading matrices
+
+        """
+
+        self.E_Igamv_the_fixed_ppress = np.zeros((self.neig, len(self.tvals)))
+
+        if not self.fixed_ppress is None:
+            zvals = [v[0] for v in self.fixed_ppress]
+            a = [v[1] for v in self.fixed_ppress]
+            mag_vs_time = [v[2] for v in self.fixed_ppress]
+            self.E_Igamv_the_fixed_ppress += 1/self.dT * speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, zvals, a, mag_vs_time, self.tvals, self.Igamv, self.dT)
+
     def _make_E_Igamv_the_BC(self):
         """make the boundary condition loading matrices
 
@@ -540,13 +569,19 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.E_Igamv_the_BC = np.zeros((self.neig, len(self.tvals)))
         self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
 
-        if sum([v is None for v in [self.et, self.kh,self.dTh]])==0:
+        if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
             if self.dTh!=0:
                 self.E_Igamv_the_BC -= self.dTh / self.dT * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
         if sum([v is None for v in [self.kv,self.dTv]])==0:
             if self.dTv!=0:
                 self.E_Igamv_the_BC += self.dTv / self.dT * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
-        return
+
+        #the fixed_ppress part
+        if not self.fixed_ppress is None:
+#            k = sum([v for v in [self.dTh, self.dTv] if not v is None]) * 500 / self.dT
+            zvals = [v[0] for v in self.fixed_ppress]
+            a = [v[1] for v in self.fixed_ppress]
+            self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, zvals, a, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT) / self.dT
 
     def _make_por(self):
         """make the pore pressure output
@@ -680,7 +715,7 @@ if __name__ == '__main__':
     dT = 1
     dTh = 100
     dTv = 0.1
-    neig = 20
+    neig = 40
 
 
     mvref = 1.0
@@ -700,14 +735,16 @@ if __name__ == '__main__':
     #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
     bot_vs_time = PolyLine([0,0.0,3], [0,-2,-2])
 
-    ppress_z = np.linspace(0,1,20)
+    fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 3], [0,-0.3,-0.3]))
+
+    ppress_z = np.linspace(0,1,70)
     avg_ppress_z_pairs = [[0,1],[0, 0.2]]
     settlement_z_pairs = [[0,1],[0, 0.5]]
     #tvals = np.linspace(0,3,10)
     tvals = [0,0.05,0.1]+list(np.linspace(0.2,3,30))
-    ppress_z_tval_indexes = [0,4,6]
-    avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
-    settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
+    #ppress_z_tval_indexes = [0,4,6]
+    #avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
+    #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
 
     implementation='scalar'
     implementation='vectorized'
