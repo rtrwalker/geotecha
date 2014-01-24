@@ -107,7 +107,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         0 = Pervious top pervious bottom (PTPB)
         1 = Pervious top impoervious bottom (PTIB)
     dT : float, optional
-        convienient time factor multiplier. default = 1.0
+        convienient normaliser for time factor multiplier. default = 1.0
     neig: int, optional
         number of series terms to use in solution. default = 2
     dTv: float, optional
@@ -420,6 +420,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.fixed_ppress is None:
             for (z, k, mag_vs_time) in self.fixed_ppress:
                 self.psi += k / self.dT * np.sin(self.m[:, np.newaxis] * z) * np.sin(self.m[np.newaxis, :] * z)
+#                self.psi += k * np.sin(self.m[:, np.newaxis] * z) * np.sin(self.m[np.newaxis, :] * z)
         self.psi[np.abs(self.psi) < 1e-8]=0.0
         return
 
@@ -545,7 +546,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         """
 
-        self.E_Igamv_the_vacuum = self.dTh*speccon1d.dim1sin_E_Igamv_the_abmag_bilinear(self.m, self.eigs, self.kh, self.et,
+        self.E_Igamv_the_vacuum = self.dTh * speccon1d.dim1sin_E_Igamv_the_abmag_bilinear(self.m, self.eigs, self.kh, self.et,
                                                                         self.vacuum_vs_depth, self.vacuum_vs_time, self.tvals, self.Igamv, self.dT)
         return
 
@@ -558,9 +559,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         if not self.fixed_ppress is None:
             zvals = [v[0] for v in self.fixed_ppress]
-            a = [v[1] for v in self.fixed_ppress]
+            fixed_ps = [v[1] for v in self.fixed_ppress]
             mag_vs_time = [v[2] for v in self.fixed_ppress]
-            self.E_Igamv_the_fixed_ppress += 1/self.dT * speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, zvals, a, mag_vs_time, self.tvals, self.Igamv, self.dT)
+            self.E_Igamv_the_fixed_ppress += speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, zvals, fixed_ps, mag_vs_time, self.tvals, self.Igamv, self.dT)
 
     def _make_E_Igamv_the_BC(self):
         """make the boundary condition loading matrices
@@ -571,17 +572,17 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
             if self.dTh!=0:
-                self.E_Igamv_the_BC -= self.dTh / self.dT * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
-        if sum([v is None for v in [self.kv,self.dTv]])==0:
+                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+        if sum([v is None for v in [self.kv, self.dTv]])==0:
             if self.dTv!=0:
-                self.E_Igamv_the_BC += self.dTv / self.dT * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
 
         #the fixed_ppress part
         if not self.fixed_ppress is None:
 #            k = sum([v for v in [self.dTh, self.dTv] if not v is None]) * 500 / self.dT
             zvals = [v[0] for v in self.fixed_ppress]
-            a = [v[1] for v in self.fixed_ppress]
-            self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, zvals, a, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT) / self.dT
+            fixed_ps = [v[1] for v in self.fixed_ppress]
+            self.E_Igamv_the_BC -= self.dT*speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, zvals, fixed_ps, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT) / self.dT
 
     def _make_por(self):
         """make the pore pressure output
@@ -710,12 +711,12 @@ if __name__ == '__main__':
     my_code = textwrap.dedent("""\
     from geotecha.piecewise.piecewise_linear_1d import PolyLine
     import numpy as np
-    H = 1.0
-    drn = 1
-    dT = 1
+    H = 1
+    drn = 0
+    dT = 1000
     dTh = 100
     dTv = 0.1
-    neig = 40
+    neig = 45
 
 
     mvref = 1.0
@@ -731,7 +732,7 @@ if __name__ == '__main__':
     surcharge_vs_time = PolyLine([0,0.1,3], [0,1,1])
     vacuum_vs_depth = PolyLine([0,1], [1,1])
     vacuum_vs_time = PolyLine([0,0.4,3], [0,-0.2,-0.2])
-    top_vs_time = PolyLine([0,0.0,3], [0,0.5,0.5])
+    top_vs_time = PolyLine([0,0.0,3], [0,0.1,0.1])
     #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
     bot_vs_time = PolyLine([0,0.0,3], [0,-2,-2])
 
@@ -742,6 +743,7 @@ if __name__ == '__main__':
     settlement_z_pairs = [[0,1],[0, 0.5]]
     #tvals = np.linspace(0,3,10)
     tvals = [0,0.05,0.1]+list(np.linspace(0.2,3,30))
+
     #ppress_z_tval_indexes = [0,4,6]
     #avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
     #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
@@ -777,17 +779,17 @@ if __name__ == '__main__':
         plt.gca().invert_yaxis()
         plt.show()
 
-        plt.plot(a.tvals[a.avg_ppress_z_pairs_tval_indexes], a.avp.T)
-        plt.xlabel('Time')
-        plt.ylabel('Average pore pressure')
-        #plt.gca().invert_yaxis()
-        plt.show()
-#        print(a.set)
-        plt.plot(a.tvals[a.settlement_z_pairs_tval_indexes], a.set.T)
-        plt.xlabel('Time')
-        plt.ylabel('settlement')
-        plt.gca().invert_yaxis()
-        plt.show()
+#        plt.plot(a.tvals[a.avg_ppress_z_pairs_tval_indexes], a.avp.T)
+#        plt.xlabel('Time')
+#        plt.ylabel('Average pore pressure')
+#        #plt.gca().invert_yaxis()
+#        plt.show()
+##        print(a.set)
+#        plt.plot(a.tvals[a.settlement_z_pairs_tval_indexes], a.set.T)
+#        plt.xlabel('Time')
+#        plt.ylabel('settlement')
+#        plt.gca().invert_yaxis()
+#        plt.show()
 #    for i, p in enumerate(a.por.T):
 #
 #        print(a.tvals[i])
