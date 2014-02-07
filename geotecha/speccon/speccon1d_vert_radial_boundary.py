@@ -128,10 +128,18 @@ class speccon1d_vr(speccon1d.Speccon1d):
         is radius of influence of vertical drain
     surcharge_vs_depth : list of Polyline, optional
         surcharge variation with depth. PolyLine(depth, multiplier)
-    vacuum_vs_depth : list of Polyline, optinal
-        vacuum variation with depth. PolyLine(depth, multiplier)
     surcharge_vs_time : list of Polyline, optional
         surcharge magnitude variation with time. PolyLine(time, magnitude)
+
+    cyclic_surcharge_vs_depth: list of PolyLine, optional
+        variation of cyclic surcharge with depth. PolyLine(depth, multiplier)
+    cyclic_surcharge_vs_time: list of PolyLine, optional
+        cyclic surcharge amplitude variation with time. PolyLine(time,
+        magnitude)
+    cyclic_surcharge_omega_phase: list of 2 element tumple of float
+        (omega, phase) used in defining cyclic load of cos(omega*t + phase).
+    vacuum_vs_depth : list of Polyline, optinal
+        vacuum variation with depth. PolyLine(depth, multiplier)
     vacuum_vs_time : list of Polyline, optional
         vacuum magnitude variation with time. Polyline(time, magnitude)
     top_vs_time : list of Polyline, optional
@@ -182,6 +190,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
     Notes
     -----
+    #TODO: explain lists of input must have same len.
     governing equation:
 
 
@@ -199,22 +208,23 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
     def _setup(self):
         self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0, 'implementation': 'vectorized', 'ppress_z_tval_indexes': slice(None, None), 'avg_ppress_z_pairs_tval_indexes': slice(None, None), 'settlement_z_pairs_tval_indexes': slice(None, None) }
-        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress'.split()
+        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress cyclic_surcharge_vs_depth cyclic_surcharge_vs_time cyclic_surcharge_omega_phase'.split()
 
-        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress'.split()
-        self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
-        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time'.split() #pairs that should have the same length
+        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress cyclic_surcharge_vs_depth cyclic_surcharge_vs_time cyclic_surcharge_omega_phase'.split()
+        self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth cyclic_surcharge_vs_depth'.split()
+        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time cyclic_surcharge_vs_depth cyclic_surcharge_vs_time cyclic_surcharge_vs_depth cyclic_surcharge_omega_phase'.split() #pairs that should have the same length
 
         self._zero_or_all = [
             'dTh kh et'.split(),
             'dTv kv'.split(),
             'surcharge_vs_depth surcharge_vs_time'.split(),
-            'vacuum_vs_depth vacuum_vs_time'.split()]
+            'vacuum_vs_depth vacuum_vs_time'.split(),
+            'cyclic_surcharge_vs_depth cyclic_surcharge_vs_time cyclic_surcharge_omega_phase'.split()]
         self._at_least_one = [
             ['mv'],
             'dTh dTv'.split(),
             'kh kv'.split(),
-            'surcharge_vs_time vacuum_vs_time top_vs_time bot_vs_time'.split(),
+            'surcharge_vs_time vacuum_vs_time top_vs_time bot_vs_time cyclic_surcharge_vs_time'.split(),
             ['tvals'],
             'ppress_z avg_ppress_z_pairs settlement_z_pairs'.split()]
 
@@ -467,7 +477,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         _make_E_Igamv_the_vacuum : vacuum contribution
         _make_E_Igamv_the_BC : top boundary pore pressure contribution
         _make_E_Igamv_the_bot : bottom boundary pore pressure contribution
-
+        _make_E_Igamv_the_cyclic_surcharge : cyclic surcharge part
         """
 
         self.E_Igamv_the = np.zeros((self.neig,len(self.tvals)))
@@ -484,6 +494,10 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.fixed_ppress is None:
             self._make_E_Igamv_the_fixed_ppress()
             self.E_Igamv_the +=self.E_Igamv_the_fixed_ppress
+
+        if sum([v is None for v in [self.cyclic_surcharge_vs_depth, self.cyclic_surcharge_vs_time, self.cyclic_surcharge_omega_phase]])==0:
+            self._make_E_Igamv_the_cyclic_surcharge()
+            self.E_Igamv_the += self.E_Igamv_the_cyclic_surcharge
 
         return
 
@@ -515,9 +529,14 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         """
 
-        self.E_Igamv_the_surcharge  = speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m, self.eigs, self.mv, self.surcharge_vs_depth, self.surcharge_vs_time,self.tvals, self.Igamv, self.dT)
+        self.E_Igamv_the_surcharge  = speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m, self.eigs, self.mv, self.surcharge_vs_depth, self.surcharge_vs_time, self.tvals, self.Igamv, self.dT)
         return
 
+    def _make_E_Igamv_the_cyclic_surcharge(self):
+
+        self.E_Igamv_the_cyclic_surcharge  = speccon1d.dim1sin_E_Igamv_the_aDmagcosDt_bilinear(self.m, self.eigs, self.mv, self.cyclic_surcharge_vs_depth, self.cyclic_surcharge_vs_time, self.cyclic_surcharge_omega_phase, self.tvals, self.Igamv, self.dT)
+
+        return
     def _make_E_Igamv_the_vacuum(self):
         """make the vacuum loading matrices
 
@@ -645,10 +664,16 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         z1 = np.asarray(self.settlement_z_pairs)[:,0]
         z2 = np.asarray(self.settlement_z_pairs)[:,1]
+
         self.set=-speccon1d.dim1sin_integrate_af(self.m, self.settlement_z_pairs, self.tvals[self.settlement_z_pairs_tval_indexes],
                                        self.v_E_Igamv_the[:,self.settlement_z_pairs_tval_indexes],
                                         self.drn, self.mv, self.top_vs_time, self.bot_vs_time)
-        self.set+=pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(self.surcharge_vs_time, self.surcharge_vs_depth, self.mv, self.tvals[self.settlement_z_pairs_tval_indexes], z1, z2,achoose_max=True)
+        if not self.surcharge_vs_time is None:
+            self.set+=pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(self.surcharge_vs_time, self.surcharge_vs_depth, self.mv, self.tvals[self.settlement_z_pairs_tval_indexes], z1, z2, achoose_max=True)
+
+        if sum([v is None for v in [self.cyclic_surcharge_vs_depth, self.cyclic_surcharge_vs_time, self.cyclic_surcharge_omega_phase]])==0:
+            self.set+=pwise.pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(self.cyclic_surcharge_vs_time, self.cyclic_surcharge_omega_phase, self.cyclic_surcharge_vs_depth, self.mv, self.tvals[self.settlement_z_pairs_tval_indexes], z1, z2, achoose_max=True)
+
         self.set *= self.H * self.mvref
         return
 
@@ -713,10 +738,10 @@ if __name__ == '__main__':
     import numpy as np
     H = 1
     drn = 0
-    dT = 1000
-    dTh = 100
+    dT = 1
+    #dTh = 100
     dTv = 0.1
-    neig = 45
+    neig = 21
 
 
     mvref = 1.0
@@ -725,26 +750,32 @@ if __name__ == '__main__':
     etref = 1.0
 
     mv = PolyLine([0,1], [1,1])
-    kh = PolyLine([0,1], [1,1])
+    #kh = PolyLine([0,1], [1,1])
     kv = PolyLine([0,1], [1,1])
-    et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
+    #et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
     surcharge_vs_depth = PolyLine([0,1], [1,1])
-    surcharge_vs_time = PolyLine([0,0.1,3], [0,1,1])
-    vacuum_vs_depth = PolyLine([0,1], [1,1])
-    vacuum_vs_time = PolyLine([0,0.4,3], [0,-0.2,-0.2])
-    top_vs_time = PolyLine([0,0.0,3], [0,0.1,0.1])
+    surcharge_vs_time = PolyLine([0,0.0,10], [0,1,1])
+    #vacuum_vs_depth = PolyLine([0,1], [1,1])
+    #vacuum_vs_time = PolyLine([0,0.4,3], [0,-0.2,-0.2])
+    #top_vs_time = PolyLine([0,0.0,3], [0,0.1,0.1])
     #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
-    bot_vs_time = PolyLine([0,0.0,3], [0,-2,-2])
+    #bot_vs_time = PolyLine([0,0.0,3], [0, 0.5, 0.5])
 
-    fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 3], [0,-0.3,-0.3]))
+
+    cyclic_surcharge_vs_depth = PolyLine([0,1], [1,1])
+    cyclic_surcharge_vs_time = PolyLine([0, 0, 10], [0, 0.2, 0.2])
+    cyclic_surcharge_omega_phase = (2*np.pi * 2, -np.pi/2)
+
+
+    #fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 3], [0,-0.3,-0.3]))
 
     ppress_z = np.linspace(0,1,70)
     avg_ppress_z_pairs = [[0,1],[0, 0.2]]
     settlement_z_pairs = [[0,1],[0, 0.5]]
     #tvals = np.linspace(0,3,10)
-    tvals = [0,0.05,0.1]+list(np.linspace(0.2,3,30))
-
-    #ppress_z_tval_indexes = [0,4,6]
+    tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
+    tvals = np.linspace(0, 5, 100)
+    #ppress_z_tval_indexes = [0,1,2,3,4,5,6,7,8]
     #avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
     #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
 
@@ -773,23 +804,25 @@ if __name__ == '__main__':
     #print(a.por.shape)
 
     if True:
+        plt.figure()
         plt.plot(a.por, a.ppress_z)
         plt.xlabel('Pore pressure')
         plt.ylabel('Normalised depth, Z')
         plt.gca().invert_yaxis()
-        plt.show()
-
-#        plt.plot(a.tvals[a.avg_ppress_z_pairs_tval_indexes], a.avp.T)
-#        plt.xlabel('Time')
-#        plt.ylabel('Average pore pressure')
-#        #plt.gca().invert_yaxis()
+#        plt.show()
+        plt.figure()
+        plt.plot(a.tvals[a.avg_ppress_z_pairs_tval_indexes], a.avp.T)
+        plt.xlabel('Time')
+        plt.ylabel('Average pore pressure')
+        #plt.gca().invert_yaxis()
 #        plt.show()
 ##        print(a.set)
-#        plt.plot(a.tvals[a.settlement_z_pairs_tval_indexes], a.set.T)
-#        plt.xlabel('Time')
-#        plt.ylabel('settlement')
-#        plt.gca().invert_yaxis()
-#        plt.show()
+        plt.figure()
+        plt.plot(a.tvals[a.settlement_z_pairs_tval_indexes], a.set.T)
+        plt.xlabel('Time')
+        plt.ylabel('settlement')
+        plt.gca().invert_yaxis()
+        plt.show()
 #    for i, p in enumerate(a.por.T):
 #
 #        print(a.tvals[i])

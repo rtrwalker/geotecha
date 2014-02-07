@@ -4173,12 +4173,14 @@ def pEDload_coslinear(a, omega, phase, eigs, tvals, dT=1.0, **kwargs):
 
     """
 
-    return EDload_linear(a.x, a.y, omega, phase, eigs, tvals, dT, **kwargs)
+    return EDload_coslinear(a.x, a.y, omega, phase, eigs, tvals, dT, **kwargs)
 
 
 def EDload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
 
     from math import exp
+    cos=math.cos
+    sin=math.sin
 
     loadtim = np.asarray(loadtim)
     loadmag = np.asarray(loadmag)
@@ -4192,17 +4194,17 @@ def EDload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
 
 
     for i, t in enumerate(tvals):
-        for k in after_instant_loads[i]:
+        for k in steps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += ((loadmag[k + 1] - loadmag[k])*cos(omega*loadtim[k] + phase)*exp(-dT*eig*(t - loadtim[k])))
-        for k in within_constant_loads[i]:
+        for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (-omega*(dT*eig*sin(omega*t + phase)/(dT**2*eig**2 + omega**2) - omega*cos(omega*t +
                     phase)/(dT**2*eig**2 + omega**2))*loadmag[k] + omega*(dT*eig*exp(-dT*eig*(t -
                     loadtim[k]))*sin(omega*loadtim[k] + phase)/(dT**2*eig**2 + omega**2) -
                     omega*exp(-dT*eig*(t - loadtim[k]))*cos(omega*loadtim[k] + phase)/(dT**2*eig**2
                     + omega**2))*loadmag[k])
-        for k in after_constant_loads[i]:
+        for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (-omega*(dT*eig*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*loadtim[k + 1] + phase)/(dT**2*eig**2 +
                     omega**2) - omega*exp(-dT*eig*(t - loadtim[k + 1]))*cos(omega*loadtim[k + 1] +
@@ -4210,7 +4212,7 @@ def EDload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
                     loadtim[k]))*sin(omega*loadtim[k] + phase)/(dT**2*eig**2 + omega**2) -
                     omega*exp(-dT*eig*(t - loadtim[k]))*cos(omega*loadtim[k] + phase)/(dT**2*eig**2
                     + omega**2))*loadmag[k])
-        for k in within_ramp_loads[i]:
+        for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (omega*(dT*eig*sin(omega*t + phase)/(dT**2*eig**2 + omega**2) - omega*cos(omega*t +
                     phase)/(dT**2*eig**2 + omega**2))*loadmag[k + 1]*(loadtim[k + 1] -
@@ -4286,7 +4288,7 @@ def EDload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
                     phase)/(dT**2*eig**2 + omega**2) + omega*exp(-dT*eig*(t -
                     loadtim[k]))*sin(omega*loadtim[k] + phase)/(dT**2*eig**2 + omega**2))*loadmag[k
                     + 1]*(loadtim[k + 1] - loadtim[k])**(-1))
-        for k in after_ramp_loads[i]:
+        for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (omega*(dT*eig*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*loadtim[k + 1] + phase)/(dT**2*eig**2 +
                     omega**2) - omega*exp(-dT*eig*(t - loadtim[k + 1]))*cos(omega*loadtim[k + 1] +
@@ -4384,12 +4386,14 @@ def pEload_coslinear(a, omega, phase, eigs, tvals, dT=1.0, **kwargs):
 
     """
 
-    return Eload_linear(a.x, a.y, omega, phase, eigs, tvals, dT, **kwargs)
+    return Eload_coslinear(a.x, a.y, omega, phase, eigs, tvals, dT, **kwargs)
 
 
 def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
 
     from math import exp
+    cos=math.cos
+    sin=math.sin
 
     loadtim = np.asarray(loadtim)
     loadmag = np.asarray(loadmag)
@@ -4403,14 +4407,14 @@ def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
 
 
     for i, t in enumerate(tvals):
-        for k in within_constant_loads[i]:
+        for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += ((dT*eig*cos(omega*t + phase)/(dT**2*eig**2 + omega**2) + omega*sin(omega*t + phase)/(dT**2*eig**2 +
                     omega**2))*loadmag[k] - (dT*eig*exp(-dT*eig*(t -
                     loadtim[k]))*cos(omega*loadtim[k] + phase)/(dT**2*eig**2 + omega**2) +
                     omega*exp(-dT*eig*(t - loadtim[k]))*sin(omega*loadtim[k] + phase)/(dT**2*eig**2
                     + omega**2))*loadmag[k])
-        for k in after_constant_loads[i]:
+        for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += ((dT*eig*exp(-dT*eig*(t - loadtim[k + 1]))*cos(omega*loadtim[k + 1] + phase)/(dT**2*eig**2 +
                     omega**2) + omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*loadtim[k + 1] +
@@ -4418,7 +4422,7 @@ def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
                     loadtim[k]))*cos(omega*loadtim[k] + phase)/(dT**2*eig**2 + omega**2) +
                     omega*exp(-dT*eig*(t - loadtim[k]))*sin(omega*loadtim[k] + phase)/(dT**2*eig**2
                     + omega**2))*loadmag[k])
-        for k in within_ramp_loads[i]:
+        for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += ((-dT*eig*cos(omega*t + phase)/(dT**2*eig**2 + omega**2) - omega*sin(omega*t + phase)/(dT**2*eig**2 +
                     omega**2))*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1)*loadtim[k] +
@@ -4480,7 +4484,7 @@ def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
                     phase)/(dT**2*eig**2 + omega**2)**2 + omega**2*exp(-dT*eig*(t -
                     loadtim[k]))*cos(omega*loadtim[k] + phase)/(dT**2*eig**2 +
                     omega**2)**2)*loadmag[k + 1]*(loadtim[k + 1] - loadtim[k])**(-1))
-        for k in after_ramp_loads[i]:
+        for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += ((-dT*eig*exp(-dT*eig*(t - loadtim[k + 1]))*cos(omega*loadtim[k + 1] + phase)/(dT**2*eig**2 +
                     omega**2) - omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*loadtim[k + 1] +

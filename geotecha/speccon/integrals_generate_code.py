@@ -652,13 +652,13 @@ def EDload_linear():
 
 
     for i, t in enumerate(tvals):
-        for k in after_instant_loads[i]:
+        for k in steps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += %s
-        for k in within_ramp_loads[i]:
+        for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += %s
-        for k in after_ramp_loads[i]:
+        for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += %s
     return A"""
@@ -731,16 +731,16 @@ def Eload_linear():
 
 
     for i, t in enumerate(tvals):
-        for k in within_constant_loads[i]:
+        for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += %s
-        for k in after_constant_loads[i]:
+        for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += %s
-        for k in within_ramp_loads[i]:
+        for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += %s
-        for k in after_ramp_loads[i]:
+        for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += %s
     return A"""
@@ -825,6 +825,8 @@ def Eload_coslinear():
     text = """def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
 
     from math import exp
+    cos=math.cos
+    sin=math.sin
 
     loadtim = np.asarray(loadtim)
     loadmag = np.asarray(loadmag)
@@ -838,16 +840,16 @@ def Eload_coslinear():
 
 
     for i, t in enumerate(tvals):
-        for k in within_constant_loads[i]:
+        for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
-        for k in after_constant_loads[i]:
+        for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
-        for k in within_ramp_loads[i]:
+        for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
-        for k in after_ramp_loads[i]:
+        for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
     return A"""
@@ -931,6 +933,8 @@ def EDload_coslinear():
     text = """def EDload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
 
     from math import exp
+    cos=math.cos
+    sin=math.sin
 
     loadtim = np.asarray(loadtim)
     loadmag = np.asarray(loadmag)
@@ -944,19 +948,19 @@ def EDload_coslinear():
 
 
     for i, t in enumerate(tvals):
-        for k in after_instant_loads[i]:
+        for k in steps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
-        for k in within_constant_loads[i]:
+        for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
-        for k in after_constant_loads[i]:
+        for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
-        for k in within_ramp_loads[i]:
+        for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
-        for k in after_ramp_loads[i]:
+        for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
                 A[i,j] += (%s)
     return A"""
