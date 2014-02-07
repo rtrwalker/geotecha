@@ -557,6 +557,188 @@ def test_schiffman_and_stein_1970():
                                 "implementation='%s', dT=%s" % (impl, dT)))
 
 
+def test_fixed_ppress_terzaghi_PTPB():
+    """test for fixed_ppress
+
+    fixed pore pressure is zero at 0.5, each half is equivalent to terzaghi_1d
+    PTPB
+
+    instant surcharge of 100
+
+    close to the fixed ppress zero is not perfectly accurate but it is reasonable
+    """
+
+
+    tslice = slice(5,None) #restrict times
+    zslice = slice(2,None) # restrict zvals
+    t = TERZ1D_T[tslice]
+    z = np.append(0.25*TERZ1D_Z[zslice], [0.5 - 0.25*TERZ1D_Z[zslice][::-1], 0.5 + 0.25*TERZ1D_Z[zslice], 1 - 0.25 * TERZ1D_Z[zslice][::-1]])
+
+
+
+    reader = textwrap.dedent("""\
+    from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    import numpy as np
+    H = 1
+    drn = 0
+    dTv = 0.1 /16
+    neig = 40
+
+    mvref = 2.0
+    mv = PolyLine([0,1], [0.5,0.5])
+    kv = PolyLine([0,1], [5,5])
+
+    #note: combo of dTv, mv, kv essentially gives dTv = 1
+
+    surcharge_vs_depth = PolyLine([0,1], [100,100])
+    surcharge_vs_time = PolyLine([0,0.0,8], [0,1,1])
+
+    fixed_ppress = [(0.5, 10000, None)]
+
+    ppress_z = np.%s
+    avg_ppress_z_pairs = [[0,1]]
+    settlement_z_pairs = [[0,1]]
+
+    tvals = np.%s
+
+    """ % (repr(z),
+           repr(t)))
+
+
+
+
+    por = 100 * np.vstack((TERZ1D_POR[zslice, tslice], TERZ1D_POR[zslice, tslice][::-1,:], TERZ1D_POR[zslice, tslice], TERZ1D_POR[zslice, tslice][::-1,:]))
+    avp = 100 * TERZ1D_AVP[:, tslice]
+    settle = 100 * (1 - TERZ1D_AVP[:,tslice])
+
+
+
+    for impl in ["vectorized"]:
+        for dT in [0.1, 1, 10]:
+            a = speccon1d_vr(reader + "\n" +
+                            "implementation = '%s'" % impl + "\n" +
+                            "dT = %s" % dT)
+
+            a.make_all()
+
+#            plt.clf()
+#            plt.figure()
+#            plt.plot(por, z,'b-*')
+#            plt.plot(a.por, z, 'r-+')
+#
+#
+#            plt.figure()
+#            plt.plot(t,settle[0],'b-*')
+#            plt.plot(t, a.set[0], 'r-+')
+#            plt.figure()
+#            plt.plot(t, avp[0],'b-*')
+#            plt.plot(t, a.avp[0], 'r-+')
+#            plt.show()
+
+            assert_allclose(a.avp, avp, atol=2,
+                            err_msg = ("Fail. test_fixed_ppress_terzaghi_PTPB, avp, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.por, por, atol=5,
+                            err_msg = ("Fail. test_fixed_ppress_terzaghi_PTPB, por, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.set, settle, atol=2,
+                            err_msg = ("Fail. test_fixed_ppress_terzaghi_PTPB, settle, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+
+
+
+def test_fixed_ppress_BC_terzaghi_PTPB():
+    """test for fixed_ppress
+
+    fixed pore pressure is -100 at 0.5.  fixed boundary conditions are
+    instantly -100.  each half is equivalent to terzaghi_1d PTPB -100.
+
+    instant surcharge of 100
+
+    close to the fixed ppress zero is not perfectly accurate but it is reasonable
+    """
+
+
+    tslice = slice(5,None) #restrict times
+    zslice = slice(2,None) # restrict zvals
+    t = TERZ1D_T[tslice]
+    z = np.append(0.25*TERZ1D_Z[zslice], [0.5 - 0.25*TERZ1D_Z[zslice][::-1], 0.5 + 0.25*TERZ1D_Z[zslice], 1 - 0.25 * TERZ1D_Z[zslice][::-1]])
+
+
+
+    reader = textwrap.dedent("""\
+    from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    import numpy as np
+    H = 1
+    drn = 0
+    dTv = 0.1 /16
+    neig = 40
+
+    mvref = 2.0
+    mv = PolyLine([0,1], [0.5,0.5])
+    kv = PolyLine([0,1], [5,5])
+
+    #note: combo of dTv, mv, kv essentially gives dTv = 1
+
+    #surcharge_vs_depth = PolyLine([0,1], [100,100])
+    #surcharge_vs_time = PolyLine([0,0.0,8], [0,1,1])
+
+    top_vs_time = PolyLine([0, 0.0, 5], [0,-100,-100])
+    bot_vs_time = PolyLine([0, 0.0, 5], [0,-100,-100])
+
+    fixed_ppress = [(0.5, 10000, PolyLine([0,0,10],[0,-100,-100]))]
+
+    ppress_z = np.%s
+    avg_ppress_z_pairs = [[0,1]]
+    settlement_z_pairs = [[0,1]]
+
+    tvals = np.%s
+
+    """ % (repr(z),
+           repr(t)))
+
+
+
+
+    por = -100 + 100 * np.vstack((TERZ1D_POR[zslice, tslice], TERZ1D_POR[zslice, tslice][::-1,:], TERZ1D_POR[zslice, tslice], TERZ1D_POR[zslice, tslice][::-1,:]))
+    avp = -100 + 100 * TERZ1D_AVP[:, tslice]
+    settle = 100 * (1 - TERZ1D_AVP[:,tslice])
+
+
+
+    for impl in ["vectorized"]:
+        for dT in [0.1, 1, 10]:
+            a = speccon1d_vr(reader + "\n" +
+                            "implementation = '%s'" % impl + "\n" +
+                            "dT = %s" % dT)
+
+            a.make_all()
+
+#            plt.clf()
+#            plt.figure()
+#            plt.plot(por, z,'b-*')
+#            plt.plot(a.por, z, 'r-+')
+#
+#
+#            plt.figure()
+#            plt.plot(t,settle[0],'b-*')
+#            plt.plot(t, a.set[0], 'r-+')
+#            plt.figure()
+#            plt.plot(t, avp[0],'b-*')
+#            plt.plot(t, a.avp[0], 'r-+')
+#            plt.show()
+
+            assert_allclose(a.avp, avp, atol=2,
+                            err_msg = ("Fail. test_fixed_ppress_BC_terzaghi_PTPB, avp, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.por, por, atol=5,
+                            err_msg = ("Fail. test_fixed_ppress_BC_terzaghi_PTPB, por, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.set, settle, atol=2,
+                            err_msg = ("Fail. test_fixed_ppress_BC_terzaghi_PTPB, settle, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+
+
 if __name__ == '__main__':
 #    test_terzaghi_1d_PTPB()
 #    test_schiffman_and_stein_1970()
@@ -564,6 +746,7 @@ if __name__ == '__main__':
 #    print(np.append(0.5*TERZ1D_Z, 1-0.5*TERZ1D_Z[::-1]))
 #    test_terzaghi_1d()
 
+#    test_fixed_ppress_BC_terzaghi_PTPB()
 
 
     import nose

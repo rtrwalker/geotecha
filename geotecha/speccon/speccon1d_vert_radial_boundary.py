@@ -148,8 +148,15 @@ class speccon1d_vr(speccon1d.Speccon1d):
         bottom p.press variation with time. Polyline(time, magnitude).
         When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying
         D[u(1,t), Z] = bot_vs_time
-    fixed_ppress: list of float, optional
-        normalised z at which pore pressure is fixed.
+    fixed_ppress: list of 3 element tuple,optional
+        (zfixed, pseudo_k, PolyLine(time, magnitude)).  zfixed is the
+        normalised z at which pore pressure is fixed. pseudo_k is a
+        permeability-like coefficient that controls how quickly the pore
+        pressure reduces to the fixed value (pseudo_k should be as high as
+        possible without causing numerical difficulties). If the third
+        element of the tuple is None then the pore pressure will be fixed at
+        zero rather than a prescribed mag_vs_time PolyLine
+
     ppress_z : list_like of float, optional
         normalised z to calc pore pressure at
     avg_ppress_z_pairs : list of two element list of float, optional
@@ -428,8 +435,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
             self.psi += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m,self.kh,self.et, implementation=self.implementation)
         #fixed pore pressure part
         if not self.fixed_ppress is None:
-            for (z, k, mag_vs_time) in self.fixed_ppress:
-                self.psi += k / self.dT * np.sin(self.m[:, np.newaxis] * z) * np.sin(self.m[np.newaxis, :] * z)
+            for (zfixed, pseudo_k, mag_vs_time) in self.fixed_ppress:
+                self.psi += pseudo_k / self.dT * np.sin(self.m[:, np.newaxis] * zfixed) * np.sin(self.m[np.newaxis, :] * zfixed)
+
 #                self.psi += k * np.sin(self.m[:, np.newaxis] * z) * np.sin(self.m[np.newaxis, :] * z)
         self.psi[np.abs(self.psi) < 1e-8]=0.0
         return
@@ -578,9 +586,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         if not self.fixed_ppress is None:
             zvals = [v[0] for v in self.fixed_ppress]
-            fixed_ps = [v[1] for v in self.fixed_ppress]
+            pseudo_k = [v[1] for v in self.fixed_ppress]
             mag_vs_time = [v[2] for v in self.fixed_ppress]
-            self.E_Igamv_the_fixed_ppress += speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, zvals, fixed_ps, mag_vs_time, self.tvals, self.Igamv, self.dT)
+            self.E_Igamv_the_fixed_ppress += speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, zvals, pseudo_k, mag_vs_time, self.tvals, self.Igamv, self.dT)
 
     def _make_E_Igamv_the_BC(self):
         """make the boundary condition loading matrices
@@ -600,8 +608,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.fixed_ppress is None:
 #            k = sum([v for v in [self.dTh, self.dTv] if not v is None]) * 500 / self.dT
             zvals = [v[0] for v in self.fixed_ppress]
-            fixed_ps = [v[1] for v in self.fixed_ppress]
-            self.E_Igamv_the_BC -= self.dT*speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, zvals, fixed_ps, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT) / self.dT
+            pseudo_k = [v[1] for v in self.fixed_ppress]
+            self.E_Igamv_the_BC -= self.dT*speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, zvals, pseudo_k, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT) / self.dT
 
     def _make_por(self):
         """make the pore pressure output
@@ -767,7 +775,7 @@ if __name__ == '__main__':
     cyclic_surcharge_omega_phase = (2*np.pi * 2, -np.pi/2)
 
 
-    #fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 3], [0,-0.3,-0.3]))
+    fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
 
     ppress_z = np.linspace(0,1,70)
     avg_ppress_z_pairs = [[0,1],[0, 0.2]]

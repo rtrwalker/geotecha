@@ -762,7 +762,7 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, a, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
+def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, pseudo_k, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -791,7 +791,7 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, a, top_vs_time, bo
         list of eigenvalues
     zvals : list of float
         z values of each delta function
-    a: list of float
+    pseudo_k: list of float
         coefficents to multiply each delta function by
     top_vs_time : list of PolyLine
         Piecewise linear magnitude  vs time for the top boundary.
@@ -825,7 +825,7 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, a, top_vs_time, bo
     if not top_vs_time is None:
         for top_vs_t in top_vs_time:
             E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
-            for z, zd, k in zip(zvals, zdist, a):
+            for z, zd, k in zip(zvals, zdist, pseudo_k):
                 theta = k * np.sin(z * m) * zd
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
