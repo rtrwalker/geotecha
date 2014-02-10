@@ -121,6 +121,7 @@ def test_terzaghi_1d_PTIB():
     surcharge_vs_depth = PolyLine([0,1], [100,100])
     surcharge_vs_time = PolyLine([0,0.0,8], [0,1,1])
 
+
     ppress_z = np.%s
     avg_ppress_z_pairs = [[0,1]]
     settlement_z_pairs = [[0,1]]
@@ -385,6 +386,7 @@ def test_schiffman_and_stein_1970():
     surcharge_vs_time = PolyLine([0,0,30000], [0,100,100])
     surcharge_vs_depth = PolyLine([0,1], [1,1])
 
+
     ppress_z = np.array(
         [  0. ,   0.4,   0.8,   1.2,   1.6,   2. ,   2.4,   2.8,   3.2,
          3.6,   4. ,   4.4,   4.8,   5.2,   5.6,   6. ,   6.4,   6.8,
@@ -592,6 +594,7 @@ def test_fixed_ppress_terzaghi_PTPB():
 
     surcharge_vs_depth = PolyLine([0,1], [100,100])
     surcharge_vs_time = PolyLine([0,0.0,8], [0,1,1])
+
 
     fixed_ppress = [(0.5, 10000, None)]
 

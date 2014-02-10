@@ -4177,6 +4177,91 @@ def pEDload_coslinear(a, omega, phase, eigs, tvals, dT=1.0, **kwargs):
 
 
 def EDload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
+    """Time integration for spectral methods
+
+    Integrates D[load(tau), tau] * exp(dT * eig * (t-tau)) between [0, t].
+    Performs integrations involving time and the time derivative of a
+    piecewise linear load.  A 2d array of dimesnions A[len(tvals), len(eigs)]
+    is produced where the 'i'th row of A contains the diagonal elements of the
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
+
+
+    Parameters
+    ----------
+    loadtim : 1d numpy.ndarray
+        list of times describing load application
+    loadmag : 1d numpy.ndarray
+        list of load magnitudes
+    omega, phase : float
+        parameters that describe a cyclic load cos(omega * t + phase)
+    eigs : 1d numpy.ndarray
+        list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    dT : ``float``, optional
+        time factor multiple (default = 1.0)
+
+    Returns
+    -------
+    A : numpy.ndarray
+        returns a 2d array of dimesnions A[len(tvals), len(eigs)].
+        The 'i'th row of A is the diagonal elements of the spectral 'E' matrix
+        calculated for the time tvals[i].
+        vector
+
+    Notes
+    -----
+
+    Assuming the load are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)\\cos\\left(\\omega t + \\phi\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    The matrix :math:`E` is a time dependent diagonal matrix due to time
+    dependant loadings.  The version of :math:`E` calculated here in
+    `EDload_linear` is from loading terms in the governing equation that are
+    differentiated wrt :math:`t` (hence the 'D' in the function name).
+    The diagonal elements of :math:`E` are given by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{\\frac{d{\\sigma\\left(\\tau\\right)}}{d\\tau}{\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
+     :math:`dT` is a time factor for numerical convienience,
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is
+    piecewise in time. The contribution of each load segment is found by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{\\frac{d{\\sigma\\left(\\tau\\right)}}{d\\tau}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+
+    where
+
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`EDload_coslinear`, rather than use :math:`t_s` and
+    :math:`t_f`,
+    explicitly finds increments that the current time falls in, falls after,
+    and falls before and treates each case on it's own.)
+
+    Each :math:`t` value of interest requires a separate diagonal matrix
+    :math:`E`.  To use space more efficiently and to facilitate numpy
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of
+    array :math:`A` returned by `EDload_coslinear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+
+    """
 
     from math import exp
     cos=math.cos
@@ -4390,7 +4475,89 @@ def pEload_coslinear(a, omega, phase, eigs, tvals, dT=1.0, **kwargs):
 
 
 def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
+    """Time integration for spectral methods
 
+    Integrates load(tau) * exp(dT * eig * (t-tau)) between [0, t].
+    Performs integrations involving time and the time derivative of a
+    piecewise linear load.  A 2d array of dimensions A[len(tvals), len(eigs)]
+    is produced where the 'i'th row of A contains the diagonal elements of the
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
+
+
+    loadtim : 1d numpy.ndarray
+        list of times describing load application
+    loadmag : 1d numpy.ndarray
+        list of load magnitudes
+    omega, phase : float
+        parameters that describe a cyclic load cos(omega * t + phase)
+    eigs : 1d numpy.ndarray
+        list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    dT : ``float``, optional
+        time factor multiple (default = 1.0)
+
+    Returns
+    -------
+    A : numpy.ndarray
+        returns a 2d array of dimesnions A[len(tvals), len(eigs)].
+        The 'i'th row of A is the diagonal elements of the spectral 'E' matrix
+        calculated for the time tvals[i].
+        vector
+
+    Notes
+    -----
+
+    Assuming the load are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)\\cos\\left(\\omega t + \\phi\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    The matrix :math:`E` is a time dependent diagonal matrix due to time
+    dependant loadings.  The version of :math:`E` calculated here in
+    `Eload_linear` is from loading terms in the governing equation that are NOT
+    differentiated wrt :math:`t`.
+    The diagonal elements of :math:`E` are given by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{{\\sigma\\left(\\tau\\right)}{\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
+     :math:`dT` is a time factor for numerical convienience,
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is
+    piecewise in time. The contribution of each load segment is found by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{{\\sigma\\left(\\tau\\right)}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+
+    where
+
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`Eload_linear`, rather than use :math:`t_s` and
+    :math:`t_f`,
+    explicitly finds increments that the current time falls in, falls after,
+    and falls before and treates each case on it's own.)
+
+    Each :math:`t` value of interest requires a separate diagonal matrix
+    :math:`E`.  To use space more efficiently and to facilitate numpy
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of
+    array :math:`A` returned by `Eload_coslinear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+
+    """
     from math import exp
     cos=math.cos
     sin=math.sin

@@ -1540,7 +1540,46 @@ def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
 
-def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(a,omega_phase, b,c, xai,xbi,xbj, **kwargs):
+#def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(a,omega_phase, b,c, xai,xbi,xbj, **kwargs):
+#    """wrapper for xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input.
+#
+#    Parameters
+#    ----------
+#    omega_phase: 2 element tuple
+#        (omega, phase) for use in cos(omega * t + phase)
+#
+#    Notes
+#    -----
+#    `a` and `b` `omega_phase` can be lists that will be superposed.  This is not available in
+#    the original function
+#
+#    See also
+#    --------
+#    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+#    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : similar polyline wrapper but no superposition
+#
+#    """
+#
+##    b, c = polyline_make_x_common(b, c)
+##    return xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a.x,a.y,b.x1,b.x2,b.y1,b.y2, c.x1, c.x2, c.y1, c.y2, xai,xbi,xbj, **kwargs)
+#
+#    if not isinstance(a,list):
+#        a = [a]
+#    if not isinstance(b, list):
+#        b = [b]
+#    if not isinstance(b, list):
+#        omega_phase = [omega_phase]
+#    if len(a)!=len(b):
+#        raise ValueError("a and b must be lengths of equal length. len(a) = {0}, len(b) = {1}".format(len(a), len(b)))
+#    if len(a)!=len(omega_phase):
+#        raise ValueError("a and omega_phase must be lengths of equal length. len(a) = {0}, len(omega_phase) = {1}".format(len(a), len(omega_phase)))
+#    out = np.zeros((len(xbi), len(xai)))
+#    for aa, bb, (omega, phase) in zip(a, b, omega_phase):
+#        bb, cc = polyline_make_x_common(bb, c)
+#        out += xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(aa.x,aa.y,omega, phase, bb.x1,bb.x2,bb.y1,bb.y2, cc.x1, cc.x2, cc.y1, cc.y2, xai,xbi,xbj, **kwargs)
+#    return out
+
+def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(a,b,c, xai, xbi, xbj, omega_phase=None, **kwargs):
     """wrapper for xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input.
 
     Parameters
@@ -1567,16 +1606,23 @@ def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_betwe
         a = [a]
     if not isinstance(b, list):
         b = [b]
+    if omega_phase is None:
+        omega_phase = [None] * len(a)
     if not isinstance(b, list):
         omega_phase = [omega_phase]
+
     if len(a)!=len(b):
         raise ValueError("a and b must be lengths of equal length. len(a) = {0}, len(b) = {1}".format(len(a), len(b)))
     if len(a)!=len(omega_phase):
         raise ValueError("a and omega_phase must be lengths of equal length. len(a) = {0}, len(omega_phase) = {1}".format(len(a), len(omega_phase)))
     out = np.zeros((len(xbi), len(xai)))
-    for aa, bb, (omega, phase) in zip(a, b, omega_phase):
+    for aa, bb, om_ph in zip(a, b, omega_phase):
         bb, cc = polyline_make_x_common(bb, c)
-        out += xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(aa.x,aa.y,omega, phase, bb.x1,bb.x2,bb.y1,bb.y2, cc.x1, cc.x2, cc.y1, cc.y2, xai,xbi,xbj, **kwargs)
+        if not om_ph is None:
+            omega, phase = om_ph
+            out += xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(aa.x,aa.y,omega, phase, bb.x1,bb.x2,bb.y1,bb.y2, cc.x1, cc.x2, cc.y1, cc.y2, xai,xbi,xbj, **kwargs)
+        else:
+            out += xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(aa.x, aa.y, bb.x1, bb.x2, bb.y1,bb.y2, cc.x1, cc.x2, cc.y1, cc.y2, xai,xbi,xbj, **kwargs)
     return out
 
 def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a, omega, phase, b, c, xai,xbi,xbj, **kwargs):
