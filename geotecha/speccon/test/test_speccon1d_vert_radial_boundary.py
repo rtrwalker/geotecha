@@ -739,6 +739,174 @@ def test_fixed_ppress_BC_terzaghi_PTPB():
                                 "implementation='%s', dT=%s" % (impl, dT)))
 
 
+
+def test_hansbo_avp():
+    """test for average hansbo radial consolidation
+
+    instant surcharge of 100
+    compare with 100*exp(t)
+
+    tolerance is quite large because method is not great when no vertical
+    drainage is present.
+
+    """
+
+
+    t = np.array(
+      [ 0.05,  0.06,  0.08,  0.1 ,  0.13,  0.17,  0.21,  0.27,  0.35,
+        0.44,  0.57,  0.72,  0.92,  1.17,  1.49,  1.9 ,  2.42,  3.09,
+        3.93,  5.01])
+
+    hansbo_avp = np.array(
+      [[ 0.95122942,  0.94176453,  0.92311635,  0.90483742,  0.87809543,
+        0.84366482,  0.81058425,  0.76337949,  0.70468809,  0.64403642,
+        0.56552544,  0.48675226,  0.39851904,  0.31036694,  0.22537266,
+        0.14956862,  0.08892162,  0.04550195,  0.01964367,  0.0066709 ]])
+
+    reader = textwrap.dedent("""\
+    from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    import numpy as np
+    H = 1
+    drn = 1
+    dTh = 0.1
+    neig = 60
+
+    mvref = 2.0
+    mv = PolyLine([0, 1], [0.5, 0.5])
+    kh = PolyLine([0, 1], [5, 5])
+    et = PolyLine([0,1], [1, 1])
+    #note: combo of dTv, mv, kv essentially gives dTv = 1
+
+    surcharge_vs_depth = PolyLine([0,1], [100,100])
+    surcharge_vs_time = PolyLine([0,0.0,8], [0,1,1])
+
+
+    avg_ppress_z_pairs = [[0,1]]
+    settlement_z_pairs = [[0,1]]
+
+    tvals = np.%s
+
+    """ % (repr(t)))
+
+    avp = 100 * hansbo_avp
+    settle = 100 - 100 * hansbo_avp
+
+    for impl in ["vectorized"]:
+        for dT in [0.1, 1, 10]:
+            a = speccon1d_vr(reader + "\n" +
+                            "implementation = '%s'" % impl + "\n" +
+                            "dT = %s" % dT)
+
+            a.make_all()
+
+#            plt.clf()
+#            plt.figure()
+#            plt.plot(por, z,'b-*', label='expected')
+#            plt.plot(a.por, z, 'r-+', label='calculated')
+#            plt.legend()
+#
+#
+#            plt.figure()
+#            plt.plot(t,settle[0],'b-*', label='expected')
+#            plt.plot(t, a.set[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.figure()
+#            plt.plot(t, avp[0],'b-*',  label='expected')
+#            plt.plot(t, a.avp[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.show()
+
+            assert_allclose(a.avp, avp, atol=1,
+                            err_msg = ("Fail. test_hansbo_avp, avp, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.set, settle, atol=1,
+                            err_msg = ("Fail. test_hansbo_avp, settle, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+
+def test_hansbo_avp_vacuum():
+    """test for average hansbo radial consolidation
+
+    BC and vacuum drop instantly to -100
+    compare with 100*exp(t)-100
+
+    tolerance is quite large because method is not great when no vertical
+    drainage is present.
+
+    """
+
+
+    t = np.array(
+      [ 0.05,  0.06,  0.08,  0.1 ,  0.13,  0.17,  0.21,  0.27,  0.35,
+        0.44,  0.57,  0.72,  0.92,  1.17,  1.49,  1.9 ,  2.42,  3.09,
+        3.93,  5.01])
+
+    hansbo_avp = np.array(
+      [[ 0.95122942,  0.94176453,  0.92311635,  0.90483742,  0.87809543,
+        0.84366482,  0.81058425,  0.76337949,  0.70468809,  0.64403642,
+        0.56552544,  0.48675226,  0.39851904,  0.31036694,  0.22537266,
+        0.14956862,  0.08892162,  0.04550195,  0.01964367,  0.0066709 ]])
+
+    reader = textwrap.dedent("""\
+    from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    import numpy as np
+    H = 1
+    drn = 1
+    dTh = 0.1
+    neig = 60
+
+    mvref = 2.0
+    mv = PolyLine([0, 1], [0.5, 0.5])
+    kh = PolyLine([0, 1], [5, 5])
+    et = PolyLine([0,1], [1, 1])
+    #note: combo of dTv, mv, kv essentially gives dTv = 1
+
+    vacuum_vs_depth = PolyLine([0,1], [1,1])
+    vacuum_vs_time = PolyLine([0,0.0,8], [0,-100,-100])
+
+    top_vs_time = PolyLine([0,0.0,8], [0,-100,-100])
+
+    avg_ppress_z_pairs = [[0,1]]
+    settlement_z_pairs = [[0,1]]
+
+    tvals = np.%s
+
+    """ % (repr(t)))
+
+    avp = 100 * hansbo_avp - 100
+    settle = 100 - 100 * hansbo_avp
+
+    for impl in ["vectorized"]:
+        for dT in [0.1,1,10]:
+            a = speccon1d_vr(reader + "\n" +
+                            "implementation = '%s'" % impl + "\n" +
+                            "dT = %s" % dT)
+
+            a.make_all()
+
+#            plt.clf()
+#            plt.figure()
+#            plt.plot(por, z,'b-*', label='expected')
+#            plt.plot(a.por, z, 'r-+', label='calculated')
+#            plt.legend()
+#
+#
+#            plt.figure()
+#            plt.plot(t,settle[0],'b-*', label='expected')
+#            plt.plot(t, a.set[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.figure()
+#            plt.plot(t, avp[0],'b-*',  label='expected')
+#            plt.plot(t, a.avp[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.show()
+
+            assert_allclose(a.avp, avp, atol=1,
+                            err_msg = ("Fail. test_hansbo_avp_vacuum, avp, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.set, settle, atol=1,
+                            err_msg = ("Fail. test_hansbo_avp_vacuum, settle, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+
 if __name__ == '__main__':
 #    test_terzaghi_1d_PTPB()
 #    test_schiffman_and_stein_1970()
@@ -748,7 +916,7 @@ if __name__ == '__main__':
 
 #    test_fixed_ppress_BC_terzaghi_PTPB()
 
-
+#    test_hansbo_avp_vacuum()
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
