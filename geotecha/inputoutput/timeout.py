@@ -23,7 +23,7 @@ Examples
 0.5403023058681398
 >>> timed_longcos(1, 2)
 Traceback (most recent call last):
-    ...
+...
 TimeoutException: timed out after 2 seconds
 
 Notes
@@ -131,7 +131,7 @@ def _longcos(x, wait=0):
     
 if __name__ == '__main__':
     import doctest
-    doctest.testmod()
+    doctest.testmod(verbose=3)
 #    timed_longcos = timeout(5,force_kill=True)(_longcos)
 #    a=timed_longcos(1,2)
 #    print a

@@ -140,9 +140,9 @@ class SyntaxChecker(ast.NodeVisitor):
         self.safe_names = {'True': True, 'False': False, 'None': None}#dict()
         self.print_each_node = False
         for v in allow:
-            s='allow_{0}'.format(v)
+            s = 'allow_{0}'.format(v)
             if hasattr(self,s):                
-                getattr(self, 'allow_{0}'.format(v))()
+                getattr(self, s)()
             else:
                 raise AttributeError("'SyntaxChecker' object has no attribute "
             "'{0}'. i.e. '{1}' is not a valid member "
@@ -551,17 +551,18 @@ class print_all_nodes(ast.NodeVisitor):#http://stackoverflow.com/a/1515403/25300
     >>> x=print_all_nodes()
     >>> tree=ast.parse(text)
     >>> x.visit(tree)
-     Module : Module(body=[Assign(targets=[Name(id='a', ctx=Store())], value=BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2)))])
-     Assign : Assign(targets=[Name(id='a', ctx=Store())], value=BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2)))
-     Name : Name(id='a', ctx=Store())
-     Store : Store()
-     BinOp : BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2))
-     List : List(elts=[Num(n=3), Num(n=2)], ctx=Load())
-     Num : Num(n=3)
-     Num : Num(n=2)
-     Load : Load()
-     Mult : Mult()
-     Num : Num(n=2)
+         Module : Module(body=[Assign(targets=[Name(id='a', ctx=Store())], value=BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2)))])
+         Assign : Assign(targets=[Name(id='a', ctx=Store())], value=BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2)))
+         Name : Name(id='a', ctx=Store())
+         Store : Store()
+         BinOp : BinOp(left=List(elts=[Num(n=3), Num(n=2)], ctx=Load()), op=Mult(), right=Num(n=2))
+         List : List(elts=[Num(n=3), Num(n=2)], ctx=Load())
+         Num : Num(n=3)
+         Num : Num(n=2)
+         Load : Load()
+         Mult : Mult()
+         Num : Num(n=2)
+     
     """
     
     #useful resources
@@ -941,7 +942,8 @@ def code_for_explicit_attribute_initialization(
 
             
 if __name__=='__main__':
-    
+    import doctest
+    doctest.testmod()
                
 #    SyntaxChecker(['ast','builtin']).visit(ast.parse('import math', mode='exec'))
     a="""[x for x in ().__class__.__bases__[0].__subclasses__() 

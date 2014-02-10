@@ -432,7 +432,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if sum([v is None for v in [self.kh, self.et, self.dTh]])==0:
             kh, et = pwise.polyline_make_x_common(self.kh, self.et)
 #            self.psi += self.dTh / self.dT * integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
-            self.psi += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m,self.kh,self.et, implementation=self.implementation)
+            self.psi += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m, self.kh, self.et, implementation=self.implementation)
         #fixed pore pressure part
         if not self.fixed_ppress is None:
             for (zfixed, pseudo_k, mag_vs_time) in self.fixed_ppress:
@@ -739,58 +739,59 @@ if __name__ == '__main__':
 
 
 
-
-
     my_code = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
-    H = 1
-    drn = 0
-    dT = 1
-    #dTh = 100
-    dTv = 0.1
-    neig = 21
+from geotecha.piecewise.piecewise_linear_1d import PolyLine
+import numpy as np
+H = 1
+drn = 1
+dT = 1
+dTh = 0.1
+dTv = 1e-4
+neig = 45
 
 
-    mvref = 1.0
-    kvref = 1.0
-    khref = 1.0
-    etref = 1.0
+mvref = 2.0
+kvref = 1.0
+khref = 1.0
+etref = 1.0
 
-    mv = PolyLine([0,1], [1,1])
-    #kh = PolyLine([0,1], [1,1])
-    kv = PolyLine([0,1], [1,1])
-    #et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
-    surcharge_vs_depth = PolyLine([0,1], [1,1])
-    surcharge_vs_time = PolyLine([0,0.0,10], [0,1,1])
-    #vacuum_vs_depth = PolyLine([0,1], [1,1])
-    #vacuum_vs_time = PolyLine([0,0.4,3], [0,-0.2,-0.2])
-    #top_vs_time = PolyLine([0,0.0,3], [0,0.1,0.1])
-    #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
-    #bot_vs_time = PolyLine([0,0.0,3], [0, 0.5, 0.5])
-
-
-    cyclic_surcharge_vs_depth = PolyLine([0,1], [1,1])
-    cyclic_surcharge_vs_time = PolyLine([0, 0, 10], [0, 0.2, 0.2])
-    cyclic_surcharge_omega_phase = (2*np.pi * 2, -np.pi/2)
+mv = PolyLine([0,1], [0.5,0.5])
+kh = PolyLine([0,1], [1,1])
+kv = PolyLine([0,1], [1,1])
+#et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
+et = PolyLine([0,1], [1,1])
+#surcharge_vs_depth = PolyLine([0,1], [1,1])
+#surcharge_vs_time = PolyLine([0,0.0,10], [0,1,1])
+vacuum_vs_depth = PolyLine([0,1], [1,1])
+vacuum_vs_time = PolyLine([0,0,10], [0,-0.2,-0.2])
+top_vs_time = PolyLine([0,0.0,10], [0,-0.2,-0.2])
+#bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
+#bot_vs_time = PolyLine([0,0.0,3], [0, 0.5, 0.5])
 
 
-    fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
+#cyclic_surcharge_vs_depth = PolyLine([0,1], [1,1])
+#cyclic_surcharge_vs_time = PolyLine([0, 0, 10], [0, 0.2, 0.2])
+#cyclic_surcharge_omega_phase = (2*np.pi * 2, -np.pi/2)
 
-    ppress_z = np.linspace(0,1,70)
-    avg_ppress_z_pairs = [[0,1],[0, 0.2]]
-    settlement_z_pairs = [[0,1],[0, 0.5]]
-    #tvals = np.linspace(0,3,10)
-    tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
-    tvals = np.linspace(0, 5, 100)
-    #ppress_z_tval_indexes = [0,1,2,3,4,5,6,7,8]
-    #avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
-    #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
 
-    implementation='scalar'
-    implementation='vectorized'
-    #implementation='fortran'
+#fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
+
+ppress_z = np.linspace(0,1,70)
+avg_ppress_z_pairs = [[0,1],[0, 0.2]]
+settlement_z_pairs = [[0,1],[0, 0.5]]
+#tvals = np.linspace(0,3,10)
+tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
+tvals = np.linspace(0, 5, 100)
+#ppress_z_tval_indexes = [0,1,2,3,4,5,6,7,8]
+#avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
+#settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
+
+implementation='scalar'
+implementation='vectorized'
+#implementation='fortran'
     """)
+
+
 #    writer = StringIO()
 #    program(my_code, writer)
 #    print('writer\n%s' % writer.getvalue())

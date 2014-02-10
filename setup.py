@@ -79,6 +79,17 @@ def get_package_data(name, extlist):
                 flist.append(osp.join(dirpath, fname))
     return flist
 
+def get_folder(name, foldernames):
+    flist = []    
+    for dirpath, _dirnames, filenames in os.walk(name):
+#        print(dirpath, _dirnames)
+        for dname in _dirnames:            
+            if dname in foldernames:
+
+                flist.append(osp.join(dirpath, dname))
+    return flist
+    
+    
 DOCLINES = __doc__.split("\n")
 CLASSIFIERS = """\
 Development Status :: 1 - Planning
@@ -116,10 +127,27 @@ DATA_FILES = [(NAME, ['LICENSE.txt','README.rst'])]
 PACKAGES=setuptools.find_packages()
 PACKAGES.remove('tools')
 
-PACKAGE_DATA={'': ['*.f95','*f90']}               
+PACKAGE_DATA={'': ['*.f95','*f90'],} #'geotecha.plotting.test': ['geotecha\\plotting\\test\\baseline_images\\test_one_d\\spines_axes_positions.png'] }
 ext_files = get_package_data(NAME,['.f90', '.f95','.F90', '.F95'])
 ext_module_names = ['.'.join(osp.splitext(v)[0].split(osp.sep)) for v in ext_files]
 EXT_MODULES = [Extension(name=x,sources=[y]) for x, y in zip(ext_module_names, ext_files)]      
+
+
+#add baseline_images for matplotlib image comparison
+baseline_folders = get_folder(NAME, ['baseline_images'])
+baseline_module_names = [osp.split(v)[0].replace(osp.sep,'.') for v in baseline_folders]
+for v in baseline_module_names:
+    if PACKAGE_DATA.has_key(v):
+        PACKAGE_DATA[v].append(osp.join('baseline_images','*','*.*'))
+    else:
+        PACKAGE_DATA[v]=[osp.join('baseline_images','*','*.*')]        
+#[PACKAGE_DATA[v] = osp.join('baseline_images','*','*.*') for v in baseline_module_names]
+#baseline_files = [osp.join('baseline_images','*','*.*')]
+#png_files = get_package_data(NAME,['.png'])
+#
+#png_files =[v for v in png_files if 'baseline_images' in v]
+##png_files=[v.split(osp.sep)[v.split()]]
+#png_module_names = ['.'.join(osp.split(v)[0].split(osp.sep)) for v in png_files]
 
 
 setup(
