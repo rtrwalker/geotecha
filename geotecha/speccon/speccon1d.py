@@ -851,11 +851,11 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, pseudo_k, top_vs_t
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, zvals, a, mag_vs_time, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix for a * delta(z-zd)*mag(t) where mag is linear time
+def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, a, mag_vs_time, omega_phase=None, dT=1.0):
+    """Loading dependant E_Igamv_the matrix for a * delta(z-zd)*mag(t) where mag is piecewise linear in time multiple by cos(omega * t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
-    The contribution of each `zval`-`a`-`mag_vs_time` pairing are superposed.
+    The contribution of each `zval`-`a`-`mag_vs_time`-`omega_phase` pairing are superposed.
     The result is an array
     of size (neig, len(tvals)). So the columns are the column array
     E*inverse(gam*v)*theta calculated at each output time.  This will allow
@@ -869,14 +869,21 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, zvals, a, mag_vs_time, tvals, I
         eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
     eigs : 1d numpy.ndarray
         list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Igamv : ndarray
+        speccon matrix
     zvals : list of float
         z values of each delta function
     a: list of float
         coefficents to multiply each delta function by
     mag_vs_time : list of PolyLine
         Piecewise linear magnitude vs time
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
+    omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
 
@@ -893,40 +900,47 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, zvals, a, mag_vs_time, tvals, I
 
     E_Igamv_the = np.zeros((len(m), len(tvals)))
 
-    for z, k, mag_vs_t in zip(zvals, a, mag_vs_time):
+    if omega_phase is None:
+            omega_phase = [None] * len(mag_vs_time)
+
+    for z, k, mag_vs_t, om_ph in zip(zvals, a, mag_vs_time, omega_phase):
         if mag_vs_t is None:
             continue
         theta = k * np.sin(z * m)
-        E = E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)
+        if not om_ph is None:
+            omega, phase = om_ph
+            E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
+        else:
+            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)
         E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
 
     return E_Igamv_the
 
 
-def dim1sin_E_Igamv_the_aDmagcosDt_bilinear(m, eigs, a, mag_vs_depth, mag_vs_time, omega_phase, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix for a(z)*D[cos(omega*t+phase) * mag(z, t), t] where mag is bilinear in depth and time
-
-    """
-
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
-
-
-    if sum([v is None for v in [mag_vs_depth, mag_vs_time, omega_phase]])==0:
-
-        for mag_vs_t, mag_vs_z, (omega, phase) in zip(mag_vs_time, mag_vs_depth, omega_phase):
-            a, mag_vs_z = pwise.polyline_make_x_common(a, mag_vs_z)
-            theta = integ.pdim1sin_ab_linear(m, a, mag_vs_z)
-            E = integ.pEDload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
-
-            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
-            #and np.dot(theta, Igamv) will give differetn 1d arrays.
-            #Basically np.dot(Igamv, theta) gives us what we want i.e.
-            #theta was treated as a column array.  The alternative
-            #np.dot(theta, Igamv) would have treated theta as a row vector.
-            E_Igamv_the += (E*np.dot(Igamv, theta)).T
-
-    return E_Igamv_the
+#def dim1sin_E_Igamv_the_aDmagcosDt_bilinear(m, eigs, a, mag_vs_depth, mag_vs_time, omega_phase, tvals, Igamv, dT=1.0):
+#    """Loading dependant E_Igamv_the matrix for a(z)*D[cos(omega*t+phase) * mag(z, t), t] where mag is bilinear in depth and time
+#
+#    """
+#
+#    E_Igamv_the = np.zeros((len(m), len(tvals)))
+#
+#
+#    if sum([v is None for v in [mag_vs_depth, mag_vs_time, omega_phase]])==0:
+#
+#        for mag_vs_t, mag_vs_z, (omega, phase) in zip(mag_vs_time, mag_vs_depth, omega_phase):
+#            a, mag_vs_z = pwise.polyline_make_x_common(a, mag_vs_z)
+#            theta = integ.pdim1sin_ab_linear(m, a, mag_vs_z)
+#            E = integ.pEDload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
+#
+#            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
+#            #and np.dot(theta, Igamv) will give differetn 1d arrays.
+#            #Basically np.dot(Igamv, theta) gives us what we want i.e.
+#            #theta was treated as a column array.  The alternative
+#            #np.dot(theta, Igamv) would have treated theta as a row vector.
+#            E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#
+#    return E_Igamv_the
 
 def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth, mag_vs_time, omega_phase = None, dT=1.0):
     """Loading dependant E_Igamv_the matrix for a(z)*D[mag(z, t), t] where mag is bilinear in depth and time multiplied by cos(omega*t + phase)

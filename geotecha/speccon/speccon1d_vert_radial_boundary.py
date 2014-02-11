@@ -153,7 +153,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         bottom p.press variation with time. Polyline(time, magnitude).
         When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying
         D[u(1,t), Z] = bot_vs_time
-    fixed_ppress: list of 3 element tuple,optional
+    fixed_ppress: list of 3 element tuple, optional
         (zfixed, pseudo_k, PolyLine(time, magnitude)).  zfixed is the
         normalised z at which pore pressure is fixed. pseudo_k is a
         permeability-like coefficient that controls how quickly the pore
@@ -161,7 +161,12 @@ class speccon1d_vr(speccon1d.Speccon1d):
         possible without causing numerical difficulties). If the third
         element of the tuple is None then the pore pressure will be fixed at
         zero rather than a prescribed mag_vs_time PolyLine
-
+    fixed_ppress_omega_phase : list of 2 element tuples, optional
+        (omega, phase) to define cyclic variation of fixed ppress. i.e.
+        mag_vs_time * cos(omega*t + phase). if fixed_ppress _omega_phase is
+        None then cyclic componenet will be ignored.  if vacuum_omega_phase is
+        a list then if any member is None then cyclic component will not be
+        applied for that load combo.
     ppress_z : list_like of float, optional
         normalised z to calc pore pressure at
     avg_ppress_z_pairs : list of two element list of float, optional
@@ -220,16 +225,17 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
     def _setup(self):
         self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0, 'implementation': 'vectorized', 'ppress_z_tval_indexes': slice(None, None), 'avg_ppress_z_pairs_tval_indexes': slice(None, None), 'settlement_z_pairs_tval_indexes': slice(None, None) }
-        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress surcharge_omega_phase vacuum_omega_phase'.split()
+        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase'.split()
 
-        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress surcharge_omega_phase vacuum_omega_phase'.split()
+        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase'.split()
         self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
 
-        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time surcharge_vs_time surcharge_omega_phase vacuum_vs_depth vacuum_vs_time vacuum_vs_time vacuum_omega_phase'.split() #pairs that should have the same length
+        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time surcharge_vs_time surcharge_omega_phase vacuum_vs_depth vacuum_vs_time vacuum_vs_time vacuum_omega_phase fixed_ppress_omega_phase fixed_ppress'.split() #pairs that should have the same length
 
         self._attributes_to_force_same_len = [
             "surcharge_vs_time surcharge_omega_phase".split(),
-            "vacuum_vs_time vacuum_omega_phase".split()]
+            "vacuum_vs_time vacuum_omega_phase".split(),
+            "fixed_ppress fixed_ppress_omega_phase".split()]
 
         self._zero_or_all = [
             'dTh kh et'.split(),
@@ -240,7 +246,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
             ['mv'],
             'dTh dTv'.split(),
             'kh kv'.split(),
-            'surcharge_vs_time vacuum_vs_time top_vs_time bot_vs_time'.split(),
+            'surcharge_vs_time vacuum_vs_time top_vs_time bot_vs_time fixed_ppress'.split(),
             ['tvals'],
             'ppress_z avg_ppress_z_pairs settlement_z_pairs'.split()]
 
@@ -248,7 +254,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'vacuum_vs_time dTh kh et'.split(),
             'vacuum_vs_depth dTh kh et'.split(),
             'surcharge_omega_phase surcharge_vs_depth surcharge_vs_time'.split(),
-            'vacuum_omega_phase vacuum_vs_depth vacuum_vs_time'.split()]
+            'vacuum_omega_phase vacuum_vs_depth vacuum_vs_time'.split(),
+            'fixed_ppress_omega_phase fixed_ppress'.split()]
+
 
         #these explicit initializations are just to make coding easier
         self.H = self._attribute_defaults.get('H', None)
@@ -274,6 +282,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.vacuum_omega_phase = None
         self.top_vs_time = None
         self.bot_vs_time = None
+        self.fixed_ppress_omega_phase = None
+        self.fixed_ppress = None
+
         self.ppress_z = None
         self.avg_ppress_z_pairs = None
         self.settlement_z_pairs = None
@@ -283,7 +294,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.ppress_z_tval_indexes = self._attribute_defaults.get('ppress_z_tval_indexes', None)
         self.avg_ppress_z_pairs_tval_indexes = self._attribute_defaults.get('avg_ppress_z_pairs_tval_indexes', None)
         self.settlement_z_pairs_tval_indexes = self._attribute_defaults.get('settlement_z_pairs_tval_indexes', None)
-        self.fixed_ppress = None
+
 
         return
 
@@ -597,7 +608,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
             zvals = [v[0] for v in self.fixed_ppress]
             pseudo_k = [v[1] for v in self.fixed_ppress]
             mag_vs_time = [v[2] for v in self.fixed_ppress]
-            self.E_Igamv_the_fixed_ppress += speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, zvals, pseudo_k, mag_vs_time, self.tvals, self.Igamv, self.dT)
+            self.E_Igamv_the_fixed_ppress += speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, self.tvals, self.Igamv, zvals, pseudo_k, mag_vs_time, self.fixed_ppress_omega_phase, self.dT)
 
     def _make_E_Igamv_the_BC(self):
         """make the boundary condition loading matrices
@@ -757,7 +768,7 @@ import numpy as np
 H = 1
 drn = 0
 dT = 1
-dTh = 5
+#dTh = 5
 dTv = 0.1
 neig = 45
 
@@ -768,18 +779,18 @@ khref = 1.0
 etref = 1.0
 
 mv = PolyLine([0,1], [0.5,0.5])
-kh = PolyLine([0,1], [1,1])
+#kh = PolyLine([0,1], [1,1])
 kv = PolyLine([0,1], [1,1])
-et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
+#et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
 #et = PolyLine([0,1], [1,1])
 #surcharge_vs_depth = PolyLine([0,1], [1,1])
 #surcharge_vs_time = PolyLine([0,0.0,10], [0,1,1])
 #surcharge_omega_phase = (2*np.pi*2, -np.pi/2)
-#surcharge_omega_phase = None
 
-vacuum_vs_depth = PolyLine([0,1], [1,1])
-vacuum_vs_time = PolyLine([0,0,20], [0,-0.2,-0.2])
-vacuum_omega_phase = (2*np.pi*2, -np.pi/2)
+
+#vacuum_vs_depth = PolyLine([0,1], [1,1])
+#vacuum_vs_time = PolyLine([0,0,20], [0,-0.2,-0.2])
+#vacuum_omega_phase = (2*np.pi*2, -np.pi/2)
 
 #top_vs_time = PolyLine([0,0.0,10], [0,-0.2,-0.2])
 #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
@@ -787,12 +798,9 @@ vacuum_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
 
-#cyclic_surcharge_vs_depth = PolyLine([0,1], [1,1])
-#cyclic_surcharge_vs_time = PolyLine([0, 0, 10], [0, 0.2, 0.2])
-#cyclic_surcharge_omega_phase = (2*np.pi * 2, -np.pi/2)
+fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
+fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
 
-
-#fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
 
 ppress_z = np.linspace(0,1,70)
 avg_ppress_z_pairs = [[0,1],[0, 0.2]]
