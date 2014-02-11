@@ -138,7 +138,7 @@ class Speccon1d(object):
         pass
 
 
-def dim1sin_f(m, outz, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_time=None):
+def dim1sin_f(m, outz, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None):
     """assemble output u(Z,t) = phi * v_E_Igam_v_the + utop(t) * (1-Z) + ubot(t)*Z
 
     Basically calculates the phi part for each tvals value, then dot product
@@ -160,18 +160,33 @@ def dim1sin_f(m, outz, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_tim
     u = np.dot(phi, v_E_Igamv_the)
     #top part
     if not top_vs_time is None:
-        for mag_vs_time in top_vs_time:
-            if drn==1:
-                u += pwise.pinterp_x_y(mag_vs_time, tvals, choose_max=True)
+        if top_omega_phase is None:
+            top_omega_phase = [None] * len(top_vs_time)
+        for mag_vs_time, om_ph in zip(top_vs_time, top_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                mult = np.cos(omega * tvals + phase)
             else:
-                u += pwise.pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time, PolyLine([0], [1], [1], [0]), tvals, outz, achoose_max=True)
+                mult = 1
+
+            if drn==1:
+                u += pwise.pinterp_x_y(mag_vs_time, tvals, choose_max=True) * mult
+            else:
+                u += pwise.pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time, PolyLine([0], [1], [1], [0]), tvals, outz, achoose_max=True) * mult
     #bot part
     if not bot_vs_time is None:
-        for mag_vs_time in bot_vs_time:
-            u += pwise.pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time, PolyLine([0], [1], [0], [1]), tvals, outz, achoose_max=True)
+        if bot_omega_phase is None:
+            bot_omega_phase = [None] * len(bot_vs_time)
+        for mag_vs_time, om_ph in zip(bot_vs_time, bot_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                mult = np.cos(omega * tvals + phase)
+            else:
+                mult=1
+            u += pwise.pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(mag_vs_time, PolyLine([0], [1], [0], [1]), tvals, outz, achoose_max=True) * mult
     return u
 
-def dim1sin_avgf(m, z, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_time=None):
+def dim1sin_avgf(m, z, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None):
     """Average u between Z1 and Z;: u(Z,t) = phi * v_E_Igam_v_the + utop(t) * (1-Z) + ubot(t)*Z
 
     Basically calculates the average phi part for each tvals value, then dot product
@@ -200,27 +215,41 @@ def dim1sin_avgf(m, z, tvals, v_E_Igamv_the, drn, top_vs_time = None, bot_vs_tim
 
     #top part
     if not top_vs_time is None:
-        for mag_vs_time in top_vs_time:
+        if top_omega_phase is None:
+            top_omega_phase = [None] * len(top_vs_time)
+        for mag_vs_time, om_ph in zip(top_vs_time, top_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                mult = np.cos(omega * tvals + phase)
+            else:
+                mult = 1
             if drn==1:
                 #bottom part
-                avg += pwise.pinterp_x_y(mag_vs_time, tvals, choose_max=True)
+                avg += pwise.pinterp_x_y(mag_vs_time, tvals, choose_max=True)*mult
             else:
                 avg += pwise.pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(mag_vs_time,
                                                                         PolyLine([0], [1], [1], [0]),
-                                                                        tvals, z1, z2, achoose_max=True)
-    #botom part
+                                                                        tvals, z1, z2, achoose_max=True)*mult
+    #bottom part
     if not bot_vs_time is None:
-        for mag_vs_time in bot_vs_time:
+        if bot_omega_phase is None:
+            bot_omega_phase = [None] * len(bot_vs_time)
+        for mag_vs_time, om_ph in zip(bot_vs_time, bot_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                mult = np.cos(omega * tvals + phase)
+            else:
+                mult=1
             avg += pwise.pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(mag_vs_time,
                                                                         PolyLine([0], [1], [0], [1]),
-                                                                        tvals, z1,z2, achoose_max=True)
+                                                                        tvals, z1,z2, achoose_max=True) * mult
 
     return avg
 
 
 
 
-def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None, bot_vs_time=None):
+def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None):
     """Integrate between Z1 and Z2: a(Z)*(phi * v_E_Igam_v_the + utop(t) * (1-Z) + ubot(t)*Z)
 
 
@@ -245,15 +274,22 @@ def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None,
 
     #top part
     if not top_vs_time is None:
-        for mag_vs_time in top_vs_time:
+        if top_omega_phase is None:
+            top_omega_phase = [None] * len(top_vs_time)
+        for mag_vs_time, om_ph in zip(top_vs_time, top_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                mult = np.cos(omega * tvals + phase)
+            else:
+                mult = 1
             if drn==1:
-                out += pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                out += mult * pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
                     mag_vs_time,
                     a,
                     PolyLine(a.x1, a.x2, np.ones_like(a.x1), np.ones_like(a.x2)),
                     tvals, z1, z2, achoose_max=True)
             else:
-                out += pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                out += mult * pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
                     mag_vs_time,
                     a,
                     PolyLine(a.x1, a.x2, 1-a.x1, 1-a.x2),
@@ -262,8 +298,15 @@ def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None,
 
     #bot part
     if not bot_vs_time is None:
-        for mag_vs_time in bot_vs_time:
-            out += pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+        if bot_omega_phase is None:
+            bot_omega_phase = [None] * len(bot_vs_time)
+        for mag_vs_time, om_ph in zip(bot_vs_time, bot_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                mult = np.cos(omega * tvals + phase)
+            else:
+                mult=1
+            out += mult * pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
                     mag_vs_time,
                     a,
                     PolyLine(a.x1, a.x2, a.x1, a.x2),
@@ -440,7 +483,7 @@ def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None,
 
 
 
-def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
+def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*D[u(z, t), t] for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -449,7 +492,7 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
     E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta.
     For the terms that arise by subbing the BC's into terms like a(z)*D[u(Z,t), t]
 
-    The contribution of each `mag_vs_time` are superposed.
+    The contribution of each `mag_vs_time`-`omega_phase` are superposed.
     The result is an array
     of size (neig, len(tvals)). So the columns are the column array
     E*inverse(gam*v)*theta calculated at each output time.  This will allow
@@ -467,6 +510,10 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
         eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
     eigs : 1d numpy.ndarray
         list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Igamv : ndarray
+        speccon matrix
     a : PolyLine
         Piewcewise linear function.  e.g. for 1d consolidation surcharge
         loading term is mv*D[sigma(z, t), t] so a would be mv.
@@ -474,8 +521,11 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
         Piecewise linear magnitude  vs time for the top boundary.
     bot_vs_time : list of PolyLine
         Piecewise linear magnitude vs time for the bottom boundary.
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
+    top_omega_phase, bot_omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
 
@@ -487,9 +537,9 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
     Notes
     -----
     Assuming the loads are formulated as the product of separate time and depth
-    dependant functions:
+    dependant functions as well as a cyclic component:
 
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)\\cos\\left(\\omega t + \\phi\\right)
 
     the solution to the consolidation equation using the spectral method has
     the form:
@@ -514,7 +564,7 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
 
     It is assumed that :math:`u_{top}\\left({t}\\right)` and
     :math:`u_{bot}\\left({t}\\right)` are piecewise linear
-    in time, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)`
+    in time with a cyclic component, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)`
     is a piecewise linear function w.r.t. :math:`z`
 
 
@@ -533,16 +583,30 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
             zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
 
         if not top_vs_time is None:
+            if top_omega_phase is None:
+                top_omega_phase = [None] * len(top_vs_time)
+
             theta = integ.pdim1sin_ab_linear(m, a, zdist)
-            for top_vs_t in top_vs_time:
-                E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT)
+            for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEDload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
 
         if not bot_vs_time is None:
+            if bot_omega_phase is None:
+                bot_omega_phase = [None] * len(bot_vs_time)
+
             theta = integ.pdim1sin_ab_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))
-            for bot_vs_t in bot_vs_time:
-                E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT)
+            for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEDload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -552,7 +616,7 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
+def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -561,7 +625,7 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_ti
     E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta.
     For the terms that arise by subbing the BC's into terms like a(z)*b(z)*u(Z,t)
 
-    The contribution of each `mag_vs_time` are superposed.
+    The contribution of each `mag_vs_time`-`omega_phase` pair are superposed.
     The result is an array
     of size (neig, len(tvals)). So the columns are the column array
     E*inverse(gam*v)*theta calculated at each output time.  This will allow
@@ -579,6 +643,10 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_ti
         eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
     eigs : 1d numpy.ndarray
         list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Igamv : ndarray
+        speccon matrix
     a : PolyLine
         Piewcewise linear function.  e.g. for 1d consolidation surcharge
         radial draiange term is dTh*kh*et*U(Z,t) `a` would be kh.
@@ -589,8 +657,11 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_ti
         Piecewise linear magnitude  vs time for the top boundary.
     bot_vs_time : list of PolyLine
         Piecewise linear magnitude vs time for the bottom boundary.
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
+    top_omega_phase, bot_omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
 
@@ -602,9 +673,9 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_ti
     Notes
     -----
     Assuming the loads are formulated as the product of separate time and depth
-    dependant functions:
+    dependant functions as well as a cyclic component:
 
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)\\cos\\left(\\omega t + \\phi\\right)
 
     the solution to the consolidation equation using the spectral method has
     the form:
@@ -628,7 +699,7 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_ti
 
     It is assumed that :math:`u_{top}\\left({t}\\right)` and
     :math:`u_{bot}\\left({t}\\right)` are piecewise linear
-    in time, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)`
+    in time including a cyclic component, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)`
     and :math:`b\\left(z\\right)` are piecewise linear functions w.r.t. :math:`z`.
 
 
@@ -645,15 +716,28 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_ti
             zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
 
         if not top_vs_time is None:
+            if top_omega_phase is None:
+                top_omega_phase = [None] * len(top_vs_time)
+
             theta = integ.pdim1sin_abc_linear(m, a,b, zdist)
-            for top_vs_t in top_vs_time:
-                E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
+            for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
         if not bot_vs_time is None:
+            if bot_omega_phase is None:
+                bot_omega_phase = [None] * len(bot_vs_time)
             theta = integ.pdim1sin_abc_linear(m, a, b, PolyLine(a.x1,a.x2,a.x1,a.x2))
-            for bot_vs_t in bot_vs_time:
-                E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
+            for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -663,7 +747,7 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, a, b, top_vs_time, bot_vs_ti
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
+def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
     """Loading dependant E_Igamv_the matrix that arise from homogenising D[a(z)*D[u(z, t),z],z] for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -672,7 +756,7 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
     E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta.
     For the terms that arise by subbing the BC's into terms like a(z)*b(z)*u(Z,t)
 
-    The contribution of each `mag_vs_time` are superposed.
+    The contribution of each `mag_vs_time`-`omega_phase` pair are superposed.
     The result is an array
     of size (neig, len(tvals)). So the columns are the column array
     E*inverse(gam*v)*theta calculated at each output time.  This will allow
@@ -690,6 +774,10 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
         eigenvlaues of BVP. generate with geotecca.speccon.m_from_sin_mx
     eigs : 1d numpy.ndarray
         list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Igamv : ndarray
+        speccon matrix
     a : PolyLine
         Piewcewise linear function.  e.g. for 1d consolidation surcharge
         radial draiange term is D[kv(z)*D[u(Z,t), Z],Z] so `a` would be kv.
@@ -697,8 +785,11 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
         Piecewise linear magnitude  vs time for the top boundary.
     bot_vs_time : list of PolyLine
         Piecewise linear magnitude vs time for the bottom boundary.
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
+    top_omega_phase, bot_omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
 
@@ -709,10 +800,10 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
 
     Notes
     -----
-    Assuming the loads are formulated as the product of separate time and depth
-    dependant functions:
+   Assuming the loads are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
 
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)\\cos\\left(\\omega t + \\phi\\right)
 
     the solution to the consolidation equation using the spectral method has
     the form:
@@ -736,7 +827,7 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
 
     It is assumed that :math:`u_{top}\\left({t}\\right)` and
     :math:`u_{bot}\\left({t}\\right)` are piecewise linear
-    in time, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)`
+    in time including a cyclic component, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)`
     is a piecewise linear functions w.r.t. :math:`z`.
 
 
@@ -752,15 +843,29 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
             zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
 
         if not top_vs_time is None:
+            if top_omega_phase is None:
+                top_omega_phase = [None] * len(top_vs_time)
+
             theta = integ.pdim1sin_D_aDb_linear(m, a, zdist)
-            for top_vs_t in top_vs_time:
-                E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
+            for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
         if not bot_vs_time is None:
+            if bot_omega_phase is None:
+                bot_omega_phase = [None] * len(bot_vs_time)
+
             theta = integ.pdim1sin_D_aDb_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))
-            for bot_vs_t in bot_vs_time:
-                E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
+            for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -770,7 +875,7 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, a, top_vs_time, bot_vs_tim
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, pseudo_k, top_vs_time, bot_vs_time, tvals, Igamv, dT=1.0):
+def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseudo_k, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -779,7 +884,7 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, pseudo_k, top_vs_t
     E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta.
     For the terms that arise by subbing the BC's into terms like a * delta(Z-Hf)*u(Z,t)
 
-    The contribution of each `mag_vs_time` are superposed.
+    The contribution of each `mag_vs_time`-`omega_phase` are superposed.
     The result is an array
     of size (neig, len(tvals)). So the columns are the column array
     E*inverse(gam*v)*theta calculated at each output time.  This will allow
@@ -797,6 +902,10 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, pseudo_k, top_vs_t
         eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
     eigs : 1d numpy.ndarray
         list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Igamv : ndarray
+        speccon matrix
     zvals : list of float
         z values of each delta function
     pseudo_k: list of float
@@ -805,8 +914,11 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, pseudo_k, top_vs_t
         Piecewise linear magnitude  vs time for the top boundary.
     bot_vs_time : list of PolyLine
         Piecewise linear magnitude vs time for the bottom boundary.
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
+    top_omega_phase, bot_omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
 
@@ -831,15 +943,29 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, zvals, pseudo_k, top_vs_t
 
     zdist = 1 - zvals * (1 - drn)
     if not top_vs_time is None:
-        for top_vs_t in top_vs_time:
-            E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
+        if top_omega_phase is None:
+            top_omega_phase = [None] * len(top_vs_time)
+
+        for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+            else:
+                E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
             for z, zd, k in zip(zvals, zdist, pseudo_k):
                 theta = k * np.sin(z * m) * zd
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     if not bot_vs_time is None:
-        for bot_vs_t in bot_vs_time:
-            E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
+        if bot_omega_phase is None:
+            bot_omega_phase = [None] * len(bot_vs_time)
+
+        for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
+            if not om_ph is None:
+                omega, phase = om_ph
+                E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+            else:
+                E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
             for z, k in zip(zvals, pseudo_k):
                 theta = k * np.sin(z * m) * z
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T

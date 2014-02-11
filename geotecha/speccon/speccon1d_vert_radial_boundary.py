@@ -149,10 +149,22 @@ class speccon1d_vr(speccon1d.Speccon1d):
         applied for that load combo.
     top_vs_time : list of Polyline, optional
         top p.press variation with time. Polyline(time, magnitude)
+    top_omega_phase : list of 2 element tuples, optional
+        (omega, phase) to define cyclic variation of top BC. i.e.
+        mag_vs_time * cos(omega*t + phase). if top_omega_phase is None
+        then cyclic componenet will be ignored.  if top_omega_phase is a
+        list then if any member is None then cyclic component will not be
+        applied for that load combo.
     bot_vs_time : list of Polyline, optional
         bottom p.press variation with time. Polyline(time, magnitude).
         When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying
         D[u(1,t), Z] = bot_vs_time
+    bot_omega_phase : list of 2 element tuples, optional
+        (omega, phase) to define cyclic variation of bot BC. i.e.
+        mag_vs_time * cos(omega*t + phase). if bot_omega_phase is None
+        then cyclic componenet will be ignored.  if bot_omega_phase is a
+        list then if any member is None then cyclic component will not be
+        applied for that load combo.
     fixed_ppress: list of 3 element tuple, optional
         (zfixed, pseudo_k, PolyLine(time, magnitude)).  zfixed is the
         normalised z at which pore pressure is fixed. pseudo_k is a
@@ -225,17 +237,19 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
     def _setup(self):
         self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0, 'implementation': 'vectorized', 'ppress_z_tval_indexes': slice(None, None), 'avg_ppress_z_pairs_tval_indexes': slice(None, None), 'settlement_z_pairs_tval_indexes': slice(None, None) }
-        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase'.split()
+        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase top_omega_phase bot_omega_phase'.split()
 
-        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase'.split()
+        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase top_omega_phase bot_omega_phase'.split()
         self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
 
-        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time surcharge_vs_time surcharge_omega_phase vacuum_vs_depth vacuum_vs_time vacuum_vs_time vacuum_omega_phase fixed_ppress_omega_phase fixed_ppress'.split() #pairs that should have the same length
+        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time surcharge_vs_time surcharge_omega_phase vacuum_vs_depth vacuum_vs_time vacuum_vs_time vacuum_omega_phase fixed_ppress_omega_phase fixed_ppress top_omega_phase top_vs_time bot_omega_phase bot_vs_time'.split() #pairs that should have the same length
 
         self._attributes_to_force_same_len = [
             "surcharge_vs_time surcharge_omega_phase".split(),
             "vacuum_vs_time vacuum_omega_phase".split(),
-            "fixed_ppress fixed_ppress_omega_phase".split()]
+            "fixed_ppress fixed_ppress_omega_phase".split(),
+            "top_vs_time top_omega_phase".split(),
+            "bot_vs_time bot_omega_phase".split()]
 
         self._zero_or_all = [
             'dTh kh et'.split(),
@@ -255,7 +269,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'vacuum_vs_depth dTh kh et'.split(),
             'surcharge_omega_phase surcharge_vs_depth surcharge_vs_time'.split(),
             'vacuum_omega_phase vacuum_vs_depth vacuum_vs_time'.split(),
-            'fixed_ppress_omega_phase fixed_ppress'.split()]
+            'fixed_ppress_omega_phase fixed_ppress'.split(),
+            'top_omega_phase top_vs_time'.split(),
+            'bot_omega_phase bot_vs_time'.split()]
 
 
         #these explicit initializations are just to make coding easier
@@ -281,7 +297,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.vacuum_vs_time = None
         self.vacuum_omega_phase = None
         self.top_vs_time = None
+        self.top_omega_phase = None
         self.bot_vs_time = None
+        self.bot_omega_phase = None
         self.fixed_ppress_omega_phase = None
         self.fixed_ppress = None
 
@@ -615,21 +633,27 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         """
         self.E_Igamv_the_BC = np.zeros((self.neig, len(self.tvals)))
-        self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+        #mv * du/dt component
+        #self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+        self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.mv, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
+        #dTh * kh * et * u component
         if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
             if self.dTh!=0:
-                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+#                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
+
+        #dTv * d/dZ(kv * du/dZ) component
         if sum([v is None for v in [self.kv, self.dTv]])==0:
             if self.dTv!=0:
-                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+#                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.kv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
+                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kv, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
-        #the fixed_ppress part
+        #the pseudo_k * delta(z-zfixed)*u component, i.e. the fixed_ppress part
         if not self.fixed_ppress is None:
-#            k = sum([v for v in [self.dTh, self.dTv] if not v is None]) * 500 / self.dT
             zvals = [v[0] for v in self.fixed_ppress]
             pseudo_k = [v[1] for v in self.fixed_ppress]
-            self.E_Igamv_the_BC -= self.dT*speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, zvals, pseudo_k, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT) / self.dT
+            self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, zvals, pseudo_k, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
     def _make_por(self):
         """make the pore pressure output
@@ -649,7 +673,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         """
 
-        self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals[self.ppress_z_tval_indexes], self.v_E_Igamv_the[:, self.ppress_z_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time)
+        self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals[self.ppress_z_tval_indexes], self.v_E_Igamv_the[:, self.ppress_z_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
         return
 
     def _make_avp(self):
@@ -668,7 +692,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         """
 
-        self.avp=speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs, self.tvals[self.avg_ppress_z_pairs_tval_indexes], self.v_E_Igamv_the[:,self.avg_ppress_z_pairs_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time)
+        self.avp=speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs, self.tvals[self.avg_ppress_z_pairs_tval_indexes], self.v_E_Igamv_the[:,self.avg_ppress_z_pairs_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
         return
 
     def _make_set(self):
@@ -695,7 +719,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         self.set=-speccon1d.dim1sin_integrate_af(self.m, self.settlement_z_pairs, self.tvals[self.settlement_z_pairs_tval_indexes],
                                        self.v_E_Igamv_the[:,self.settlement_z_pairs_tval_indexes],
-                                        self.drn, self.mv, self.top_vs_time, self.bot_vs_time)
+                                        self.drn, self.mv, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
+
         if not self.surcharge_vs_time is None:
 
 #            self.set+=pwise.pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(self.surcharge_vs_time, self.surcharge_vs_depth, self.mv, self.tvals[self.settlement_z_pairs_tval_indexes], z1, z2, achoose_max=True)
@@ -766,7 +791,7 @@ if __name__ == '__main__':
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import numpy as np
 H = 1
-drn = 0
+drn = 1
 dT = 1
 #dTh = 5
 dTv = 0.1
@@ -790,16 +815,19 @@ kv = PolyLine([0,1], [1,1])
 
 #vacuum_vs_depth = PolyLine([0,1], [1,1])
 #vacuum_vs_time = PolyLine([0,0,20], [0,-0.2,-0.2])
-#vacuum_omega_phase = (2*np.pi*2, -np.pi/2)
+#vacuum_omega_phase = (2*np.pi*50, -np.pi/2)
 
-#top_vs_time = PolyLine([0,0.0,10], [0,-0.2,-0.2])
+top_vs_time = PolyLine([0,0.0,10], [0,-0.2,-0.2])
+#top_omega_phase = (2*np.pi*1, -np.pi/2)
 #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
-#bot_vs_time = PolyLine([0,0.0,3], [0, 0.5, 0.5])
+bot_vs_time = PolyLine([0,0.0,10], [0, -0.2, -0.2])
+
+bot_vs_time = PolyLine([0,0.0,1,10], [0, -1,-0.1, 0])
+#bot_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
-
-fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
-fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
+#fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
+#fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
 ppress_z = np.linspace(0,1,70)
