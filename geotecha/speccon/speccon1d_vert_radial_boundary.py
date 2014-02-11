@@ -791,11 +791,11 @@ if __name__ == '__main__':
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import numpy as np
 H = 1
-drn = 1
+drn = 0
 dT = 1
 #dTh = 5
-dTv = 0.1
-neig = 45
+dTv = 0.1 * 0.25
+neig = 500
 
 
 mvref = 2.0
@@ -805,11 +805,11 @@ etref = 1.0
 
 mv = PolyLine([0,1], [0.5,0.5])
 #kh = PolyLine([0,1], [1,1])
-kv = PolyLine([0,1], [1,1])
+kv = PolyLine([0,1], [5,5])
 #et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
 #et = PolyLine([0,1], [1,1])
-#surcharge_vs_depth = PolyLine([0,1], [1,1])
-#surcharge_vs_time = PolyLine([0,0.0,10], [0,1,1])
+surcharge_vs_depth = PolyLine([0,1], [1,1])
+surcharge_vs_time = PolyLine([0,0.0,10], [0,100,100])
 #surcharge_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
@@ -817,12 +817,12 @@ kv = PolyLine([0,1], [1,1])
 #vacuum_vs_time = PolyLine([0,0,20], [0,-0.2,-0.2])
 #vacuum_omega_phase = (2*np.pi*50, -np.pi/2)
 
-top_vs_time = PolyLine([0,0.0,10], [0,-0.2,-0.2])
+#top_vs_time = PolyLine([0,0.0,10], [0,-100,-100])
 #top_omega_phase = (2*np.pi*1, -np.pi/2)
 #bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
-bot_vs_time = PolyLine([0,0.0,10], [0, -0.2, -0.2])
+#bot_vs_time = PolyLine([0,0.0,10], [0, -0.2, -0.2])
 
-bot_vs_time = PolyLine([0,0.0,1,10], [0, -1,-0.1, 0])
+#bot_vs_time = PolyLine([0,0.0,0.4,10], [0, -2500, -250, -210])
 #bot_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
@@ -830,12 +830,13 @@ bot_vs_time = PolyLine([0,0.0,1,10], [0, -1,-0.1, 0])
 #fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
-ppress_z = np.linspace(0,1,70)
+ppress_z = np.linspace(0,1,100)
 avg_ppress_z_pairs = [[0,1],[0, 0.2]]
 settlement_z_pairs = [[0,1],[0, 0.5]]
 #tvals = np.linspace(0,3,10)
 tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
 tvals = np.linspace(0, 5, 100)
+tvals = np.logspace(-5, 1,50)
 #ppress_z_tval_indexes = [0,1,2,3,4,5,6,7,8]
 #avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
 #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
@@ -852,6 +853,9 @@ implementation='vectorized'
     #a = calculate_normalised(my_code)
     a = speccon1d_vr(my_code)
     a.make_all()
+    slope = (a.por[-1,:]-a.por[-2,:]) / (a.ppress_z[-1]-a.ppress_z[-2])
+    print(repr(a.tvals))
+    print(repr(slope))
 #    a._make_gam()
 #    #print(a.gam)
 #    a._make_psi()

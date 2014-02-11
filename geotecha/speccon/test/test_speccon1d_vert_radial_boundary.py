@@ -910,6 +910,143 @@ def test_hansbo_avp_vacuum():
                             err_msg = ("Fail. test_hansbo_avp_vacuum, settle, "
                                 "implementation='%s', dT=%s" % (impl, dT)))
 
+def test_terzaghi_1d_PTPB_bot_BC_gradient():
+    """test for terzaghi 1d PTPB simulated by specifying pore pressure gradient at bottom
+
+    top BC drops to -100 instantly
+    gradient at bot BC is prescribed
+
+    should be same as terzaghi PTPB - 100
+
+    """
+
+
+
+    flow_t = np.array([  0, 0.00000000e+00,   1.00000000e-05,   1.32571137e-05,
+         1.75751062e-05,   2.32995181e-05,   3.08884360e-05,
+         4.09491506e-05,   5.42867544e-05,   7.19685673e-05,
+         9.54095476e-05,   1.26485522e-04,   1.67683294e-04,
+         2.22299648e-04,   2.94705170e-04,   3.90693994e-04,
+         5.17947468e-04,   6.86648845e-04,   9.10298178e-04,
+         1.20679264e-03,   1.59985872e-03,   2.12095089e-03,
+         2.81176870e-03,   3.72759372e-03,   4.94171336e-03,
+         6.55128557e-03,   8.68511374e-03,   1.15139540e-02,
+         1.52641797e-02,   2.02358965e-02,   2.68269580e-02,
+         3.55648031e-02,   4.71486636e-02,   6.25055193e-02,
+         8.28642773e-02,   1.09854114e-01,   1.45634848e-01,
+         1.93069773e-01,   2.55954792e-01,   3.39322177e-01,
+         4.49843267e-01,   5.96362332e-01,   7.90604321e-01,
+         1.04811313e+00,   1.38949549e+00,   1.84206997e+00,
+         2.44205309e+00,   3.23745754e+00,   4.29193426e+00,
+         5.68986603e+00,   7.54312006e+00,   1.00000000e+01])
+    flow_v = -np.array([0,  2.00000000e+05,   3.56824823e+04,   3.09906417e+04,
+         2.69157248e+04,   2.33766131e+04,   2.03028544e+04,
+         1.76332600e+04,   1.53146868e+04,   1.33009797e+04,
+         1.15520522e+04,   1.00330887e+04,   8.71385164e+03,
+         7.56807926e+03,   6.57296291e+03,   5.70869305e+03,
+         4.95806484e+03,   4.30613571e+03,   3.73992784e+03,
+         3.24816986e+03,   2.82107247e+03,   2.45013353e+03,
+         2.12796884e+03,   1.84816514e+03,   1.60515244e+03,
+         1.39409315e+03,   1.21078576e+03,   1.05158120e+03,
+         9.13310235e+02,   7.93220327e+02,   6.88920876e+02,
+         5.98335616e+02,   5.19661287e+02,   4.51331637e+02,
+         3.91982248e+02,   3.40369144e+02,   2.95064036e+02,
+         2.53909631e+02,   2.14068409e+02,   1.73374382e+02,
+         1.31849349e+02,   9.18362586e+01,   5.68676559e+01,
+         3.01248089e+01,   1.29749663e+01,   4.24753612e+00,
+         9.66513565e-01,   1.35790536e-01,   1.00673399e-02,
+         3.19831215e-04,   3.30379683e-06,   7.69614367e-09])
+
+#    flow_t =np.array([  0.0, 0.00000000e+00,   1.00000000e-04,   2.03503287e-04,
+#         4.14135879e-04,   8.42780126e-04,   1.71508526e-03,
+#         3.49025488e-03,   7.10278341e-03,   1.44543977e-02,
+#         2.94151745e-02,   5.98608469e-02,   1.21818791e-01,
+#         2.47905244e-01,   5.04495321e-01,   1.02666456e+00,
+#         2.08929613e+00])
+#    flow_v = -np.array([  0, 2.00000000e+05,   1.12837917e+04,   7.90986998e+03,
+#         5.54477121e+03,   3.88685121e+03,   2.72465929e+03,
+#         1.90996975e+03,   1.33887729e+03,   9.38544911e+02,
+#         6.57914329e+02,   4.61193930e+02,   3.23118191e+02,
+#         2.18601587e+02,   1.15205739e+02,   3.17620214e+01,
+#         2.30788836e+00])
+    z = np.append(0.5*TERZ1D_Z, 1 - 0.5*TERZ1D_Z[::-1])
+    t = TERZ1D_T
+    reader = textwrap.dedent("""\
+    from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    import numpy as np
+    H = 1
+    drn = 1
+    dTv = 1 * 0.25
+    neig = 15
+
+    mvref = 1.0
+    mv = PolyLine([0,1], [1,1])
+    kv = PolyLine([0,1], [1,1])
+
+    #note: combo of dTv, mv, kv essentially gives dTv = 1
+
+    top_vs_time = PolyLine([0, 0.0, 5], [0,-100,-100])
+    bot_vs_time = PolyLine([0, 0.0, 5], [0,-100,-100])
+    bot_vs_time = PolyLine(np.%s, np.%s)
+
+    ppress_z = np.%s
+    avg_ppress_z_pairs = [[0,1]]
+    settlement_z_pairs = [[0,1]]
+
+    tvals = np.%s
+
+    """ % (repr(flow_t), repr(flow_v), repr(z),repr(t)))
+
+
+    por = 100 * np.vstack((TERZ1D_POR, TERZ1D_POR[::-1,:])) - 100
+    avp = 100 * TERZ1D_AVP - 100
+    settle = 100 * (1 - TERZ1D_AVP)
+
+
+
+    for impl in ["vectorized"]:
+        for dT in [0.1]:
+            a = speccon1d_vr(reader + "\n" +
+                            "implementation = '%s'" % impl + "\n" +
+                            "dT = %s" % dT)
+
+            a.make_all()
+
+
+#            slope = (a.por[-1,:]-a.por[-2,:]) / (a.ppress_z[-1]-a.ppress_z[-2])
+#            print(repr(t))
+#            print(repr(slope))
+#            print(a.por)
+#            plt.clf()
+#            plt.figure()
+#            plt.plot(por, z,'b-*', label='expected')
+#            plt.plot(a.por, z,lw=2)
+##            plt.plot(a.por, z, 'r-+', label='calculated')
+#            plt.gca().invert_yaxis()
+#            plt.legend()
+
+
+#            plt.figure()
+#            plt.plot(t,settle[0],'b-*', label='expected')
+#            plt.plot(t, a.set[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.figure()
+#            plt.plot(t, avp[0],'b-*',  label='expected')
+#            plt.plot(t, a.avp[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.show()
+            assert_allclose(a.avp, avp, atol=1,
+                            err_msg = ("Fail. test_terzaghi_1d_PTPB_bot_BC_gradient, avp, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.por, por, atol=2,
+                            err_msg = ("Fail. test_terzaghi_1d_PTPB_bot_BC_gradient, por, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.set, settle, atol=1,
+                            err_msg = ("Fail. test_terzaghi_1d_PTPB_bot_BC_gradient, settle, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+
+
+
 if __name__ == '__main__':
 #    test_terzaghi_1d_PTPB()
 #    test_schiffman_and_stein_1970()
@@ -920,6 +1057,7 @@ if __name__ == '__main__':
 #    test_fixed_ppress_BC_terzaghi_PTPB()
 
 #    test_hansbo_avp_vacuum()
-    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    test_terzaghi_1d_PTPB_bot_BC_gradient()
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
