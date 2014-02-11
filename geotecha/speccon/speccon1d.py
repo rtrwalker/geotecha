@@ -353,90 +353,90 @@ def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None,
 #    return E_Igamv_the
 
 
-def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, a,b, mag_vs_depth, mag_vs_time, tvals, Igamv, dT=1.0):
-    """Loading dependant E_Igamv_the matrix for a(z)*b(z)*D[mag(z, t), t] where mag is bilinear in depth and time
-
-    Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
-    The contribution of each `mag_vs_time`-`mag_vs_depth` pair are superposed.
-    The result is an array
-    of size (neig, len(tvals)). So the columns are the column array
-    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-    us later to do u = phi*v*E_Igamv_the
-
-    Uses sin(m*z) in the calculation of theta.
-
-    Parameters
-    ----------
-    m : ``list`` of ``float``
-        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
-    eigs : 1d numpy.ndarray
-        list of eigenvalues
-    a : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        loading term is mv*D[sigma(z, t), t] so a would be mv.
-    b : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation vacuum term is
-         kh*et*w(z,t) so a would be `kh`, `b` would be `et`
-    mag_vs_depth : list of PolyLine
-        Piecewise linear magnitude  vs depth.
-    mag_vs_time : list of PolyLine
-        Piecewise linear magnitude vs time
-    tvals : 1d numpy.ndarray`
-        list of time values to calculate integral at
-    dT : ``float``, optional
-        time factor multiple (default = 1.0)
-
-    Returns
-    -------
-    E_Igamv_the: ndarray
-        loading matrix
-
-    Notes
-    -----
-    Assuming the loads are formulated as the product of separate time and depth
-    dependant functions:
-
-    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
-
-    the solution to the consolidation equation using the spectral method has
-    the form:
-
-    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
-
-    In this instance :math:`\\sigma\\left({Z}\\right)`
-    and :math:`\\sigma\\left({t}\\right)` are piecewise linear in depth and
-    time (hence the 'bilinear' in the function name).
-
-    `dim1sin_E_Igamv_the_abDmagDt_bilinear` will calculate
-    :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
-    for terms with the form:
-
-    .. math:: a\\left({z}\\right)b\\left({z}\\right)\\frac{\\partial\\sigma\\left({Z,t}\\right)}{\\partial t}
-
-    where :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)` are
-    piecewise linear functions w.r.t. :math:`z`.
-
-
-    """
-
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
-
-
-    if sum([v is None for v in [mag_vs_depth, mag_vs_time]])==0:
-
-        for mag_vs_t, mag_vs_z in zip(mag_vs_time, mag_vs_depth):
-            a, b , mag_vs_z = pwise.polyline_make_x_common(a, b, mag_vs_z)
-            theta = integ.pdim1sin_abc_linear(m, a, b, mag_vs_z)
-            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)
-
-            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
-            #and np.dot(theta, Igamv) will give differetn 1d arrays.
-            #Basically np.dot(Igamv, theta) gives us what we want i.e.
-            #theta was treated as a column array.  The alternative
-            #np.dot(theta, Igamv) would have treated theta as a row vector.
-            E_Igamv_the += (E*np.dot(Igamv, theta)).T
-
-    return E_Igamv_the
+#def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, a, b, mag_vs_depth, mag_vs_time, tvals, Igamv, dT=1.0):
+#    """Loading dependant E_Igamv_the matrix for a(z)*b(z)*D[mag(z, t), t] where mag is bilinear in depth and time
+#
+#    Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
+#    The contribution of each `mag_vs_time`-`mag_vs_depth` pair are superposed.
+#    The result is an array
+#    of size (neig, len(tvals)). So the columns are the column array
+#    E*inverse(gam*v)*theta calculated at each output time.  This will allow
+#    us later to do u = phi*v*E_Igamv_the
+#
+#    Uses sin(m*z) in the calculation of theta.
+#
+#    Parameters
+#    ----------
+#    m : ``list`` of ``float``
+#        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
+#    eigs : 1d numpy.ndarray
+#        list of eigenvalues
+#    a : PolyLine
+#        Piewcewise linear function.  e.g. for 1d consolidation surcharge
+#        loading term is mv*D[sigma(z, t), t] so a would be mv.
+#    b : PolyLine
+#        Piewcewise linear function.  e.g. for 1d consolidation vacuum term is
+#         kh*et*w(z,t) so a would be `kh`, `b` would be `et`
+#    mag_vs_depth : list of PolyLine
+#        Piecewise linear magnitude  vs depth.
+#    mag_vs_time : list of PolyLine
+#        Piecewise linear magnitude vs time
+#    tvals : 1d numpy.ndarray`
+#        list of time values to calculate integral at
+#    dT : ``float``, optional
+#        time factor multiple (default = 1.0)
+#
+#    Returns
+#    -------
+#    E_Igamv_the: ndarray
+#        loading matrix
+#
+#    Notes
+#    -----
+#    Assuming the loads are formulated as the product of separate time and depth
+#    dependant functions:
+#
+#    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+#
+#    the solution to the consolidation equation using the spectral method has
+#    the form:
+#
+#    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+#
+#    In this instance :math:`\\sigma\\left({Z}\\right)`
+#    and :math:`\\sigma\\left({t}\\right)` are piecewise linear in depth and
+#    time (hence the 'bilinear' in the function name).
+#
+#    `dim1sin_E_Igamv_the_abDmagDt_bilinear` will calculate
+#    :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
+#    for terms with the form:
+#
+#    .. math:: a\\left({z}\\right)b\\left({z}\\right)\\frac{\\partial\\sigma\\left({Z,t}\\right)}{\\partial t}
+#
+#    where :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)` are
+#    piecewise linear functions w.r.t. :math:`z`.
+#
+#
+#    """
+#
+#    E_Igamv_the = np.zeros((len(m), len(tvals)))
+#
+#
+#    if sum([v is None for v in [mag_vs_depth, mag_vs_time]])==0:
+#
+#        for mag_vs_t, mag_vs_z in zip(mag_vs_time, mag_vs_depth):
+#            a, b , mag_vs_z = pwise.polyline_make_x_common(a, b, mag_vs_z)
+#            theta = integ.pdim1sin_abc_linear(m, a, b, mag_vs_z)
+#            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)
+#
+#            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
+#            #and np.dot(theta, Igamv) will give differetn 1d arrays.
+#            #Basically np.dot(Igamv, theta) gives us what we want i.e.
+#            #theta was treated as a column array.  The alternative
+#            #np.dot(theta, Igamv) would have treated theta as a row vector.
+#            E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#
+#    return E_Igamv_the
 
 
 
@@ -972,8 +972,6 @@ def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth,
 
     Notes
     -----
-    TODO: fix for cyclic
-
     Assuming the loads are formulated as the product of separate time and depth
     dependant functions as well as a cyclic component:
 
@@ -1026,3 +1024,103 @@ def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth,
             E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     return E_Igamv_the
+
+def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth, mag_vs_time, omega_phase=None, dT=1.0):
+    """Loading dependant E_Igamv_the matrix for a(z)*b(z)*D[mag(z, t), t] where mag is bilinear in depth and time multiplied by cos(omega*t + phase)
+
+    Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
+    The contribution of each `mag_vs_time`-`mag_vs_depth`-`omega_phase` pair are superposed.
+    The result is an array
+    of size (neig, len(tvals)). So the columns are the column array
+    E*inverse(gam*v)*theta calculated at each output time.  This will allow
+    us later to do u = phi*v*E_Igamv_the
+
+    Uses sin(m*z) in the calculation of theta.
+
+    Parameters
+    ----------
+    m : ``list`` of ``float``
+        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
+    eigs : 1d numpy.ndarray
+        list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Igamv : ndarray
+        speccon matrix
+    a : PolyLine
+        Piewcewise linear function.  e.g. for 1d consolidation surcharge
+        loading term is mv*D[sigma(z, t), t] so a would be mv.
+    b : PolyLine
+        Piewcewise linear function.  e.g. for 1d consolidation vacuum term is
+         kh*et*w(z,t) so a would be `kh`, `b` would be `et`
+    mag_vs_depth : list of PolyLine
+        Piecewise linear magnitude  vs depth.
+    mag_vs_time : list of PolyLine
+        Piecewise linear magnitude vs time
+    omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
+    dT : ``float``, optional
+        time factor multiple (default = 1.0)
+
+    Returns
+    -------
+    E_Igamv_the: ndarray
+        loading matrix
+
+    Notes
+    -----
+    Assuming the loads are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)\\cos\\left(\\omega t + \\phi\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    In this instance :math:`\\sigma\\left({Z}\\right)`
+    and :math:`\\sigma\\left({t}\\right)` are piecewise linear in depth and
+    time (hence the 'bilinear' in the function name) there is also a cyclic
+    component.
+
+    `dim1sin_E_Igamv_the_abmag_bilinear` will calculate
+    :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
+    for terms with the form:
+
+    .. math:: a\\left({z}\\right)b\\left({z}\\right)\\frac{\\partial\\sigma\\left({Z,t}\\right)}{\\partial t}
+
+    where :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)` are
+    piecewise linear functions w.r.t. :math:`z`.
+
+
+    """
+
+    E_Igamv_the = np.zeros((len(m), len(tvals)))
+
+
+    if sum([v is None for v in [mag_vs_depth, mag_vs_time]])==0:
+        if omega_phase is None:
+            omega_phase = [None] * len(mag_vs_time)
+
+        for mag_vs_t, mag_vs_z, om_ph in zip(mag_vs_time, mag_vs_depth, omega_phase):
+            a, b , mag_vs_z = pwise.polyline_make_x_common(a, b, mag_vs_z)
+            theta = integ.pdim1sin_abc_linear(m, a, b, mag_vs_z)
+            if not om_ph is None:
+                omega, phase = om_ph
+                E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
+            else:
+                E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)
+
+            #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
+            #and np.dot(theta, Igamv) will give differetn 1d arrays.
+            #Basically np.dot(Igamv, theta) gives us what we want i.e.
+            #theta was treated as a column array.  The alternative
+            #np.dot(theta, Igamv) would have treated theta as a row vector.
+            E_Igamv_the += (E*np.dot(Igamv, theta)).T
+
+    return E_Igamv_the
+
