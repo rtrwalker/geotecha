@@ -163,7 +163,7 @@ class MarkersDashesColors(object):
     Use this object to create a list of style dictionaries.  Each style dict
     can be unpacked when passed to the matplotlib.plot command.  each dict
     contains the appropriate keywords to set the marker, dashes, and color
-    properties.  You can turn the list into a cycle using functools.cycle
+    properties.  You can turn the list into a cycle using itertools.cycle
     To see the marker, dashes, and color options run the `demo_options' method.
     To choose a subset of styles see the `__call__` method.  To view what the
     chosen styles actually look like run the `construct_styles' and the
@@ -1409,7 +1409,7 @@ if __name__ == '__main__':
         gs_index = row_major_order_reverse_map(shape=shape,index_steps=index_steps, transpose=transpose)
         gs_index = [np.s_[:2,:2],2,8]
         #gs_index=[1,2,3,0]
-        ax=plot_data_in_grid(fig, data=data, gs=gs,
+        ax = plot_data_in_grid(fig, data=data, gs=gs,
                               gs_index=gs_index,
                               sharex=sharex, sharey=sharey)
 

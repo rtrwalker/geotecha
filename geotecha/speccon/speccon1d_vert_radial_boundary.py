@@ -24,10 +24,13 @@ import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
 
+import itertools
+
 import geotecha.inputoutput.inputoutput as inputoutput
 
 import geotecha.speccon.speccon1d as speccon1d
 
+import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
 
 import sys
 import textwrap
@@ -202,20 +205,35 @@ class speccon1d_vr(speccon1d.Speccon1d):
         i.e. only calc settlement_z_pairs at a subset of the `tvals` values.
         default = slice(None, None) i.e. use all the `tvals`.
     por : ndarray, only present if ppress_z is input
-        calculated pore pressure at depths coreespoinding to `ppress_z` and times corresponding
-        to `tvals`.  This is an output array of size (len(ppress_z), len(tvals[ppress_z_tval_indexes])).
-        por : ndarray
+        calculated pore pressure at depths correspoinding to `ppress_z` and
+        times corresponding to `tvals`.  This is an output array of
+        size (len(ppress_z), len(tvals[ppress_z_tval_indexes])).
     avp : ndarray, only present if avg_ppress_z_pairs is input
-        calculated average pore pressure between depths coreespoinding to `avg_ppress_z_pairs` and
-        times corresponding to `tvals`.  This is an output array of size (len(avg_ppress_z_pairs), len(tvals[avg_ppress_z_pairs_tval_indexes])).
+        calculated average pore pressure between depths correspoinding to
+        `avg_ppress_z_pairs` and times corresponding to `tvals`.  This is an
+        output array of size
+        (len(avg_ppress_z_pairs), len(tvals[avg_ppress_z_pairs_tval_indexes])).
     set : ndarray, only present if settlement_z_pairs is input
         settlement between depths coreespoinding to `settlement_z_pairs` and
-        times corresponding to `tvals`.  This is an output array of size (len(avg_ppress_z_pairs), len(tvals[settlement_z_pairs_tval_indexes]))
+        times corresponding to `tvals`.  This is an output array of size
+        (len(avg_ppress_z_pairs), len(tvals[settlement_z_pairs_tval_indexes]))
     implementation: ['scalar', 'vectorized','fortran'], optional
         where possible use the `implementation`, implementation.  'scalar'=
         python loops (slowest), 'vectorized' = numpy (fast), 'fortran' =
         fortran extension (fastest).  Note only some functions have multiple
         implementations.
+
+    RLzero: float, optional
+        reduced level of the top of the soil layer.  If RLzero is not None
+        then all depths (in plots and results) will be transformed to an RL
+        by RL = RLzero - z*H.  If RLzero is None (i.e. the default) then all
+        depths will be reported  z*H (i.e. positive numbers).
+
+    plot_properties : dict of dict, optional
+        dictionary that passes some overridessome of the plot properties.
+        Each member of `plot_properties` will correspond to one of the plots.
+        e.g. plot_properties['por'] will pass properties to the pore pressure
+        vs depth plot.
 
     Notes
     -----
@@ -236,13 +254,47 @@ class speccon1d_vr(speccon1d.Speccon1d):
     """
 
     def _setup(self):
-        self._attribute_defaults = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 1.0, 'implementation': 'vectorized', 'ppress_z_tval_indexes': slice(None, None), 'avg_ppress_z_pairs_tval_indexes': slice(None, None), 'settlement_z_pairs_tval_indexes': slice(None, None) }
-        self._attributes = 'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time ppress_z avg_ppress_z_pairs settlement_z_pairs tvals implementation ppress_z_tval_indexes avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase top_omega_phase bot_omega_phase'.split()
 
-        self._attributes_that_should_be_lists= 'surcharge_vs_depth surcharge_vs_time vacuum_vs_depth vacuum_vs_time top_vs_time bot_vs_time fixed_ppress surcharge_omega_phase vacuum_omega_phase fixed_ppress_omega_phase top_omega_phase bot_omega_phase'.split()
-        self._attributes_that_should_have_same_x_limits = 'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()
+        self._attributes = (
+            'H drn dT neig mvref kvref khref etref dTh dTv mv kh kv et '
+            'surcharge_vs_depth surcharge_vs_time '
+            'vacuum_vs_depth vacuum_vs_time '
+            'top_vs_time bot_vs_time '
+            'ppress_z avg_ppress_z_pairs settlement_z_pairs tvals '
+            'implementation ppress_z_tval_indexes '
+            'avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes '
+            'fixed_ppress surcharge_omega_phase vacuum_omega_phase '
+            'fixed_ppress_omega_phase top_omega_phase bot_omega_phase '
+            'RLzero '
+            'plot_properties').split()
 
-        self._attributes_that_should_have_same_len_pairs = 'surcharge_vs_depth surcharge_vs_time surcharge_vs_time surcharge_omega_phase vacuum_vs_depth vacuum_vs_time vacuum_vs_time vacuum_omega_phase fixed_ppress_omega_phase fixed_ppress top_omega_phase top_vs_time bot_omega_phase bot_vs_time'.split() #pairs that should have the same length
+        self._attribute_defaults = {
+            'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0,
+            'kvref': 1.0, 'khref': 1.0, 'etref': 1.0,
+            'implementation': 'vectorized',
+            'ppress_z_tval_indexes': slice(None, None),
+            'avg_ppress_z_pairs_tval_indexes': slice(None, None),
+            'settlement_z_pairs_tval_indexes': slice(None, None),
+            'plot_properties': dict() }
+
+        self._attributes_that_should_be_lists= (
+            'surcharge_vs_depth surcharge_vs_time surcharge_omega_phase '
+            'vacuum_vs_depth vacuum_vs_time vacuum_omega_phase '
+            'top_vs_time top_omega_phase '
+            'bot_vs_time bot_omega_phase '
+            'fixed_ppress fixed_ppress_omega_phase').split()
+
+        self._attributes_that_should_have_same_x_limits = (
+            'mv kv kh et surcharge_vs_depth vacuum_vs_depth').split()
+
+        self._attributes_that_should_have_same_len_pairs = (
+            'surcharge_vs_depth surcharge_vs_time '
+            'surcharge_vs_time surcharge_omega_phase '
+            'vacuum_vs_depth vacuum_vs_time '
+            'vacuum_vs_time vacuum_omega_phase '
+            'top_vs_time top_omega_phase '
+            'bot_vs_time bot_omega_phase '
+            'fixed_ppress_omega_phase fixed_ppress').split() #pairs that should have the same length
 
         self._attributes_to_force_same_len = [
             "surcharge_vs_time surcharge_omega_phase".split(),
@@ -260,14 +312,16 @@ class speccon1d_vr(speccon1d.Speccon1d):
             ['mv'],
             'dTh dTv'.split(),
             'kh kv'.split(),
-            'surcharge_vs_time vacuum_vs_time top_vs_time bot_vs_time fixed_ppress'.split(),
+            ('surcharge_vs_time vacuum_vs_time top_vs_time '
+                'bot_vs_time fixed_ppress').split(),
             ['tvals'],
             'ppress_z avg_ppress_z_pairs settlement_z_pairs'.split()]
 
         self._one_implies_others = [
             'vacuum_vs_time dTh kh et'.split(),
             'vacuum_vs_depth dTh kh et'.split(),
-            'surcharge_omega_phase surcharge_vs_depth surcharge_vs_time'.split(),
+            ('surcharge_omega_phase surcharge_vs_depth '
+                'surcharge_vs_time').split(),
             'vacuum_omega_phase vacuum_vs_depth vacuum_vs_time'.split(),
             'fixed_ppress_omega_phase fixed_ppress'.split(),
             'top_omega_phase top_vs_time'.split(),
@@ -307,7 +361,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.avg_ppress_z_pairs = None
         self.settlement_z_pairs = None
         self.tvals = None
+        self.RLzero = None
 
+        self.plot_properties = self._attribute_defaults.get('plot_properties', None)
 
         self.ppress_z_tval_indexes = self._attribute_defaults.get('ppress_z_tval_indexes', None)
         self.avg_ppress_z_pairs_tval_indexes = self._attribute_defaults.get('avg_ppress_z_pairs_tval_indexes', None)
@@ -734,9 +790,91 @@ class speccon1d_vr(speccon1d.Speccon1d):
         return
 
 
+    def _plot_pore_pressure(self):
+        """make a pore_pressure vs depth plot
+
+        por_prop dictionary options
+        ---------------------------
+        ==================  ================================================
+        option              description
+        ==================  ================================================
+        fig_prop            Dict of prop to pass to plt.figure
+        styles              List of dict.  Each dict is for one line.
+                            Each dict contains kwargs for plt.plot
+                            See geotecha.plotting.one_d.MarkersDashesColors
+        xlabel              x-axis label.
+        ylabel              y-axis label
+        has_legend          True or False. default is True
+        ==================  ================================================
+
+        """
+
+        por_prop = self.plot_properties.pop('por', dict())
+
+        fig_prop = por_prop.pop('fig_prop', dict())
+
+
+        styles = por_prop.pop('style', None)
+        if styles is None:
+            mcd = geotecha.plotting.one_d.MarkersDashesColors(
+                color = 'black',
+                default_marker={'markersize': 7})
+            mcd.construct_styles(markers = range(32), dashes=[0],
+                                 marker_colors=None, line_colors=None)
+
+
+        [v.update({'mark_every': 0.1}) for v in mcd.styles]
+        styles = itertools.cycle(mcd.styles)
 
 
 
+        z = speccon1d.depth_to_reduced_level(self.ppress_z, self.H,
+                                                 self.RLzero)
+        t = self.tvals[self.ppress_z_tval_indexes]
+
+        fig = plt.figure(**fig_prop)
+        plt.plot(self.por, z)
+
+        xlabel = por_prop.pop('xlabel', 'Pore pressure, u')
+        plt.xlabel(xlabel)
+
+        if self.RLzero is None:
+            plt.gca().invert_yaxis()
+            ylabel = por_prop.pop('ylabel', 'Depth, z')
+        else:
+            ylabel = por_prop.pop('ylabel', 'RL')
+
+        plt.ylabel(ylabel)
+
+        #apply style to each line
+        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+            for line, d in zip(fig.gca().get_lines(), styles)]
+        #apply markevery to each line
+        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+            for line, d in zip(fig.gca().get_lines(), [{'markevery': 0.1}]*len(t))]
+        #apply label to each line
+        line_labels = [{'label': '%.3g' % v} for v in t]
+        print(line_labels)
+        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+            for line, d in zip(fig.gca().get_lines(), line_labels)]
+
+        has_legend = por_prop.pop('has_legend', True)
+        if has_legend:
+            leg = fig.gca().legend()
+            leg.draggable(True)
+
+
+
+
+
+    def produce_plots(self):
+        """produce plots of analysis"""
+
+
+
+
+        if not self.ppress_z is None:
+            self._plot_pore_pressure()
 
 
 
@@ -795,7 +933,7 @@ drn = 0
 dT = 1
 #dTh = 5
 dTv = 0.1 * 0.25
-neig = 500
+neig = 10
 
 
 mvref = 2.0
@@ -837,13 +975,15 @@ settlement_z_pairs = [[0,1],[0, 0.5]]
 tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
 tvals = np.linspace(0, 5, 100)
 tvals = np.logspace(-5, 1,50)
-#ppress_z_tval_indexes = [0,1,2,3,4,5,6,7,8]
+ppress_z_tval_indexes = np.arange(len(tvals))[::len(tvals)//7]
 #avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
 #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
 
 implementation='scalar'
 implementation='vectorized'
 #implementation='fortran'
+RLzero = -12.0
+plot_properties={}
     """)
 
 
@@ -854,8 +994,8 @@ implementation='vectorized'
     a = speccon1d_vr(my_code)
     a.make_all()
     slope = (a.por[-1,:]-a.por[-2,:]) / (a.ppress_z[-1]-a.ppress_z[-2])
-    print(repr(a.tvals))
-    print(repr(slope))
+#    print(repr(a.tvals))
+#    print(repr(slope))
 #    a._make_gam()
 #    #print(a.gam)
 #    a._make_psi()
@@ -870,7 +1010,10 @@ implementation='vectorized'
 #    print(len(a.tvals))
     #print(a.por.shape)
 
-    if True:
+    a.produce_plots()
+    plt.show()
+
+    if False:
         plt.figure()
         plt.plot(a.por, a.ppress_z)
         plt.xlabel('Pore pressure')
