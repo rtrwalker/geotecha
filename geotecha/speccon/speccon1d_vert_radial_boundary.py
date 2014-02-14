@@ -24,7 +24,7 @@ import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
 import random
-import gridspec
+
 
 
 import itertools
@@ -1035,6 +1035,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.settlement_z_pairs is None:
             self._plot_set()
 
+        self._plot_loads()
 
     def _plot_loads(self):
         """plot loads
@@ -1044,13 +1045,19 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         load_triples=[]
         load_names = []
+        ylabels=[]
         #surcharge
         if not self.surcharge_vs_time is None:
-            load_names.append('surcharge')
-            [(vs_time, vs_depth, omega_phase) for
-                vs_time, vs_depth, omega_phase  in
-                zip(self.surcharge_vs_time, self.surcharge_vs_depth,
-                    self.surcharge_omega_phase)]
+            load_names.append('surch')
+            ylabels.append('Surcharge')
+            load_triples.append(
+                [(vs_time, vs_depth, omega_phase) for
+                    vs_time, vs_depth, omega_phase  in
+                    zip(self.surcharge_vs_time, self.surcharge_vs_depth,
+                    self.surcharge_omega_phase)])
+
+
+        return self._plot_generic_loads(load_triples, load_names, ylabels=ylabels)
 
 
     def _plot_generic_loads(self, load_triples, load_names, ylabels=None, trange = None):
@@ -1073,14 +1080,15 @@ class speccon1d_vr(speccon1d.Speccon1d):
         """
 
 
-        n = len(load_names)
+        n = len(load_triples)
 
-        gs = matplotlib.gridspec.GridSpec((n,2), width_ratios=[5,1])
+        gs = matplotlib.gridspec.GridSpec(n,2, width_ratios=[5,1])
+        fig = plt.figure()
         plt.subplot(gs[0])
 
         #determine tmax etc
         if trange is None:
-            for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylables)):
+            for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
                 for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
                     if not vs_time is None:
                         tmin = np.min(vs_time.x)
@@ -1089,28 +1097,45 @@ class speccon1d_vr(speccon1d.Speccon1d):
             tmin, tmax = trange
 
         if ylabels is None:
-            ylables = ['y%d' % v for v in range(n)]
+            ylabels = ['y%d' % v for v in range(n)]
         ax1 = []
         ax2 = []
-        for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylables)):
-            ax1.append(plt.subplot(gs[i, 1]))
-            ax2.append(plt.subplot(gs[i, 2]))
+        for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
+            ax1.append(plt.subplot(gs[i, 0]))
+            ax2.append(plt.subplot(gs[i, 1]))
 
             for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
                 if vs_time is None: #allow for fixed ppress
                     vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
-                if omega_phase is None:
-                    x = vs_time.x
-                    y = vs_time.y
-                    mark_every = None
-                else:
+
+                dx = (tmax-tmin)/20.0
+                if not omega_phase is None:
                     omega, phase = omega_phase
-                    #find meaning ful start and stop time
-                    x = np.linspace(np.max(tmin,vs_time),tmax,omega/(2*np.pi)/80)
-                    y = np.cos(np.)
+                    dx = min(dx, 1/(omega/(2*np.pi))/40)
 
+                print(dx, omega)
+#                print(vs_time.x)
+                x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+                        (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
+                        #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
 
+                y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+                        (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
+                        #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
 
+                x = np.array([val for subl in x for val in subl])
+                y = np.array([val for subl in y for val in subl])
+
+                if not omega_phase is None:
+                    y *= np.cos(omega * x + phase)
+
+                mark_every = None
+#                print(x, y)
+                ax1[-1].plot(x, y, '-o',label=name)
+                ax1[-1].set_xlabel('Time')
+                ax1[-1].set_ylabel(ylabel)
+
+        return fig
 
     def _plot_vs_time(self, t, y, line_labels, prop_dict={}):
         """plot y vs t for variuos values
@@ -1311,8 +1336,8 @@ kv = PolyLine([0,1], [5,5])
 #et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
 #et = PolyLine([0,1], [1,1])
 surcharge_vs_depth = PolyLine([0,1], [1,1])
-surcharge_vs_time = PolyLine([0,0.0,10], [0,100,100])
-#surcharge_omega_phase = (2*np.pi*2, -np.pi/2)
+surcharge_vs_time = PolyLine([0,1,10], [0,100,100])
+surcharge_omega_phase = (2*np.pi*0.5, -np.pi/2)
 
 
 #vacuum_vs_depth = PolyLine([0,1], [1,1])
