@@ -23,6 +23,9 @@ from __future__ import division, print_function
 import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
+import random
+import gridspec
+
 
 import itertools
 
@@ -35,6 +38,7 @@ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColor
 import sys
 import textwrap
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 try:
@@ -790,59 +794,426 @@ class speccon1d_vr(speccon1d.Speccon1d):
         return
 
 
-    def _plot_pore_pressure(self):
-        """make a pore_pressure vs depth plot
+#    def _plot_pore_pressure(self):
+#        """make a pore_pressure vs depth plot
+#
+#        por_prop dictionary options
+#        ---------------------------
+#        ==================  ================================================
+#        option              description
+#        ==================  ================================================
+#        fig_prop            dict of prop to pass to plt.figure
+#        styles              List of dict.  Each dict is for one line.
+#                            Each dict contains kwargs for plt.plot
+#                            See geotecha.plotting.one_d.MarkersDashesColors
+#        xlabel              x-axis label.
+#        ylabel              y-axis label
+#        has_legend          True or False. default is True
+#        legend_prop         dict of prop to pass to ax.legend
+#        ==================  ================================================
+#
+#        """
+#
+#
+#        por_prop = self.plot_properties.pop('por', dict())
+#        fig_prop = por_prop.pop('fig_prop', {})
+#        legend_prop = por_prop.pop('legend_prop',
+#                                   {'title': 'time:', 'fontsize': 8})
+#
+#        styles = por_prop.pop('style', None)
+#        if styles is None:
+#            mcd = geotecha.plotting.one_d.MarkersDashesColors(
+##                color = 'black',
+#                default_marker={'markersize': 7})
+#            mcd.construct_styles(markers = range(32), dashes=[0],
+#                                 marker_colors=None, line_colors=None)
+#
+#
+#        styles = itertools.cycle(mcd.styles)
+#
+#
+#
+#        z = speccon1d.depth_to_reduced_level(self.ppress_z, self.H,
+#                                                 self.RLzero)
+#        t = self.tvals[self.ppress_z_tval_indexes]
+#
+#        fig = plt.figure(**fig_prop)
+#
+#
+#
+#
+#
+#        plt.plot(self.por, z)
+#
+#
+#
+#        xlabel = por_prop.pop('xlabel', 'Pore pressure, u')
+#        plt.xlabel(xlabel)
+#
+#        if self.RLzero is None:
+#            plt.gca().invert_yaxis()
+#            ylabel = por_prop.pop('ylabel', 'Depth, z')
+#        else:
+#            ylabel = por_prop.pop('ylabel', 'RL')
+#
+#        plt.ylabel(ylabel)
+#
+#        #apply style to each line
+#        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+#            for line, d in zip(fig.gca().get_lines(), styles)]
+#        #apply markevery to each line
+##        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+##            for line, d in zip(fig.gca().get_lines(), [{'markevery': 0.1}]*len(t))]
+#        random.seed(1)
+#        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+#            for line, d in
+#                zip(fig.gca().get_lines(),
+#                    [{'markevery': (random.random()* 0.1, 0.1)} for v in t])]
+#        #apply label to each line
+#        line_labels = [{'label': '%.3g' % v} for v in t]
+#        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+#            for line, d in zip(fig.gca().get_lines(), line_labels)]
+#
+#        has_legend = por_prop.pop('has_legend', True)
+#        if has_legend:
+#            leg = fig.gca().legend(**legend_prop)
+#            leg.draggable(True)
+#
+#
+#    def _plot_average_pore_pressure(self):
+#        """make an average_pore_pressure vs time plot
+#
+#        avp_prop dictionary options
+#        ---------------------------
+#        ==================  ================================================
+#        option              description
+#        ==================  ================================================
+#        fig_prop            dict of prop to pass to plt.figure
+#        styles              List of dict.  Each dict is for one line.
+#                            Each dict contains kwargs for plt.plot
+#                            See geotecha.plotting.one_d.MarkersDashesColors
+#        xlabel              x-axis label.
+#        ylabel              y-axis label
+#        has_legend          True or False. default is True
+#        legend_prop         dict of prop to pass to ax.legend
+#        ==================  ================================================
+#
+#        """
+#
+#        avp_prop = self.plot_properties.pop('avp', dict())
+#        fig_prop = avp_prop.pop('fig_prop', {})
+#        legend_prop = avp_prop.pop('legend_prop',
+#                                   {'title': 'Depth interval:', 'fontsize': 8})
+#
+#        styles = avp_prop.pop('style', None)
+#        if styles is None:
+#            mcd = geotecha.plotting.one_d.MarkersDashesColors(
+##                color = 'black',
+#                default_marker={'markersize': 7})
+#            mcd.construct_styles(markers = range(32), dashes=[0],
+#                                 marker_colors=None, line_colors=None)
+#
+#
+#
+#        styles = itertools.cycle(mcd.styles)
+#
+#
+#        t = self.tvals[self.avg_ppress_z_pairs_tval_indexes]
+#
+#        z_pairs = speccon1d.depth_to_reduced_level(
+#            np.asarray(self.avg_ppress_z_pairs), self.H, self.RLzero)
+#
+#
+#        fig = plt.figure(**fig_prop)
+#
+#
+#
+#
+#
+#        plt.plot(t, self.avp.T)
+#
+#
+#
+#        xlabel = avp_prop.pop('xlabel', 'Time, t')
+#        plt.xlabel(xlabel)
+#        ylabel = avp_prop.pop('ylabel', 'Average pore pressure')
+#        plt.ylabel(ylabel)
+#
+#        #apply style to each line
+#        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+#            for line, d in zip(fig.gca().get_lines(), styles)]
+#        #apply markevery to each line
+#        random.seed(1)
+#        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+#            for line, d in zip(fig.gca().get_lines(), [{'markevery': (random.random()* 0.1, 0.1)} for v in z_pairs])]
+#
+#        #apply label to each line
+#        line_labels = [{'label': '%.3g to %.3g' % (z1, z2)} for z1, z2 in z_pairs]
+#        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+#            for line, d in zip(fig.gca().get_lines(), line_labels)]
+#
+#        has_legend = avp_prop.pop('has_legend', True)
+#        if has_legend:
+#            leg = fig.gca().legend(**legend_prop)
+#            leg.draggable(True)
 
-        por_prop dictionary options
-        ---------------------------
-        ==================  ================================================
-        option              description
-        ==================  ================================================
-        fig_prop            Dict of prop to pass to plt.figure
-        styles              List of dict.  Each dict is for one line.
-                            Each dict contains kwargs for plt.plot
-                            See geotecha.plotting.one_d.MarkersDashesColors
-        xlabel              x-axis label.
-        ylabel              y-axis label
-        has_legend          True or False. default is True
-        ==================  ================================================
+
+    def _plot_por(self):
+        """plot depth vs pore pressure for various times
+
+        """
+        t = self.tvals[self.ppress_z_tval_indexes]
+        line_labels = [{'label': '%.3g' % v} for v in t]
+        por_prop = self.plot_properties.pop('por', dict())
+        if not 'xlabel' in por_prop:
+            por_prop['xlabel'] = 'Pore pressure'
+
+
+        fig_por = self._plot_vs_depth(self.por, self.ppress_z,
+                                      line_labels=line_labels, H = self.H,
+                                      RLzero=self.RLzero,
+                                      prop_dict=por_prop)
+
+    def _plot_avp(self):
+        """plot average pore pressure vs time for various depth intervals
 
         """
 
-        por_prop = self.plot_properties.pop('por', dict())
+        t = self.tvals[self.avg_ppress_z_pairs_tval_indexes]
+        z_pairs = speccon1d.depth_to_reduced_level(
+            np.asarray(self.avg_ppress_z_pairs), self.H, self.RLzero)
+        line_labels = [{'label': '%.3g to %.3g' % (z1, z2)} for
+            z1, z2 in z_pairs]
 
-        fig_prop = por_prop.pop('fig_prop', dict())
+        avp_prop = self.plot_properties.pop('avp', dict())
+        if not 'ylabel' in avp_prop:
+            avp_prop['ylabel'] = 'Average pore pressure'
+        fig_avp = self._plot_vs_time(t, self.avp.T,
+                           line_labels=line_labels,
+                           prop_dict=avp_prop)
+    def _plot_set(self):
+        """plot settlement vs time fro various depth intervals
 
 
-        styles = por_prop.pop('style', None)
+        """
+        t = self.tvals[self.settlement_z_pairs_tval_indexes]
+        z_pairs = speccon1d.depth_to_reduced_level(
+            np.asarray(self.settlement_z_pairs), self.H, self.RLzero)
+        line_labels = [{'label': '%.3g to %.3g' % (z1, z2)} for
+            z1, z2 in z_pairs]
+
+        set_prop = self.plot_properties.pop('set', dict())
+        if not 'ylabel' in set_prop:
+            set_prop['ylabel'] = 'Settlement'
+        fig_set = self._plot_vs_time(t, self.set.T,
+                           line_labels=line_labels,
+                           prop_dict=set_prop)
+        fig_set.gca().invert_yaxis()
+
+
+
+    def produce_plots(self):
+        """produce plots of analysis"""
+
+        geotecha.plotting.one_d.pleasing_defaults()
+
+
+        matplotlib.rcParams.update({'font.size': 11})
+        matplotlib.rcParams.update({'font.family': 'serif'})
+
+
+        #por
+        if not self.ppress_z is None:
+            self._plot_por()
+
+
+        #avp
+        if not self.avg_ppress_z_pairs is None:
+            self._plot_avp()
+
+        #settle
+        if not self.settlement_z_pairs is None:
+            self._plot_set()
+
+
+    def _plot_loads(self):
+        """plot loads
+
+        """
+
+
+        load_triples=[]
+        load_names = []
+        #surcharge
+        if not self.surcharge_vs_time is None:
+            load_names.append('surcharge')
+            [(vs_time, vs_depth, omega_phase) for
+                vs_time, vs_depth, omega_phase  in
+                zip(self.surcharge_vs_time, self.surcharge_vs_depth,
+                    self.surcharge_omega_phase)]
+
+
+    def _plot_generic_loads(self, load_triples, load_names, ylabels=None, trange = None):
+        """plot loads
+
+        Parameters
+        ----------
+        load_triples : list of list of 3 element tuples
+            (load_vs_time, load_vs_depth, load_omega_phase) PolyLines.
+            load_triples[i] will be a list of load triples for the ith plot
+            load_triples[i][j] will be the jth load triple for the ith plot
+        load_names : list of string
+            string to prepend to legend entries for each load
+        ylabels : list of string, optional
+            ylabels for each of the axes, Default = None i.e. y0, y1, y2 etc
+        tmax : 2 element tuple
+            (tmin, tmax) max and min times to plot loads for
+
+
+        """
+
+
+        n = len(load_names)
+
+        gs = matplotlib.gridspec.GridSpec((n,2), width_ratios=[5,1])
+        plt.subplot(gs[0])
+
+        #determine tmax etc
+        if trange is None:
+            for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylables)):
+                for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+                    if not vs_time is None:
+                        tmin = np.min(vs_time.x)
+                        tmax = np.max(vs_time.x)
+        else:
+            tmin, tmax = trange
+
+        if ylabels is None:
+            ylables = ['y%d' % v for v in range(n)]
+        ax1 = []
+        ax2 = []
+        for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylables)):
+            ax1.append(plt.subplot(gs[i, 1]))
+            ax2.append(plt.subplot(gs[i, 2]))
+
+            for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+                if vs_time is None: #allow for fixed ppress
+                    vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
+                if omega_phase is None:
+                    x = vs_time.x
+                    y = vs_time.y
+                    mark_every = None
+                else:
+                    omega, phase = omega_phase
+                    #find meaning ful start and stop time
+                    x = np.linspace(np.max(tmin,vs_time),tmax,omega/(2*np.pi)/80)
+                    y = np.cos(np.)
+
+
+
+
+    def _plot_vs_time(self, t, y, line_labels, prop_dict={}):
+        """plot y vs t for variuos values
+
+
+        """
+
+        fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+        legend_prop = prop_dict.pop('legend_prop',
+                                   {'title': 'Depth interval:', 'fontsize': 9})
+
+        styles = prop_dict.pop('style', None)
         if styles is None:
             mcd = geotecha.plotting.one_d.MarkersDashesColors(
-                color = 'black',
+#                color = 'black',
                 default_marker={'markersize': 7})
             mcd.construct_styles(markers = range(32), dashes=[0],
                                  marker_colors=None, line_colors=None)
 
 
-        [v.update({'mark_every': 0.1}) for v in mcd.styles]
         styles = itertools.cycle(mcd.styles)
 
 
 
-        z = speccon1d.depth_to_reduced_level(self.ppress_z, self.H,
-                                                 self.RLzero)
-        t = self.tvals[self.ppress_z_tval_indexes]
+#        z = speccon1d.depth_to_reduced_level(z, H, RLzero)
+
+#        t = self.tvals[self.ppress_z_tval_indexes]
+
 
         fig = plt.figure(**fig_prop)
-        plt.plot(self.por, z)
+        plt.plot(t, y)
 
-        xlabel = por_prop.pop('xlabel', 'Pore pressure, u')
+        xlabel = prop_dict.pop('xlabel', 'Time, t')
+        plt.xlabel(xlabel)
+        ylabel = prop_dict.pop('ylabel', 'y')
+        plt.ylabel(ylabel)
+
+        #apply style to each line
+        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+            for line, d in zip(fig.gca().get_lines(), styles)]
+        #apply markevery to each line
+        random.seed(1)
+        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+            for line, d in
+                zip(fig.gca().get_lines(),
+                    [{'markevery': (random.random()* 0.1, 0.1)} for v in y])]
+
+        [geotecha.plotting.one_d.apply_dict_to_object(line, d)
+            for line, d in zip(fig.gca().get_lines(), line_labels)]
+
+        has_legend = prop_dict.pop('has_legend', True)
+
+        if has_legend:
+            leg = fig.gca().legend(**legend_prop)
+            leg.draggable(True)
+
+        return fig
+
+
+
+    def _plot_vs_depth(self, x, z, line_labels=None, H = 1.0, RLzero=None, prop_dict={}):
+        """plot z vs x for various t values
+
+        Parameters
+        ----------
+
+
+
+        """
+
+        fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+        legend_prop = prop_dict.pop('legend_prop',
+                                   {'title': 'time:', 'fontsize': 9})
+
+        styles = prop_dict.pop('style', None)
+        if styles is None:
+            mcd = geotecha.plotting.one_d.MarkersDashesColors(
+#                color = 'black',
+                default_marker={'markersize': 7})
+            mcd.construct_styles(markers = range(32), dashes=[0],
+                                 marker_colors=None, line_colors=None)
+
+
+        styles = itertools.cycle(mcd.styles)
+
+
+
+        z = speccon1d.depth_to_reduced_level(z, H, RLzero)
+
+#        t = self.tvals[self.ppress_z_tval_indexes]
+
+
+        fig = plt.figure(**fig_prop)
+        plt.plot(x, z)
+
+        xlabel = prop_dict.pop('xlabel', 'x')
         plt.xlabel(xlabel)
 
-        if self.RLzero is None:
+        if RLzero is None:
             plt.gca().invert_yaxis()
-            ylabel = por_prop.pop('ylabel', 'Depth, z')
+            ylabel = prop_dict.pop('ylabel', 'Depth, z')
         else:
-            ylabel = por_prop.pop('ylabel', 'RL')
+            ylabel = prop_dict.pop('ylabel', 'RL')
 
         plt.ylabel(ylabel)
 
@@ -850,31 +1221,24 @@ class speccon1d_vr(speccon1d.Speccon1d):
         [geotecha.plotting.one_d.apply_dict_to_object(line, d)
             for line, d in zip(fig.gca().get_lines(), styles)]
         #apply markevery to each line
+        random.seed(1)
         [geotecha.plotting.one_d.apply_dict_to_object(line, d)
-            for line, d in zip(fig.gca().get_lines(), [{'markevery': 0.1}]*len(t))]
+            for line, d in
+                zip(fig.gca().get_lines(),
+                    [{'markevery': (random.random()* 0.1, 0.1)} for v in x])]
         #apply label to each line
-        line_labels = [{'label': '%.3g' % v} for v in t]
-        print(line_labels)
+#        line_labels = [{'label': '%.3g' % v} for v in t]
         [geotecha.plotting.one_d.apply_dict_to_object(line, d)
             for line, d in zip(fig.gca().get_lines(), line_labels)]
 
-        has_legend = por_prop.pop('has_legend', True)
+        has_legend = prop_dict.pop('has_legend', True)
+
         if has_legend:
-            leg = fig.gca().legend()
+            leg = fig.gca().legend(**legend_prop)
             leg.draggable(True)
 
+        return fig
 
-
-
-
-    def produce_plots(self):
-        """produce plots of analysis"""
-
-
-
-
-        if not self.ppress_z is None:
-            self._plot_pore_pressure()
 
 
 
@@ -969,12 +1333,12 @@ surcharge_vs_time = PolyLine([0,0.0,10], [0,100,100])
 
 
 ppress_z = np.linspace(0,1,100)
-avg_ppress_z_pairs = [[0,1],[0, 0.2]]
-settlement_z_pairs = [[0,1],[0, 0.5]]
+avg_ppress_z_pairs = [[0,1],[0.4, 0.5]]
+settlement_z_pairs = [[0,1],[0.4, 0.5]]
 #tvals = np.linspace(0,3,10)
 tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
 tvals = np.linspace(0, 5, 100)
-tvals = np.logspace(-5, 1,50)
+tvals = np.logspace(-2, 0.3,50)
 ppress_z_tval_indexes = np.arange(len(tvals))[::len(tvals)//7]
 #avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
 #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
@@ -1021,7 +1385,7 @@ plot_properties={}
         plt.gca().invert_yaxis()
 #        plt.show()
         plt.figure()
-        plt.plot(a.tvals[a.avg_ppress_z_pairs_tval_indexes], a.avp.T)
+        plt.plot(a.tvals[a.avg_ppress_z_pairs_tval_indexes], a.avp.T, '-o')
         plt.xlabel('Time')
         plt.ylabel('Average pore pressure')
         #plt.gca().invert_yaxis()
