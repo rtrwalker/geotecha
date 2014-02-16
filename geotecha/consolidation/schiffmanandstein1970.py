@@ -28,6 +28,9 @@ import textwrap
 import scipy.optimize
 import geotecha.piecewise.piecewise_linear_1d as pwise
 
+from geotecha.optimize.root_finding import find_n_roots
+
+
 
 def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
@@ -260,35 +263,15 @@ class SchiffmanAndStein1970(object):
         """find the eigenvalues of the solution
 
         """
-        self._beta0 = np.empty(self.n, dtype=float)
+
         H = self.zlayer[-1]
 
         x0 = 0.1 / H**2
-        y0 = self._characteristic_eqn(x0)
+        self._beta0 = np.empty(self.n, dtype=float)
 
-        p=1.01
-        dx = x0
+        self._beta0[:] = find_n_roots(self._characteristic_eqn, n=self.n,
+            x0=x0, dx=x0, p=1.01)
 
-        nroots = 0
-
-        while nroots < self.n:
-            x1 = x0 + dx
-            y1 = self._characteristic_eqn(x1)
-
-            if y0 * y1 <= 0.0: #root found
-                if nroots==0:
-                    dx /= p
-                xguess = x0 - y0 * (x1-x0)/(y1-y0)
-
-                xr, = scipy.optimize.fsolve(self._characteristic_eqn, xguess)
-                self._beta0[nroots]=xr
-                nroots += 1
-#                print(nroots, xguess,xr)
-
-            x0 = x1
-            y0 = y1
-            if nroots == 0:
-                dx *= p
 
         return
 
