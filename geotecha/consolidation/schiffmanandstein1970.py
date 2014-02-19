@@ -615,7 +615,7 @@ if __name__ == '__main__':
     z = np.concatenate((np.linspace(0, np.sum(h[:1]), 25, endpoint=False),
                         np.linspace(np.sum(h[:1]), np.sum(h[:2]), 25, endpoint=False),
                         np.linspace(np.sum(h[:2]), np.sum(h[:3]), 25, endpoint=False),
-                        np.linspace(np.sum(h[:3]), np.sum(h), 2, endpoint=True)))
+                        np.linspace(np.sum(h[:3]), np.sum(h), 25, endpoint=True)))
 
 
 
