@@ -83,11 +83,14 @@ def find_n_roots(func, args=(), n=1, x0=0.001, dx=0.001, p=1.0, fsolve_kwargs={}
             xr, = scipy.optimize.fsolve(func, xguess, args, **fsolve_kwargs)
             roots[nroots]=xr
             nroots += 1
+            if nroots >= 2:
+                dx = (roots[nroots-1]-roots[nroots-2]) / 20
 
         x0 = x1
         y0 = y1
         if nroots == 0:
             dx *= p
+
 
     return roots
 

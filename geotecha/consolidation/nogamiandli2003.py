@@ -27,6 +27,7 @@ import math
 import textwrap
 import scipy.optimize
 import geotecha.piecewise.piecewise_linear_1d as pwise
+import cmath
 
 from geotecha.optimize.root_finding import find_n_roots
 
@@ -74,7 +75,7 @@ def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
 
 
-class NogamiAndLi2003(object):
+class NogamiAndLi2003(inputoutput.InputFileLoaderAndChecker):
     """Multi-layer consolidation
 
 
@@ -117,7 +118,7 @@ class NogamiAndLi2003(object):
             'h kv '
             'kv mv '
             'h mv '
-#            'h kh '
+            'h kh '
             'h kv '
             'h mv').split() #pairs that should have the same length
 
@@ -155,57 +156,57 @@ class NogamiAndLi2003(object):
                                     'nh kh r0 r1'.split()]
 
 
-    def __init__(self, reader=None):
-        self._debug = False
-        self._setup()
-
-        inputoutput.initialize_objects_attributes(self,
-                                                  self._attributes,
-                                                  self._attribute_defaults,
-                                                  not_found_value = None)
-
-        self._input_text = None
-        if not reader is None:
-            if isinstance(reader, str):
-                self._input_text = reader
-            else:
-                self._input_text = reader.read()
-
-            inputoutput.copy_attributes_from_text_to_object(reader,self,
-                self._attributes, self._attribute_defaults,
-                not_found_value = None)
-
-    def check_all(self):
-        """perform checks on attributes
-
-        Notes
-        -----
-
-        See also
-        --------
-        geotecha.inputoutput.inputoutput.check_attribute_combinations
-        geotecha.inputoutput.inputoutput.check_attribute_is_list
-        geotecha.inputoutput.inputoutput.check_attribute_PolyLines_have_same_x_limits
-        geotecha.inputoutput.inputoutput.check_attribute_pairs_have_equal_length
-
-        """
-
-
-        inputoutput.check_attribute_combinations(self,
-                                                 self._zero_or_all,
-                                                 self._at_least_one,
-                                                 self._one_implies_others)
-        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)
-        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)
-        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
-
-        return
+#    def __init__(self, reader=None):
+#        self._debug = False
+#        self._setup()
+#
+#        inputoutput.initialize_objects_attributes(self,
+#                                                  self._attributes,
+#                                                  self._attribute_defaults,
+#                                                  not_found_value = None)
+#
+#        self._input_text = None
+#        if not reader is None:
+#            if isinstance(reader, str):
+#                self._input_text = reader
+#            else:
+#                self._input_text = reader.read()
+#
+#            inputoutput.copy_attributes_from_text_to_object(reader,self,
+#                self._attributes, self._attribute_defaults,
+#                not_found_value = None)
+#
+#    def check_all(self):
+#        """perform checks on attributes
+#
+#        Notes
+#        -----
+#
+#        See also
+#        --------
+#        geotecha.inputoutput.inputoutput.check_attribute_combinations
+#        geotecha.inputoutput.inputoutput.check_attribute_is_list
+#        geotecha.inputoutput.inputoutput.check_attribute_PolyLines_have_same_x_limits
+#        geotecha.inputoutput.inputoutput.check_attribute_pairs_have_equal_length
+#
+#        """
+#
+#
+#        inputoutput.check_attribute_combinations(self,
+#                                                 self._zero_or_all,
+#                                                 self._at_least_one,
+#                                                 self._one_implies_others)
+#        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)
+#        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)
+#        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
+#
+#        return
 
 
     def _calc_derived_properties(self):
         """Calculate properties/ratios derived from input"""
 
-        self.check_all()
+        self.check_input_attributes()
 
         self.t = np.asarray(self.t)
         self.z = np.asarray(self.z)
@@ -297,12 +298,14 @@ class NogamiAndLi2003(object):
                 r0=1
             else:
                 r0 = self.r0
+            a = 1/self.cv * alp**2 -(self.ch/self.cv)*s**2/r0**2
+            return np.sqrt(np.array(a, dtype=complex))
 
-            a = np.abs(1/self.cv * alp**2 -(self.ch/self.cv)*s**2/r0**2)
-            b = np.empty_like(a, dtype=float)
-            b[(a>=0)] = np.sqrt(a[(a>=0)])
-            b[(a<0)] = -np.sqrt(np.abs(a[a<0]))
-            return b
+#            a = np.abs(1/self.cv * alp**2 -(self.ch/self.cv)*s**2/r0**2)
+#            b = np.empty_like(a, dtype=float)
+#            b[(a>=0)] = np.sqrt(a[(a>=0)])
+#            b[(a<0)] = np.sqrt(np.abs(a[a<0]))
+#            return b
 #            return np.sqrt(np.abs(np.abs(1/self.cv * alp**2 -(self.ch/self.cv)*s**2/r0**2)))
 #            return np.sqrt(alp**2 -(self.ch/self.cv)*s**2/r0**2)
         else:
@@ -311,64 +314,114 @@ class NogamiAndLi2003(object):
 
     def _calc_phia_and_phidota(self):
 
+#        sin = math.sin
+#        cos = math.cos
+        sin = cmath.sin
+        cos = cmath.cos
+
         self._phia = np.zeros((self.nh, self.nv, self.nlayers), dtype=float)
         self._phidota = np.zeros((self.nh, self.nv, self.nlayers), dtype=float)
 
         self._phia[:,:,0] = self.phia0[0]
         self._phidota[:,:,0] = self.phia0[1]
-
+#        print('o'*40)
         for i in range(self.nh):
             s = self._sn[i]
-            square = np.zeros((2,2), dtype=float)
+
+            square = np.zeros((2,2), dtype=complex)
             for j in range(self.nv):
                 alp = self._alp[i, j]
-                phia = np.array([self.phia0[0], self.phia0[1]])
+                phia = np.array([self.phia0[0], self.phia0[1]], dtype=complex)
+#                print(i, 's=', s)
+#                print(j, 'alp=', alp)
                 for k in range(self.nlayers):
                     h = self.h[k]
                     beta = self._betamn[i, j, k]
+                    if cmath.polar(beta)[0]==0:
+                        phib = np.array([phia[0],0], dtype=complex)
+#                        phib[0] = phia[0]
+#                        phib[1] = 0+0j
+                    else:
+                        square[0,0] = cos(beta*h)
+                        square[0,1] = sin(beta*h) / beta
+                        square[1,0] = -beta*sin(beta*h)
+                        square[1,1] = cos(beta*h)
 
-                    square[0,0] = math.cos(beta*h)
-                    square[0,1] = math.sin(beta*h) / beta
-                    square[1,0] = -beta*math.sin(beta*h)
-                    square[1,1] = math.cos(beta*h)
-
-                    phib = np.dot(square, phia)
-
+                        phib = np.dot(square, phia)
+#                    print(k, beta, phia, phib)
                     if k != self.nlayers-1: # we are not in the last layer
                         # transfer phib to next layers phia
                         phia[0] = phib[0]
                         phia[1] = phib[1] * self.kv[k] /  self.kv[k+1]
-                        self._phia[i,j,k + 1] = phia[0]
-                        self._phidota[i, j, k+1] = phia[1]#phib[1] * self.kv[i] /  self.kv[i+1]
+                        self._phia[i,j,k + 1] = phia[0].real
+                        self._phidota[i, j, k+1] = phia[1].real#phib[1] * self.kv[i] /  self.kv[i+1]
 
                 #check
-                if abs(phib[self.phi_i_check])>0.01:
-                    raise ValueError('Bottom BC not satisfied')
+#                print('_', alp, 's', phib.real)
+                if abs(phib[self.phi_i_check].real)>0.1:
+                    pass
+                    print('bottom BC not satisfied. ih=',i,'jv=', j )
+#                    raise ValueError('Bottom BC not satisfied')
 
     def _vertical_characteristic_curve(self, alp, s):
 
-        phia = np.array([self.phia0[0], self.phia0[1]])
-        square = np.zeros((2,2), dtype=float)
+#        sin = math.sin
+#        cos = math.cos
+        sin = cmath.sin
+        cos = cmath.cos
+
+        phia = np.array([self.phia0[0], self.phia0[1]], dtype=complex)
+        square = np.zeros((2,2), dtype=complex)
 
         beta = self._beta(alp, s)
-
+#        print("*", 's=', s)
+#        print('alp=', alp)
         for i, h in enumerate(self.h):
-            if beta[i]==0:
-                phib[:] = phia[:]
+            if cmath.polar(beta[i])[0]==0:
+                phib = np.array([phia[0], 0], dtype=complex)
+#                phib[0] = phia[0]
+#                phib[1] = 0+0j
             else:
-                square[0,0] = math.cos(beta[i]*h)
-                square[0,1] = math.sin(beta[i]*h) / beta[i]
-                square[1,0] = -beta[i]* math.sin(beta[i]*h)
-                square[1,1] = math.cos(beta[i]*h)
+                square[0,0] = cos(beta[i]*h)
+                square[0,1] = sin(beta[i]*h) / beta[i]
+                square[1,0] = -beta[i]* sin(beta[i]*h)
+                square[1,1] = cos(beta[i]*h)
 
                 phib = np.dot(square, phia)
-
+#            print(i,  beta[i], phia, phib)
             if i != self.nlayers - 1: # we are not in the last layer
                 #transfer phib to the next layer phia
                 phia[0]= phib[0]
                 phia[1] = phib[1] * self.kv[i] /  self.kv[i+1]
+        ret = phib[self.phi_i_check].real
 
-        return phib[self.phi_i_check]
+
+
+
+#        if abs(phib[self.phi_i_check].real)<=1e-9:
+#            phia = np.array([self.phia0[0], self.phia0[1]], dtype=complex)
+#            print("*", 's=', s)
+#            print('alp=', alp)
+#            for i, h in enumerate(self.h):
+#                if cmath.polar(beta[i])[0]==0:
+#                    phib = np.array([phia[0], 0], dtype=complex)
+#    #                phib[0] = phia[0]
+#    #                phib[1] = 0+0j
+#                else:
+#                    square[0,0] = cos(beta[i]*h)
+#                    square[0,1] = sin(beta[i]*h) / beta[i]
+#                    square[1,0] = -beta[i]* sin(beta[i]*h)
+#                    square[1,1] = cos(beta[i]*h)
+#
+#                    phib = np.dot(square, phia)
+#                print(i,  beta[i], phia, phib)
+#                if i != self.nlayers - 1: # we are not in the last layer
+#                    #transfer phib to the next layer phia
+#                    phia[0]= phib[0]
+#                    phia[1] = phib[1] * self.kv[i] /  self.kv[i+1]
+
+
+        return ret#phib[self.phi_i_check].real
 
 
     def _find_alp(self):
@@ -384,9 +437,13 @@ class NogamiAndLi2003(object):
                 alp_start_offset = 0
             alp = alp_min[n]
             alp=0.0001
+            if n==0:
+                alp=0.0001
+            else:
+                alp = self._alp[n-1,0]
             self._alp[n,:] = find_n_roots(self._vertical_characteristic_curve,
                 args=(s,),n= self.nv, x0 = alp+alp_start_offset,
-                dx = 0.01, p = 1.01)
+                dx = 0.001, p = 1.01, fsolve_kwargs={})
 
     def _calc_Cn(self):
 
@@ -416,7 +473,7 @@ class NogamiAndLi2003(object):
             self._Cn[n] = numer / denom
 
     def _calc_betamn(self):
-        self._betamn = np.zeros((self.nh, self.nv, self.nlayers), dtype=float)
+        self._betamn = np.zeros((self.nh, self.nv, self.nlayers), dtype=complex)
 
         for i in range(self.nh):
             s = self._sn[i]
@@ -428,11 +485,13 @@ class NogamiAndLi2003(object):
 
     def _calc_Amn_and_Bmn(self):
 
-        sin = math.sin
-        cos = math.cos
+#        sin = math.sin
+#        cos = math.cos
+        sin = cmath.sin
+        cos = cmath.cos
 
-        self._Amn = np.zeros((self.nh, self.nv, self.nlayers), dtype=float)
-        self._Bmn = np.zeros((self.nh, self.nv, self.nlayers), dtype=float)
+        self._Amn = np.zeros((self.nh, self.nv, self.nlayers), dtype=complex)
+        self._Bmn = np.zeros((self.nh, self.nv, self.nlayers), dtype=complex)
 
         for i in range(self.nh):
             s = self._sn[i]
@@ -446,7 +505,7 @@ class NogamiAndLi2003(object):
                     phi_a = self._phia[i, j, k]
                     phi_a_dot = self._phidota[i, j, k]
 
-                    if bet==0:
+                    if cmath.polar(bet)[0]==0:
                         self._Amn[i,j,k] = h*phi_a
                         self._Bmn[i,j,k] = h*phi_a**2
                     else:
@@ -465,7 +524,7 @@ class NogamiAndLi2003(object):
     def _calc_Cm(self):
 
         self._calc_Amn_and_Bmn()
-        self._Cm = np.zeros((self.nh, self.nv), dtype=float)
+        self._Cm = np.zeros((self.nh, self.nv), dtype=complex)
 
 
         for i in range(self.nh):
@@ -492,7 +551,7 @@ class NogamiAndLi2003(object):
         self._calc_Cn()
         self._calc_Cm()
 
-        self._Cmn = np.zeros((self.nh, self.nv), dtype=float)
+        self._Cmn = np.zeros((self.nh, self.nv), dtype=complex)
         for i in range(self.nh):
             Cn = self._Cn[i]
             for j in range(self.nv):
@@ -604,6 +663,11 @@ class NogamiAndLi2003(object):
 
     def _calc_por(self):
 
+#        sin = math.sin
+#        cos = math.cos
+        sin = cmath.sin
+        cos = cmath.cos
+
         if self.tpor is None:
             self.tpor==self.t
 
@@ -627,12 +691,12 @@ class NogamiAndLi2003(object):
                         zlay = z - (self.zlayer[layer] - self.h[layer])
 #                        print(z, zlay)
                         bet = self._betamn[i, j, layer]
-                        Cmn = self._Cmn[i, j]
+                        Cmn = self._Cmn[i, j].real
                         phi_a = self._phia[i, j, layer]
                         phi_a_dot = self._phidota[i, j, layer]
-                        phi = (math.cos(bet * zlay) * phi_a +
-                            math.sin(bet * zlay)/bet * phi_a_dot)
-                        self.por[k, p] += Cmn * un * phi * Tm
+                        phi = (cos(bet * zlay) * phi_a +
+                            sin(bet * zlay)/bet * phi_a_dot)
+                        self.por[k, p] += Cmn * un * phi.real * Tm
 #                        if z==1 and t==0:
 #                            print(self.un(rx,s))
 #                            print(bet)
@@ -692,21 +756,48 @@ import numpy as np
 #     3.42359796e+03,   4.52035366e+03,   5.96845700e+03,
 #     7195.0,   1.04049831e+04,   1.37382380e+04,
 #     1.81393069e+04,   2.39502662e+04,   3.16227766e+04])
+################################################
+
+#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
+#h = np.array([0.5,0.5])
+##f = 0.001
+#cv = np.array([1,1) * 0.1
+#mv = np.array([1,1])
+#
+##h = np.array([1])
+##cv = np.array([1])
+##mv = np.array([1])
+#
+#kv = cv*mv
+#kh = kv
+#kh = np.array([1,1])
+#r0 = 0.1
+#r1 = 20 * r0
+#
+#
+#bctop = 0
+#
+#bcbot = 1
+#
+#
+#nv = 4
+#nh = 3
+#
+#z = np.linspace(0,np.sum(h),100)
+#tpor = np.array([0.0,0.1, 0.3, 1])
+#t = np.linspace(0,3, 50)
+
 
 surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-h = np.array([0.5,0.5])
-#f = 0.001
-cv = np.array([1,20])
-mv = np.array([1,1])
 
-#h = np.array([1])
-#cv = np.array([1])
-#mv = np.array([1])
-
-kv = cv*mv
+hs=0.05
+h = np.array([1, hs, hs, 1, hs, hs, 0.5])
+lam = 100
+kv = np.array([1,lam/hs, lam/hs, 1, lam/hs, lam/hs, 1])
+mv = np.array([1,1, 1, 1, 1, 1, 1])
 kh = kv
-#kh = np.array([1,5.7])
-r0 = 0.1
+
+r0 = 0.05
 r1 = 20 * r0
 
 
@@ -715,12 +806,17 @@ bctop = 0
 bcbot = 1
 
 
-nv = 12
-nh = 6
+nv = 6
+nh = 5
 
 z = np.linspace(0,np.sum(h),100)
-tpor = np.array([0.0,0.1, 0.3, 1])
+tpor = np.array([0,0.01,0.1, 0.4])
 t = np.linspace(0,3, 50)
+
+
+
+
+
     """)
 
     a = NogamiAndLi2003(my_code)
@@ -749,8 +845,11 @@ t = np.linspace(0,3, 50)
 #    a._debug=True
 
     a.calc()
-    print('alp', a._alp[0,:2])
-    print('bet', a._betamn[0,:2,:])
+#    print('*'*100)
+#    print(a._alp)
+
+#    print('alp', a._alp[0,:2])
+#    print('bet', a._betamn[0,:2,:])
 #    print(a._betamn)
 #    print(a._Cmn)
 #    print('hello')
@@ -758,26 +857,30 @@ t = np.linspace(0,3, 50)
 #    plot_one_dim_consol(a.z, a.t, por=a.por, uavg=a.uavg, settle=a.settle)
     plot_one_dim_consol(a.z, a.tpor, por=a.por, uavg=None, settle=None)
 
-
-    i = 0
-    s = a._sn[0]
-    amin=a._alp_min()[i]
-    amin=0.001
-    x = np.linspace(amin, a._alp[i,-1], 200)
-
-    y = np.zeros_like(x)
-    for j,_x in enumerate(x):
-
-        y[j] = a._vertical_characteristic_curve(_x, s)
-#        print(x[i],y[i])
-
-    plt.figure()
-    plt.plot(x, y, '-+')
-    plt.plot(a._alp[i,:], np.zeros_like(a._alp[i,:]),'o')
-    plt.ylim((np.min(y[-150:]),np.max(y[-150:])))
-    plt.plot(a._alp_min()[i], 0, 'r^')
+    if 1:
+        i = 2
+        s = a._sn[i]
+        amin=a._alp_min()[i]
+        amin=0.001
+        amin = a._alp[i,0]-0.1
+        x = np.linspace(amin, a._alp[i,-1], 200)
 
 
+        y = np.zeros_like(x)
+        for j,_x in enumerate(x):
+
+            y[j] = a._vertical_characteristic_curve(_x, s)
+        #        print(x[i],y[i])
+
+        plt.figure()
+        #    print(y)
+        plt.plot(x, y, '-+')
+        plt.plot(a._alp[i,:], np.zeros_like(a._alp[i,:]),'o')
+        #    plt.ylim((np.min(y[-100:]),np.max(y[-100:])))
+        #    plt.ylim((-0.1,0.1))
+        plt.plot(a._alp_min()[i], 0, 'r^')
+
+#    print(a._alp)
 
     plt.show()
 

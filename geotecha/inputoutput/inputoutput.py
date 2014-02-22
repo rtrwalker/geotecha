@@ -654,7 +654,7 @@ def copy_attributes_between_objects(from_object, to_object, attributes=[], defau
 
     return
 
-def copy_attributes_from_text_to_object(reader,*args, **kwargs):
+def copy_attributes_from_text_to_object(reader, *args, **kwargs):
     """wrapper for `copy_attributes_between_objects` where `from_object` is fileobject, StringIO, text
 
     Parameters
@@ -662,13 +662,22 @@ def copy_attributes_from_text_to_object(reader,*args, **kwargs):
     reader : fileobject, StringIO, text
         text to turn into a module and pass as from_object
 
+
     See also
     --------
     copy_attributes_between_objects : see for args and kwargs input
+    SyntaxChecker
+
+    Notes
+    -----
+    Put 'syntax_checker= ' in the kwargs to add a SyntaxChecker
+
 
     """
 
-    copy_attributes_between_objects(make_module_from_text(reader), *args, **kwargs)
+    syn_checker=kwargs.pop('syntax_checker', None)
+    copy_attributes_between_objects(make_module_from_text(reader,
+            syn_checker), *args, **kwargs)
     return
 
 
@@ -755,14 +764,16 @@ def check_attribute_PolyLines_have_same_x_limits(obj, attributes=[]):
 def check_attribute_pairs_have_equal_length(obj, attributes=[]):
     """check if attribute pairs ahave the same length
 
+    Compares pairs only if both pairs are not None.  Raises error if pair items
+    have unequal lenghth
+
     Parameters
     ----------
     obj: object
         object with attributes to check
-    attributes: list of string
-        list of attribute names to check.  Names will be considered in groups
-        of two e.g. attributes=['a', 'b', 'c', 'd',...] will compare a with b, c
-        with d etc.
+    attributes: list of list of two string
+        list of attribute names to check. each sub list should have two
+        elements.
 
     Returns
     -------
@@ -773,15 +784,20 @@ def check_attribute_pairs_have_equal_length(obj, attributes=[]):
     g = obj.__getattribute__
 
     # for iterating in chuncks see http://stackoverflow.com/a/434328/2530083
-    for v1, v2 in [attributes[pos:pos + 2] for pos in xrange(0, len(attributes), 2)]:
+    #for v1, v2 in [attributes[pos:pos + 2] for pos in xrange(0, len(attributes), 2)]:
+
+    for pair in attributes:
+        if len(pair)>2:
+            raise ValueError('Can only compare two items. you have %s' % str(pair))
+        v1, v2 = pair
         if sum([v is None for v in [g(v1), g(v2)]])==0:
             if sum([hasattr(v,'__len__') for v in [g(v1), g(v2)]])!=2:
                 raise TypeError("either {0} and {1} have no len attribute and so cannot be compared".format(v1,v2))
             if len(g(v1)) != len(g(v2)):
                 raise ValueError("%s has %d elements, %s has %d elements.  They should have the same number of elements." % (v1,len(g(v1)), v2, len(g(v2))))
 
-        elif sum([v is None for v in [g(v1), g(v2)]])==1:
-            raise ValueError("Cannot compare length of {0} and {1} when one of them is None".format(v1,v2))
+#        elif sum([v is None for v in [g(v1), g(v2)]])==1:
+#            raise ValueError("Cannot compare length of {0} and {1} when one of them is None".format(v1,v2))
     return
 
 
@@ -971,6 +987,134 @@ def code_for_explicit_attribute_initialization(
                 out+='{0} = {1}\n'.format('.'.join([object_name,v]), v2)
     return out
 
+
+class InputFileLoaderAndChecker(object):
+    """
+
+
+    Attributes
+    ----------
+    _attribute_defaults
+    _attributes
+    _attributes_that_should_be_lists
+    _attributes_that_should_have_same_x_limits
+    _attributes_that_should_have_same_len_pairs
+    _zero_or_all = []
+    _at_least_one = []
+    _one_implies_others = []
+
+    _input_text : string
+        str of the input file.  Will be None if no reader is passed to the
+        __init__ method
+    _debug : True/False
+        for use with debugging. Default = False
+
+    """
+
+    def __init__(self, reader = None):
+
+        self._debug = False
+        self._setup()
+
+        if not hasattr(self, '_attributes'):
+            raise ValueError("No 'self._attributes' defined in object.")
+
+        attribute_defaults = getattr(self, '_attribute_defaults', dict())
+
+        initialize_objects_attributes(self,
+                                      self._attributes,
+                                      attribute_defaults,
+                                      not_found_value = None)
+
+        self._input_text = None
+        if not reader is None:
+            if isinstance(reader, str):
+                self._input_text = reader
+            else:
+                self._input_text = reader.read()
+
+            syn_checker=SyntaxChecker(['ast','builtin','numpy','PolyLine'])
+
+            copy_attributes_from_text_to_object(reader,
+                self,
+                self._attributes, self._attribute_defaults,
+                not_found_value = None, syntax_checker=syn_checker)
+
+
+    def _setup(self):
+        """set up attributes for checking and initializing
+
+        To be overridden in subclasses
+
+        Basically define:
+         - self._attribute_defaults
+         - self._attributes
+         - self._attributes_that_should_be_lists
+         - self._attributes_to_force_same_len
+         - self._attributes_that_should_have_same_x_limits
+         - self._attributes_that_should_have_same_len_pairs
+         - self._zero_or_all
+         - self._at_least_one
+         - self._one_implies_others
+
+        To make coding easier (i.e. autocomplete) once you have a
+        self.attributes defined,
+        `use code_for_explicit_attribute_initialization`
+        and paste the resulting code into your `_setup` routine
+
+        """
+
+        pass
+        return
+
+    def check_input_attributes(self):
+        """perform checks on attributes
+
+        Notes
+        -----
+
+        See also
+        --------
+        check_attribute_combinations
+        check_attribute_is_list
+        force_attribute_same_len_if_none
+        check_attribute_PolyLines_have_same_x_limits
+        check_attribute_pairs_have_equal_length
+
+        """
+
+
+        zero_or_all = getattr(self, '_zero_or_all', [])
+        at_least_one = getattr(self, '_at_least_one', [])
+        one_implies_others = getattr(self, 'one implies_others', [])
+        attributes_that_should_be_lists = getattr(self,
+            '_attributes_that_should_be_lists',[])
+        attributes_to_force_same_len = getattr(self,
+             '_attributes_to_force_same_len', [])
+        attributes_that_should_have_same_x_limits = getattr(self,
+            '_attributes_that_should_have_same_x_limits ', [])
+        attributes_that_should_have_same_len_pairs = getattr(self,
+            '_attributes_that_should_have_same_len_pairs ', [])
+
+
+
+        check_attribute_combinations(self,
+                                     zero_or_all,
+                                     at_least_one,
+                                     one_implies_others)
+
+        check_attribute_is_list(self,
+                            attributes_that_should_be_lists, force_list=True)
+
+        force_attribute_same_len_if_none(self,
+                                     attributes_to_force_same_len, value=None)
+
+        check_attribute_PolyLines_have_same_x_limits(self,
+                         attributes=attributes_that_should_have_same_x_limits)
+        check_attribute_pairs_have_equal_length(self,
+                        attributes=attributes_that_should_have_same_len_pairs)
+
+        return
 
 
 if __name__=='__main__':

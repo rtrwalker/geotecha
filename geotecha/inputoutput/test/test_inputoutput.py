@@ -148,15 +148,15 @@ def test_check_attribute_pairs_have_equal_length():
     a.d = [6,7]
     a.e = 8
 
+#    assert_raises(ValueError, check_attribute_pairs_have_equal_length, a,
+#                  attributes=[['a','b']])
     assert_raises(ValueError, check_attribute_pairs_have_equal_length, a,
-                  attributes=['a','b'])
-    assert_raises(ValueError, check_attribute_pairs_have_equal_length, a,
-                  attributes=['b','c'])
+                  attributes=[['b','c']])
     assert_raises(TypeError, check_attribute_pairs_have_equal_length, a,
-                  attributes=['b','e'])
+                  attributes=[['b','e']])
 
     assert_equal(check_attribute_pairs_have_equal_length(a,
-                  attributes=['b','d']), None)
+                  attributes=[['b','d']]), None)
 
 def test_check_attribute_combinations():
     """test for check_attribute_combinations function"""

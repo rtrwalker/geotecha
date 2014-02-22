@@ -291,14 +291,14 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self._attributes_that_should_have_same_x_limits = (
             'mv kv kh et surcharge_vs_depth vacuum_vs_depth').split()
 
-        self._attributes_that_should_have_same_len_pairs = (
-            'surcharge_vs_depth surcharge_vs_time '
-            'surcharge_vs_time surcharge_omega_phase '
-            'vacuum_vs_depth vacuum_vs_time '
-            'vacuum_vs_time vacuum_omega_phase '
-            'top_vs_time top_omega_phase '
-            'bot_vs_time bot_omega_phase '
-            'fixed_ppress_omega_phase fixed_ppress').split() #pairs that should have the same length
+        self._attributes_that_should_have_same_len_pairs = [
+            ['surcharge_vs_depth surcharge_vs_time'.split()],
+            ['surcharge_vs_time surcharge_omega_phase'.split()],
+            ['vacuum_vs_depth vacuum_vs_time'.split()],
+            ['vacuum_vs_time vacuum_omega_phase'.split()],
+            ['top_vs_time top_omega_phase'.split()],
+            ['bot_vs_time bot_omega_phase'.split()],
+            ['fixed_ppress_omega_phase fixed_ppress'.split()]] #pairs that should have the same length
 
         self._attributes_to_force_same_len = [
             "surcharge_vs_time surcharge_omega_phase".split(),
@@ -386,14 +386,14 @@ class speccon1d_vr(speccon1d.Speccon1d):
 #
 #        See also
 #        --------
-#        check_all
+#        check_input_attributes
 #        make_time_independent_arrays
 #        make_time_dependent_arrays
 #        make_output
 #
 #        """
 #
-#        self.check_all()
+#        self.check_input_attributes()
 #        self.make_time_independent_arrays()
 #        self.make_time_dependent_arrays()
 #        self.make_output()
@@ -1035,6 +1035,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.settlement_z_pairs is None:
             self._plot_set()
 
+
         self._plot_loads()
 
     def _plot_loads(self):
@@ -1056,11 +1057,47 @@ class speccon1d_vr(speccon1d.Speccon1d):
                     zip(self.surcharge_vs_time, self.surcharge_vs_depth,
                     self.surcharge_omega_phase)])
 
+        if not self.vacuum_vs_time is None:
+            load_names.append('vac')
+            ylabels.append('Vacuum')
+            load_triples.append(
+                [(vs_time, vs_depth, omega_phase) for
+                    vs_time, vs_depth, omega_phase  in
+                    zip(self.vacuum_vs_time, self.vacuum_vs_depth,
+                    self.vacuum_omega_phase)])
+
+        if not self.top_vs_time is None:
+            load_names.append('top')
+            ylabels.append('Top boundary')
+            load_triples.append(
+                [(vs_time, vs_depth, omega_phase) for
+                    vs_time, vs_depth, omega_phase  in
+                    zip(self.top_vs_time, self.top_vs_depth,
+                    self.top_omega_phase)])
+
+        if not self.bot_vs_time is None:
+            load_names.append('bot')
+            ylabels.append('Bottom boundary')
+            load_triples.append(
+                [(vs_time, vs_depth, omega_phase) for
+                    vs_time, vs_depth, omega_phase  in
+                    zip(self.bot_vs_time, self.bot_vs_depth,
+                    self.bot_omega_phase)])
+
+#        if not self.surcharge_vs_time is None:
+#            load_names.append('surch')
+#            ylabels.append('Surcharge')
+#            load_triples.append(
+#                [(vs_time, vs_depth, omega_phase) for
+#                    vs_time, vs_depth, omega_phase  in
+#                    zip(self.surcharge_vs_time, self.surcharge_vs_depth,
+#                    self.surcharge_omega_phase)])
 
         return self._plot_generic_loads(load_triples, load_names, ylabels=ylabels)
 
 
-    def _plot_generic_loads(self, load_triples, load_names, ylabels=None, trange = None):
+    def _plot_generic_loads(self, load_triples, load_names, ylabels=None,
+                            trange = None, H = 1.0, RLzero=None, prop_dict={}):
         """plot loads
 
         Parameters
@@ -1073,17 +1110,44 @@ class speccon1d_vr(speccon1d.Speccon1d):
             string to prepend to legend entries for each load
         ylabels : list of string, optional
             ylabels for each of the axes, Default = None i.e. y0, y1, y2 etc
-        tmax : 2 element tuple
-            (tmin, tmax) max and min times to plot loads for
+        trange : 2 element tuple, optional
+            (tmin, tmax) max and min times to plot loads for. default = None
+            i.e. t limits will be worked out from data
+        H : float, optional
+            height of soil profile.  Default H=1.0.  Used to transform
+            normalised depth to actual depth
+        RLzero : float, optional
+            reduced level of the top of the soil layer.  If RLzero is not None
+            then all depths (in plots and results) will be transformed to an
+            RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
+            then all depths will be reported  z*H (i.e. positive numbers).
 
 
         """
 
 
+
+        fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+        legend_prop = prop_dict.pop('legend_prop',
+                                   {'title': 'Load:', 'fontsize': 9})
+
+        styles = prop_dict.pop('style', None)
+        if styles is None:
+            mcd = geotecha.plotting.one_d.MarkersDashesColors(
+#                color = 'black',
+                markersize=7)
+            mcd.construct_styles(markers = range(32), dashes=[0],
+                                 marker_colors=None, line_colors=None)
+
+
+        styles = itertools.cycle(mcd.styles)
+
+
         n = len(load_triples)
 
         gs = matplotlib.gridspec.GridSpec(n,2, width_ratios=[5,1])
-        fig = plt.figure()
+        fig = plt.figure(**fig_prop)
+
         plt.subplot(gs[0])
 
         #determine tmax etc
@@ -1098,9 +1162,13 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         if ylabels is None:
             ylabels = ['y%d' % v for v in range(n)]
+
+
+
         ax1 = []
         ax2 = []
         for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
+            style = styles.next()
             ax1.append(plt.subplot(gs[i, 0]))
             ax2.append(plt.subplot(gs[i, 1]))
 
@@ -1109,12 +1177,14 @@ class speccon1d_vr(speccon1d.Speccon1d):
                     vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
 
                 dx = (tmax-tmin)/20.0
+                markevery=None
                 if not omega_phase is None:
                     omega, phase = omega_phase
                     dx = min(dx, 1/(omega/(2*np.pi))/40)
+                    markevery = 0.1
 
                 print(dx, omega)
-#                print(vs_time.x)
+
                 x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
                         (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
                         #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
@@ -1129,11 +1199,59 @@ class speccon1d_vr(speccon1d.Speccon1d):
                 if not omega_phase is None:
                     y *= np.cos(omega * x + phase)
 
-                mark_every = None
-#                print(x, y)
-                ax1[-1].plot(x, y, '-o',label=name)
-                ax1[-1].set_xlabel('Time')
-                ax1[-1].set_ylabel(ylabel)
+
+
+
+                linename = name + str(j)
+                ax1[-1].plot(x, y, label=linename, markevery=markevery, **style)
+
+                #TODO: add some more points in the z direction, account for when only one point
+                if len(vs_depth.x)==1:
+                    x = vs_depth.x
+                    y = vs_depth.y
+                else:
+                    dx = (np.max(vs_depth.x)-np.min(vs_depth.x))/8
+
+                    x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+                            (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+                            #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+
+                    y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+                            (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+
+                    x = np.array([val for subl in x for val in subl])
+                    y = np.array([val for subl in y for val in subl])
+
+                z = speccon1d.depth_to_reduced_level(x, H, RLzero)
+                ax2[-1].plot(y, z, label=linename, **style)
+
+
+
+            #load_vs_time plot stuff
+            xlabel = prop_dict.pop('time_axis_label', 'Time')
+            ax1[-1].set_xlabel(xlabel)
+            ax1[-1].set_ylabel(ylabel)
+
+            has_legend = prop_dict.pop('has_legend', True)
+
+            if has_legend:
+                leg = ax1[-1].legend(**legend_prop)
+                leg.draggable(True)
+
+            #load_vs_depth plot stuff
+            xlabel = prop_dict.pop('depth_axis_label', 'Load factor')
+            ax2[-1].set_xlabel(xlabel)
+
+            if RLzero is None:
+                ax2[-1].invert_yaxis()
+                ylabel = prop_dict.pop('depth_axis_label', 'Depth, z')
+            else:
+                ylabel = prop_dict.pop('depth_axis_label', 'RL')
+
+            ax2[-1].set_ylabel(ylabel)
+            ax2[-1].set_xlim((0,1.01))
+            ax2[-1].set_xticks([0,0.5,1])
+
 
         return fig
 
@@ -1151,7 +1269,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if styles is None:
             mcd = geotecha.plotting.one_d.MarkersDashesColors(
 #                color = 'black',
-                default_marker={'markersize': 7})
+                markersize=7)
             mcd.construct_styles(markers = range(32), dashes=[0],
                                  marker_colors=None, line_colors=None)
 
@@ -1214,7 +1332,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if styles is None:
             mcd = geotecha.plotting.one_d.MarkersDashesColors(
 #                color = 'black',
-                default_marker={'markersize': 7})
+                markersize= 7)
             mcd.construct_styles(markers = range(32), dashes=[0],
                                  marker_colors=None, line_colors=None)
 
@@ -1315,8 +1433,8 @@ if __name__ == '__main__':
 
 
     my_code = textwrap.dedent("""\
-from geotecha.piecewise.piecewise_linear_1d import PolyLine
-import numpy as np
+#from geotecha.piecewise.piecewise_linear_1d import PolyLine
+#import numpy as np
 H = 1
 drn = 0
 dT = 1

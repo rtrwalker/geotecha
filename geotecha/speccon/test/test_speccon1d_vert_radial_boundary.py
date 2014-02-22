@@ -105,8 +105,8 @@ def test_terzaghi_1d_PTIB():
 
     """
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 1
     dTv = 0.1
@@ -166,8 +166,8 @@ def test_terzaghi_1d_PTPB():
     """
 
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 0
     dTv = 0.1 * 0.25
@@ -227,8 +227,8 @@ def test_BC_terzaghi_1d_PTIB():
 
     """
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 1
     dTv = 0.1
@@ -286,8 +286,8 @@ def test_BC_terzaghi_1d_PTPB():
     """
 
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 0
     dTv = 0.1 * 0.25
@@ -345,8 +345,8 @@ def test_schiffman_and_stein_1970():
 
 
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
 
     #<start params from Schiffman and stein
     h = np.array([10, 20, 30, 20])
@@ -579,8 +579,8 @@ def test_fixed_ppress_terzaghi_PTPB():
 
 
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 0
     dTv = 0.1 /16
@@ -670,8 +670,8 @@ def test_fixed_ppress_BC_terzaghi_PTPB():
 
 
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 0
     dTv = 0.1 /16
@@ -767,8 +767,8 @@ def test_hansbo_avp():
         0.14956862,  0.08892162,  0.04550195,  0.01964367,  0.0066709 ]])
 
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 1
     dTh = 0.1
@@ -850,8 +850,8 @@ def test_hansbo_avp_vacuum():
         0.14956862,  0.08892162,  0.04550195,  0.01964367,  0.0066709 ]])
 
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 1
     dTh = 0.1
@@ -972,8 +972,8 @@ def test_terzaghi_1d_PTPB_bot_BC_gradient():
     z = np.append(0.5*TERZ1D_Z, 1 - 0.5*TERZ1D_Z[::-1])
     t = TERZ1D_T
     reader = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
     H = 1
     drn = 1
     dTv = 1 * 0.25
