@@ -70,7 +70,7 @@ class Talbot(object):
 
     See Also
     --------
-    `geotecha.math.mp_laplace` : higher precision numerical inverse laplace
+    `geotecha.math.mp_laplace.Talbot` : higher precision numerical inverse laplace
 
     """
 

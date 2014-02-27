@@ -22,15 +22,15 @@ from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
-import geotecha.inputoutput.inputoutput as inputoutput
+#import geotecha.inputoutput.inputoutput as inputoutput
 import math
 import textwrap
-import scipy.optimize
+
 import geotecha.piecewise.piecewise_linear_1d as pwise
 
-from geotecha.math.root_finding import find_n_roots
 
-
+#from geotecha.math.mp_laplace import Talbot
+from geotecha.math.laplace import Talbot
 
 def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
@@ -69,569 +69,143 @@ def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
 
 
-class CosenzaAndKorosak2014(inputoutput.InputFileLoaderAndChecker):
-    """Multi-layer consolidation
+def cosenzaandkorosak2014(z, t, theta, v, tpor=None, L = 1, kv = 1, mv = 0.1, gamw = 10,
+                ui = 1, nterms = 100):
+    """Terzaghi 1d consolidation
 
-
-    Attributes
+    Parameters
     ----------
-    z : list/array of float
-        depth to calc pore pressure at
-    t : list/array of float
-        time values to calc at
-    tpor : list/array of float
-        time values to calc pore pressure profiles at
-    h : list/array of float
-        layer depths thickness
-    n : int, optional
-        number of series terms to use. default n=5
-    kv : list/array of float
-        layer vertical permeability divided by unit weight of water
-    mv : list/array of float
-        layer volume compressibility
-    bctop, bcbot : [0, 1, 2]
-        boundary condition. bctop=0 is free draining, bctop=1 is
-        impervious, bctop = impeded.
-    htop, hbot : float
-        thickness of impeding layer.
-    ktop, hbot : float
-        impeding layer vertical permeability divided py unit weight of
-        water
-    surcharge_vs_time : PolyLine
-        piecewise linear variation of surcharge with time
+    z : float or 1d array/list of float
+        depth
+    t : float or 1d array/list of float
+        time
+    theta : float or array/list of float
+        parameter in cosenzaandkorosak2014
+    v : float or array/list of float
+        parameter in cosenzaandkorosak2014
+    tpor : float or 1d array/list of float
+        time values for pore pressure vs depth calcs
+    L : float, optional
+        drainage path length.  default H = 1
+    kv : float, optional
+        vertical coefficient of permeability.  default kv = 1
+    mv : float, optional
+        volume compressibility. default mv = 0.1
+    gamw : float, optional
+        unit weight of water.  defaule gamw = 10
+    ui : float, optional
+        initial uniform pore water pressure.  default ui = 1
+    nterms : int, optional
+        maximum number of series terms. default nterms= 100
+
+    Returns
+    -------
+    por: 2d array of float
+        pore pressure at depth and time.  ppress is an array of size
+        (len(z), len(t)).
+    avp: 1d array of float
+        average pore pressure between depth H and depth Z
+    settlement : 1d array of float
+        surface settlement at depth z
+
+    Notes
+    -----
+    The article Cosenza and Korosak 2014 only has singel values of theta-v.
+    Here I've simply added more.
+
+    References
+    ----------
+    Code developed based on [1]_
+
+    ..[1] Cosenza, Philippe, and Dean Korošak. 2014. 'Secondary Consolidation
+          of Clay as an Anomalous Diffusion Process'. International Journal
+          for Numerical and Analytical Methods in Geomechanics:
+          doi:10.1002/nag.2256.
+
 
     """
 
-    def _setup(self):
-        self._attribute_defaults = {'n': 5}
-        self._attributes = 'z t tpor n h kv mv bctop bcbot htop ktop hbot kbot surcharge_vs_time'.split()
-        self._attributes_that_should_have_same_len_pairs = [
-        'h kv'.split(),
-        'kv mv'.split(),
-        'h mv'.split()] #pairs that should have the same length
+#    def F(s, v, theta, lam):
+#        return (1+theta*s**(v-1))/(s + theta*s**v+lam)
 
-        self._attributes_that_should_be_lists= []
-        self._attributes_that_should_have_same_x_limits = []
+    def F(s, v, theta, lam):
+        numer = np.ones_like(s)
+        denom = s+lam
 
+        for v_, the_ in zip(v,theta):
+            numer += the_*s**(v_-1)
+            denom += the_*s**v_
+        return  (numer/denom)
 
-        self.z = None
-        self.t = None
-        self.tpor = None
-        self.n = self._attribute_defaults.get('n', None)
-        self.h = None
-        self.kv = None
-        self.mv = None
-        self.bctop = None
-        self.bcbot = None
-        self.htop = None
-        self.ktop = None
-        self.hbot = None
-        self.kbot = None
-        self.surcharge_vs_time = None
-
-        self._zero_or_all = [
-            'h kv mv'.split(),
-            'htop ktop'.split(),
-            'hbot kbot'.split(),
-            'z t'.split()]
-        self._at_least_one = [['surcharge_vs_time']]
-        self._one_implies_others = []
-
-
-#    def __init__(self, reader=None):
-#        self._debug = False
-#        self._setup()
+#    def Bn(r, lam, the, v, t):
+#        numer = lam * the*r**(v-1)*cmath.sin(np.pi*v)
+#        denom = (lam - r + the*r**v*cmath.exp(1j*np.pi*v))**2
 #
-#        inputoutput.initialize_objects_attributes(self,
-#                                                  self._attributes,
-#                                                  self._attribute_defaults,
-#                                                  not_found_value = None)
-#
-#        self._input_text = None
-#        if not reader is None:
-#            if isinstance(reader, str):
-#                self._input_text = reader
-#            else:
-#                self._input_text = reader.read()
-#
-#            inputoutput.copy_attributes_from_text_to_object(reader,self,
-#                self._attributes, self._attribute_defaults,
-#                not_found_value = None)
-#
-#    def check_all(self):
-#        """perform checks on attributes
-#
-#        Notes
-#        -----
-#
-#        See also
-#        --------
-#        geotecha.inputoutput.inputoutput.check_attribute_combinations
-#        geotecha.inputoutput.inputoutput.check_attribute_is_list
-#        geotecha.inputoutput.inputoutput.check_attribute_PolyLines_have_same_x_limits
-#        geotecha.inputoutput.inputoutput.check_attribute_pairs_have_equal_length
-#
-#        """
-#
-#
-#        inputoutput.check_attribute_combinations(self,
-#                                                 self._zero_or_all,
-#                                                 self._at_least_one,
-#                                                 self._one_implies_others)
-#        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)
-#        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)
-#        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
-#
-#        return
+#        return math.exp(-r * t)*numer/denom
 
+    z = np.atleast_1d(z)
+    t = np.atleast_1d(t)
+    theta = np.atleast_1d(theta)
+    v = np.atleast_1d(v)
 
-    def _calc_derived_properties(self):
-        """Calculate properties/ratios derived from input"""
+    if tpor is None:
+        tpor=t
+    else:
+        tpor = np.atleast_1d(t)
 
-        self.check_input_attributes()
 
-        self.t = np.asarray(self.t)
-        self.z = np.asarray(self.z)
-        self.kv = np.asarray(self.kv)
-        self.mv = np.asarray(self.mv)
-        self.h = np.asarray(self.h)
+    M = ((2 * np.arange(nterms) + 1) * np.pi)
 
-        self.nlayers = len(self.kv)
+#    an = 2 / M
 
-        self.zlayer = np.cumsum(self.h)
-#        print (self.zlayer)
-#        self.zlayer = np.zeros(nlayers +1, dtype=float)
-#        self.zlayer[1:] = np.cumsum(self.h)
+    dTv = kv / L**2 / mv / gamw
+    lamda_n = M**2*dTv
 
+    Z = (z / L)
 
-        self.cv = self.kv / self.mv
+#    por = np.zeros((len(z), len(tpor)))
 
+#    doc = np.zeros(len(t))
 
+    a = Talbot(F, n=24, shift=0.0)
 
-        if self.bctop == 0:
-            self.atop = 0
-            self.btop = -1
-        elif self.bctop == 1:
-            self.atop = 1
-            self.btop = 0
-        elif self.bctop == 3:
-            self.atop = h[0]
-            self.btop = ktop * h[0] / (kv[0] * htop)
-        else:
-            raise ValueError('bctop must be 0, 1, or 2. you have bctop = %s' % self.bctop)
+    Bn = np.zeros((len(tpor), nterms), dtype=float)
+    for j, lam in enumerate(M):
+        Bn[:, j] = np.array(a(tpor, args=(v, theta, M[j])), dtype=float)
 
-        if self.bcbot == 0:
-            self.abot = 0
-            self.bbot = 1
-        elif self.bcbot == 1:
-            self.abot = 1
-            self.bbot = 0
-        elif self.bcbot == 3:
-            self.abot = h[-1]
-            self.bbot = kbot * h[-1] / (kv[-1] * hbot)
-        else:
-            raise ValueError('bctop must be 0, 1, or 2. you have bctop = %s' % self.bctop)
+    if np.allclose(tpor, t): #reuse Bn for Doc
+        Bn_ = Bn.copy()
 
-        self.BC = np.zeros((2 * self.nlayers, 2* self.nlayers), dtype=float)
+    Bn = Bn[np.newaxis, :, :]
+    An = 2/M[np.newaxis, :] * np.sin(M[np.newaxis, :] * Z[:, np.newaxis])
+    An = An[:, np.newaxis, :]
+    por = np.sum(An*Bn, axis=2)*ui
 
-    def calc(self):
-        """Perform all calculations"""
+    #degree of consolidation
+    An = 2*2**2/M[np.newaxis, :]**2
+    if np.allclose(tpor, t):
+        Bn = Bn_
+    else:
+        Bn = np.zeros((len(t), nterms), dtype=float)
+        for j, lam in enumerate(M):
+            Bn[:, j] = np.array(a(t, args=(v, theta, M[j])), dtype=float)
 
-        self._calc_derived_properties()
+    doc = 1 - np.sum(An*Bn, axis = 1)
 
-        self._find_beta()
 
-
-        self._calc_Bm_and_Cm()
-
-        self._calc_Am()
-
-        self.calc_por()
-
-        self.calc_settle_and_uavg()
-
-        if self._debug:
-            print ('beta')
-            print (self._beta)
-            print('Bm')
-            print(self._Bm)
-            print('Cm')
-            print(self._Cm)
-            print('Am')
-            print(self._Am)
-
-        return
-
-    def _find_beta(self):
-        """find the eigenvalues of the solution
-
-        """
-
-        H = self.zlayer[-1]
-
-        x0 = 0.1 / H**2
-        self._beta0 = np.empty(self.n, dtype=float)
-
-        self._beta0[:] = find_n_roots(self._characteristic_eqn, n=self.n,
-            x0=x0, dx=x0, p=1.01)
-
-
-        return
-
-
-
-
-
-
-
-    def _characteristic_eqn(self, beta0):
-        """function for characteristic equation
-
-        Roots are the eigenvalues of problem beta 1
-
-        """
-
-        self._make_BC(beta0)
-
-        return np.linalg.det(self.BC)
-
-    def _make_BC(self, beta0):
-        """make boundary condition matrix
-
-        for use in characteristic equatin and in determining coefficients B,C
-
-        """
-
-        beta = np.zeros_like(self.h, dtype=float)
-        beta[0] = beta0
-        for i in xrange(1, self.nlayers):
-            beta[i] = np.sqrt(self.cv[i-1] / self.cv[i] * beta[i-1]**2)
-
-        alpha = self.kv[:-1] / self.kv[1:]
-
-        self.BC[0, 0] = self.btop * (-1)
-        self.BC[0, 1] = self.atop * beta[0]
-
-        self.BC[-1, -2] = (self.bbot * math.cos(beta[-1] * self.zlayer[-1]) -
-                     self.abot * beta[-1] * math.sin(beta[-1] * self.zlayer[-1]))
-        self.BC[-1, -1] = (self.bbot * math.sin(beta[-1] * self.zlayer[-1]) +
-                     self.abot * beta[-1] * math.cos(beta[-1] * self.zlayer[-1]))
-
-        for i in xrange(self.nlayers - 1):
-            #1st equation
-            #TODO: row is wrong
-            row = 2 * i + 1
-            self.BC[row, 2 * i] = math.cos(beta[i] * self.zlayer[i])#Bi coeef
-            self.BC[row, 2 * i + 1] = math.sin(beta[i] * self.zlayer[i])#Ci coeef#C coeff
-            self.BC[row, 2 * i + 2] = -math.cos(beta[i+1] * self.zlayer[i]) #Bi+1 coeef
-            self.BC[row, 2 * i + 3] = -math.sin(beta[i+1] * self.zlayer[i])#Ci+1 coeff
-
-            #2nd equation
-            row += 1
-            self.BC[row, 2 * i] = - alpha[i] * beta[i] * math.sin(beta[i] * self.zlayer[i])#Bi coeef
-            self.BC[row, 2 * i + 1] = alpha[i] * beta[i] * math.cos(beta[i] * self.zlayer[i])#Ci coeef#C coeff
-            self.BC[row, 2 * i + 2] = beta[i+1] * math.sin(beta[i+1] * self.zlayer[i]) #Bi+1 coeef
-            self.BC[row, 2 * i + 3] = - beta[i+1] * math.cos(beta[i+1] * self.zlayer[i])#Ci+1 coeff
-
-        return beta
-
-    def plot_characteristic_curve_and_roots(self):
-
-        x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, 400)
-        y = np.zeros_like(x)
-        for i in xrange(len(x)):
-            y[i]=self._characteristic_eqn(x[i])
-        plt.gcf().clear()
-        plt.plot(x ,y,'-')
-        plt.plot(self._beta0, np.zeros_like(self._beta0),'ro')
-        plt.ylabel('det(A)')
-        plt.xlabel('beta0')
-#        plt.gca().set_ylim(-0.1,0.1)
-        plt.grid()
-        plt.show()
-        plt.gcf().clear()
-
-        return
-
-    def _calc_Bm_and_Cm(self):
-        """calculate the coefficinets Bm and Cm"""
-        self._Bm = np.zeros((self.n, self.nlayers), dtype=float)
-        self._Cm = np.zeros((self.n, self.nlayers), dtype=float)
-
-        self._beta = np.zeros((self.n, self.nlayers), dtype=float)
-
-        self._Cm[:, -1] = 1.0
-        for i, beta in enumerate(self._beta0):
-            self._beta[i, :] = self._make_BC(beta)
-            self.BC[np.abs(self.BC)<1e-10]=0
-            if self._debug and i==0:
-                print('BC for beta0')
-                print(self.BC)
-            b = -self.BC[:-1, -1]
-            a = self.BC[:-1, :-1]
-            x = np.linalg.solve(a, b)
-            self._Bm[i, :] = x[::2]
-            self._Cm[i, :-1] = x[1::2]
-
-    def _Tm_integrations(self):
-        """symbolic integration of the Tm coefficient
-
-        just used as a step to derive some code"""
-
-        import sympy
-
-        cv, beta, t, tau, t1, t2, sig1, sig2 =  sympy.var('cv, beta, t, tau, t1, t2, sig1, sig2')
-
-        q = sig1 + (sig2 - sig1) / (t2 - t1) * tau
-
-        f = sympy.diff(q, tau) * sympy.exp(-cv * beta**2 * (t - tau))
-
-        #uniform laod
-        #within ramp
-        Tm = sympy.integrate(f, (tau, t1, t))
-        print('Tm within a ramp load')
-        print(Tm)
-#        after ramp
-        Tm = sympy.integrate(f, (tau, t1, t2))
-        print('Tm after a ramp load')
-        print(Tm)
-        return
-
-    def _uavg_integrations(self):
-        """symbolic integration of for uavg average pore pressure
-
-        just used as a step to derive some code"""
-
-        import sympy
-
-        z, mv, Bm, Cm, beta, f, Zm, z1, z2 = sympy.var('z, mv, Bm, Cm, beta, f, Zm, z1, z2')
-
-        Zm = Bm * sympy.cos(beta * z) + Cm * sympy.sin(beta * z)
-
-        f = sympy.integrate(Zm, (z, z1, z2))
-        print('summation term for uavg')
-        print(f)
-
-        return
-
-    def _Am_integrations(self):
-        """symbolic integration of for Am coefficient
-
-        just used as a step to derive some code"""
-
-        import sympy
-
-        z, mv, Bm, Cm, beta, f, Zm, z1, z2 = sympy.var('z, mv, Bm, Cm, beta, f, Zm, z1, z2')
-
-        Zm = Bm * sympy.cos(beta * z) + Cm * sympy.sin(beta * z)
-
-        #uniform initial pore pressure
-        numerator = mv * sympy.integrate(Zm, (z, z1, z2))
-        denominator = mv * (sympy.integrate(Zm**2, (z, z1, z2)))
-#        Am = numerator / denominator
-        print('Am numerator - uniform initial pore pressure')
-        print(numerator)
-        print('Am denominator - uniform initial pore pressure')
-        print(denominator)
-#        print('**')
-#        print(Am)
-    def _calc_Am(self):
-        """make the Am coefficients"""
-
-        cos = math.cos
-        sin = math.sin
-        self._Am = np.zeros(self.n, dtype=float)
-
-        _z2 = self.zlayer
-        _z1 = self.zlayer - self.h
-
-        for m in range(self.n):
-            numer = 0
-            denom = 0
-            for i in range(self.nlayers):
-                z1=_z1[i]
-                z2=_z2[i]
-                mv = self.mv[i]
-                Bm = self._Bm[m, i]
-                Cm = self._Cm[m, i]
-                beta = self._beta[m, i]
-
-                numer += mv*(-Bm*sin(beta*z1)/beta + Bm*sin(beta*z2)/beta +
-                    Cm*cos(beta*z1)/beta - Cm*cos(beta*z2)/beta)
-                denom += mv*(-Bm**2*z1*sin(beta*z1)**2/2 -
-                    Bm**2*z1*cos(beta*z1)**2/2 + Bm**2*z2*sin(beta*z2)**2/2 +
-                    Bm**2*z2*cos(beta*z2)**2/2 -
-                    Bm**2*sin(beta*z1)*cos(beta*z1)/(2*beta) +
-                    Bm**2*sin(beta*z2)*cos(beta*z2)/(2*beta) +
-                    Bm*Cm*cos(beta*z1)**2/beta - Bm*Cm*cos(beta*z2)**2/beta -
-                    Cm**2*z1*sin(beta*z1)**2/2 - Cm**2*z1*cos(beta*z1)**2/2 +
-                    Cm**2*z2*sin(beta*z2)**2/2 + Cm**2*z2*cos(beta*z2)**2/2 +
-                    Cm**2*sin(beta*z1)*cos(beta*z1)/(2*beta) -
-                    Cm**2*sin(beta*z2)*cos(beta*z2)/(2*beta))
-
-            Am = numer / denom
-            self._Am[m] = Am
-
-        return
-
-    def _calc_Tm(self, cv, beta, t):
-        """calculate the Tm expression at a given time
-
-        Parameters
-        ----------
-        cv : float
-            coefficient of vertical consolidation for layer
-        beta : float
-            eigenvalue for layer
-        t : float
-            time value
-
-        Returns
-        -------
-        Tm: float
-            time dependant function
-
-        """
-        loadmag = self.surcharge_vs_time.y
-        loadtim = self.surcharge_vs_time.x
-        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
-            ramps_containing_t, constants_containing_t) = pwise.segment_containing_also_segments_less_than_xi(loadtim, loadmag, t, steps_or_equal_to = True)
-
-        exp = math.exp
-        Tm=0
-        i=0 #only one time value
-        for k in steps_less_than_t[i]:
-            sig1 = loadmag[k]
-            sig2 = loadmag[k+1]
-
-            Tm += (sig2-sig1)*exp(-cv * beta**2 * (t-loadtim[k]))
-        for k in ramps_containing_t[i]:
-            sig1 = loadmag[k]
-            sig2 = loadmag[k+1]
-            t1 = loadtim[k]
-            t2 = loadtim[k+1]
-
-#            Tm += (-sig1 + sig2)/(beta**2*cv*(-t1 + t2)) - (-sig1 + sig2)*exp(-beta**2*cv*t)*exp(beta**2*cv*t1)/(beta**2*cv*(-t1 + t2))
-            Tm += (-sig1 + sig2)/(beta**2*cv*(-t1 + t2)) - (-sig1 + sig2)*exp(-beta**2*cv*(t-t1))/(beta**2*cv*(-t1 + t2))
-
-        for k in ramps_less_than_t[i]:
-            sig1 = loadmag[k]
-            sig2 = loadmag[k+1]
-            t1 = loadtim[k]
-            t2 = loadtim[k+1]
-#            Tm += -(-sig1 + sig2)*exp(-beta**2*cv*t)*exp(beta**2*cv*t1)/(beta**2*cv*(-t1 + t2)) + (-sig1 + sig2)*exp(-beta**2*cv*t)*exp(beta**2*cv*t2)/(beta**2*cv*(-t1 + t2))
-            Tm += -(-sig1 + sig2)*exp(-beta**2*cv*(t-t1))/(beta**2*cv*(-t1 + t2)) + (-sig1 + sig2)*exp(-beta**2*cv*(t-t2))/(beta**2*cv*(-t1 + t2))
-        return Tm
-
-    def calc_settle_and_uavg(self):
-
-        self.settle = np.zeros(len(self.t), dtype=float)
-        self.uavg = np.zeros(len(self.t), dtype=float)
-        _z2 = self.zlayer
-        _z1 = self.zlayer - self.h
-#        print(_z1,_z2)
-        sin = math.sin
-        cos = math.cos
-        for j, t in enumerate(self.t):
-            settle=0
-            uavg = 0
-            q = pwise.pinterp_x_y(self.surcharge_vs_time, t)[0]
-            settle = np.sum(self.mv * self.h) * q
-
-
-            for layer in range(self.nlayers):
-                for m in range(self.n):
-                    z1=_z1[layer]
-                    z2=_z2[layer]
-                    Am = self._Am[m]
-                    mv = self.mv[layer]
-                    Bm = self._Bm[m, layer]
-                    Cm = self._Cm[m, layer]
-                    beta = self._beta[m, layer]
-                    cv = self.cv[layer]
-
-                    Zm_integral = -Bm*sin(beta * z1)/beta + Bm * sin(beta * z2)/beta + Cm * cos(beta*z1)/beta - Cm*cos(beta*z2)/beta
-                    Tm = self._calc_Tm(cv, beta, t)
-
-                    uavg += Zm_integral * Tm * Am
-
-                    settle -= mv * Zm_integral * Tm * Am
-
-
-            self.settle[j] = settle
-            self.uavg[j] = uavg / self.zlayer[-1]
-
-        return
-
-
-
-
-    def calc_por(self):
-
-        if self.tpor is None:
-            self.tpor==self.t
-
-        self.por = np.zeros((len(self.z), len(self.tpor)), dtype=float)
-
-
-        z_in_layer = np.searchsorted(self.zlayer, self.z)
-
-        for j, t in enumerate(self.tpor):
-            for m in range(self.n):
-                for k, z in enumerate(self.z):
-                    layer = z_in_layer[k]
-
-                    Am = self._Am[m]
-
-                    Bm = self._Bm[m, layer]
-                    Cm = self._Cm[m, layer]
-                    beta = self._beta[m, layer]
-                    cv = self.cv[layer]
-                    Zm = Bm * math.cos(beta * z) + Cm * math.sin(beta * z)
-#                    Tm = math.exp(-cv * beta**2 * t)
-                    Tm = self._calc_Tm(cv, beta, t)
-
-                    self.por[k, j] += Am * Zm * Tm
-
+    return por, doc
 
 if __name__ == '__main__':
 
-    my_code = textwrap.dedent("""\
-    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    #import numpy as np
+    z = np.linspace(0,1,20)
+#    t = np.linspace(0.1,3,5)
+    t = np.logspace(-3,6,80)
+    tpor = np.array([0.01, 1])
+    theta = [0.2, 0.2]
+    v = [0.1, 0.01]
+#    theta = 1.5
+#    v = 0.5
+    por, doc = cosenzaandkorosak2014(z, t, theta, v, nterms=20)
 
-
-    L = 1
-    n = 12
-    cv = 1
-    theta = 0.5
-    v=0.25
-
-
-    tpor = np.array([0,0.5,4])
-    z =
-    t =
-
-
-    """)
-
-    a = CosenzaAndKorosak2014(my_code)
-
-
-#
-#    a._calc_derived_properties()
-#    a._find_beta()
-##    a.plot_characteristic_curve_and_roots()
-#    a._make_BC(a._beta0[0])
-#    a._Am_integrations()
-#    a._Tm_integrations()
-#    a._uavg_integrations()
-#    a._debug=True
-
-    a.calc()
-    plot_one_dim_consol(a.z, a.t, por=a.por, uavg=a.uavg, settle=a.settle)
+    plot_one_dim_consol(z, t, por, doc)
     plt.show()
-
-
-
-
