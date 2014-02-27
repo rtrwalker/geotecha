@@ -29,7 +29,7 @@ import scipy.optimize
 import geotecha.piecewise.piecewise_linear_1d as pwise
 import cmath
 
-from geotecha.optimize.root_finding import find_n_roots
+from geotecha.math.root_finding import find_n_roots
 
 import scipy.special
 #from scipy.special import j0, y0, j1, y1

@@ -13,11 +13,13 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""
-This is the testing sub-package for the `optimize` package.
 
-The sub-package contains the following modules:
-    - don't know yet
-    - don't know yet
+"""
+This is the `math` package level docstring.
+
+
+The package contains the following modules:
+    - don't know yet      maybe a short description
+    - don't know yet      maybe a short description
 
 """

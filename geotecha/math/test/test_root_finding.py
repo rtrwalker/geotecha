@@ -29,7 +29,7 @@ import math
 import numpy as np
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
-from geotecha.optimize.root_finding import find_n_roots
+from geotecha.math.root_finding import find_n_roots
 
 from scipy.special import j0
 

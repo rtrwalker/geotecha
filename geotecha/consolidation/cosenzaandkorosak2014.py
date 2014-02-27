@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for Schiffman and Stein 1970 multi layer consolidation
+module for Cosenza and Korosak 2014
 
 """
 from __future__ import print_function, division
@@ -69,7 +69,7 @@ def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
 
 
-class SchiffmanAndStein1970(inputoutput.InputFileLoaderAndChecker):
+class CosenzaAndKorosak2014(inputoutput.InputFileLoaderAndChecker):
     """Multi-layer consolidation
 
 
@@ -597,63 +597,25 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderAndChecker):
 if __name__ == '__main__':
 
     my_code = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
-
-    h = np.array([10, 20, 30, 20])
-    cv = np.array([0.0411, 0.1918, 0.0548, 0.0686])
-    mv = np.array([3.07e-3, 1.95e-3, 9.74e-4, 1.95e-3])
-    #kv = np.array([7.89e-6, 2.34e-5, 3.33e-6, 8.35e-6])
-    kv = cv*mv
-
-    bctop = 0
-    #htop = None
-    #ktop = None
-    bcbot = 0
-    #hbot = None
-    #kbot = None
-
-    n = 40
-    surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-    z = np.concatenate((np.linspace(0, np.sum(h[:1]), 25, endpoint=False),
-                        np.linspace(np.sum(h[:1]), np.sum(h[:2]), 25, endpoint=False),
-                        np.linspace(np.sum(h[:2]), np.sum(h[:3]), 25, endpoint=False),
-                        np.linspace(np.sum(h[:3]), np.sum(h), 25, endpoint=True)))
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
 
 
+    L = 1
+    n = 12
+    cv = 1
+    theta = 0.5
+    v=0.25
 
-    tpor = np.array([740, 2930, 7195], dtype=float)
 
-    t = np.logspace(1, 4.5, 30)
+    tpor = np.array([0,0.5,4])
+    z =
+    t =
 
-    t = np.array(
-        [1.21957046e+02,   1.61026203e+02,   2.12611233e+02,
-         2.80721620e+02,   3.70651291e+02,   4.89390092e+02,
-         740.0,   8.53167852e+02,   1.12648169e+03,
-         1.48735211e+03,   1.96382800e+03,   2930.0,
-         3.42359796e+03,   4.52035366e+03,   5.96845700e+03,
-         7195.0,   1.04049831e+04,   1.37382380e+04,
-         1.81393069e+04,   2.39502662e+04,   3.16227766e+04])
 
-    #z = np.linspace(0.0, np.sum(h), 100)
-
-    #
-    #z=np.array([0,10])
-    #t = np.linspace(0,10000, 100)
-    ##t=np.array([1])
-    #
-    #h=np.array([1])
-    #kv=np.array([1])
-    #mv=np.array([1])
-    #surcharge_vs_time = PolyLine([0,0,8], [0,100,100])
-    #surcharge_vs_time = PolyLine([0,0.1,8], [0,100,100])
-    #
-    #z = np.linspace(0.0, np.sum(h), 7)
-    ##t = np.linspace(0, 10, 50)
-    #t = np.logspace(-1,1.8,100)
     """)
 
-    a = SchiffmanAndStein1970(my_code)
+    a = CosenzaAndKorosak2014(my_code)
 
 
 #
@@ -669,32 +631,7 @@ if __name__ == '__main__':
     a.calc()
     plot_one_dim_consol(a.z, a.t, por=a.por, uavg=a.uavg, settle=a.settle)
     plt.show()
-    print(repr(a.z))
-    print('*')
-    print(repr(a.por))
-    print('*')
-    print(repr(a.uavg))
-    print('*')
-    print(repr(a.settle))
-    print('*')
-    print(repr(a.t))
-#    plt.plot(a.por,a.z)
-#    plt.ylabel('Depth, z')
-#    plt.xlabel('Pore pressure')
-#    plt.gca().invert_yaxis()
-#    plt.grid()
-#    plt.show()
-#    x = np.linspace(0, 20, 400)
-##    x = np.array([0.1])
-#    y = np.zeros_like(x)
-#    for i in xrange(len(x)):
-#        y[i]=a._characteristic_eqn(x[i])
-##        print(x[i],y[i])
-#
-#    print(np.sum(y[0:-1] * y[1:] < 0))
-#    plt.plot(x ,y,'-')
-#    plt.plot(a._beta0, np.zeros_like(a._beta0),'ro')
-##    plt.gca().set_ylim(-0.1,0.1)
-#    plt.grid()
-#    plt.show()
-#    print(inputoutput.code_for_explicit_attribute_initialization('z t n h kv mv bctop bcbot htop ktop hbot kbot'.split(), {'n': 5} ))
+
+
+
+
