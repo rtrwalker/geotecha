@@ -165,7 +165,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
     bot_vs_time : list of Polyline, optional
         bottom p.press variation with time. Polyline(time, magnitude).
         When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying
-        D[u(1,t), Z] = bot_vs_time
+        D[u(1,t), Z] = bot_vs_time. If specifying a gradient you need to
+        specify the normalised gradient du/dZ, where du/dZ = H * du/dz.
     bot_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of bot BC. i.e.
         mag_vs_time * cos(omega*t + phase). if bot_omega_phase is None
@@ -179,7 +180,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         pressure reduces to the fixed value (pseudo_k should be as high as
         possible without causing numerical difficulties). If the third
         element of the tuple is None then the pore pressure will be fixed at
-        zero rather than a prescribed mag_vs_time PolyLine
+        zero rather than a prescribed mag_vs_time PolyLine.
     fixed_ppress_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of fixed ppress. i.e.
         mag_vs_time * cos(omega*t + phase). if fixed_ppress _omega_phase is
@@ -234,10 +235,19 @@ class speccon1d_vr(speccon1d.Speccon1d):
         depths will be reported  z*H (i.e. positive numbers).
 
     plot_properties : dict of dict, optional
-        dictionary that passes some overridessome of the plot properties.
+        dictionary that overrides some of the plot properties.
         Each member of `plot_properties` will correspond to one of the plots.
-        e.g. plot_properties['por'] will pass properties to the pore pressure
-        vs depth plot.
+        ==================  ============================================
+        plot_properties    description
+        ==================  ============================================
+        por                 dict of prop to pass to pore pressure plot.
+        avp                 dict of prop to pass to avergae pore
+                            pressure plot.
+        set                 dict of prop to pass to settlement plot.
+        load                dict of prop to pass to pore pressure plot.
+        material            dict of prop to pass to materials plot.
+        ==================  ============================================
+        see blah blah blah for what options can be specified in each plot dict.
 
     Notes
     -----
@@ -968,7 +978,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not 'xlabel' in por_prop:
             por_prop['xlabel'] = 'Pore pressure'
 
-
+        #to do
         fig_por = self._plot_vs_depth(self.por, self.ppress_z,
                                       line_labels=line_labels, H = self.H,
                                       RLzero=self.RLzero,
@@ -992,7 +1002,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
                            line_labels=line_labels,
                            prop_dict=avp_prop)
     def _plot_set(self):
-        """plot settlement vs time fro various depth intervals
+        """plot settlement vs time for various depth intervals
 
 
         """
@@ -1035,15 +1045,40 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.settlement_z_pairs is None:
             self._plot_set()
 
-
+        #loads
         self._plot_loads()
 
+        #materials
+        self._plot_materials()
+
+    def _plot_materials(self):
+
+        material_prop = self.plot_properties.pop('material', dict())
+
+        z_x=[]
+        xlabels=[]
+        if not self.mv is None:
+            z_x.append(self.kv)
+            xlabels.append('$m_v$')
+        if not self.kv is None:
+            z_x.append(self.kv)
+            xlabels.append('$k_v$')
+        if not self.kh is None:
+            z_x.append(self.kh)
+            xlabels.append('$k_h$')
+        if not self.et is None:
+            z_x.append(self.et)
+            xlabels.append('$\\eta$')
+
+
+        return (self._plot_materials_vs_depth(z_x, xlabels, H = self.H,
+                            RLzero = self.RLzero,prop_dict = material_prop))
     def _plot_loads(self):
         """plot loads
 
         """
 
-
+        load_prop = self.plot_properties.pop('load', dict())
         load_triples=[]
         load_names = []
         ylabels=[]
@@ -1070,42 +1105,67 @@ class speccon1d_vr(speccon1d.Speccon1d):
             load_names.append('top')
             ylabels.append('Top boundary')
             load_triples.append(
-                [(vs_time, vs_depth, omega_phase) for
-                    vs_time, vs_depth, omega_phase  in
-                    zip(self.top_vs_time, self.top_vs_depth,
-                    self.top_omega_phase)])
+                [(vs_time, ([0],[1]), omega_phase) for
+                    vs_time, omega_phase  in
+                    zip(self.top_vs_time, self.top_omega_phase)])
 
         if not self.bot_vs_time is None:
             load_names.append('bot')
-            ylabels.append('Bottom boundary')
+            ylabels.append('Bot boundary')
             load_triples.append(
-                [(vs_time, vs_depth, omega_phase) for
-                    vs_time, vs_depth, omega_phase  in
-                    zip(self.bot_vs_time, self.bot_vs_depth,
-                    self.bot_omega_phase)])
+                [(vs_time, ([1],[1]), omega_phase) for
+                    vs_time, omega_phase  in
+                    zip(self.bot_vs_time, self.bot_omega_phase)])
 
-#        if not self.surcharge_vs_time is None:
-#            load_names.append('surch')
-#            ylabels.append('Surcharge')
-#            load_triples.append(
-#                [(vs_time, vs_depth, omega_phase) for
-#                    vs_time, vs_depth, omega_phase  in
-#                    zip(self.surcharge_vs_time, self.surcharge_vs_depth,
-#                    self.surcharge_omega_phase)])
+        if not self.fixed_ppress is None:
+            load_names.append('fixed p')
+            ylabels.append('Fixed ppress')
+            fixed_ppress_triples=[]
+            for (zfixed, pseudo_k, vs_time), omega_phase in zip(self.fixed_ppress, self.fixed_ppress_omega_phase):
 
-        return self._plot_generic_loads(load_triples, load_names, ylabels=ylabels)
+                if vs_time is None:
+                    vs_time = PolyLine([self.tvals[0], self.tvals[-1]], [0,0])
+
+                vs_depth = ([zfixed], [1])
+                fixed_ppress_triples.append((vs_time,vs_depth, omega_phase))
+
+            load_triples.append(fixed_ppress_triples)
+
+
+        return (self._plot_generic_loads(load_triples, load_names,
+                    ylabels=ylabels, H = self.H, RLzero=self.RLzero,
+                    prop_dict=load_prop))
 
 
     def _plot_generic_loads(self, load_triples, load_names, ylabels=None,
                             trange = None, H = 1.0, RLzero=None, prop_dict={}):
-        """plot loads
+        """Plot loads that come in load_vs_time-load_vs_depth-omega_phase form
+
+        For each load_triple (i.e. each load type) two plots will be made
+        side by side: a load_vs_time plot; and a load_vs_depth plot. the
+        different load types will appear one under the other.
+
+        ::
+            Load Magnitude                 Depth
+            ^                              ^
+            |           .....               |     *
+            |          .                    |    *
+            |   . . . .                     |   *
+            |  .                            |   *
+            | .                             |    *
+            --------------------->Time     --------->Load factor
+
 
         Parameters
         ----------
         load_triples : list of list of 3 element tuples
             (load_vs_time, load_vs_depth, load_omega_phase) PolyLines.
             load_triples[i] will be a list of load triples for the ith plot
-            load_triples[i][j] will be the jth load triple for the ith plot
+            load_triples[i][j] will be the jth load triple for the ith plot.
+            The load_vs_depth can also be a two element tuple containing a
+            list/array of depth values and a list/array of load values.
+            The load_vs_time can also be a two element tuple containing a
+            list/array of time values and a list/array of load values.
         load_names : list of string
             string to prepend to legend entries for each load
         ylabels : list of string, optional
@@ -1121,13 +1181,46 @@ class speccon1d_vr(speccon1d.Speccon1d):
             then all depths (in plots and results) will be transformed to an
             RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
             then all depths will be reported  z*H (i.e. positive numbers).
+        prop_dict : dict of dict, optional
+            dictionary containing certain properties used to set various plot
+            options. If a dict within prop_dict is not None then all defaults
+            will be lost and you will have to specify all values.
+            ==================  ============================================
+            prop_dict option    description
+            ==================  ============================================
+            fig_prop            dict of prop to pass to plt.figure.
+                                defaults include:
+                                figsize=(7.05, 1.57 * no.of.loads)
+            styles              List of dict.  Each dict is for one line.
+                                Each dict contains kwargs for plt.plot
+                                See
+                                geotecha.plotting.one_d.MarkersDashesColors
+                                defaults give black and white markersize 5
+            xlabel              x-axis label.
+            ylabel              y-axis label.
+            time_axis_label     label for x axis in load_vs_time plots.
+                                default = 'Time'
+            depth_axis_label    label for y axis in load_vs_depth plot
+                                default = "Depth, z" or "RL" depending on
+                                RLzero.
+            has_legend          True or False. default is True
+            legend_prop         dict of prop to pass to ax.legend
+                                defaults include:
+                                title='Load'
+                                fontsize=9
+            ==================  ============================================
+
+        Returns
+        -------
+        fig : matplolib.Figure
+            figure wil plot in it.
 
 
         """
 
 
 
-        fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+        fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples)) })
         legend_prop = prop_dict.pop('legend_prop',
                                    {'title': 'Load:', 'fontsize': 9})
 
@@ -1135,7 +1228,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if styles is None:
             mcd = geotecha.plotting.one_d.MarkersDashesColors(
 #                color = 'black',
-                markersize=7)
+                markersize=5)
             mcd.construct_styles(markers = range(32), dashes=[0],
                                  marker_colors=None, line_colors=None)
 
@@ -1148,7 +1241,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
         gs = matplotlib.gridspec.GridSpec(n,2, width_ratios=[5,1])
         fig = plt.figure(**fig_prop)
 
-        plt.subplot(gs[0])
+#        plt.subplot(gs[0])
 
         #determine tmax etc
         if trange is None:
@@ -1169,21 +1262,35 @@ class speccon1d_vr(speccon1d.Speccon1d):
         ax2 = []
         for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
             style = styles.next()
-            ax1.append(plt.subplot(gs[i, 0]))
-            ax2.append(plt.subplot(gs[i, 1]))
+            sharex1 = None
+            sharex2 = None
+            sharey1 = None
+            sharey2 = None
+            if i != 0:
+                sharex1 = ax1[0]
+                sharex2 = ax2[0]
+                sharey1 = ax1[0]
+                sharey2 = ax2[0]
+            ax1.append(plt.subplot(gs[i, 0], sharex=sharex1, sharey=sharey1))
+            ax2.append(plt.subplot(gs[i, 1], sharex=sharex2, sharey=sharey2 ))
 
             for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
                 if vs_time is None: #allow for fixed ppress
                     vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
+
+                if not isinstance(vs_time, PolyLine):
+                    x_, y_ =vs_time
+                    vs_time = PolyLine(x_,y_)
+
 
                 dx = (tmax-tmin)/20.0
                 markevery=None
                 if not omega_phase is None:
                     omega, phase = omega_phase
                     dx = min(dx, 1/(omega/(2*np.pi))/40)
-                    markevery = 0.1
+                markevery = 0.1
 
-                print(dx, omega)
+#                print(dx, omega)
 
                 x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
                         (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
@@ -1203,13 +1310,12 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
 
                 linename = name + str(j)
+
                 ax1[-1].plot(x, y, label=linename, markevery=markevery, **style)
 
                 #TODO: add some more points in the z direction, account for when only one point
-                if len(vs_depth.x)==1:
-                    x = vs_depth.x
-                    y = vs_depth.y
-                else:
+
+                if isinstance(vs_depth, PolyLine):
                     dx = (np.max(vs_depth.x)-np.min(vs_depth.x))/8
 
                     x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
@@ -1221,7 +1327,10 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
                     x = np.array([val for subl in x for val in subl])
                     y = np.array([val for subl in y for val in subl])
-
+                else: # assume a tuple of x and y values
+                        x, y = vs_depth
+                        x = np.atleast_1d(x)
+                        y = np.atleast_1d(y)
                 z = speccon1d.depth_to_reduced_level(x, H, RLzero)
                 ax2[-1].plot(y, z, label=linename, **style)
 
@@ -1229,7 +1338,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
             #load_vs_time plot stuff
             xlabel = prop_dict.pop('time_axis_label', 'Time')
-            ax1[-1].set_xlabel(xlabel)
+            if i==len(load_triples)-1:
+                ax1[-1].set_xlabel(xlabel)
             ax1[-1].set_ylabel(ylabel)
 
             has_legend = prop_dict.pop('has_legend', True)
@@ -1240,7 +1350,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
             #load_vs_depth plot stuff
             xlabel = prop_dict.pop('depth_axis_label', 'Load factor')
-            ax2[-1].set_xlabel(xlabel)
+            if i==len(load_triples)-1:
+                ax2[-1].set_xlabel(xlabel)
 
             if RLzero is None:
                 ax2[-1].invert_yaxis()
@@ -1252,11 +1363,61 @@ class speccon1d_vr(speccon1d.Speccon1d):
             ax2[-1].set_xlim((0,1.01))
             ax2[-1].set_xticks([0,0.5,1])
 
-
+            fig.tight_layout()
         return fig
 
     def _plot_vs_time(self, t, y, line_labels, prop_dict={}):
-        """plot y vs t for variuos values
+        """Plot y vs t with some options
+
+        Originally used for plotting things like average excess pore pressure
+        vs time.
+
+        ::
+            y
+            ^
+            |           .......
+            |          .
+            |   . . . .  ***
+            |  . *      *   *
+            | .*   *****
+            --------------------->Time
+
+        Parameters
+        ----------
+        t : np.array
+            time values
+        y :  one or two dimensional ndarray
+            y values to plot.  basically plt.plot(t,y) will be used
+        line_labels : list of string
+            label for each line in y
+        prop_dict : dict of dict, optional
+            dictionary containing certain properties used to set various plot
+            options. If a dict within prop_dict is not None then all defaults
+            will be lost and you will have to specify all values.
+            ==================  ============================================
+            prop_dict option    description
+            ==================  ============================================
+            fig_prop            dict of prop to pass to plt.figure.
+                                defaults include:
+                                figsize=(7.05, 4.4)
+            styles              List of dict.  Each dict is for one line.
+                                Each dict contains kwargs for plt.plot
+                                See
+                                geotecha.plotting.one_d.MarkersDashesColors
+                                defaults give black and white markersize 5
+            xlabel              x-axis label. default='Time
+            ylabel              y-axis label. default = 'y'
+            has_legend          True or False. default is True
+            legend_prop         dict of prop to pass to ax.legend
+                                defaults include:
+                                title='Depth interval'
+                                fontsize=9
+            ==================  ============================================
+
+        Returns
+        -------
+        fig : matplolib.Figure
+            figure wil plot in it.
 
 
         """
@@ -1312,14 +1473,198 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         return fig
 
+    def _plot_materials_vs_depth(self, z_x, xlabels, H = 1.0, RLzero=None,
+                        prop_dict={}):
+        """plot side by side property vs depth graphs
 
+        ::
 
-    def _plot_vs_depth(self, x, z, line_labels=None, H = 1.0, RLzero=None, prop_dict={}):
-        """plot z vs x for various t values
+               x1            x2           x3
+            ----------------------------------------
+            |     .      |   .        |   .        |
+            |     .      |    .       |  .         |
+            |     .      |     .      |  .         |
+            |    .       |      .     |    .       |
+            |   .        |      .     |      .     |
+            |  .         |      .     |        .   |
+            v            v            v            v
+            depth
 
         Parameters
         ----------
+        z_x : list of PolyLine
+            list of value_vs_depth PolyLines.
+        xlabels: list of string
+            list of x-axis labels
+        H : float, optional
+            height of soil profile.  Default H=1.0.  Used to transform
+            normalised depth to actual depth
+        RLzero : float, optional
+            reduced level of the top of the soil layer.  If RLzero is not None
+            then all depths (in plots and results) will be transformed to an
+            RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
+            then all depths will be reported  z*H (i.e. positive numbers).
+        prop_dict : dict of dict, optional
+            dictionary containing certain properties used to set various plot
+            options. If a dict within prop_dict is not None then all defaults
+            will be lost and you will have to specify all values.
+            ==================  ============================================
+            prop_dict option    description
+            ==================  ============================================
+            fig_prop            dict of prop to pass to plt.figure.
+                                defaults include:
+                                figsize=(7.05, 4.4)
+            styles              List of dict.  Each dict is for one line.
+                                Each dict contains kwargs for plt.plot
+                                See
+                                geotecha.plotting.one_d.MarkersDashesColors
+                                defaults give black and white markersize 5
+            xlabel              x-axis label. default='Time
+            ylabel              y-axis label. default = 'Depth, z' or 'RL'
+                                depending on RLzero.
+            ==================  ============================================
 
+        """
+
+
+        n = len(z_x)
+        fig_prop = prop_dict.pop('fig_prop', {'figsize':(2 * n, 18/1.61/2.54)})
+
+        styles = prop_dict.pop('style', None)
+        if styles is None:
+            mcd = geotecha.plotting.one_d.MarkersDashesColors(
+#                color = 'black',
+                markersize= 7)
+            mcd.construct_styles(markers = range(32), dashes=[0],
+                                 marker_colors=None, line_colors=None)
+
+
+        styles = itertools.cycle(mcd.styles)
+
+
+        gs = matplotlib.gridspec.GridSpec(1,n, width_ratios=None)
+        fig = plt.figure(**fig_prop)
+
+        ax1=[]
+        for i, (vs_depth, xlabel)  in enumerate(zip(z_x, xlabels)):
+
+            style = styles.next()
+            sharey1 = None
+            if i != 0: #share the y axis
+                sharex1 = ax1[0]
+                sharey1 = ax1[0]
+
+            ax1.append(plt.subplot(gs[i], sharey=sharey1))
+
+            if not isinstance(vs_depth, PolyLine):
+                # assume a tuple of x and y values
+                x_, y_ =vs_depth
+                vs_depth = PolyLine(x_,y_)
+
+            dx = (np.max(vs_depth.x)-np.min(vs_depth.x))/8
+
+            x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+                    (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+                    #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+
+            y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+                    (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+
+            x = np.array([val for subl in x for val in subl])
+            y = np.array([val for subl in y for val in subl])
+
+            z = speccon1d.depth_to_reduced_level(x, H, RLzero)
+            ax1[-1].plot(y, z, **style)
+
+
+            ax1[-1].set_xlabel(xlabel)
+            ax1[-1].xaxis.set_label_position('top')
+            ax1[-1].xaxis.tick_top()
+            if i != 0:
+#                ax1[-1].yaxis.set_ticklabels([])
+                plt.setp(ax1[-1].get_yticklabels(), visible=False)
+            cur_xlim = ax1[-1].get_xlim()
+#            ax1[-1].set_xlim([0, cur_xlim[0]+0.5])
+
+        if RLzero is None:
+            plt.gca().invert_yaxis()
+            ylabel = prop_dict.pop('ylabel', 'Depth, z')
+        else:
+            ylabel = prop_dict.pop('ylabel', 'RL')
+            ax1[0].set_ylabel(ylabel)
+#        ax1[-1].yaxis.set_ticklabels([])
+
+        fig.tight_layout()
+        return fig
+
+
+
+
+    def _plot_vs_depth(self, x, z, line_labels=None, H = 1.0, RLzero=None,
+                       prop_dict={}):
+        """plot z vs x for various t values
+
+        Originally used for plotting things like excess pore pressure vs depth
+
+
+        ::
+
+            --------------------> value
+            |.*
+            | .  *
+            |  .    *
+            |   .     *
+            |  .    *
+            | .  *
+            v
+            depth
+
+
+        Parameters
+        ----------
+        x :  one or two dimensional ndarray
+            y values to plot.  basically plt.plot(t,y) will be used
+        z : one d array of float
+            depth values
+        line_labels : list of string
+            label for each line in y
+        H : float, optional
+            height of soil profile.  Default H=1.0.  Used to transform
+            normalised depth to actual depth
+        RLzero : float, optional
+            reduced level of the top of the soil layer.  If RLzero is not None
+            then all depths (in plots and results) will be transformed to an
+            RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
+            then all depths will be reported  z*H (i.e. positive numbers).
+        prop_dict : dict of dict, optional
+            dictionary containing certain properties used to set various plot
+            options. If a dict within prop_dict is not None then all defaults
+            will be lost and you will have to specify all values.
+            ==================  ============================================
+            prop_dict option    description
+            ==================  ============================================
+            fig_prop            dict of prop to pass to plt.figure.
+                                defaults include:
+                                figsize=(7.05, 4.4)
+            styles              List of dict.  Each dict is for one line.
+                                Each dict contains kwargs for plt.plot
+                                See
+                                geotecha.plotting.one_d.MarkersDashesColors
+                                defaults give black and white markersize 5
+            xlabel              x-axis label. default='Time
+            ylabel              y-axis label. default = 'Depth, z' or 'RL'
+                                depending on RLzero.
+            has_legend          True or False. default is True
+            legend_prop         dict of prop to pass to ax.legend
+                                defaults include:
+                                title='Depth interval'
+                                fontsize=9
+            ==================  ============================================
+
+        Returns
+        -------
+        fig : matplolib.Figure
+            figure wil plot in it.
 
 
         """
@@ -1438,7 +1783,7 @@ if __name__ == '__main__':
 H = 1
 drn = 0
 dT = 1
-#dTh = 5
+dTh = 5
 dTv = 0.1 * 0.25
 neig = 10
 
@@ -1449,30 +1794,30 @@ khref = 1.0
 etref = 1.0
 
 mv = PolyLine([0,1], [0.5,0.5])
-#kh = PolyLine([0,1], [1,1])
+kh = PolyLine([0,1], [1,1])
 kv = PolyLine([0,1], [5,5])
-#et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
+et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
 #et = PolyLine([0,1], [1,1])
 surcharge_vs_depth = PolyLine([0,1], [1,1])
-surcharge_vs_time = PolyLine([0,1,10], [0,100,100])
+surcharge_vs_time = PolyLine([0,1,10], [0,10,10])
 surcharge_omega_phase = (2*np.pi*0.5, -np.pi/2)
 
 
-#vacuum_vs_depth = PolyLine([0,1], [1,1])
-#vacuum_vs_time = PolyLine([0,0,20], [0,-0.2,-0.2])
+vacuum_vs_depth = PolyLine([0,1], [1,1])
+vacuum_vs_time = PolyLine([0,0,7], [0,-20,-20])
 #vacuum_omega_phase = (2*np.pi*50, -np.pi/2)
 
-#top_vs_time = PolyLine([0,0.0,10], [0,-100,-100])
-#top_omega_phase = (2*np.pi*1, -np.pi/2)
-#bot_vs_time = PolyLine([0,0.0,3], [0,-0.2,-0.2])
-#bot_vs_time = PolyLine([0,0.0,10], [0, -0.2, -0.2])
+top_vs_time = PolyLine([0,0.0,10], [0,-100,-100])
+top_omega_phase = (2*np.pi*1, -np.pi/2)
+bot_vs_time = PolyLine([0,0.0,3], [0,-10,-10])
+bot_vs_time = PolyLine([0,0.0,10], [0, -10, -10])
 
 #bot_vs_time = PolyLine([0,0.0,0.4,10], [0, -2500, -250, -210])
 #bot_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
-#fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-0.3,-0.3]))
-#fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
+fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-30,-30]))
+fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
 ppress_z = np.linspace(0,1,100)

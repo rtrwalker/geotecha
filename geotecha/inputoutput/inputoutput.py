@@ -406,7 +406,7 @@ class SyntaxChecker(ast.NodeVisitor):
             tril_indices_from trim_zeros triu triu_indices
             triu_indices_from typename union1d unique unpackbits
             unravel_index unwrap vander var vdot vsplit vstack
-            where who zeros zeros_like
+            where who zeros zeros_like pi
             """)
         self._split_string_allow(s, add_to='attributes')
 
@@ -1086,7 +1086,7 @@ class InputFileLoaderAndChecker(object):
 
         zero_or_all = getattr(self, '_zero_or_all', [])
         at_least_one = getattr(self, '_at_least_one', [])
-        one_implies_others = getattr(self, 'one implies_others', [])
+        one_implies_others = getattr(self, '_one_implies_others', [])
         attributes_that_should_be_lists = getattr(self,
             '_attributes_that_should_be_lists',[])
         attributes_to_force_same_len = getattr(self,
