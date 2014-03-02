@@ -33,6 +33,8 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
 from geotecha.speccon.speccon1d_vert_radial_boundary import speccon1d_vr
 
+import geotecha.math.transformations as transformations
+
 TERZ1D_Z = np.array([0. ,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,
                       0.7,  0.8,  0.9,  1. ])
 

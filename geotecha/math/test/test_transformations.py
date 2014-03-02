@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""Some test routines for the speccon_1d_vert_radial_boundary module
+"""Some test routines for the transformations module
 
 """
 from __future__ import division, print_function
@@ -31,10 +31,25 @@ import textwrap
 import matplotlib.pyplot as plt
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
-#from geotecha.speccon.speccon1d import blah_blah
+from geotecha.math.transformations import depth_to_reduced_level
 
 
+def test_depth_to_reduced_level():
+    """test for depth_to_reduced_level"""
+    #depth_to_reduced_level(z, H = 1.0, rlzero=None)
 
+    assert_allclose(depth_to_reduced_level(z=1, H = 2.0, rlzero=None), 2,
+                    atol = 1e-4)
+    assert_allclose(depth_to_reduced_level(z=1, H = 2.0, rlzero=5), 3,
+                    atol = 1e-4)
+
+    #numpy
+    assert_allclose(depth_to_reduced_level(z=np.array([0.5, 1.0]), H = 2.0,
+                                           rlzero=None), np.array([1,2]),
+                                           atol = 1e-4)
+    assert_allclose(depth_to_reduced_level(z=np.array([0.5, 1.0]), H = 2.0,
+                                           rlzero=5.0), np.array([4,3]),
+                                           atol = 1e-4)
 
 
 

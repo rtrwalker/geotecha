@@ -26,8 +26,10 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import brewer2mpl
-from itertools import cycle
-
+import random
+import itertools
+import geotecha.math.transformations as transformations
+from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
 def rgb_shade(rgb, factor=1, scaled=True):
     """apply shade (darken) to an rgb triplet
@@ -264,22 +266,22 @@ class MarkersDashesColors(object):
             n = max([len(v) for v in [markers, dashes, marker_colors, line_colors] if v is not None])
 
         if markers is None: # no markers
-            markers=cycle([None])
+            markers=itertools.cycle([None])
         else:
-            markers=cycle(markers)
+            markers=itertools.cycle(markers)
         if dashes is None: # no lines
-            dashes=cycle([None])
+            dashes=itertools.cycle([None])
         else:
-            dashes=cycle(dashes)
+            dashes=itertools.cycle(dashes)
         if marker_colors is None: #default color
-            marker_colors=cycle([None])
+            marker_colors=itertools.cycle([None])
         else:
-            marker_colors = cycle(marker_colors)
+            marker_colors = itertools.cycle(marker_colors)
 
         if line_colors is None: #defult color
-            line_colors = cycle([None])
+            line_colors = itertools.cycle([None])
         else:
-            line_colors = cycle(line_colors)
+            line_colors = itertools.cycle(line_colors)
 
         styles=[dict() for i in range(n)]
         for i in range(n):
@@ -1341,6 +1343,612 @@ def apply_dict_to_object(obj, dic):
                 getattr(o, s)(value)
 
     return
+
+def plot_generic_loads(load_triples, load_names, ylabels=None,
+                        trange = None, H = 1.0, RLzero=None, prop_dict={}):
+    """Plot loads that come in load_vs_time-load_vs_depth-omega_phase form
+
+    For each load_triple (i.e. each load type) two plots will be made
+    side by side: a load_vs_time plot; and a load_vs_depth plot. the
+    different load types will appear one under the other.
+
+    ::
+        Load Magnitude                 Depth
+        ^                              ^
+        |           .....               |     *
+        |          .                    |    *
+        |   . . . .                     |   *
+        |  .                            |   *
+        | .                             |    *
+        --------------------->Time     --------->Load factor
+
+
+    Parameters
+    ----------
+    load_triples : list of list of 3 element tuples
+        (load_vs_time, load_vs_depth, load_omega_phase) PolyLines.
+        load_triples[i] will be a list of load triples for the ith plot
+        load_triples[i][j] will be the jth load triple for the ith plot.
+        The load_vs_depth can also be a two element tuple containing a
+        list/array of depth values and a list/array of load values.
+        The load_vs_time can also be a two element tuple containing a
+        list/array of time values and a list/array of load values.
+    load_names : list of string
+        string to prepend to legend entries for each load
+    ylabels : list of string, optional
+        ylabels for each of the axes, Default = None i.e. y0, y1, y2 etc
+    trange : 2 element tuple, optional
+        (tmin, tmax) max and min times to plot loads for. default = None
+        i.e. t limits will be worked out from data
+    H : float, optional
+        height of soil profile.  Default H=1.0.  Used to transform
+        normalised depth to actual depth
+    RLzero : float, optional
+        reduced level of the top of the soil layer.  If RLzero is not None
+        then all depths (in plots and results) will be transformed to an
+        RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
+        then all depths will be reported  z*H (i.e. positive numbers).
+    prop_dict : dict of dict, optional
+        dictionary containing certain properties used to set various plot
+        options. If a dict within prop_dict is not None then all defaults
+        will be lost and you will have to specify all values.
+        ==================  ============================================
+        prop_dict option    description
+        ==================  ============================================
+        fig_prop            dict of prop to pass to plt.figure.
+                            defaults include:
+                            figsize=(7.05, 1.57 * no.of.loads)
+        styles              List of dict.  Each dict is for one line.
+                            Each dict contains kwargs for plt.plot
+                            See
+                            MarkersDashesColors
+                            defaults give black and white markersize 5
+        xlabel              x-axis label.
+        ylabel              y-axis label.
+        time_axis_label     label for x axis in load_vs_time plots.
+                            default = 'Time'
+        depth_axis_label    label for y axis in load_vs_depth plot
+                            default = "Depth, z" or "RL" depending on
+                            RLzero.
+        has_legend          True or False. default is True
+        legend_prop         dict of prop to pass to ax.legend
+                            defaults include:
+                            title='Load'
+                            fontsize=9
+        ==================  ============================================
+
+    Returns
+    -------
+    fig : matplolib.Figure
+        figure wil plot in it.
+
+
+    """
+
+
+
+    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples)) })
+    legend_prop = prop_dict.pop('legend_prop',
+                               {'title': 'Load:', 'fontsize': 9})
+
+    styles = prop_dict.pop('style', None)
+    if styles is None:
+        mcd = MarkersDashesColors(
+            #color = 'black',
+            markersize=5)
+        mcd.construct_styles(markers = range(32), dashes=[0],
+                             marker_colors=None, line_colors=None)
+
+
+    styles = itertools.cycle(mcd.styles)
+
+
+    n = len(load_triples)
+
+    gs = mpl.gridspec.GridSpec(n,2, width_ratios=[5,1])
+    fig = plt.figure(**fig_prop)
+
+    #plt.subplot(gs[0])
+
+    #determine tmax etc
+    if trange is None:
+        for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
+            for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+                if not vs_time is None:
+                    tmin = np.min(vs_time.x)
+                    tmax = np.max(vs_time.x)
+    else:
+        tmin, tmax = trange
+
+    if ylabels is None:
+        ylabels = ['y%d' % v for v in range(n)]
+
+
+
+    ax1 = []
+    ax2 = []
+    for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
+        style = styles.next()
+        sharex1 = None
+        sharex2 = None
+        sharey1 = None
+        sharey2 = None
+        if i != 0:
+            sharex1 = ax1[0]
+            sharex2 = ax2[0]
+            sharey1 = ax1[0]
+            sharey2 = ax2[0]
+        ax1.append(plt.subplot(gs[i, 0], sharex=sharex1, sharey=sharey1))
+        ax2.append(plt.subplot(gs[i, 1], sharex=sharex2, sharey=sharey2 ))
+
+        for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+            if vs_time is None: #allow for fixed ppress
+                vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
+
+            if not isinstance(vs_time, PolyLine):
+                x_, y_ =vs_time
+                vs_time = PolyLine(x_,y_)
+
+
+            dx = (tmax-tmin)/20.0
+            markevery=None
+            if not omega_phase is None:
+                omega, phase = omega_phase
+                dx = min(dx, 1/(omega/(2*np.pi))/40)
+            markevery = 0.1
+
+#                print(dx, omega)
+
+            x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+                    (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
+                    #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+
+            y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+                    (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
+                    #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+
+            x = np.array([val for subl in x for val in subl])
+            y = np.array([val for subl in y for val in subl])
+
+            if not omega_phase is None:
+                y *= np.cos(omega * x + phase)
+
+
+
+
+            linename = name + str(j)
+
+            ax1[-1].plot(x, y, label=linename, markevery=markevery, **style)
+
+            #TODO: add some more points in the z direction, account for when only one point
+
+            if isinstance(vs_depth, PolyLine):
+                dx = (np.max(vs_depth.x)-np.min(vs_depth.x))/8
+
+                x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+                        (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+                        #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+
+                y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+                        (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+
+                x = np.array([val for subl in x for val in subl])
+                y = np.array([val for subl in y for val in subl])
+            else: # assume a tuple of x and y values
+                    x, y = vs_depth
+                    x = np.atleast_1d(x)
+                    y = np.atleast_1d(y)
+            z = transformations.depth_to_reduced_level(x, H, RLzero)
+            ax2[-1].plot(y, z, label=linename, **style)
+
+
+
+        #load_vs_time plot stuff
+        xlabel = prop_dict.pop('time_axis_label', 'Time')
+        if i==len(load_triples)-1:
+            ax1[-1].set_xlabel(xlabel)
+        ax1[-1].set_ylabel(ylabel)
+
+        has_legend = prop_dict.pop('has_legend', True)
+
+        if has_legend:
+            leg = ax1[-1].legend(**legend_prop)
+            leg.draggable(True)
+
+        #load_vs_depth plot stuff
+        xlabel = prop_dict.pop('depth_axis_label', 'Load factor')
+        if i==len(load_triples)-1:
+            ax2[-1].set_xlabel(xlabel)
+
+        if RLzero is None:
+            ax2[-1].invert_yaxis()
+            ylabel = prop_dict.pop('depth_axis_label', 'Depth, z')
+        else:
+            ylabel = prop_dict.pop('depth_axis_label', 'RL')
+
+        ax2[-1].set_ylabel(ylabel)
+        ax2[-1].set_xlim((0,1.01))
+        ax2[-1].set_xticks([0,0.5,1])
+
+        fig.tight_layout()
+    return fig
+
+def plot_vs_time(t, y, line_labels, prop_dict={}):
+    """Plot y vs t with some options
+
+    Originally used for plotting things like average excess pore pressure
+    vs time.
+
+    ::
+        y
+        ^
+        |           .......
+        |          .
+        |   . . . .  ***
+        |  . *      *   *
+        | .*   *****
+        --------------------->Time
+
+    Parameters
+    ----------
+    t : np.array
+        time values
+    y :  one or two dimensional ndarray
+        y values to plot.  basically plt.plot(t,y) will be used
+    line_labels : list of string
+        label for each line in y
+    prop_dict : dict of dict, optional
+        dictionary containing certain properties used to set various plot
+        options. If a dict within prop_dict is not None then all defaults
+        will be lost and you will have to specify all values.
+        ==================  ============================================
+        prop_dict option    description
+        ==================  ============================================
+        fig_prop            dict of prop to pass to plt.figure.
+                            defaults include:
+                            figsize=(7.05, 4.4)
+        styles              List of dict.  Each dict is for one line.
+                            Each dict contains kwargs for plt.plot
+                            See
+                            MarkersDashesColors
+                            defaults give black and white markersize 5
+        xlabel              x-axis label. default='Time
+        ylabel              y-axis label. default = 'y'
+        has_legend          True or False. default is True
+        legend_prop         dict of prop to pass to ax.legend
+                            defaults include:
+                            title='Depth interval'
+                            fontsize=9
+        ==================  ============================================
+
+    Returns
+    -------
+    fig : matplolib.Figure
+        figure wil plot in it.
+
+
+    """
+
+    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+    legend_prop = prop_dict.pop('legend_prop',
+                               {'title': 'Depth interval:', 'fontsize': 9})
+
+    styles = prop_dict.pop('style', None)
+    if styles is None:
+        mcd = MarkersDashesColors(
+            #color = 'black',
+            markersize=7)
+        mcd.construct_styles(markers = range(32), dashes=[0],
+                             marker_colors=None, line_colors=None)
+
+
+    styles = itertools.cycle(mcd.styles)
+
+
+
+    #z = transformations.depth_to_reduced_level(z, H, RLzero)
+
+    #t = self.tvals[self.ppress_z_tval_indexes]
+
+
+    fig = plt.figure(**fig_prop)
+    plt.plot(t, y)
+
+    xlabel = prop_dict.pop('xlabel', 'Time, t')
+    plt.xlabel(xlabel)
+    ylabel = prop_dict.pop('ylabel', 'y')
+    plt.ylabel(ylabel)
+
+    #apply style to each line
+    [apply_dict_to_object(line, d)
+        for line, d in zip(fig.gca().get_lines(), styles)]
+    #apply markevery to each line
+    random.seed(1)
+    [apply_dict_to_object(line, d)
+        for line, d in
+            zip(fig.gca().get_lines(),
+                [{'markevery': (random.random()* 0.1, 0.1)} for v in y])]
+
+    [apply_dict_to_object(line, d)
+        for line, d in zip(fig.gca().get_lines(), line_labels)]
+
+    has_legend = prop_dict.pop('has_legend', True)
+
+    if has_legend:
+        leg = fig.gca().legend(**legend_prop)
+        leg.draggable(True)
+
+    return fig
+
+def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
+                    prop_dict={}):
+    """plot side by side property vs depth graphs
+
+    ::
+
+           x1            x2           x3
+        ----------------------------------------
+        |     .      |   .        |   .        |
+        |     .      |    .       |  .         |
+        |     .      |     .      |  .         |
+        |    .       |      .     |    .       |
+        |   .        |      .     |      .     |
+        |  .         |      .     |        .   |
+        v            v            v            v
+        depth
+
+    Parameters
+    ----------
+    z_x : list of PolyLine
+        list of value_vs_depth PolyLines.
+    xlabels: list of string
+        list of x-axis labels
+    H : float, optional
+        height of soil profile.  Default H=1.0.  Used to transform
+        normalised depth to actual depth
+    RLzero : float, optional
+        reduced level of the top of the soil layer.  If RLzero is not None
+        then all depths (in plots and results) will be transformed to an
+        RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
+        then all depths will be reported  z*H (i.e. positive numbers).
+    prop_dict : dict of dict, optional
+        dictionary containing certain properties used to set various plot
+        options. If a dict within prop_dict is not None then all defaults
+        will be lost and you will have to specify all values.
+        ==================  ============================================
+        prop_dict option    description
+        ==================  ============================================
+        fig_prop            dict of prop to pass to plt.figure.
+                            defaults include:
+                            figsize=(7.05, 4.4)
+        styles              List of dict.  Each dict is for one line.
+                            Each dict contains kwargs for plt.plot
+                            See
+                            MarkersDashesColors
+                            defaults give black and white markersize 5
+        xlabel              x-axis label. default='Time
+        ylabel              y-axis label. default = 'Depth, z' or 'RL'
+                            depending on RLzero.
+        ==================  ============================================
+
+    """
+
+
+    n = len(z_x)
+    fig_prop = prop_dict.pop('fig_prop', {'figsize':(2 * n, 18/1.61/2.54)})
+
+    styles = prop_dict.pop('style', None)
+    if styles is None:
+        mcd = MarkersDashesColors(
+            #color = 'black',
+            markersize= 7)
+        mcd.construct_styles(markers = range(32), dashes=[0],
+                             marker_colors=None, line_colors=None)
+
+
+    styles = itertools.cycle(mcd.styles)
+
+
+    gs = mpl.gridspec.GridSpec(1,n, width_ratios=None, wspace=0.13)
+    gs.update(left=0.1, right=0.98, bottom=0.05,  top=0.9)
+    fig = plt.figure(**fig_prop)
+
+    ax1=[]
+    style = styles.next()
+    for i, (vs_depth, xlabel)  in enumerate(zip(z_x, xlabels)):
+
+
+        sharey1 = None
+        if i != 0: #share the y axis
+            sharex1 = ax1[0]
+            sharey1 = ax1[0]
+
+        ax1.append(plt.subplot(gs[i], sharey=sharey1))
+
+        if not isinstance(vs_depth, PolyLine):
+            # assume a tuple of x and y values
+            x_, y_ =vs_depth
+            vs_depth = PolyLine(x_,y_)
+
+        dx = (np.max(vs_depth.x)-np.min(vs_depth.x))/8
+
+        x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+                (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+                #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+
+        y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+                (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+
+        x = np.array([val for subl in x for val in subl])
+        y = np.array([val for subl in y for val in subl])
+
+        z = transformations.depth_to_reduced_level(x, H, RLzero)
+        ax1[-1].plot(y, z, **style)
+
+
+        ax1[-1].set_xlabel(xlabel, multialignment='center')
+        ax1[-1].xaxis.set_label_position('top')
+        ax1[-1].xaxis.tick_top()
+
+        ax1[-1].xaxis.set_major_locator( plt.MaxNLocator(4))
+        ax1[-1].xaxis.set_minor_locator( plt.AutoLocator())
+        cur_xlim = ax1[-1].get_xlim()
+
+        ax1[-1].set_xlim([0, cur_xlim[1]])
+
+
+
+        #ax1[-1].xaxis.set_minor_locator(ml)
+
+        #ax1[-1].set_xticks(ax1[-1].get_xticks()[1:])
+
+
+
+
+        if i != 0:
+            #ax1[-1].yaxis.set_ticklabels([])
+            plt.setp(ax1[-1].get_yticklabels(), visible=False)
+
+
+    if RLzero is None:
+        plt.gca().invert_yaxis()
+        ylabel = prop_dict.pop('ylabel', 'Depth, z')
+    else:
+        ylabel = prop_dict.pop('ylabel', 'RL')
+        ax1[0].set_ylabel(ylabel)
+    #ax1[-1].yaxis.set_ticklabels([])
+
+    #fig.tight_layout()
+    return fig
+
+
+
+
+def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
+                   prop_dict={}):
+    """plot z vs x for various t values
+
+    Originally used for plotting things like excess pore pressure vs depth
+
+
+    ::
+
+        --------------------> value
+        |.*
+        | .  *
+        |  .    *
+        |   .     *
+        |  .    *
+        | .  *
+        v
+        depth
+
+
+    Parameters
+    ----------
+    x :  one or two dimensional ndarray
+        y values to plot.  basically plt.plot(t,y) will be used
+    z : one d array of float
+        depth values
+    line_labels : list of string
+        label for each line in y
+    H : float, optional
+        height of soil profile.  Default H=1.0.  Used to transform
+        normalised depth to actual depth
+    RLzero : float, optional
+        reduced level of the top of the soil layer.  If RLzero is not None
+        then all depths (in plots and results) will be transformed to an
+        RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
+        then all depths will be reported  z*H (i.e. positive numbers).
+    prop_dict : dict of dict, optional
+        dictionary containing certain properties used to set various plot
+        options. If a dict within prop_dict is not None then all defaults
+        will be lost and you will have to specify all values.
+        ==================  ============================================
+        prop_dict option    description
+        ==================  ============================================
+        fig_prop            dict of prop to pass to plt.figure.
+                            defaults include:
+                            figsize=(7.05, 4.4)
+        styles              List of dict.  Each dict is for one line.
+                            Each dict contains kwargs for plt.plot
+                            See
+                            MarkersDashesColors
+                            defaults give black and white markersize 5
+        xlabel              x-axis label. default='Time
+        ylabel              y-axis label. default = 'Depth, z' or 'RL'
+                            depending on RLzero.
+        has_legend          True or False. default is True
+        legend_prop         dict of prop to pass to ax.legend
+                            defaults include:
+                            title='Depth interval'
+                            fontsize=9
+        ==================  ============================================
+
+    Returns
+    -------
+    fig : matplolib.Figure
+        figure wil plot in it.
+
+
+    """
+
+    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+    legend_prop = prop_dict.pop('legend_prop',
+                               {'title': 'time:', 'fontsize': 9})
+
+    styles = prop_dict.pop('style', None)
+    if styles is None:
+        mcd = MarkersDashesColors(
+            #color = 'black',
+            markersize= 7)
+        mcd.construct_styles(markers = range(32), dashes=[0],
+                             marker_colors=None, line_colors=None)
+
+
+    styles = itertools.cycle(mcd.styles)
+
+
+
+    z = transformations.depth_to_reduced_level(z, H, RLzero)
+
+    fig = plt.figure(**fig_prop)
+    plt.plot(x, z)
+
+    xlabel = prop_dict.pop('xlabel', 'x')
+    plt.xlabel(xlabel)
+
+    if RLzero is None:
+        plt.gca().invert_yaxis()
+        ylabel = prop_dict.pop('ylabel', 'Depth, z')
+    else:
+        ylabel = prop_dict.pop('ylabel', 'RL')
+
+    plt.ylabel(ylabel)
+
+    #apply style to each line
+    [apply_dict_to_object(line, d)
+        for line, d in zip(fig.gca().get_lines(), styles)]
+    #apply markevery to each line
+    random.seed(1)
+    [apply_dict_to_object(line, d)
+        for line, d in
+            zip(fig.gca().get_lines(),
+                [{'markevery': (random.random()* 0.1, 0.1)} for v in x])]
+    #apply label to each line
+    #line_labels = [{'label': '%.3g' % v} for v in t]
+    [apply_dict_to_object(line, d)
+        for line, d in zip(fig.gca().get_lines(), line_labels)]
+
+    has_legend = prop_dict.pop('has_legend', True)
+
+    if has_legend:
+        leg = fig.gca().legend(**legend_prop)
+        leg.draggable(True)
+
+    return fig
+
+
 
 if __name__ == '__main__':
     a = MarkersDashesColors()

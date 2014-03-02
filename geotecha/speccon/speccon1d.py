@@ -1265,32 +1265,32 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
 
     return E_Igamv_the
 
-def depth_to_reduced_level(z, H = 1.0, rlzero=None):
-    """convert normalised depth to rl, or simply actual depth
-
-
-    Parameters
-    ----------
-    z : float, or ndarray
-        normalised depth
-    H : float, optional
-        height of soil layer.  Default `H` = 1.0
-    rlzero : float, optional
-        reduced level of soil surface. default = None.  If rlzero=None then
-        function will return non normalised depth H*z, otherwise it will
-        return rl=rlzero - H * z
-
-    Returns
-    -------
-    out: float or ndarray
-        actual depth or reduced level
-
-    """
-
-    if not rlzero is None:
-        return rlzero - z * H
-    else:
-        return z * H
+#def depth_to_reduced_level(z, H = 1.0, rlzero=None):
+#    """convert normalised depth to rl, or simply actual depth
+#
+#
+#    Parameters
+#    ----------
+#    z : float, or ndarray
+#        normalised depth
+#    H : float, optional
+#        height of soil layer.  Default `H` = 1.0
+#    rlzero : float, optional
+#        reduced level of soil surface. default = None.  If rlzero=None then
+#        function will return non normalised depth H*z, otherwise it will
+#        return rl=rlzero - H * z
+#
+#    Returns
+#    -------
+#    out: float or ndarray
+#        actual depth or reduced level
+#
+#    """
+#
+#    if not rlzero is None:
+#        return rlzero - z * H
+#    else:
+#        return z * H
 
 
 if __name__=='__main__':
