@@ -1680,7 +1680,66 @@ def xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_betwee
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
 class PolyLine(object):
-    """a line is a series of x y points"""
+    """A Polyline is a series of x y points joined by straight lines
+
+    Provides some extra functionality beyond just using an x array and y array
+    to represent a multi-point line.
+
+    Functinality of PolyLines:
+
+
+    - PolyLines can be intialized in different ways e.g. use a single array
+      of x-y points; use separate x-arrays and y-arrays; use x values at the
+      start and end of each interval and yvalues at the start and end of each
+      interval.  This can be useful if you want to work with layer/interval
+      data but to plot those intervals you want x-y points.
+    - Multiply a PolyLine by a scalar and only the y values will be changed
+    - Add to/from a PolyLine with a scalar and only the y values will be
+      changed.
+    - PolyLines can be added together to create a new PolyLine; the x values
+      of each PolyLine will be maintained.  Any x values that are not common
+      to both PolyLines will have their y values interpolated and then added.
+
+    Attributes
+    ---------
+    xy : 2d numpy array
+        n by 2 array containing x and y values for each of the n points i.e.
+        [[x0, y0], [x1, y1], ..., [xn, yn]]
+    x, y : 1d numpy array
+        arrays containing all the x values  and all the y values in the
+        PolyLine
+    x1, x2, y1, y2 : 1d numpy array
+        When you want the start and end values of each of the intervals/layers
+        in the PolyLine.  x1 is the x values at the start of each interval,
+        x2 is the x values at the end of each interval. y1 is the y values at
+        the start of each interval, y2 is the y values at the end of each
+        interval.  Note that when dealing with intervals any vertical intervals
+        will be lost e.g. say our x-y values are defined by joining the dots:
+        PolyLine([0,1,1,2], [4,4,5,5])  is defined by 4 points but  it will
+        have only 2 layers/intervals i.e. x1 will be [0,1], x2 will be [1,0],
+        y1 will be [4,5], y2 will be [4,5].  Just be careful when initialising
+        PolyLines using x1_x2_y1_y2 values, any initial or final vertical
+        section  cannot be defined.
+    x1_x2_y1_y2 : tuple of 4 1d arrays
+        the x1, x2, y1, y2 arrays returned in a tuple.
+    atol, rtol : float
+        absolute and relative tolerance when comparing equality of points in a
+        PolyLine using numpy.allclose
+    _prefix_for_numpy_array_repr : string
+        When using the repr function on Numpy arrays the default output will
+        print array([...]).  Because PolyLines use numpy arrays to store data
+        when using repr on PolyLines you would get PolyLine(array([...])).
+        Now if in your code you have done import numpy.array as array" or some
+        such import then you can just copy the repr of a PolylIne into you code
+        .  However I usually use "import numpy as np"  so ideally I want
+        'np.' prepended to all my numpy array reprs.
+        _prefix_for_numpy_array_repr does just this with the default prefix
+        = "np."  (if you wish to change the prefix for all numpy arrays not
+        just the PolyLine repr then see numpy.`set_string_function` )
+
+    """
+
+
     def __init__(self, *args):
 
         if not len(args) in [1,2,4]:
@@ -1697,6 +1756,8 @@ class PolyLine(object):
         self._y2 = None
         self.atol = 1e-5
         self.rtol = 1e-8
+        self._prefix_for_numpy_array_repr = "np."
+
 
         if len(args)==1:
             #args[0] is an 2d array of n xy data points; shape=(n,2)
@@ -1791,8 +1852,12 @@ class PolyLine(object):
         return self.x1_x2_y1_y2[3]
 
     def __str__(self):
+        """Return a string representation of the xy data"""
         return str(self.xy)
-
+    def __repr__(self):
+        """A string repr of the PolyLine that will recreate the Ployline"""
+        return "PolyLine(%s%s)" % (self._prefix_for_numpy_array_repr,
+                                    repr(self.xy))
     def __add__(self, other):
         return self._add_substract(other, op = operator.add)
     def __radd__(self, other):
@@ -1951,6 +2016,84 @@ class PolyLine(object):
             print("unsupported operand type(s) for +: 'PolyLine' and '%s'" % other.__class__.__name__)
 #            sys.exit(0)
         return a
+    def subdivide_into_linear_segments(self, dx, min_segments = 2,
+                                       just_before = None):
+        """subdivide each segment into equally spaced subsegments
+
+        return a new PolyLine
+
+        Parameters
+        ----------
+        dx : float
+            approxmate length of subsegment.  Say segment is 10 units long
+            and dx=4 then int(10/4)=2 subsegments (i.e. an extra point will
+            be inserted in teh segement) will be created with length
+            5 units.  Use a large dx (larger than your range of x values) if
+            you want to subdivide into a specific number of subsegments
+        min_segments : int, optional
+            minuimum number of subsegments per inteval. this will be used if
+            int(segment_lenght/dx)<min_segments. default = 2
+        just_before : float, optional
+            If just_before is not None then in terms of subdividing each
+            segment will be treated as if it begins at its starting value but
+            ends a distance of `just_before` multiplied by the interval length
+            before its end value. This
+            means that an extra point will be added just before all of the
+            original points. default = None i.e dont use just before point.
+            Use a small number e.g. 1e-6.
+            `just_before` can be useful for example when getting
+            times to evaluate pore pressure at in a soil consoliation
+            analysis.  Say you have a PolyLine representing load_vs_time. If
+            there are step changes in your load then there will be step
+            changes in your pore pressure.  To capture the step change in your
+            output you need an output time just before and just after the step
+            change in your load.  Using `just_before` can achieve this.
+
+        Returns
+        -------
+        out : PolyLine
+            New PolyLine with points inserted within each interval
+
+        """
+
+
+
+        if just_before is None:
+            x = [np.linspace(x1, x2, max(int(abs((x2-x1)//dx)), min_segments),
+                             endpoint = False) for
+                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
+                                            self.y[:-1], self.y[1:])]
+
+
+            y = [np.linspace(y1, y2, max(int(abs((x2-x1)//dx)), min_segments),
+                             endpoint = False) for
+                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
+                                            self.y[:-1], self.y[1:])]
+        else:
+            x = [np.linspace(x1, x1 + (1-just_before) * (x2 - x1),
+                             max(int(abs((x2-x1)//dx)), min_segments)+1,
+                             endpoint = True) for
+                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
+                                            self.y[:-1], self.y[1:])]
+
+
+            y = [np.linspace(y1, y1 + (1-just_before) * (y2 - y1),
+                             max(int(abs((x2-x1)//dx)), min_segments)+1,
+                             endpoint = True) for
+                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
+                                            self.y[:-1], self.y[1:])]
+
+
+        # add in final point
+        x.append([self.x[-1]])
+        y.append([self.y[-1]])
+
+        x = np.array([val for subl in x for val in subl])
+        y = np.array([val for subl in y for val in subl])
+
+        return PolyLine(x, y)
+
+
 
 def polyline_make_x_common(*p_lines):
     """add points to multiple PolyLine's so that each have matching x1_x2 intevals
@@ -2050,16 +2193,16 @@ if __name__ == '__main__':
 #    print('ccc')
 #    print(b.x1_x2_y1_y2)
 
-    print(pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
-                        **{'a': PolyLine([0],[1],[1],[1]),
-                           'b': PolyLine([0],[0.5],[1],[2]),
-                           'xi':[0.25], 'xj':[0.75]
-                           }))
-    print(integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
-                        **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],
-                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],
-                           'xi':[0.25], 'xj':[0.75]
-                           }))
+#    print(pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+#                        **{'a': PolyLine([0],[1],[1],[1]),
+#                           'b': PolyLine([0],[0.5],[1],[2]),
+#                           'xi':[0.25], 'xj':[0.75]
+#                           }))
+#    print(integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(
+#                        **{'x1a':[0],'x2a':[1],'y1a':[1], 'y2a':[1],
+#                           'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[2],
+#                           'xi':[0.25], 'xj':[0.75]
+#                           }))
 
 #    ppp=[PolyLine([0,1], [1,2]),PolyLine([0,0.5,0.5,0.6,0.6,1], [0,0,1,1,0,0])]
 #    ppp=[PolyLine([0,1,2], [0,1,0]),PolyLine([0,1+1e-3,2], [1,0,1])]
@@ -2170,3 +2313,8 @@ if __name__ == '__main__':
 
 
 #def passes_vertical_line_test(x, y):
+    a = PolyLine([0,1], [6,8])
+    b = a.subdivide_into_linear_segments(500,2)
+    print(repr(a))
+    print(repr(b))
+    print(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2))

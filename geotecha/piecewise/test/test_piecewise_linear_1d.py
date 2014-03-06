@@ -29,7 +29,7 @@ from nose.tools.trivial import assert_equal
 #from nose.tools.trivial import assertSequenceEqual
 import unittest
 
-
+from numpy.testing import assert_allclose
 
 from math import pi
 import numpy as np
@@ -1217,6 +1217,25 @@ def test_PolyLine():
     ok_(PolyLine([0,1],[3,4])==PolyLine([0,1],[3,4]))
     ok_(PolyLine([0,1],[3,4])==PolyLine([0,1],[3+1e-10,4]))
     assert_false(PolyLine([0,1],[3,4])==PolyLine([0,1],[3,8]))
+
+
+    #subdivide_into_linear_segments
+    ok_(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2)==
+        PolyLine([[ 0. ,  6. ],[ 0.5,  7. ],[ 1.,  8. ]]))
+    ok_(PolyLine([1,0], [6,8]).subdivide_into_linear_segments(500,2)==
+        PolyLine([[ 1. ,  6. ],[ 0.5,  7. ],[ 0.,  8. ]]))
+    ok_(PolyLine([0,3,9], [10,13,19]).subdivide_into_linear_segments(500,3)==
+        PolyLine([[ 0 ,  10 ],[ 1,  11 ],[ 2,  12 ],
+                  [3, 13], [5, 15], [7,17], [9,19]]))
+    ok_(PolyLine([0,3,9], [10,13,19]).subdivide_into_linear_segments(2,2)==
+        PolyLine([[ 0 ,  10 ],[ 1.5,  11.5 ],[ 3,  13 ],
+                  [5, 15], [7,17], [9,19]]))
+    ok_(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2, 0.2)==
+        PolyLine([[ 0. ,  6. ],[ 0.4,  6.8 ],[0.8, 7.6],[ 1.,  8. ]]))
+
+#    assert_allclose(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2, 0.2).xy,
+#                    [[ 0. ,  6. ],[ 0.4,  6.8 ],[0.8, 7.6],[ 1.,  8. ]])
+
 
 class test_polyline_make_x_common(unittest.TestCase):
 
