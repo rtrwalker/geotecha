@@ -1808,13 +1808,14 @@ class PolyLine(object):
             raise TypeError('cannot multiply two PolyLines together.  You will get a quadratic that I cannot handle')
             sys.exit(0)
         try:
-            a = copy.deepcopy(self)
-            a.xy #ensure xy has been initialized
-            a._xy[:,1] *= other
+            return PolyLine(self.x, self.y * other)
+#            a = copy.deepcopy(self)
+#            a.xy #ensure xy has been initialized
+#            a._xy[:,1] *= other
         except TypeError:
             print("unsupported operand type(s) for *: 'PolyLine' and '%s'" % other.__class__.__name__)
             sys.exit(0)
-        return a
+#        return a
     def __rmul__(self,other):
         return self.__mul__(other)
 
@@ -1823,25 +1824,27 @@ class PolyLine(object):
             raise TypeError('cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
             sys.exit(0)
         try:
-            a = copy.deepcopy(self)
-            a.xy #ensure xy has been initialized
-            a._xy[:,1] /= other
+            return PolyLine(self.x, self.y / other)
+#            a = copy.deepcopy(self)
+#            a.xy #ensure xy has been initialized
+#            a._xy[:,1] /= other
         except TypeError:
             print("unsupported operand type(s) for /: 'PolyLine' and '%s'" % other.__class__.__name__)
             sys.exit(0)
-        return a
+#        return a
     def __rtruediv__(self, other):
         if isinstance(other, PolyLine):
             raise TypeError('cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
             sys.exit(0)
         try:
-            a = copy.deepcopy(self)
-            a.xy #ensure xy has been initialized
-            a._xy[:,1] = other/a._xy[:,1]
+            return PolyLine(self.x, other / self.y)
+#            a = copy.deepcopy(self)
+#            a.xy #ensure xy has been initialized
+#            a._xy[:,1] = other/a._xy[:,1]
         except TypeError:
             print("unsupported operand type(s) for /: 'PolyLine' and '%s'" % other.__class__.__name__)
             sys.exit(0)
-        return a
+#        return a
         return self.__mul__(other)
     def __eq__(self, other):
         if len(self.xy)!=len(other.xy):
@@ -1938,14 +1941,15 @@ class PolyLine(object):
 
 
         try:
-            a = copy.deepcopy(self)
-            #a._xy[:,1] += other
-
-            a.xy #ensure xy has been initialized
-            iop(a._xy[:,1], other)
+            return PolyLine(self.x, iop(self.y, other))
+#            a = copy.deepcopy(self)
+#            #a._xy[:,1] += other
+#
+#            a.xy #ensure xy has been initialized
+#            iop(a._xy[:,1], other)
         except TypeError:
             print("unsupported operand type(s) for +: 'PolyLine' and '%s'" % other.__class__.__name__)
-            sys.exit(0)
+#            sys.exit(0)
         return a
 
 def polyline_make_x_common(*p_lines):

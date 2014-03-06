@@ -96,10 +96,15 @@ class speccon1d_vr(speccon1d.Speccon1d):
     Attributes
     ----------
     H : float, optional
-        total height of soil profile. default = 1.0
+        total height of soil profile. default = 1.0. Note that even though
+        this program deals with normalised depth values it is important to
+        enter the correct H value.  As it is used when plotting, outputing
+        data and in normalising gradient boundary conditions (see
+        `bot_vs_time` below) and pumping velocities (see `pumping` below).
     mvref : float, optional
         reference value of volume compressibility mv (used with `H` in
-        settlement calculations). default = 1.0
+        settlement calculations). default = 1.0.  Note mvref will be used to
+        normalise pumping velocities (see `pumping` below).
     kvref : float, optional
         reference value of vertical permeability kv (only used for pretty
         output). default = 1.0
@@ -165,8 +170,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
     bot_vs_time : list of Polyline, optional
         bottom p.press variation with time. Polyline(time, magnitude).
         When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying
-        D[u(1,t), Z] = bot_vs_time. If specifying a gradient you need to
-        specify the normalised gradient du/dZ, where du/dZ = H * du/dz.
+        D[u(H,t), z] = bot_vs_time. Within the program the actual gradient
+        will be normalised with depth by multiplying H.
     bot_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of bot BC. i.e.
         mag_vs_time * cos(omega*t + phase). if bot_omega_phase is None
@@ -184,7 +189,20 @@ class speccon1d_vr(speccon1d.Speccon1d):
     fixed_ppress_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of fixed ppress. i.e.
         mag_vs_time * cos(omega*t + phase). if fixed_ppress _omega_phase is
-        None then cyclic componenet will be ignored.  if vacuum_omega_phase is
+        None then cyclic componenet will be ignored.  if
+        fixed_ppress_omega_phase is a list then if any member is None then
+        cyclic component will not be applied for that load combo.
+    pumping: list of 2 element tuple
+        (zpump, mag_vs_time).  `zpump` is the normalised
+        z at which pumping takes place. The mag_vs_time polyline should be
+        the actual pumping velocity.  Within the program the actual pumping
+        velocity will be normalised by dividing by (mvref * H).
+        Negative values of vp will pump fluid out of the model, positive
+        values of vp will pump fluid into the model.
+    pumping_omega_phase : list of 2 element tuples, optional
+        (omega, phase) to define cyclic variation of pumping velocity. i.e.
+        mag_vs_time * cos(omega*t + phase). if pumping_omega_phase is
+        None then cyclic componenet will be ignored.  if pumping_omega_phase is
         a list then if any member is None then cyclic component will not be
         applied for that load combo.
     ppress_z : list_like of float, optional
@@ -279,6 +297,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes '
             'fixed_ppress surcharge_omega_phase vacuum_omega_phase '
             'fixed_ppress_omega_phase top_omega_phase bot_omega_phase '
+            'pumping pumping_omega_phase '
             'RLzero '
             'plot_properties').split()
 
@@ -296,26 +315,29 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'vacuum_vs_depth vacuum_vs_time vacuum_omega_phase '
             'top_vs_time top_omega_phase '
             'bot_vs_time bot_omega_phase '
-            'fixed_ppress fixed_ppress_omega_phase').split()
+            'fixed_ppress fixed_ppress_omega_phase '
+            'pumping pumping_omega_phase').split()
 
         self._attributes_that_should_have_same_x_limits = (
             'mv kv kh et surcharge_vs_depth vacuum_vs_depth').split()
 
         self._attributes_that_should_have_same_len_pairs = [
-            ['surcharge_vs_depth surcharge_vs_time'.split()],
-            ['surcharge_vs_time surcharge_omega_phase'.split()],
-            ['vacuum_vs_depth vacuum_vs_time'.split()],
-            ['vacuum_vs_time vacuum_omega_phase'.split()],
-            ['top_vs_time top_omega_phase'.split()],
-            ['bot_vs_time bot_omega_phase'.split()],
-            ['fixed_ppress_omega_phase fixed_ppress'.split()]] #pairs that should have the same length
+            'surcharge_vs_depth surcharge_vs_time'.split(),
+            'surcharge_vs_time surcharge_omega_phase'.split(),
+            'vacuum_vs_depth vacuum_vs_time'.split(),
+            'vacuum_vs_time vacuum_omega_phase'.split(),
+            'top_vs_time top_omega_phase'.split(),
+            'bot_vs_time bot_omega_phase'.split(),
+            'fixed_ppress_omega_phase fixed_ppress'.split(),
+            'pumping pumping_omega_phase'.split()] #pairs that should have the same length
 
         self._attributes_to_force_same_len = [
             "surcharge_vs_time surcharge_omega_phase".split(),
             "vacuum_vs_time vacuum_omega_phase".split(),
             "fixed_ppress fixed_ppress_omega_phase".split(),
             "top_vs_time top_omega_phase".split(),
-            "bot_vs_time bot_omega_phase".split()]
+            "bot_vs_time bot_omega_phase".split(),
+            "pumping pumping_omega_phase".split()]
 
         self._zero_or_all = [
             'dTh kh et'.split(),
@@ -327,7 +349,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'dTh dTv'.split(),
             'kh kv'.split(),
             ('surcharge_vs_time vacuum_vs_time top_vs_time '
-                'bot_vs_time fixed_ppress').split(),
+                'bot_vs_time fixed_ppress pumping').split(),
             ['tvals'],
             'ppress_z avg_ppress_z_pairs settlement_z_pairs'.split()]
 
@@ -339,7 +361,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'vacuum_omega_phase vacuum_vs_depth vacuum_vs_time'.split(),
             'fixed_ppress_omega_phase fixed_ppress'.split(),
             'top_omega_phase top_vs_time'.split(),
-            'bot_omega_phase bot_vs_time'.split()]
+            'bot_omega_phase bot_vs_time'.split(),
+            'pumping_omega_phase pumping'.split()]
 
 
         #these explicit initializations are just to make coding easier
@@ -370,6 +393,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.bot_omega_phase = None
         self.fixed_ppress_omega_phase = None
         self.fixed_ppress = None
+        self.pumping = None
+        self.pumping_omega_phase=None
 
         self.ppress_z = None
         self.avg_ppress_z_pairs = None
@@ -457,21 +482,6 @@ class speccon1d_vr(speccon1d.Speccon1d):
             self._make_set()
         return
 
-    def _make_m(self):
-        """make the basis function eigenvalues
-
-        Notes
-        -----
-
-        .. math:: m_i =\\pi*\\left(i+1-drn/2\\right)
-
-        for :math:`i = 1\:to\:neig-1`
-
-        """
-        if sum(v is None for v in[self.neig, self.drn])!=0:
-            raise ValueError('neig and/or drn is not defined')
-        self.m = integ.m_from_sin_mx(np.arange(self.neig), self.drn)
-        return
 
     def _make_m(self):
         """make the basis function eigenvalues
@@ -615,6 +625,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
         if not self.fixed_ppress is None:
             self._make_E_Igamv_the_fixed_ppress()
             self.E_Igamv_the +=self.E_Igamv_the_fixed_ppress
+        if not self.pumping is None:
+            self._make_E_Igamv_the_pumping()
+            self.E_Igamv_the += self.E_Igamv_the_pumping
 
         return
 
@@ -698,6 +711,43 @@ class speccon1d_vr(speccon1d.Speccon1d):
             mag_vs_time = [v[2] for v in self.fixed_ppress]
             self.E_Igamv_the_fixed_ppress += speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, self.tvals, self.Igamv, zvals, pseudo_k, mag_vs_time, self.fixed_ppress_omega_phase, self.dT)
 
+    def _make_E_Igamv_the_pumping(self):
+        """make the pumping loading matrices
+
+        """
+
+        self.E_Igamv_the_pumping = np.zeros((self.neig, len(self.tvals)))
+
+        if not self.pumping is None:
+            zvals = [v[0] for v in self.pumping]
+            pseudo_k = [1 for v in self.pumping]
+#            mag_vs_time = [v[1] for v in self.pumping]
+            #dividing by mvref*H is because input pumping velocities need to
+            # normalised
+            mag_vs_time = [v[1] / (self.mvref * self.H) for v in self.pumping]
+            self.E_Igamv_the_pumping += speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m, self.eigs, self.tvals, self.Igamv, zvals, pseudo_k, mag_vs_time, self.pumping_omega_phase, self.dT)
+
+    def _normalised_bot_vs_time(self):
+        """Normalise bot_vs_time when drn=1, i.e. bot_vs_time is a gradient
+
+        Multiplie each bot_vs_time PolyLine by self.H
+
+        Returns
+        -------
+        bot_vs_time : list of Polylines, or None
+            bot_vs_time normalised by H
+
+        """
+
+        if not self.bot_vs_time is None:
+            if self.drn == 1:
+                bot_vs_time = [vs_time * self.H for vs_time in self.bot_vs_time]
+            else:
+                bot_vs_time = self.bot_vs_time
+        else:
+            bot_vs_time = None
+        return bot_vs_time
+
     def _make_E_Igamv_the_BC(self):
         """make the boundary condition loading matrices
 
@@ -705,25 +755,28 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.E_Igamv_the_BC = np.zeros((self.neig, len(self.tvals)))
         #mv * du/dt component
         #self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.mv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
-        self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.mv, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
+
+        bot_vs_time = self._normalised_bot_vs_time()
+
+        self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.mv, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
         #dTh * kh * et * u component
         if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
             if self.dTh!=0:
-#                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
-                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kh, self.et, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
+#                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, bot_vs_time, self.tvals, self.Igamv, self.dT)
+                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kh, self.et, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
         #dTv * d/dZ(kv * du/dZ) component
         if sum([v is None for v in [self.kv, self.dTv]])==0:
             if self.dTv!=0:
-#                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.kv, self.top_vs_time, self.bot_vs_time, self.tvals, self.Igamv, self.dT)
-                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kv, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
+#                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.kv, self.top_vs_time, bot_vs_time, self.tvals, self.Igamv, self.dT)
+                self.E_Igamv_the_BC += self.dTv * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kv, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
         #the pseudo_k * delta(z-zfixed)*u component, i.e. the fixed_ppress part
         if not self.fixed_ppress is None:
             zvals = [v[0] for v in self.fixed_ppress]
             pseudo_k = [v[1] for v in self.fixed_ppress]
-            self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, zvals, pseudo_k, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
+            self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, zvals, pseudo_k, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
     def _make_por(self):
         """make the pore pressure output
@@ -742,7 +795,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
 
         """
-
+        bot_vs_time = self._normalised_bot_vs_time()
         self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals[self.ppress_z_tval_indexes], self.v_E_Igamv_the[:, self.ppress_z_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
         return
 
@@ -761,8 +814,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
         .. math:: \\overline{u}\\left(\\left({Z_1,Z_2}\\right),t\\right)=\\int_{Z_1}^{Z_2}{\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}+u_{top}\\left({t}\\right)\\left({1-Z}\\right)+u_{bot}\\left({t}\\right)\\left({Z}\\right)\,dZ}/\\left({Z_2-Z_1}\\right)
 
         """
-
-        self.avp=speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs, self.tvals[self.avg_ppress_z_pairs_tval_indexes], self.v_E_Igamv_the[:,self.avg_ppress_z_pairs_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
+        bot_vs_time = self._normalised_bot_vs_time()
+        self.avp=speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs, self.tvals[self.avg_ppress_z_pairs_tval_indexes], self.v_E_Igamv_the[:,self.avg_ppress_z_pairs_tval_indexes], self.drn, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
         return
 
     def _make_set(self):
@@ -784,12 +837,13 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
         """
 
+        bot_vs_time = self._normalised_bot_vs_time()
         z1 = np.asarray(self.settlement_z_pairs)[:,0]
         z2 = np.asarray(self.settlement_z_pairs)[:,1]
 
         self.set=-speccon1d.dim1sin_integrate_af(self.m, self.settlement_z_pairs, self.tvals[self.settlement_z_pairs_tval_indexes],
                                        self.v_E_Igamv_the[:,self.settlement_z_pairs_tval_indexes],
-                                        self.drn, self.mv, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
+                                        self.drn, self.mv, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
 
         if not self.surcharge_vs_time is None:
 
@@ -948,6 +1002,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
                     zip(self.top_vs_time, self.top_omega_phase)])
 
         if not self.bot_vs_time is None:
+            #TODO: maybe if drn = 1, multiply bot_vs_time by H to give actual
+            # gradient rather than normalised.
             load_names.append('bot')
             ylabels.append('Bot boundary')
             load_triples.append(
@@ -959,7 +1015,9 @@ class speccon1d_vr(speccon1d.Speccon1d):
             load_names.append('fixed p')
             ylabels.append('Fixed ppress')
             fixed_ppress_triples=[]
-            for (zfixed, pseudo_k, vs_time), omega_phase in zip(self.fixed_ppress, self.fixed_ppress_omega_phase):
+            for (zfixed, pseudo_k,
+                     vs_time), omega_phase in zip(self.fixed_ppress,
+                                                self.fixed_ppress_omega_phase):
 
                 if vs_time is None:
                     vs_time = PolyLine([self.tvals[0], self.tvals[-1]], [0,0])
@@ -969,6 +1027,19 @@ class speccon1d_vr(speccon1d.Speccon1d):
 
             load_triples.append(fixed_ppress_triples)
 
+        if not self.pumping is None:
+            #TODO: maybe multiply mag_vs_time by H and mvref to atual pumping
+            #velocity rather than normalised.
+            # gradient rather than normalised.
+            load_names.append('pump')
+            ylabels.append('Pumping velocity')
+            pumping_triples=[]
+            for (zpump, vs_time), omega_phase in zip(self.pumping,
+                                                    self.pumping_omega_phase):
+                vs_depth = ([zpump], [1])
+                pumping_triples.append((vs_time, vs_depth, omega_phase))
+
+            load_triples.append(pumping_triples)
 
         return (geotecha.plotting.one_d.plot_generic_loads(load_triples, load_names,
                     ylabels=ylabels, H = self.H, RLzero=self.RLzero,
@@ -1033,41 +1104,43 @@ if __name__ == '__main__':
 H = 1
 drn = 0
 dT = 1
-dTh = 5
+#dTh = 5
 dTv = 0.1 * 0.25
 neig = 10
 
 
 mvref = 2.0
 kvref = 1.0
-khref = 1.0
-etref = 1.0
+#khref = 1.0
+#etref = 1.0
 
 mv = PolyLine([0,1], [0.5,0.5])
-kh = PolyLine([0,1], [1,1])
+#kh = PolyLine([0,1], [1,1])
 kv = PolyLine([0,1], [5,5])
-et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
+#et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
 #et = PolyLine([0,1], [1,1])
 surcharge_vs_depth = PolyLine([0,1], [1,1])
-surcharge_vs_time = PolyLine([0,1,10], [0,10,10])
-surcharge_omega_phase = (2*np.pi*0.5, -np.pi/2)
+surcharge_vs_time = PolyLine([0,0,10], [0,10,10])
+#surcharge_omega_phase = (2*np.pi*0.5, -np.pi/2)
 
 
-vacuum_vs_depth = PolyLine([0,1], [1,1])
-vacuum_vs_time = PolyLine([0,0,7], [0,-20,-20])
+#vacuum_vs_depth = PolyLine([0,1], [1,1])
+#vacuum_vs_time = PolyLine([0,0,7], [0,-20,-20])
 #vacuum_omega_phase = (2*np.pi*50, -np.pi/2)
 
-top_vs_time = PolyLine([0,0.0,10], [0,-100,-100])
-top_omega_phase = (2*np.pi*1, -np.pi/2)
-bot_vs_time = PolyLine([0,0.0,3], [0,-10,-10])
-bot_vs_time = PolyLine([0,0.0,10], [0, -10, -10])
+#top_vs_time = PolyLine([0,0.0,10], [0,-100,-100])
+#top_omega_phase = (2*np.pi*1, -np.pi/2)
+#bot_vs_time = PolyLine([0,0.0,3], [0,-10,-10])
+#bot_vs_time = PolyLine([0,0.0,10], [0, -10, -10])
 
 #bot_vs_time = PolyLine([0,0.0,0.4,10], [0, -2500, -250, -210])
 #bot_omega_phase = (2*np.pi*2, -np.pi/2)
 
 
-fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-30,-30]))
-fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
+#fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-30,-30]))
+#fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
+
+pumping = (0.5, PolyLine([0,0,10], [0,5,5]))
 
 
 ppress_z = np.linspace(0,1,100)
