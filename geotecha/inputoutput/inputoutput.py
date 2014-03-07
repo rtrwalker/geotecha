@@ -28,6 +28,8 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 from sympy.printing.fcode import FCodePrinter
 import multiprocessing
 import time
+from StringIO import StringIO
+
 
 class SyntaxChecker(ast.NodeVisitor):
     """
@@ -1034,6 +1036,7 @@ class InputFileLoaderAndChecker(object):
                 self._input_text = reader.read()
 
             syn_checker=SyntaxChecker(['ast','builtin','numpy','PolyLine'])
+#            syntax_checker=None
 
             copy_attributes_from_text_to_object(reader,
                 self,
@@ -1116,15 +1119,145 @@ class InputFileLoaderAndChecker(object):
 
         return
 
+    def create_parsed_input(self):
+        """create an input file based on the objects attributtes"""
+        PrefixNumpyArrayString().turn_on()
+        writer = StringIO()
+#        none_attributes = [v for v in self.attributes if
+#                            getattr(self, v, None) is None]
+#        attributes = [v for v in self.attributes if
+#                            not getattr(self, v, None) is None]
+
+
+        #TODO: add in special for string arguments( i.e. put in '' if strings)
+#        writer.writelines(['%s = %s\n' % (v, getattr(self, v, None))
+#            for v in self._attributes if not getattr(self, v, None) is None])
+#        writer.write('\n\n#Unused parameters\n')
+#        writer.writelines(['%s = %s\n' % (v, getattr(self, v, None))
+#            for v in self._attributes if getattr(self, v, None) is None])
+
+        def f(v):
+            if isinstance(v, str):
+                return "'"
+            else:
+                return ""
+
+        writer.writelines(['{0} = {1}{2}{1}\n'.format(v, f(getattr(self, v, None)), getattr(self, v, None))
+            for v in self._attributes if not getattr(self, v, None) is None])
+        writer.write('\n\n#Unused parameters\n')
+        writer.writelines(['{0} = {1}{2}{1}\n'.format(v, f(getattr(self, v, None)), getattr(self, v, None))
+            for v in self._attributes if getattr(self, v, None) is None])
+
+
+
+        PrefixNumpyArrayString().turn_off()
+        return writer
+
+
+
+
+
+class PrefixNumpyArrayString(object):
+    """When printing a numpy array string prefix 'array'
+
+    If you use `repr` to print a numpy array it will print as 'array([...])'.
+    If you have imported numpy with 'import numpy.array as array' or some such
+    import then you can paste the printed output straight back into Python.
+    However, I use 'import numpy as np' so I have to manually put in the 'np.'
+    before I can use the printed output in my code.  Using
+    PrefixNumpyArrayString can put in the 'np.' automatically when using the
+    __str__ of the numpy array. i.e. __repr__ remains unchanged but __str__
+    will have the prefix
+
+    Attributes
+    ----------
+    prefix : string, optional
+        strin gto prefix with. default = 'np.'
+
+
+    Examples
+    --------
+
+    >>> print(np.arange(3))
+    [0 1 2]
+    >>> a=PrefixNumpyArrayString('numpy.')
+    >>> a.turn_on()
+    >>> print(np.arange(3))
+    numpy.array([             0,              1,              2])
+    >>> a.turn_off()
+    >>> print(np.arange(3))
+    [0 1 2]
+
+    """
+
+    def __init__(self, prefix = 'np.'):
+
+        self.prefix = prefix
+
+    def _pprint(self, arr):
+        """function to pass to np.set_string_function"""
+        return '%s%s' % (self.prefix, repr(arr))
+
+    def turn_on(self):
+        """turn_on printing numpy array with prefix"""
+        np.set_string_function(self._pprint, False)
+
+    def turn_off(self):
+        """turn_on printing numpy array with prefix"""
+        np.set_string_function(None, False)
+
+
 
 if __name__=='__main__':
+#    b = PrefixNumpyArrayString()
+#    b.turn_off()
+#    print(np.arange(4).__str__())
+#    print(np.arange(4).__repr__())
+#    b.turn_on()
+#    print(np.arange(4).__str__())
+#    print(np.arange(4).__repr__())
+#    b.turn_off()
+##    np.set_string_function(None)
+#    print(np.arange(4).__str__())
+#    print(np.arange(4).__repr__())
+#    print('*' * 5)
+#    b = PrefixNumpyArrayString()
+#    b.turn_off()
+#    print([np.arange(4).__str__()])
+#    print([np.arange(4).__repr__()])
+#    b.turn_on()
+#    print([np.arange(4).__str__()])
+#    print([np.arange(4).__repr__()])
+#    b.turn_off()
+##    np.set_string_function(None)
+#    print([np.arange(4).__str__()])
+#    print([np.arange(4).__repr__()])
+
+
+
+
+
+    b = PrefixNumpyArrayString()
+    b.turn_off()
+    a = PolyLine([0,1], [8,6])
+    print(a)
+    print(repr(a))
+    b = PrefixNumpyArrayString()
+    b.turn_on()
+    print(a)
+    print(repr(a))
+    b.turn_off()
+    np.set_string_function(None)
+    print(a)
+    print(repr(a))
+
     import doctest
     doctest.testmod()
-
-#    SyntaxChecker(['ast','builtin']).visit(ast.parse('import math', mode='exec'))
-    a="""[x for x in ().__class__.__bases__[0].__subclasses__()
-               if x.__name__ == 'Popen'][0](['ls', '-la']).wait()"""
-    SyntaxChecker(['ast','builtin','numpy']).visit(ast.parse(a, mode='exec'))
+#
+#
+#    a="""[x for x in ().__class__.__bases__[0].__subclasses__()
+#               if x.__name__ == 'Popen'][0](['ls', '-la']).wait()"""
+#    SyntaxChecker(['ast','builtin','numpy']).visit(ast.parse(a, mode='exec'))
 
 
 #    b = {'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0, 'kvref': 1.0, 'khref': 1.0, 'etref': 'yes1.01' }

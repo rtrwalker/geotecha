@@ -1853,11 +1853,15 @@ class PolyLine(object):
 
     def __str__(self):
         """Return a string representation of the xy data"""
-        return str(self.xy)
+        return "PolyLine(%s)" % (str(self.xy))
+#    def __repr__(self):
+#        """A string repr of the PolyLine that will recreate the Ployline"""
+#        return "PolyLine(%s%s)" % (self._prefix_for_numpy_array_repr,
+#                                    repr(self.xy))
     def __repr__(self):
         """A string repr of the PolyLine that will recreate the Ployline"""
-        return "PolyLine(%s%s)" % (self._prefix_for_numpy_array_repr,
-                                    repr(self.xy))
+        return "PolyLine(%s)" % (repr(self.xy))
+
     def __add__(self, other):
         return self._add_substract(other, op = operator.add)
     def __radd__(self, other):
@@ -2313,8 +2317,16 @@ if __name__ == '__main__':
 
 
 #def passes_vertical_line_test(x, y):
+
+    def pprint(arr):
+        return 'np.%s' % repr(arr)
+
+    np.set_string_function(pprint, repr=False)
     a = PolyLine([0,1], [6,8])
-    b = a.subdivide_into_linear_segments(500,2)
+#    b = a.subdivide_into_linear_segments(500,2)
     print(repr(a))
-    print(repr(b))
-    print(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2))
+    print(a)
+
+
+#    print(repr(b))
+#    print(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2))

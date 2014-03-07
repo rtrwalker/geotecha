@@ -1167,6 +1167,8 @@ plot_properties={}
 #    print('writer\n%s' % writer.getvalue())
     #a = calculate_normalised(my_code)
     a = speccon1d_vr(my_code)
+    writer = a.create_parsed_input()
+    print(writer.getvalue())
     a.make_all()
     slope = (a.por[-1,:]-a.por[-2,:]) / (a.ppress_z[-1]-a.ppress_z[-2])
 #    print(repr(a.tvals))
