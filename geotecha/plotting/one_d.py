@@ -30,6 +30,8 @@ import random
 import itertools
 import geotecha.math.transformations as transformations
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
+import geotecha.piecewise.piecewise_linear_1d as pwise
+
 
 def rgb_shade(rgb, factor=1, scaled=True):
     """apply shade (darken) to an rgb triplet
@@ -1499,17 +1501,17 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 
 #                print(dx, omega)
 
-            x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
-                    (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
-                    #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
-
-            y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
-                    (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
-                    #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
-
-            x = np.array([val for subl in x for val in subl])
-            y = np.array([val for subl in y for val in subl])
-
+#            x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+#                    (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
+#                    #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+#
+#            y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+#                    (x1, x2, y1, y2) in zip(vs_time.x[:-1], vs_time.x[1:], vs_time.y[:-1], vs_time.y[1:])]
+#                    #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+#
+#            x = np.array([val for subl in x for val in subl])
+#            y = np.array([val for subl in y for val in subl])
+            x, y = pwise.subdivide_x_y_into_segments(x=vs_time.x, y=vs_time.y, dx=dx, min_segments=4)
             if not omega_phase is None:
                 y *= np.cos(omega * x + phase)
 
@@ -1525,15 +1527,16 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
             if isinstance(vs_depth, PolyLine):
                 dx = (np.max(vs_depth.x)-np.min(vs_depth.x))/8
 
-                x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
-                        (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
-                        #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
-
-                y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
-                        (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
-
-                x = np.array([val for subl in x for val in subl])
-                y = np.array([val for subl in y for val in subl])
+#                x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+#                        (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+#                        #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+#
+#                y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+#                        (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+#
+#                x = np.array([val for subl in x for val in subl])
+#                y = np.array([val for subl in y for val in subl])
+                x, y = pwise.subdivide_x_y_into_segments(x=vs_depth.x, y=vs_depth.y, dx=dx, min_segments=4)
             else: # assume a tuple of x and y values
                     x, y = vs_depth
                     x = np.atleast_1d(x)
@@ -1770,18 +1773,19 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
             x_, y_ =vs_depth
             vs_depth = PolyLine(x_,y_)
 
-        dx = (np.max(vs_depth.x)-np.min(vs_depth.x))/8
+        dx = (np.max(vs_depth.x)-np.min(vs_depth.x)) / 8
+#
+#        x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
+#                (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+#                #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
+#
+#        y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
+#                (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
+#
+#        x = np.array([val for subl in x for val in subl])
+#        y = np.array([val for subl in y for val in subl])
 
-        x = [np.linspace(x1, x2, max(int((x2-x1)//dx), 4)) for
-                (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
-                #if abs(y2-y1) > 1e-5 and abs(x2-x1) > 1e-5]
-
-        y = [np.linspace(y1, y2, max(int((x2-x1)//dx), 4)) for
-                (x1, x2, y1, y2) in zip(vs_depth.x[:-1], vs_depth.x[1:], vs_depth.y[:-1], vs_depth.y[1:])]
-
-        x = np.array([val for subl in x for val in subl])
-        y = np.array([val for subl in y for val in subl])
-
+        x, y = pwise.subdivide_x_y_into_segments(x=vs_depth.x, y=vs_depth.y, dx=dx, min_segments=4)
         z = transformations.depth_to_reduced_level(x, H, RLzero)
         ax1[-1].plot(y, z, **style)
 

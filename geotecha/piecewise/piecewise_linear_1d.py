@@ -2020,82 +2020,7 @@ class PolyLine(object):
             print("unsupported operand type(s) for +: 'PolyLine' and '%s'" % other.__class__.__name__)
 #            sys.exit(0)
         return a
-    def subdivide_into_linear_segments(self, dx, min_segments = 2,
-                                       just_before = None):
-        """subdivide each segment into equally spaced subsegments
 
-        return a new PolyLine
-
-        Parameters
-        ----------
-        dx : float
-            approxmate length of subsegment.  Say segment is 10 units long
-            and dx=4 then int(10/4)=2 subsegments (i.e. an extra point will
-            be inserted in teh segement) will be created with length
-            5 units.  Use a large dx (larger than your range of x values) if
-            you want to subdivide into a specific number of subsegments
-        min_segments : int, optional
-            minuimum number of subsegments per inteval. this will be used if
-            int(segment_lenght/dx)<min_segments. default = 2
-        just_before : float, optional
-            If just_before is not None then in terms of subdividing each
-            segment will be treated as if it begins at its starting value but
-            ends a distance of `just_before` multiplied by the interval length
-            before its end value. This
-            means that an extra point will be added just before all of the
-            original points. default = None i.e dont use just before point.
-            Use a small number e.g. 1e-6.
-            `just_before` can be useful for example when getting
-            times to evaluate pore pressure at in a soil consoliation
-            analysis.  Say you have a PolyLine representing load_vs_time. If
-            there are step changes in your load then there will be step
-            changes in your pore pressure.  To capture the step change in your
-            output you need an output time just before and just after the step
-            change in your load.  Using `just_before` can achieve this.
-
-        Returns
-        -------
-        out : PolyLine
-            New PolyLine with points inserted within each interval
-
-        """
-
-
-
-        if just_before is None:
-            x = [np.linspace(x1, x2, max(int(abs((x2-x1)//dx)), min_segments),
-                             endpoint = False) for
-                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
-                                            self.y[:-1], self.y[1:])]
-
-
-            y = [np.linspace(y1, y2, max(int(abs((x2-x1)//dx)), min_segments),
-                             endpoint = False) for
-                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
-                                            self.y[:-1], self.y[1:])]
-        else:
-            x = [np.linspace(x1, x1 + (1-just_before) * (x2 - x1),
-                             max(int(abs((x2-x1)//dx)), min_segments)+1,
-                             endpoint = True) for
-                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
-                                            self.y[:-1], self.y[1:])]
-
-
-            y = [np.linspace(y1, y1 + (1-just_before) * (y2 - y1),
-                             max(int(abs((x2-x1)//dx)), min_segments)+1,
-                             endpoint = True) for
-                    (x1, x2, y1, y2) in zip(self.x[:-1], self.x[1:],
-                                            self.y[:-1], self.y[1:])]
-
-
-        # add in final point
-        x.append([self.x[-1]])
-        y.append([self.y[-1]])
-
-        x = np.array([val for subl in x for val in subl])
-        y = np.array([val for subl in y for val in subl])
-
-        return PolyLine(x, y)
 
 
 
@@ -2181,7 +2106,275 @@ def polyline_make_x_common(*p_lines):
 
 
 
+def subdivide_x_y_into_segments(x, y, dx=None, min_segments = 2,
+        just_before = None, logx=False, logy=False, logxzero=0.1,
+        logyzero=0.1, rtol=1e-5, atol=1e-8):
+    """subdivide each line segment into subsegments
 
+    subsegements are evenly spaced in linear or log space
+
+    Parameters
+    ----------
+    x : 1d array-like
+        list of xvalues to subdivide
+    y : 1d array-like
+        list of y values to subdivide (based on x values)
+        no y values
+    dx : float, optional
+        approxmate log10(length) of subsegment.  Say segment is from 1-10 units
+        and dx=0.2 then int((log(10)-log(1))/0.2)=5 subsegments
+        (i.e. 5 extra points will be inserted in thh segement) will be
+        created at log(1+0.2), log(1+0.4), log(1+0.6) etc.
+        default = None i.e. no dx check use min_segments.
+    min_segments : int, optional
+        minuimum number of subsegments per inteval. this will be used if
+        int(segment_lenght/dx)<min_segments. default = 2
+    just_before : float, optional
+        If just_before is not None then in terms of subdividing each
+        segment will be treated as if it begins at its starting value but
+        ends a distance of `just_before` multiplied by the interval length
+        before its end value. This
+        means that an extra point will be added just before all of the
+        original points. default = None i.e dont use just before point.
+        Use a small number e.g. 1e-6.
+        `just_before` can be useful for example when getting
+        times to evaluate pore pressure at in a soil consoliation
+        analysis.  Say you have a PolyLine representing load_vs_time. If
+        there are step changes in your load then there will be step
+        changes in your pore pressure.  To capture the step change in your
+        output you need an output time just before and just after the step
+        change in your load.  Using `just_before` can achieve this.
+    logx, logy: True/False, optional
+        use log scale on x and y axes.  default = False
+    logxzero, logyzero: float, optional
+        if log scale is used force zero value to be given number.
+        Useful when 1st point iszero but you really want to start from close
+        to zero. default = 0.01
+    rtol, atol: float, optional
+        for determining equal to zero when using log scale with numpy.
+        default atol = 1e-8 , rtol = 1e-5
+    Returns
+    -------
+    xnew, ynew : 1d array
+        new x and y coordinates
+
+    """
+
+
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+
+
+    if len(x)!=len(y):
+        raise (ValueError('x and y must have same length '
+                     'len(x)=%d, len(y)=%d' % (len(x), len(y))))
+    if logx:
+        x[np.abs(x) <= (atol + rtol * np.abs(x))] = logxzero
+        if np.any(x<0):
+            raise ValueError('When logx=True cannot have negative '
+                                'x values, x=' + x)
+        x = np.log10(x)
+    if logy:
+        y[np.abs(y) <= (atol + rtol * np.abs(y))] = logyzero
+        if np.any(y<0):
+            raise ValueError('When logy=True cannot have negative '
+                                'y values, y=' + x)
+        y = np.log10(y)
+
+
+    if dx is None:
+        dx = 2*(np.max(x)-np.min(x))
+
+    if just_before is None:
+        xnew = [np.linspace(x1, x2, max(int(abs((x2-x1)//dx)), min_segments),
+                         endpoint = False) for (x1, x2) in zip(x[:-1], x[1:])]
+
+        ynew = [np.linspace(y1, y2, max(int(abs((x2-x1)//dx)), min_segments),
+                            endpoint = False) for
+                (x1, x2, y1, y2) in zip(x[:-1], x[1:], y[:-1], y[1:])]
+    else:
+        xnew = [np.linspace(x1, x1 + (1-just_before) * (x2 - x1),
+                         max(int(abs((x2-x1)//dx)), min_segments)+1,
+                         endpoint = True) for
+                (x1, x2) in zip(x[:-1], x[1:])]
+
+
+        ynew = [np.linspace(y1, y1 + (1-just_before) * (y2 - y1),
+                         max(int(abs((x2-x1)//dx)), min_segments)+1,
+                         endpoint = True) for
+                (x1, x2, y1, y2) in zip(x[:-1], x[1:],
+                                        y[:-1], y[1:])]
+
+    # add in final point
+    xnew.append([x[-1]])
+    ynew.append([y[-1]])
+
+    xnew = np.array([val for subl in xnew for val in subl])
+    ynew = np.array([val for subl in ynew for val in subl])
+
+
+    if logx:
+
+        xnew = 10**xnew
+    if logy:
+        ynew = 10**ynew
+
+    return (xnew, ynew)
+
+def subdivide_x_into_segments(x, dx=None, min_segments = 2,
+        just_before = None, logx=False, logxzero=0.1,
+        rtol=1e-5, atol=1e-8):
+    """subdivide each inteval into subsegments
+
+    Intervals are evenly spaced in linear or log space
+
+    Parameters
+    ----------
+    x : 1d array-like
+        list of xvalues to subdivide
+    dx : float, optional
+        approxmate log10(length) of subsegment.  Say segment is from 1-10 units
+        and dx=0.2 then int((log(10)-log(1))/0.2)=5 subsegments
+        (i.e. 5 extra points will be inserted in thh segement) will be
+        created at log(1+0.2), log(1+0.4), log(1+0.6) etc.
+        default = None i.e. no dx check use min_segments.
+    min_segments : int, optional
+        minuimum number of subsegments per inteval. this will be used if
+        int(segment_lenght/dx)<min_segments. default = 2
+    just_before : float, optional
+        If just_before is not None then in terms of subdividing each
+        segment will be treated as if it begins at its starting value but
+        ends a distance of `just_before` multiplied by the interval length
+        before its end value. This
+        means that an extra point will be added just before all of the
+        original points. default = None i.e dont use just before point.
+        Use a small number e.g. 1e-6.
+        `just_before` can be useful for example when getting
+        times to evaluate pore pressure at in a soil consoliation
+        analysis.  Say you have a PolyLine representing load_vs_time. If
+        there are step changes in your load then there will be step
+        changes in your pore pressure.  To capture the step change in your
+        output you need an output time just before and just after the step
+        change in your load.  Using `just_before` can achieve this.
+    logx: True/False, optional
+        use log scale on x axis.  default = False
+    logxzero: float, optional
+        if log scale is used force zero value to be given number.
+        Useful when 1st point iszero but you really want to start from close
+        to zero. default = 0.01
+    rtol, atol: float, optional
+        for determining equal to zero when using log scale with numpy.
+        default atol = 1e-8 , rtol = 1e-5
+    Returns
+    -------
+    xnew: 1d array
+        new x values
+
+    """
+
+
+    x = np.asarray(x, dtype=float)
+
+
+
+    if logx:
+        x[np.abs(x) <= (atol + rtol * np.abs(x))] = logxzero
+        if np.any(x<0):
+            raise ValueError('When logx=True cannot have negative '
+                                'x values, x=' + x)
+        x = np.log10(x)
+
+
+    if dx is None:
+        dx = 2*(np.max(x)-np.min(x))
+
+    if just_before is None:
+        xnew = [np.linspace(x1, x2, max(int(abs((x2-x1)//dx)), min_segments),
+                         endpoint = False) for (x1, x2) in zip(x[:-1], x[1:])]
+
+    else:
+        xnew = [np.linspace(x1, x1 + (1-just_before) * (x2 - x1),
+                         max(int(abs((x2-x1)//dx)), min_segments)+1,
+                         endpoint = True) for
+                (x1, x2) in zip(x[:-1], x[1:])]
+
+
+    # add in final point
+    xnew.append([x[-1]])
+
+
+    xnew = np.array([val for subl in xnew for val in subl])
+
+
+
+    if logx:
+
+        xnew = 10**xnew
+
+
+    return xnew
+
+
+#def subdivide_x_into_linear_segments(x, dx=None, min_segments = 2,
+#                                       just_before = None):
+#    """subdivide each x inteval into equally spaced subsegments
+#
+#    Parameters
+#    ----------
+#    x : 1d array-like
+#        list of xvalues to subdivide
+#    dx : float, optional
+#        approxmate length of subsegment.  Say segment is 10 units long
+#        and dx=4 then int(10/4)=2 subsegments (i.e. an extra point will
+#        be inserted in teh segement) will be created with length
+#        5 units.
+#        default = None i.e. no dx check use min_segments.
+#    min_segments : int, optional
+#        minuimum number of subsegments per inteval. this will be used if
+#        int(segment_lenght/dx)<min_segments. default = 2
+#    just_before : float, optional
+#        If just_before is not None then in terms of subdividing each
+#        segment will be treated as if it begins at its starting value but
+#        ends a distance of `just_before` multiplied by the interval length
+#        before its end value. This
+#        means that an extra point will be added just before all of the
+#        original points. default = None i.e dont use just before point.
+#        Use a small number e.g. 1e-6.
+#        `just_before` can be useful for example when getting
+#        times to evaluate pore pressure at in a soil consoliation
+#        analysis.  Say you have a PolyLine representing load_vs_time. If
+#        there are step changes in your load then there will be step
+#        changes in your pore pressure.  To capture the step change in your
+#        output you need an output time just before and just after the step
+#        change in your load.  Using `just_before` can achieve this.
+#
+#    Returns
+#    -------
+#    xnew : 1d array
+#        new x, values
+#
+#    """
+#
+#    x = np.asarray(x)
+#
+#
+#    if dx is None:
+#        dx = 2*(np.max(x)-np.min(x))
+#
+#    if just_before is None:
+#        xnew = [np.linspace(x1, x2, max(int(abs((x2-x1)//dx)), min_segments),
+#                         endpoint = False) for (x1, x2) in zip(x[:-1], x[1:])]
+#
+#    else:
+#        xnew = [np.linspace(x1, x1 + (1-just_before) * (x2 - x1),
+#                         max(int(abs((x2-x1)//dx)), min_segments)+1,
+#                         endpoint = True) for
+#                (x1, x2) in zip(x[:-1], x[1:])]
+#
+#    # add in final point
+#    xnew.append([x[-1]])
+#    xnew = np.array([val for subl in xnew for val in subl])
+#    return (xnew, ynew)
 
 
 if __name__ == '__main__':
@@ -2318,15 +2511,16 @@ if __name__ == '__main__':
 
 #def passes_vertical_line_test(x, y):
 
-    def pprint(arr):
-        return 'np.%s' % repr(arr)
-
-    np.set_string_function(pprint, repr=False)
-    a = PolyLine([0,1], [6,8])
-#    b = a.subdivide_into_linear_segments(500,2)
-    print(repr(a))
-    print(a)
-
+#    def pprint(arr):
+#        return 'np.%s' % repr(arr)
+#
+#    np.set_string_function(pprint, repr=False)
+#    a = PolyLine([0,1], [6,8])
+##    b = a.subdivide_into_linear_segments(500,2)
+#    print(repr(a))
+#    print(a)
+    print(subdivide_x_y_into_segments([0,10], [6,8],
+                            dx=None, min_segments=2, logx=True))
 
 #    print(repr(b))
 #    print(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2))

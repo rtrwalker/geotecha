@@ -84,6 +84,9 @@ from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multiply_integrate_x1b
 
 from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super
 
+from geotecha.piecewise.piecewise_linear_1d import subdivide_x_y_into_segments
+from geotecha.piecewise.piecewise_linear_1d import subdivide_x_into_segments
+
 class test_linear_piecewise(object):
     """Some piecewise distributions for testing"""
 
@@ -1219,22 +1222,30 @@ def test_PolyLine():
     assert_false(PolyLine([0,1],[3,4])==PolyLine([0,1],[3,8]))
 
 
-    #subdivide_into_linear_segments
-    ok_(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2)==
-        PolyLine([[ 0. ,  6. ],[ 0.5,  7. ],[ 1.,  8. ]]))
-    ok_(PolyLine([1,0], [6,8]).subdivide_into_linear_segments(500,2)==
-        PolyLine([[ 1. ,  6. ],[ 0.5,  7. ],[ 0.,  8. ]]))
-    ok_(PolyLine([0,3,9], [10,13,19]).subdivide_into_linear_segments(500,3)==
-        PolyLine([[ 0 ,  10 ],[ 1,  11 ],[ 2,  12 ],
-                  [3, 13], [5, 15], [7,17], [9,19]]))
-    ok_(PolyLine([0,3,9], [10,13,19]).subdivide_into_linear_segments(2,2)==
-        PolyLine([[ 0 ,  10 ],[ 1.5,  11.5 ],[ 3,  13 ],
-                  [5, 15], [7,17], [9,19]]))
-    ok_(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2, 0.2)==
-        PolyLine([[ 0. ,  6. ],[ 0.4,  6.8 ],[0.8, 7.6],[ 1.,  8. ]]))
+#    #subdivide_into_linear_segments
+#    ok_(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2)==
+#        PolyLine([[ 0. ,  6. ],[ 0.5,  7. ],[ 1.,  8. ]]))
+#    ok_(PolyLine([1,0], [6,8]).subdivide_into_linear_segments(500,2)==
+#        PolyLine([[ 1. ,  6. ],[ 0.5,  7. ],[ 0.,  8. ]]))
+#    ok_(PolyLine([0,3,9], [10,13,19]).subdivide_into_linear_segments(500,3)==
+#        PolyLine([[ 0 ,  10 ],[ 1,  11 ],[ 2,  12 ],
+#                  [3, 13], [5, 15], [7,17], [9,19]]))
+#    ok_(PolyLine([0,3,9], [10,13,19]).subdivide_into_linear_segments(2,2)==
+#        PolyLine([[ 0 ,  10 ],[ 1.5,  11.5 ],[ 3,  13 ],
+#                  [5, 15], [7,17], [9,19]]))
+#    ok_(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2, 0.2)==
+#        PolyLine([[ 0. ,  6. ],[ 0.4,  6.8 ],[0.8, 7.6],[ 1.,  8. ]]))
+#
+##    assert_allclose(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2, 0.2).xy,
+##                    [[ 0. ,  6. ],[ 0.4,  6.8 ],[0.8, 7.6],[ 1.,  8. ]])
 
-#    assert_allclose(PolyLine([0,1], [6,8]).subdivide_into_linear_segments(500,2, 0.2).xy,
-#                    [[ 0. ,  6. ],[ 0.4,  6.8 ],[0.8, 7.6],[ 1.,  8. ]])
+
+
+
+
+
+
+
 
 
 class test_polyline_make_x_common(unittest.TestCase):
@@ -1302,6 +1313,116 @@ class test_polyline_make_x_common(unittest.TestCase):
                              PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[0.0, 3.0, 6.0, 5.0, 7.0]),
                              PolyLine([0.0, 0.5, 1.0, 2.0, 4.0],[1.0, 1.0, 3.0, 7.0, 7.0]))
                  )
+
+class test_subdivide_x_y_into_segments(unittest.TestCase):
+    """test for subdivide_x_y_into_segments"""
+
+    def test_single_segment(self):
+        x, y = subdivide_x_y_into_segments([0,1], [6,8],
+                            dx=None,min_segments=2)
+        assert_allclose(x, [0.0, 0.5, 1.0])
+        assert_allclose(y, [6.0, 7.0, 8.0])
+
+    def test_single_segment_reverse_order(self):
+        x, y = subdivide_x_y_into_segments([1,0], [8,6],
+                            dx=None,min_segments=2)
+        assert_allclose(x, [1.0, 0.5, 0.0])
+        assert_allclose(y, [8.0, 7.0, 6.0])
+
+    def test_two_segments_of_different_length(self):
+        x, y = subdivide_x_y_into_segments([0,3,9], [10,13,19],
+                            dx=None,min_segments=3)
+        assert_allclose(x, [0,1,2,3,5,7,9])
+        assert_allclose(y, [10,11,12,13,15,17,19])
+
+    def test_two_segments_of_different_length_dx_governs(self):
+        x, y = subdivide_x_y_into_segments([0,3,9], [10,13,19],
+                            dx=2,min_segments=2)
+        assert_allclose(x, [0,1.5,3, 5, 7, 9])
+        assert_allclose(y, [10,11.5,13,15,17,19])
+
+    def test_just_before(self):
+        x, y = subdivide_x_y_into_segments([0,1], [6,8],
+                            dx=None,min_segments=2, just_before=0.2)
+        assert_allclose(x, [0.0, 0.4, 0.8, 1.0])
+        assert_allclose(y, [6.0, 6.8, 7.6, 8.0])
+
+
+    def test_single_segment_logx_only(self):
+        x, y = subdivide_x_y_into_segments([1,10], [6,8],
+                            dx=None,min_segments=2, logx=True)
+        assert_allclose(x, [1, 3.16227766, 10])
+        assert_allclose(y, [6.0, 7.0, 8.0])
+
+    def test_single_segment_logy_only(self):
+        x, y = subdivide_x_y_into_segments([1,10], [6,8],
+                            dx=None,min_segments=2, logy=True)
+        assert_allclose(x, [1, 5.5, 10])
+        assert_allclose(y, [6.0, 6.9282032302755, 8.0])
+
+    def test_single_segment_logx_logy(self):
+        x, y = subdivide_x_y_into_segments([1,10], [6,8],
+                            dx=None,min_segments=2, logx=True, logy=True)
+        assert_allclose(x, [1, 3.16227766, 10])
+        assert_allclose(y, [6.0, 6.9282032302755, 8.0])
+
+    def test_single_segment_logx_zero(self):
+        x, y = subdivide_x_y_into_segments([0,10], [6,8],
+                            dx=None, min_segments=2, logx=True, logxzero=0.1)
+        assert_allclose(x, [0.1, 1, 10])
+        assert_allclose(y, [6.0, 7.0, 8.0])
+    def test_single_segment_logy_zero(self):
+        x, y = subdivide_x_y_into_segments([0,10], [0,10],
+                            dx=None, min_segments=2, logy=True, logyzero=0.1)
+        assert_allclose(x, [0, 5, 10])
+        assert_allclose(y, [0.1, 1, 10])
+
+
+class test_subdivide_x_into_segments(unittest.TestCase):
+    """test for subdivide_x_into_segments"""
+
+    def test_single_segment(self):
+        x = subdivide_x_into_segments([0,1],
+                            dx=None,min_segments=2)
+        assert_allclose(x, [0.0, 0.5, 1.0])
+
+
+    def test_single_segment_reverse_order(self):
+        x= subdivide_x_into_segments([1,0],
+                            dx=None,min_segments=2)
+        assert_allclose(x, [1.0, 0.5, 0.0])
+
+
+    def test_two_segments_of_different_length(self):
+        x= subdivide_x_into_segments([0,3,9],
+                            dx=None,min_segments=3)
+        assert_allclose(x, [0,1,2,3,5,7,9])
+
+
+    def test_two_segments_of_different_length_dx_governs(self):
+        x = subdivide_x_into_segments([0,3,9],
+                            dx=2,min_segments=2)
+        assert_allclose(x, [0,1.5,3, 5, 7, 9])
+
+
+    def test_just_before(self):
+        x = subdivide_x_into_segments([0,1],
+                            dx=None,min_segments=2, just_before=0.2)
+        assert_allclose(x, [0.0, 0.4, 0.8, 1.0])
+
+
+    def test_single_segment_logx(self):
+        x = subdivide_x_into_segments([1,10],
+                            dx=None,min_segments=2, logx=True)
+        assert_allclose(x, [1, 3.16227766, 10])
+
+
+    def test_single_segment_logx_zero(self):
+        x= subdivide_x_into_segments([0,10],
+                            dx=None, min_segments=2, logx=True, logxzero=0.1)
+        assert_allclose(x, [0.1, 1, 10])
+
+
 
 
 #    ok_(np.allclose((PolyLine([0,1],[3,4]) + PolyLine([0,1],[1,2])).xy,
