@@ -26,6 +26,7 @@ from nose.tools.trivial import ok_
 from nose.tools.trivial import assert_equal
 from nose.tools.trivial import assert_equals
 
+import unittest
 import textwrap
 from math import pi
 import numpy as np
@@ -43,6 +44,7 @@ from geotecha.inputoutput.inputoutput import code_for_explicit_attribute_initial
 from geotecha.inputoutput.inputoutput import object_members
 from geotecha.inputoutput.inputoutput import SyntaxChecker
 from geotecha.inputoutput.inputoutput import force_attribute_same_len_if_none
+from geotecha.inputoutput.inputoutput import string_of_object_attributes
 
 class EmptyClass(object):
     """empty class for assigning attributes fot object testing"""
@@ -262,3 +264,61 @@ def test_SyntaxChecker():
     assert_raises(SyntaxError, syntax_checker.visit,
                   ast.parse("""[x for x in ().__class__.__bases__[0].__subclasses__()
            if x.__name__ == 'Popen'][0](['ls', '-la']).wait()""", mode='exec'))
+
+
+class test_string_of_object_attributes(unittest.TestCase):
+    """ tests for string_of_object_attributes"""
+#    string_of_object_attributes(obj, attributes=[], none_at_bottom=True,
+#                                    numpy_array_prefix = "np."):
+
+    def test_defaults(self):
+
+        a=EmptyClass()
+        a.a=None
+        a.b=4
+        a.c = np.array([1,2,3])
+        a.d='happy'
+        assert_equal(string_of_object_attributes(a, 'a b c d'.split()),
+                     textwrap.dedent("""\
+                     b = 4
+                     c = np.array([          1,           2,           3])
+                     d = 'happy'
+
+
+                     a = None
+                     """))
+
+    def test_numpy_array_prefix_none(self):
+
+        a=EmptyClass()
+        a.a=None
+        a.b=4
+        a.c = np.array([1,2,3])
+        a.d='happy'
+        assert_equal(string_of_object_attributes(a, 'a b c d'.split(), numpy_array_prefix = None),
+                     textwrap.dedent("""\
+                     b = 4
+                     c = array([       1,        2,        3])
+                     d = 'happy'
+
+
+                     a = None
+                     """))
+    def test_none_at_bottom(self):
+
+        a=EmptyClass()
+        a.a=None
+        a.b=4
+        a.d='happy'
+        assert_equal(string_of_object_attributes(a, 'a b c d'.split(), none_at_bottom=False),
+                     textwrap.dedent("""\
+                     a = None
+                     b = 4
+                     c = None
+                     d = 'happy'
+                     """))
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3'])
+#    nose.run(argv=[__file__, '--with-doctest', '-vv'])

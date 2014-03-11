@@ -1119,41 +1119,67 @@ class InputFileLoaderAndChecker(object):
 
         return
 
-    def create_parsed_input(self):
-        """create an input file based on the objects attributtes"""
-        PrefixNumpyArrayString().turn_on()
-        writer = StringIO()
-#        none_attributes = [v for v in self.attributes if
-#                            getattr(self, v, None) is None]
-#        attributes = [v for v in self.attributes if
-#                            not getattr(self, v, None) is None]
 
 
-        #TODO: add in special for string arguments( i.e. put in '' if strings)
-#        writer.writelines(['%s = %s\n' % (v, getattr(self, v, None))
-#            for v in self._attributes if not getattr(self, v, None) is None])
-#        writer.write('\n\n#Unused parameters\n')
-#        writer.writelines(['%s = %s\n' % (v, getattr(self, v, None))
-#            for v in self._attributes if getattr(self, v, None) is None])
+def string_of_object_attributes(obj, attributes=[], none_at_bottom=True,
+                                    numpy_array_prefix = "np."):
+    """Put repr of objects attributes into one string
 
-        def f(v):
-            if isinstance(v, str):
-                return "'"
-            else:
-                return ""
+    The repr of each attribute will be put in a line within the output string.
+    If the attribute is not found then None will be given
 
-        writer.writelines(['{0} = {1}{2}{1}\n'.format(v, f(getattr(self, v, None)), getattr(self, v, None))
-            for v in self._attributes if not getattr(self, v, None) is None])
-        writer.write('\n\n#Unused parameters\n')
-        writer.writelines(['{0} = {1}{2}{1}\n'.format(v, f(getattr(self, v, None)), getattr(self, v, None))
-            for v in self._attributes if getattr(self, v, None) is None])
+    Parameters
+    ----------
+    obj : object
+        object containing attributes
+    attributes : list of string, optional
+        list of attribute names.
+    none_at_bottom: True/False
+        If True then any attribute that is None will be placed at the end
+        of the output string.
+    numpy_array_prefix : string, optional
+        repr of numpy arrays by default do not print with anything in front of
+        'array'.  with `numpy_array_prefix` wou can add a 'np.' etc.  default=
+        'np.' Use `None` for no prefix.
+
+    Returns
+    -------
+    out : str
+        string
+
+    """
+
+    def f(v):
+        if isinstance(v, str):
+            return "'"
+        else:
+            return ""
+
+    if not numpy_array_prefix is None:
+        a = PrefixNumpyArrayString(numpy_array_prefix)
+    else:
+        a = PrefixNumpyArrayString('')
+    a.turn_on()
 
 
 
-        PrefixNumpyArrayString().turn_off()
-        return writer
+    writer = ""
+    if none_at_bottom:
+        writer+='\n'.join(['{0} = {1}{2}{1}'.format(v, f(getattr(obj, v, None)),
+            getattr(obj, v, None))
+            for v in attributes if not getattr(obj, v, None) is None])
+        writer+='\n\n\n'
+        writer+='\n'.join(['{0} = {1}{2}{1}'.format(v, f(getattr(obj, v, None)),
+            getattr(obj, v, None))
+            for v in attributes if getattr(obj, v, None) is None])
+    else:
+        writer+='\n'.join(['{0} = {1}{2}{1}'.format(v, f(getattr(obj, v, None)),
+            getattr(obj, v, None))
+            for v in attributes])
 
-
+    writer+='\n'
+    a.turn_off()
+    return writer
 
 
 
