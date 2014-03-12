@@ -29,6 +29,8 @@ from sympy.printing.fcode import FCodePrinter
 import multiprocessing
 import time
 from StringIO import StringIO
+import re
+import os
 
 
 class SyntaxChecker(ast.NodeVisitor):
@@ -1232,6 +1234,68 @@ class PrefixNumpyArrayString(object):
         """turn_on printing numpy array with prefix"""
         np.set_string_function(None, False)
 
+
+def next_output_stem(prefix, path=None, start=1, inc=1, zfill=3,
+                     overwrite=False):
+    """find next unique prefix-number in sequence of numbered files/folders
+
+    Looks in folder of `path` for files/folders with prefix-number combos
+    of the form 'prefixdddxyz.ext'.  If found
+    then the ddd is incremented by `inc` and the new 'prefixddd' is returned.
+    E.g. if file 'prefix004_exact.out' exists you will get 'prefix_005' as
+    the next output stem.
+
+    Parameters
+    ----------
+    prefix : string
+        start of file/folder name to search for
+    path : string, optional
+        folder to seach in.  Default= None i.e. search in current working
+        directory.
+    start : int, optional
+        If no existing files/folders match the numbering will start at `start`.
+        Default = 1.
+    inc : int, optional
+        If matching files/folders are found then the number will increment
+        by inc. default inc=1
+    zfill : int, optional
+        fill number with zeros to the left. eg. if `zfill` is 3 and the number
+        is 8, then the number will be output as '008'
+    overwrite: True/False
+        when True the prefix-number combo will not be incremented and the
+        highest exisiting prefix-number combo will be returned.
+    Returns
+    -------
+    stem : string
+        next output stem.
+
+    """
+
+
+    if path is None:
+        cwd = os.curdir
+    else:
+        if not os.path.isdir(path):
+            raise ValueError('folder does not exist: ' + cwd)
+        cwd = path
+
+
+    pattern = re.compile(prefix + "(?P<x>\d+).*")
+
+    nums = []
+    for nm in os.listdir(cwd):
+        match = pattern.match(nm)
+        if match:
+            nums.append(int(match.group('x')))
+    if len(nums)>0:
+
+        num = max(nums)
+        if not overwrite:
+            num += inc
+    else:
+        num = start
+
+    return prefix+""+str(num).zfill(zfill)
 
 
 if __name__=='__main__':

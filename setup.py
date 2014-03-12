@@ -25,34 +25,34 @@ from __future__ import division, print_function
 #ideas for setup/f2py came from:
 #    -numpy setup.py: https://github.com/numpy/numpy/blob/master/setup.py 2013-11-07
 #    -winpython setup.py: http://code.google.com/p/winpython/source/browse/setup.py 2013-11-07
-#    -needing to use 
-#        import setuptools; from numpy.distutils.core import setup, Extension: 
+#    -needing to use
+#        import setuptools; from numpy.distutils.core import setup, Extension:
 #        http://comments.gmane.org/gmane.comp.python.f2py.user/707 2013-11-07
 #    -wrapping FORTRAN code with f2py: http://www2-pcmdi.llnl.gov/cdat/tutorials/f2py-wrapping-fortran-code 2013-11-07
 #    -numpy disutils: http://docs.scipy.org/doc/numpy/reference/distutils.html 2013-11-07
-#    -manifest files in disutils: 
+#    -manifest files in disutils:
 #        'distutils doesn't properly update MANIFEST. when the contents of directories change.'
-#        https://github.com/numpy/numpy/blob/master/setup.py         
-#    -if things are not woring try deleting build, sdist, egg directories  and try again: 
+#        https://github.com/numpy/numpy/blob/master/setup.py
+#    -if things are not woring try deleting build, sdist, egg directories  and try again:
 #        http://stackoverflow.com/a/9982133/2530083 2013-11-07
 #    -getting fortran extensions to be installed in their appropriate sub package
-#        i.e. "my_ext = Extension(name = 'my_pack._fortran', sources = ['my_pack/code.f90'])" 
-#        Note that sources is a list even if one file: 
+#        i.e. "my_ext = Extension(name = 'my_pack._fortran', sources = ['my_pack/code.f90'])"
+#        Note that sources is a list even if one file:
 #        http://numpy-discussion.10968.n7.nabble.com/f2py-and-setup-py-how-can-I-specify-where-the-so-file-goes-tp34490p34497.html 2013-11-07
-#    -install fortran source files into their appropriate sub-package 
+#    -install fortran source files into their appropriate sub-package
 #        i.e. "package_data={'': ['*.f95','*.f90']}# Note it's a dict and list":
 #        http://stackoverflow.com/a/19373744/2530083 2013-11-07
-#    -Chapter 9 Fortran Programming with NumPy Arrays: 
+#    -Chapter 9 Fortran Programming with NumPy Arrays:
 #        Langtangen, Hans Petter. 2013. Python Scripting for Computational Science. 3rd edition. Springer.
 #    -Hitchhikers guide to packaging :
 #        http://guide.python-distribute.org/
-#    -Python Packaging: Hate, hate, hate everywhere : 
+#    -Python Packaging: Hate, hate, hate everywhere :
 #        http://lucumr.pocoo.org/2012/6/22/hate-hate-hate-everywhere/
-#    -How To Package Your Python Code: 
+#    -How To Package Your Python Code:
 #        http://www.scotttorborg.com/python-packaging/
-#    -install testing requirements: 
+#    -install testing requirements:
 #        http://stackoverflow.com/a/7747140/2530083 2013-11-07
-#    - 'python setup.py develop' : 
+#    - 'python setup.py develop' :
 #        http://stackoverflow.com/a/19048754/2530083
 
 import setuptools
@@ -73,23 +73,23 @@ def get_package_data(name, extlist):
     # Workaround to replace os.path.relpath (not available until Python 2.6):
     offset = len(name)+len(os.pathsep)
     for dirpath, _dirnames, filenames in os.walk(name):
-        for fname in filenames:            
+        for fname in filenames:
             if not fname.startswith('.') and osp.splitext(fname)[1] in extlist:
 #                flist.append(osp.join(dirpath, fname[offset:]))
                 flist.append(osp.join(dirpath, fname))
     return flist
 
 def get_folder(name, foldernames):
-    flist = []    
+    flist = []
     for dirpath, _dirnames, filenames in os.walk(name):
 #        print(dirpath, _dirnames)
-        for dname in _dirnames:            
+        for dname in _dirnames:
             if dname in foldernames:
 
                 flist.append(osp.join(dirpath, dname))
     return flist
-    
-    
+
+
 DOCLINES = __doc__.split("\n")
 CLASSIFIERS = """\
 Development Status :: 1 - Planning
@@ -121,7 +121,7 @@ VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 INSTALL_REQUIRES=[]
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'
-TESTS_REQUIRE=['nose']
+TESTS_REQUIRE=['nose', 'testfixtures']
 
 DATA_FILES = [(NAME, ['LICENSE.txt','README.rst'])]
 PACKAGES=setuptools.find_packages()
@@ -130,7 +130,7 @@ PACKAGES.remove('tools')
 PACKAGE_DATA={'': ['*.f95','*f90'],} #'geotecha.plotting.test': ['geotecha\\plotting\\test\\baseline_images\\test_one_d\\spines_axes_positions.png'] }
 ext_files = get_package_data(NAME,['.f90', '.f95','.F90', '.F95'])
 ext_module_names = ['.'.join(osp.splitext(v)[0].split(osp.sep)) for v in ext_files]
-EXT_MODULES = [Extension(name=x,sources=[y]) for x, y in zip(ext_module_names, ext_files)]      
+EXT_MODULES = [Extension(name=x,sources=[y]) for x, y in zip(ext_module_names, ext_files)]
 
 
 #add baseline_images for matplotlib image comparison
@@ -140,7 +140,7 @@ for v in baseline_module_names:
     if PACKAGE_DATA.has_key(v):
         PACKAGE_DATA[v].append(osp.join('baseline_images','*','*.*'))
     else:
-        PACKAGE_DATA[v]=[osp.join('baseline_images','*','*.*')]        
+        PACKAGE_DATA[v]=[osp.join('baseline_images','*','*.*')]
 #[PACKAGE_DATA[v] = osp.join('baseline_images','*','*.*') for v in baseline_module_names]
 #baseline_files = [osp.join('baseline_images','*','*.*')]
 #png_files = get_package_data(NAME,['.png'])
@@ -170,7 +170,7 @@ setup(
     zip_safe=ZIP_SAFE,
     test_suite=TEST_SUITE,
     tests_require=TESTS_REQUIRE,
-    package_data=PACKAGE_DATA,    
+    package_data=PACKAGE_DATA,
     ext_modules=EXT_MODULES,
     )
 ########################################################
@@ -183,7 +183,7 @@ setup(
 
 
 
-    
+
 #find all .f90 files
 #files = get_package_data('geotecha',['.f90', '.f95','.F90', '.F95'])
 
@@ -195,8 +195,8 @@ setup(
 
 
 
-        
-        
+
+
 
 
 
@@ -306,9 +306,9 @@ setup(
 #    elif os.path.exists('{pkg}/version.py'.format(pkg=NAME)):
 #        # must be a source distribution, use existing version file
 #        try:
-##            from numpy.version import git_revision as GIT_REVISION                                    
+##            from numpy.version import git_revision as GIT_REVISION
 #            GIT_REVISION =__import__('{pkg}.version'.format(pkg=NAME), globals(), locals(), ['git_revision'], -1).git_revision
-#            
+#
 #        except ImportError:
 #            raise ImportError("Unable to import git_revision. Try removing " \
 #                              "{pkg}/version.py and the build directory " \

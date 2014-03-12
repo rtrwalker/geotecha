@@ -27,6 +27,8 @@ from nose.tools.trivial import assert_equal
 from nose.tools.trivial import assert_equals
 
 import unittest
+
+from testfixtures import TempDirectory
 import textwrap
 from math import pi
 import numpy as np
@@ -45,6 +47,7 @@ from geotecha.inputoutput.inputoutput import object_members
 from geotecha.inputoutput.inputoutput import SyntaxChecker
 from geotecha.inputoutput.inputoutput import force_attribute_same_len_if_none
 from geotecha.inputoutput.inputoutput import string_of_object_attributes
+from geotecha.inputoutput.inputoutput import next_output_stem
 
 class EmptyClass(object):
     """empty class for assigning attributes fot object testing"""
@@ -317,6 +320,54 @@ class test_string_of_object_attributes(unittest.TestCase):
                      c = None
                      d = 'happy'
                      """))
+
+
+class test_next_output_stem(unittest.TestCase):
+    """tests for next_output_stem"""
+    #next_output_stem(prefix, path=None, start=1, inc=1, zfill=3,
+    #       overwrite=False)
+
+    def setUp(self):
+        self.tempdir = TempDirectory()
+        self.tempdir.write('a_004', b'some text a4')
+        self.tempdir.write('a_005', b'some text a5')
+        self.tempdir.write('b_002.txt', b'some text b2')
+        self.tempdir.write('b_008.out', b'some text b8')
+        self.tempdir.write(('c_010', 'por'), b'some text c5por')
+
+    def tearDown(self):
+        self.tempdir.cleanup()
+
+#    @with_setup(setup=self.setup, teardown=self.teardown)
+    def test_file(self):
+        assert_equal(next_output_stem(prefix='a_', path=self.tempdir.path),
+                     'a_006')
+    def test_file2(self):
+        assert_equal(next_output_stem(prefix='b_', path=self.tempdir.path),
+                     'b_009')
+    def test_directory(self):
+        assert_equal(next_output_stem(prefix='c_', path=self.tempdir.path),
+                     'c_011')
+    def test_file_overwrite(self):
+        assert_equal(next_output_stem(prefix='a_', path=self.tempdir.path,
+                                      overwrite=True),
+                     'a_005')
+    def test_inc(self):
+        assert_equal(next_output_stem(prefix='a_', path=self.tempdir.path,
+                                      inc=3),
+                     'a_008')
+    def test_zfill(self):
+        assert_equal(next_output_stem(prefix='a_', path=self.tempdir.path,
+                                      zfill=5),
+                     'a_00006')
+    def test_does_not_exist(self):
+        assert_equal(next_output_stem(prefix='g_', path=self.tempdir.path),
+                     'g_001')
+    def test_does_not_exist(self):
+        assert_equal(next_output_stem(prefix='g_', path=self.tempdir.path,
+                                      start=4),
+                     'g_004')
+
 
 if __name__ == '__main__':
     import nose
