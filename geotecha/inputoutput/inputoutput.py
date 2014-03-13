@@ -31,7 +31,7 @@ import time
 from StringIO import StringIO
 import re
 import os
-
+import pandas as pd
 
 class SyntaxChecker(ast.NodeVisitor):
     """
@@ -1296,6 +1296,151 @@ def next_output_stem(prefix, path=None, start=1, inc=1, zfill=3,
         num = start
 
     return prefix+""+str(num).zfill(zfill)
+
+
+def make_array_into_dataframe(data, column_labels=None, row_labels=None,
+                                row_labels_label='item'):
+    """Make an array into a pandas dataframe
+
+    The data frame will have no index. use df.set_index()
+
+    Parameters
+    ----------
+    data : 2d array
+        data to be put int (can be )
+    column_labels :  list or 1d array, optional
+        Column lables for data. default=None which will give column numbers
+        0,1,2, etc
+    row_labels : list or 1d array, optional
+        default = None which will use row numbers, 0,1,2,etc.
+    row_labels_label : string, optional
+        column label for the row_labels column.  default = 'item'
+
+    Returns
+    -------
+    df : pandas dataframe
+        dataframe of data. with column and row labels added
+
+
+    """
+
+    if isinstance(data, pd.DataFrame):
+        return data
+
+    if column_labels is None:
+        df = pd.DataFrame(data)
+    else:
+        df = pd.DataFrame(data=data, columns=column_labels)
+
+    if not row_labels is None:
+        s = pd.Series(row_labels)
+        df.insert(loc=0, column=row_labels_label, value = row_labels)
+
+    return df
+
+
+
+
+
+def save_grid_data_to_file(data_dicts, directory=None, file_stem='out_000',
+                           create_directory=True, ext='.csv'):
+    """Save grid data to files using a common filename stem
+
+    Saves grid data in `directory`.  Each data filename will begin with
+    `file_stem`.
+
+
+    Parameters
+    ----------
+    data_dicts : list of dict or single dict
+        Each data_dict contains info for outputing a piece of data to a file.
+        Although the data_dicts parameter is listed last, each data_dict
+        should appear at the start of the argument list when calling the
+        function.
+
+        ==================  ============================================
+        data_dict key       description
+        ==================  ============================================
+        name                String to be added to end of stem to create
+                            file_name
+        data                array of data to save to file.  If data
+                            is a pandas dataframe then row_labels and
+                            column labels will be ignored (i.e. it will
+                            be assumed that the dataframe already has
+                            row labels and column labels)
+        row_labels          List of row labels for data. default = None
+                            which will give no row labels.
+        row_labels_label    if there are row_labels then the column
+                            label for the row_label column. default=None
+                            which will give 'item'.
+        column_labels       Column lables for data. default=None which will
+                            give nothing
+        header              String to appear before data. Default=None
+        df_kwargs           dict of kwargs to pass to
+                            pandas.DataFrame.to_csv(). Default ={}
+        ==================  ============================================
+    directory : string, optional
+        path of directory to save data in.  default=None which will save
+        to the current working directory
+    file_stem : string, optional
+        beginning of file name, default = 'out_000'. Filename will be made
+        from `file_stem` + [`data_dict`['name']] + `ext`
+    ext : string, optional
+        file extension.  default = ".csv"
+    create_directory : True/False, optional
+        If True, all data files will be placed in a directory named file_stem.
+        So you might get files path_to_directory\out_000\out_000_cow.csv etc.
+        If False, all data files will be placed in `directory`.  So you would
+        get files path_to_directory\out_000_cow.csv etc.
+
+
+    """
+
+    if not isinstance(data_dicts, list):
+        data_dicts=[data_dicts]
+
+    if len(data_dicts)==0:
+        return
+
+
+    if not all([isinstance(v, dict) for v in data_dicts]):
+        raise ValueError('all elements of data_dicts must be a dict.')
+
+    if directory is None:
+        directory = os.path.curdir
+    if not os.path.isdir(directory):
+        os.mkdir(directory)
+
+
+    if create_directory:
+        dirname = os.path.join(directory, file_stem)
+        if not os.path.isdir(dirname):
+            os.mkdir(dirname)
+    else:
+        dirname = directory
+
+
+    for d in data_dicts:
+        data = d.pop('data', None)
+        name = d.pop('name',"")
+        row_labels = d.pop('row_labels', None)
+        row_labels_label = d.pop('row_labels_label', 'item')
+        column_labels = d.pop('column_labels', None)
+        header = d.pop('header', None)
+        df_kwargs = d.pop('df_kwargs',{})
+
+        if data is None:
+            continue
+        df = make_array_into_dataframe(data=data,
+                column_labels=column_labels, row_labels=row_labels,
+                row_labels_label=row_labels_label)
+
+
+        filename = os.path.join(dirname, str(file_stem) + str(name) + ext )
+        with open(filename,'w') as myfile:
+            if not header is None:
+                myfile.write(header+'\n')
+            df.to_csv(myfile, **df_kwargs)
 
 
 if __name__=='__main__':

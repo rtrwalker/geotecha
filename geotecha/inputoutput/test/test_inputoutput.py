@@ -32,6 +32,11 @@ from testfixtures import TempDirectory
 import textwrap
 from math import pi
 import numpy as np
+import pandas as pd
+from pandas.util.testing import assert_frame_equal
+import os
+
+
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
 from geotecha.inputoutput.inputoutput import make_module_from_text
@@ -48,6 +53,8 @@ from geotecha.inputoutput.inputoutput import SyntaxChecker
 from geotecha.inputoutput.inputoutput import force_attribute_same_len_if_none
 from geotecha.inputoutput.inputoutput import string_of_object_attributes
 from geotecha.inputoutput.inputoutput import next_output_stem
+from geotecha.inputoutput.inputoutput import make_array_into_dataframe
+from geotecha.inputoutput.inputoutput import save_grid_data_to_file
 
 class EmptyClass(object):
     """empty class for assigning attributes fot object testing"""
@@ -368,8 +375,204 @@ class test_next_output_stem(unittest.TestCase):
                                       start=4),
                      'g_004')
 
+class test_make_array_into_dataframe(unittest.TestCase):
+    """tests for make_array_into_dataframe"""
+#    make_array_into_dataframe(data, column_labels=None, row_labels=None,
+#                                row_labels_label='item')
+
+    def test_defaults(self):
+        assert_frame_equal(make_array_into_dataframe(
+                        data=np.arange(10).reshape((5,2))),
+                 pd.DataFrame(data=np.arange(10).reshape((5,2))))
+    def test_column_labels(self):
+        assert_frame_equal(make_array_into_dataframe(
+                        data=np.arange(10).reshape((5,2)),
+                        column_labels=['a', 'b']),
+                 pd.DataFrame(data=np.arange(10).reshape((5,2)),
+                              columns=['a', 'b']))
+
+    def test_row_labels(self):
+
+        df = pd.DataFrame(data=np.arange(10).reshape((5,2)))
+        s = pd.Series(['a', 'b', 'c', 'd', 'e'])
+        df.insert(loc=0, column='item', value=s)
+
+        assert_frame_equal(make_array_into_dataframe(
+                        data=np.arange(10).reshape((5,2)),
+                        row_labels=['a', 'b', 'c', 'd', 'e']),
+
+                 df)
+    def test_row_labels_label(self):
+
+        df = pd.DataFrame(data=np.arange(10).reshape((5,2)))
+        s = pd.Series(['a', 'b', 'c', 'd', 'e'])
+        df.insert(loc=0, column='hey', value=s)
+
+        assert_frame_equal(make_array_into_dataframe(
+                        data=np.arange(10).reshape((5,2)),
+                        row_labels=['a', 'b', 'c', 'd', 'e'],
+                        row_labels_label='hey'),
+
+                 df)
+
+
+
+
+
+class test_save_grid_data_to_file(unittest.TestCase):
+    """tests for save_grid_data_to_file"""
+#    save_grid_data_to_file(directory=None, file_stem='out_000',
+#                           create_directory=True, ext='.csv', *data_dicts)
+
+    def setUp(self):
+        self.tempdir = TempDirectory()
+
+
+    def tearDown(self):
+        self.tempdir.cleanup()
+
+    def test_defaults(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data},
+                               directory=self.tempdir.path)
+        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+    def test_directory(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data},
+                               directory=os.path.join(self.tempdir.path,'g'))
+        assert_equal(self.tempdir.read(('g','out_000','out_000.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+    def test_file_stem(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data},
+                               directory=self.tempdir.path,
+                               file_stem="ppp")
+        assert_equal(self.tempdir.read(('ppp','ppp.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+    def test_ext(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data},
+                               directory=self.tempdir.path,
+                               ext=".out")
+        assert_equal(self.tempdir.read(('out_000','out_000.out')).splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+    def test_create_directory(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data},
+                               directory=self.tempdir.path,
+                               create_directory=False)
+        assert_equal(self.tempdir.read('out_000.csv').splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+    def test_data_dict_header(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data, 'header':'hello header'},
+                               directory=self.tempdir.path)
+        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            hello header
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+    def test_data_dict_name(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data, 'name':'xx'},
+                               directory=self.tempdir.path)
+        assert_equal(self.tempdir.read(('out_000','out_000xx.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+
+    def test_data_dict_row_labels(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data, 'row_labels':[8,12,6]},
+                               directory=self.tempdir.path)
+        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,item,0,1
+                            0,8,0,1
+                            1,12,2,3
+                            2,6,4,5""").splitlines())
+    def test_data_dict_row_labels_label(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data, 'row_labels':[8,12,6],
+                                'row_labels_label':'yyy'},
+                               directory=self.tempdir.path)
+        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,yyy,0,1
+                            0,8,0,1
+                            1,12,2,3
+                            2,6,4,5""").splitlines())
+    def test_data_dict_column_labels(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file({'data': data, 'column_labels':['a', 'b']},
+                               directory=self.tempdir.path)
+        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,a,b
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+    def test_two_files(self):
+
+        data = np.arange(6).reshape(3,2)
+        save_grid_data_to_file([{'data': data, 'name':1},
+                                {'data': 2*data, 'name':2}],
+                               directory=self.tempdir.path,
+                               file_stem="qqq")
+        assert_equal(self.tempdir.read(('qqq','qqq1.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,1
+                            1,2,3
+                            2,4,5""").splitlines())
+        assert_equal(self.tempdir.read(('qqq','qqq2.csv')).splitlines(),
+                            textwrap.dedent("""\
+                            ,0,1
+                            0,0,2
+                            1,4,6
+                            2,8,10""").splitlines())
 
 if __name__ == '__main__':
+
+#      a = test_make_array_into_dataframe()
+
+
+
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3'])
 #    nose.run(argv=[__file__, '--with-doctest', '-vv'])
