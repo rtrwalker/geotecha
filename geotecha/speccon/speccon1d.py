@@ -124,6 +124,17 @@ class Speccon1d(inputoutput.InputFileLoaderAndChecker):
         self.make_time_dependent_arrays()
         self.make_output()
 
+        if getattr(self, 'save_data_to_file', False):
+            self._save_data()
+        if (getattr(self, 'save_figures_to_file', False) or
+                getattr(self, 'show_figures', False)):
+            self.produce_plots()
+            if getattr(self, 'save_figures_to_file', False):
+                self._save_figures()
+            if getattr(self, 'show_figures', False):
+                plt.show()
+
+
         return
 
     def make_time_independent_arrays(self):

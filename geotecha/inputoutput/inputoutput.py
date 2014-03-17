@@ -32,6 +32,7 @@ from StringIO import StringIO
 import re
 import os
 import pandas as pd
+import matplotlib.pyplot as plt
 
 class SyntaxChecker(ast.NodeVisitor):
     """
@@ -1003,15 +1004,52 @@ class InputFileLoaderAndChecker(object):
     _attributes_that_should_be_lists
     _attributes_that_should_have_same_x_limits
     _attributes_that_should_have_same_len_pairs
-    _zero_or_all = []
-    _at_least_one = []
-    _one_implies_others = []
+    _zero_or_all
+    _at_least_one
+    _one_implies_others
 
     _input_text : string
         str of the input file.  Will be None if no reader is passed to the
         __init__ method
     _debug : True/False
         for use with debugging. Default = False
+
+
+    _figures : list of matplotlib figures
+        each figure should have a label which will be used to save figures
+
+    _grid_data_dicts : list of dict
+        for saving grid_data to file using `save_grid_data_to_file`.
+
+
+    save_figures_to_file: True/False
+        If True then figures will be saved to file.  default=False
+
+    save_data_to_file: True/False, optional
+        If True data will be saved to file.  Default=False
+    directory : string, optional
+        path to directory where files should be stored.  Default = None which
+        will use the current working directory
+    overwrite : True/False, optional
+        If True then exisitng files will be overwritten. default=False.
+    prefix : string, optional
+         filename prefix for all output files default = 'out'
+    _file_stem: string
+        path including file name prefix with number for all output files.
+        default='out_000'.  If
+        create_directory=True then files will be put in a folder named
+        `file_stem`
+    create_directory: True/Fase, optional
+        If True a new sub-folder named `file_stem` will contain the output
+        files. default=True
+    data_ext: string, optional
+        file extension for data files. default = '.csv'
+    input_ext: string, optional
+        file extension for original and parsed input files default = ".py"
+    figure_ext: string, optional
+        file extension for figures, default = ".eps".  can be any valid
+        matplotlib option for savefig.
+
 
     """
 
@@ -1044,6 +1082,127 @@ class InputFileLoaderAndChecker(object):
                 self,
                 self._attributes, self._attribute_defaults,
                 not_found_value = None, syntax_checker=syn_checker)
+
+#        self._determine_output_stem()
+
+
+    def _determine_output_stem(self):
+        """Determine the stem for outputting files"""
+        prefix = getattr(self, 'prefix', None)
+        if prefix is None:
+            prefix='out'
+        directory = getattr(self, 'directory', None)
+        if directory is None:
+            directory = os.curdir()
+        overwrite = getattr(self, 'overwrite', None)
+        if overwrite is None:
+            overwrite = False
+
+        self._file_stem = next_output_stem(
+            prefix=prefix, path=directory, start=1, inc=1, zfill=4,
+                     overwrite=overwrite)
+
+        create_directory = getattr(self, 'create_directory', True)
+        if create_directory:
+            self._file_stem = os.path.join(directory,
+                                           self._file_stem,
+                                           self._file_stem)
+        else:
+            self._file_stem = os.path.join(directory,
+                                           self._file_stem)
+        if not os.path.isdir(os.path.dirname(self._file_stem)):
+            os.mkdir(os.path.dirname(self._file_stem))
+
+    def _save_figures(self):
+        """
+        You need the following defined:
+         - self._figures: a list of figures to save.  Each figure should have a label
+         -
+
+        """
+        if getattr(self, '_figures', None) is None:
+            return
+
+        if getattr(self, '_file_stem', None) is None:
+            self._determine_output_stem()
+
+        if not isinstance(self._figures, list):
+            figures = [self._figures]
+        else:
+            figures = self._figures
+
+#        directory = getattr(self, 'directory', None)
+#        if directory is None:
+#            directory = os.curdir()
+#
+#        create_directory = getattr(self, 'create_directory', True)
+
+
+        for i,fig in enumerate(self._figures):
+            if len(fig.get_label()) > 0:
+                figname = fig.get_label()
+            else:
+                figname = "Figure_%s" % str(i).zfill(2)
+            filename = self._file_stem +'_' + figname + getattr(self, 'figure_ext',
+                                                               '.eps')
+            fig.savefig(filename, dpi=600, bbox_inches='tight')
+
+    def _save_data(self):
+
+        if not getattr(self, 'save_data_to_file', False):
+            return
+
+        if getattr(self, '_file_stem', None) is None:
+            self._determine_output_stem()
+
+
+
+#        directory = getattr(self, 'directory', None)
+#        if directory is None:
+#            directory = os.curdir()
+
+#        create_directory=getattr(self, 'create_directory', True)
+
+        #original input
+        if not getattr(self, '_input_text', None) is None:
+#            if create_directory:
+#                filename = os.path.join(directory, self.file_stem,
+#                                    self._file_stem + "_original_input.txt")
+#            else:
+#                filename = os.path.join(directory, self._file_stem +
+#                    "_original_input.txt")
+            filename = (self._file_stem + "_input_original" +
+                getattr(self, 'input_ext', '.py'))
+
+            with open(filename,'w') as myfile:
+                myfile.write(self._input_text)
+
+        #parsed input
+#        if create_directory:
+#            filename = os.path.join(directory, self._file_stem,
+#                                    self._file_stem + "_parsed_input.txt")
+#        else:
+#            filename = os.path.join(directory, self._file_stem +
+#                    "_parsed_input.txt")
+        filename = (self._file_stem + "_input_parsed" +
+                getattr(self, 'input_ext', '.py'))
+        text = string_of_object_attributes(obj=self,
+                        attributes=self._attributes, none_at_bottom=True,
+                                    numpy_array_prefix = "np.")
+        with open(filename, 'w') as myfile:
+            myfile.write(text)
+
+
+        #grid data
+        if getattr(self, '_grid_data_dicts', None) is None: #no data
+            return
+        save_grid_data_to_file(data_dicts=self._grid_data_dicts,
+               directory=os.path.dirname(self._file_stem),
+               file_stem=os.path.basename(self._file_stem),
+               create_directory=False,# already in file stem getattr(self, 'create_directory', True),
+               ext=getattr(self, 'data_ext', '.csv'))
+
+
 
 
     def _setup(self):
@@ -1103,6 +1262,7 @@ class InputFileLoaderAndChecker(object):
 
 
 
+
         check_attribute_combinations(self,
                                      zero_or_all,
                                      at_least_one,
@@ -1120,6 +1280,8 @@ class InputFileLoaderAndChecker(object):
                         attributes=attributes_that_should_have_same_len_pairs)
 
         return
+
+#    def _save_data_to_file(self):
 
 
 
@@ -1264,6 +1426,7 @@ def next_output_stem(prefix, path=None, start=1, inc=1, zfill=3,
     overwrite: True/False
         when True the prefix-number combo will not be incremented and the
         highest exisiting prefix-number combo will be returned.
+
     Returns
     -------
     stem : string

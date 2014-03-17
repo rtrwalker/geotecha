@@ -267,6 +267,33 @@ class speccon1d_vr(speccon1d.Speccon1d):
         ==================  ============================================
         see blah blah blah for what options can be specified in each plot dict.
 
+    save_data_to_file: True/False, optional
+        If True data will be saved to file.  Default=False
+    save_figures_to_file: True/False
+        If True then figures will be saved to file.  default=False
+    show_figures: True/False, optional
+        If True the after calculation figures will be shown on screen.
+    directory : string, optional
+        path to directory where files should be stored.  Default = None which
+        will use the current working directory.  Note if you keep getting
+        directory does not exist errors then try putting an r before the
+        string definition. i.e. directory = r'C:\\Users\\...'
+    overwrite : True/False, optional
+        If True then exisitng files will be overwritten. default=False.
+    prefix : string, optional
+         filename prefix for all output files default = 'out'
+
+    create_directory: True/Fase, optional
+        If True a new sub-folder named `file_stem` will contain the output
+        files. default=True
+    data_ext: string, optional
+        file extension for data files. default = '.csv'
+    input_ext: string, optional
+        file extension for original and parsed input files. default = ".py"
+    figure_ext: string, optional
+        file extension for figures, default = ".eps".  can be any valid
+        matplotlib option for savefig.
+
     Notes
     -----
     #TODO: explain lists of input must have same len.
@@ -299,7 +326,10 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'fixed_ppress_omega_phase top_omega_phase bot_omega_phase '
             'pumping pumping_omega_phase '
             'RLzero '
-            'plot_properties').split()
+            'plot_properties '
+            'save_data_to_file prefix directory overwrite '
+            'create_directory data_ext input_ext figure_ext '
+            'save_figures_to_file show_figures').split()
 
         self._attribute_defaults = {
             'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0,
@@ -308,7 +338,16 @@ class speccon1d_vr(speccon1d.Speccon1d):
             'ppress_z_tval_indexes': slice(None, None),
             'avg_ppress_z_pairs_tval_indexes': slice(None, None),
             'settlement_z_pairs_tval_indexes': slice(None, None),
-            'plot_properties': dict() }
+            'plot_properties': dict(),
+            'save_data_to_file': False,
+            'save_figures_to_file': False,
+            'show_figures': False,
+            'prefix': 'speccon1dvr_',
+            'overwrite': False,
+            'create_directory': True,
+            'data_ext': '.csv',
+            'input_ext': '.py',
+            'figure_ext': '.eps'}
 
         self._attributes_that_should_be_lists= (
             'surcharge_vs_depth surcharge_vs_time surcharge_omega_phase '
@@ -471,15 +510,52 @@ class speccon1d_vr(speccon1d.Speccon1d):
         self.v_E_Igamv_the=np.dot(self.v, self.E_Igamv_the)
         return
 
+
+
+
+
     def make_output(self):
         """make all output"""
 
+        self._grid_data_dicts = []
         if not self.ppress_z is None:
             self._make_por()
+            z = transformations.depth_to_reduced_level(
+                np.asarray(self.ppress_z), self.H, self.RLzero)
+            labels = ['%.3g' % v for v in z]
+            d = {'name': '_data_por',
+                 'data': self.por.T,
+                 'row_labels': self.tvals[self.ppress_z_tval_indexes],
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': 'Pore pressure at depth'}
+            self._grid_data_dicts.append(d)
+
         if not self.avg_ppress_z_pairs is None:
             self._make_avp()
+            z_pairs = transformations.depth_to_reduced_level(
+                np.asarray(self.avg_ppress_z_pairs), self.H, self.RLzero)
+            labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
+            d = {'name': '_data_avp',
+                 'data': self.avp.T,
+                 'row_labels': self.tvals[self.avg_ppress_z_pairs_tval_indexes],
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': 'Average pore pressure between depths'}
+            self._grid_data_dicts.append(d)
+
         if not self.settlement_z_pairs is None:
             self._make_set()
+            z_pairs = transformations.depth_to_reduced_level(
+                np.asarray(self.settlement_z_pairs), self.H, self.RLzero)
+            labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
+            d = {'name': '_data_set',
+                 'data': self.set.T,
+                 'row_labels': self.tvals[self.settlement_z_pairs_tval_indexes],
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': 'settlement between depths'}
+            self._grid_data_dicts.append(d)
         return
 
 
@@ -876,6 +952,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
                                       line_labels=line_labels, H = self.H,
                                       RLzero=self.RLzero,
                                       prop_dict=por_prop)
+        return fig_por
 
     def _plot_avp(self):
         """plot average pore pressure vs time for various depth intervals
@@ -894,6 +971,8 @@ class speccon1d_vr(speccon1d.Speccon1d):
         fig_avp = geotecha.plotting.one_d.plot_vs_time(t, self.avp.T,
                            line_labels=line_labels,
                            prop_dict=avp_prop)
+        return fig_avp
+
     def _plot_set(self):
         """plot settlement vs time for various depth intervals
 
@@ -913,7 +992,7 @@ class speccon1d_vr(speccon1d.Speccon1d):
                            prop_dict=set_prop)
         fig_set.gca().invert_yaxis()
 
-
+        return fig_set
 
     def produce_plots(self):
         """produce plots of analysis"""
@@ -924,24 +1003,42 @@ class speccon1d_vr(speccon1d.Speccon1d):
         matplotlib.rcParams.update({'font.size': 11})
         matplotlib.rcParams.update({'font.family': 'serif'})
 
-
+        self._figures=[]
         #por
         if not self.ppress_z is None:
-            self._plot_por()
+            f=self._plot_por()
+            title = 'fig_por'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
 
-        #avp
         if not self.avg_ppress_z_pairs is None:
-            self._plot_avp()
+            f=self._plot_avp()
+            title = 'fig_avp'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
 
         #settle
         if not self.settlement_z_pairs is None:
-            self._plot_set()
-
+            f=self._plot_set()
+            title = 'fig_set'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
         #loads
-        self._plot_loads()
+        f=self._plot_loads()
+        title = 'fig_loads'
+        f.set_label(title)
+        f.canvas.manager.set_window_title(title)
+        self._figures.append(f)
 
         #materials
-        self._plot_materials()
+        f=self._plot_materials()
+        self._figures.append(f)
+        title = 'fig_materials'
+        f.set_label(title)
+        f.canvas.manager.set_window_title(title)
 
     def _plot_materials(self):
 
@@ -1159,6 +1256,20 @@ implementation='vectorized'
 #implementation='fortran'
 RLzero = -12.0
 plot_properties={}
+
+directory= r"C:\\Users\\Rohan Walker\\Documents\\temp" #may always need the r
+save_data_to_file= True
+save_figures_to_file= True
+show_figures= False
+overwrite=True
+
+#prefix="silly"
+
+#create_directory=True
+#data_ext = '.csv'
+#input_ext='.py'
+figure_ext='.pdf'
+
     """)
 
 
@@ -1194,9 +1305,9 @@ plot_properties={}
 #    print(len(a.tvals))
     #print(a.por.shape)
 
-    a.produce_plots()
-    plt.show()
-
+#    a.produce_plots()
+#    plt.show()
+#
     if False:
         plt.figure()
         plt.plot(a.por, a.ppress_z)
