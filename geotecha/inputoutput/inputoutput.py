@@ -34,6 +34,12 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
+import wx
+import fnmatch
+import argparse
+import logging
+from contextlib import contextmanager
+
 class SyntaxChecker(ast.NodeVisitor):
     """
 
@@ -1605,6 +1611,245 @@ def save_grid_data_to_file(data_dicts, directory=None, file_stem='out_000',
                 myfile.write(header+'\n')
             df.to_csv(myfile, **df_kwargs)
 
+
+
+class GenericInputFileArgParser(object):
+    """Pass input files to a class/function that accepts a file
+
+    see self.main for use in scripts.
+
+    The working directory will be changed to the location of each input file
+
+
+    Parameters
+    ----------
+    obj : object/callable
+        object to call with input file
+    pass_open_file: True/False, optional
+        if True then input files willed be passed to obj as open file objects.
+         If False then paths of the input files will be passed to obj.
+        default = True
+    prog : string, optional
+        part of usage method for argparse. default = None which uses sys.argv[0]
+    description : string, optional
+        part of usage method for argparse. default = "Process some input files"
+    epilog : string, optional
+        part of usage method for argparse. default = 'If no options are
+        specifyied then the user will be prompted to select files.'
+
+
+
+    Notes
+    -----
+    For basic usage, in a file to be used as a script put:
+
+    ::
+
+    if __name__=='__main__':
+        a = GenericInputFileArgParser(obj_to_call)
+        a.main()
+
+
+    """
+
+    def __init__(self, obj,
+                 pass_open_file=True,
+                 prog = None,
+                 description = "Process some input files",
+                 epilog = ('If no options are specifyied then the user '
+                           'will be prompted to select files.')):
+        """
+
+        Parameters
+        ----------
+        obj : callable object
+            object to call with object file
+        pass_open_file : True/False, optional
+            If True (default) then open files will be passed to obj.  If False
+            then the
+
+        """
+
+        self.obj = obj
+        self.pass_open_file = pass_open_file
+        self._prog = prog
+        self._description = description
+        self._epilog = epilog
+
+    def main(self, argv=None):
+        """Accept command line arguments and pass files/paths to self.obj
+
+        Allows users to specify files via the command line in various ways:
+
+        1. If no options are specifyied a dialog box will open for the user
+        to select files.
+        2. A list of file paths can be specified with the --filenmame option
+        3. The --directory and --pattern options can be used together to
+        search a particular directory for files matching a certain pattern.
+        If no actual directory is specified then the current working directory
+        will be used.  The default pattern to look for is "*.py".  The
+        script file itself will not be processed if  it matches the pattern
+        itself.
+
+        Parameters
+        ----------
+        argv : list of str, optional
+            list of command line arguments. default = None which will grab
+            argumnets from sys.argv.  Used mainly for testing or bypassing
+            script  based command line arguments.
+
+
+        """
+
+        parser = argparse.ArgumentParser(prog=self._prog,
+                                         description=self._description,
+                                         epilog = self._epilog)
+
+        parser.add_argument('-f', '--filename', type=str,#argparse.FileType('r'),
+                            nargs='+',
+                            help="Path(s) to input file(s).")
+
+        parser.add_argument('-d', '--directory', type=str,
+                            nargs='*',
+                            help="Path(s) to directory containing input "
+                            "files. Files in specified directory(s) that "
+                            "match the pattern given with the --pattern "
+                            "flag will be used.  If the --directory flag is "
+                            "used without specifying a directory then the "
+                            "current working directroy will be used.")
+
+        parser.add_argument('-p', '--pattern', type=str,
+                            nargs='?', const="*.py",
+                            help="pattern to match files in the "
+                            "directory specified using the --directory flag. "
+                            "If the --pattern flag is used without "
+                            "specifying a pattern then '*.py' will be used.")
+
+
+
+
+        if argv == None:
+            ns = parser.parse_args()
+        else:
+            ns = parser.parse_args(argv)
+
+
+
+        if len([x for x in (ns.pattern, ns.directory) if x is not None]) == 1:
+            parser.error('--directory and --pattern must be given together. ')
+
+
+        if len([x for x in (ns.filename, ns.directory)
+                    if x is not None]) == 2:
+            parser.error('--filenames and --directory cannot be used '
+                         'together.')
+
+
+        ns.directory = [os.getcwd()] if ns.directory==[] else ns.directory
+
+        if (not ns.directory is None) and (not ns.pattern is None):
+            #find all files that match pattern
+            filenames=[]
+            for i,d in enumerate(ns.directory):
+                if not os.path.isdir(d):
+                    parser.error('directory #{0} in command line is not a '
+                    'valid directory: {1}'.format(i, d))
+
+                [filenames.append(os.path.join(os.path.abspath(d), v)) for v in
+                    fnmatch.filter(os.listdir(d), ns.pattern) if v!=os.path.basename(__file__)]
+
+            if len(filenames)==0:
+                raise IOError("no files that match '{0}' can be found in the "
+                              "specified directories".format(ns.pattern))
+
+        elif not ns.filename is None:
+            filenames = [os.path.abspath(v) for v in ns.filename]
+
+        else:
+            #prompt for files
+            filenames = get_filepaths(wildcard="")
+
+
+
+
+        for path in filenames:
+            try:
+                with working_directory(os.path.dirname(path)):
+                    if self.pass_open_file:
+                        with open(path,'r') as f:
+                            self.obj(f)
+                    else:
+                        self.obj(path)
+
+            except Exception:
+                logging.exception("problem with file {0}:\n".format(path))
+            finally:
+                pass
+
+
+
+
+
+
+
+
+@contextmanager
+def working_directory(path):
+    """change working directory for duration of with statement
+
+    Parameters
+    ----------
+    path : str
+        path to new current working directory
+
+    Notes
+    -----
+    e.g. with working_directory(\data\stuff):
+
+    References
+    ----------
+    Taken straight from http://stackoverflow.com/a/3012921/2530083
+
+    """
+
+    current_dir = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(current_dir)
+
+
+
+def get_filepaths(wildcard=""):
+    """wx dialog box to select files
+
+    opens a dialog box from which the user can select files
+
+    Parameters
+    ----------
+    wildcard : string, optional
+        only show file types of this kind. Default = "" which means no file
+        type filtering.  e.g. "BMP files (*.bmp)|*.bmp|GIF files (*.gif)|*.gif"
+
+    Returns
+    -------
+    filepaths: list of paths
+        list of user selected file paths.  Will return None if the cancel
+        button was selected.
+
+    """
+
+    # wx idea from http://stackoverflow.com/a/9319832/2530083
+    app = wx.App(None)
+    style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE
+    dialog = wx.FileDialog(None, 'Open', wildcard=wildcard, style=style)
+    if dialog.ShowModal() == wx.ID_OK:
+        filepaths = dialog.GetPaths()
+    else:
+        filepaths = None
+    dialog.Destroy()
+    return filepaths
 
 if __name__=='__main__':
 #    b = PrefixNumpyArrayString()

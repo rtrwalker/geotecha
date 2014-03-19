@@ -55,6 +55,8 @@ from geotecha.inputoutput.inputoutput import string_of_object_attributes
 from geotecha.inputoutput.inputoutput import next_output_stem
 from geotecha.inputoutput.inputoutput import make_array_into_dataframe
 from geotecha.inputoutput.inputoutput import save_grid_data_to_file
+from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
+from geotecha.inputoutput.inputoutput import working_directory
 
 class EmptyClass(object):
     """empty class for assigning attributes fot object testing"""
@@ -566,6 +568,130 @@ class test_save_grid_data_to_file(unittest.TestCase):
                             0,0,2
                             1,4,6
                             2,8,10""").splitlines())
+
+
+
+
+
+class test_GenericInputFileArgParser(unittest.TestCase):
+    """tests GenericInputFileArgParser"""
+
+    def setUp(self):
+        self.tempdir = TempDirectory()
+        self.tempdir.write('a1.py', "a1")
+        self.tempdir.write('a2.py', "a2")
+        self.tempdir.write('b1.txt', "b1")
+        self.tempdir.write('b2.txt', "b2")
+
+    def tearDown(self):
+        self.tempdir.cleanup()
+
+    def _abc_fobj(self, fobj):
+        """print file contents to out.zebra"""
+        with open(os.path.join(self.tempdir.path, 'out.zebra'), 'a') as f:
+            f.write(fobj.read()+'\n')
+        return
+
+    def _abc_path(self, path):
+        """print file basename out.zebra"""
+        with open(os.path.join(self.tempdir.path, 'out.zebra'), 'a') as f:
+            f.write(os.path.basename(path)+'\n')
+        return
+
+
+    def test_default_directory(self):
+
+        a = GenericInputFileArgParser(self._abc_path, False)
+        args = '-d -p'.format(self.tempdir.path).split()
+
+        with working_directory(self.tempdir.path):
+            a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            a1.py
+                            a2.py""").splitlines())
+
+    def test_directory_with_path(self):
+
+        a = GenericInputFileArgParser(self._abc_path, False)
+        args = '-d {0} -p'.format(self.tempdir.path).split()
+        print(args)
+        a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            a1.py
+                            a2.py""").splitlines())
+
+    def test_directory_with_fobj(self):
+
+        a = GenericInputFileArgParser(self._abc_fobj, True)
+        args = '-d {0} -p'.format(self.tempdir.path).split()
+#        print(args)
+        a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            a1
+                            a2""").splitlines())
+
+    def test_pattern_with_path(self):
+
+        a = GenericInputFileArgParser(self._abc_path, False)
+        args = '-d {0} -p *.txt'.format(self.tempdir.path).split()
+#        print(args)
+        a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            b1.txt
+                            b2.txt""").splitlines())
+
+    def test_pattern_with_fobj(self):
+
+        a = GenericInputFileArgParser(self._abc_fobj, True)
+        args = '-d {0} -p *.txt'.format(self.tempdir.path).split()
+#        print(args)
+        a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            b1
+                            b2""").splitlines())
+
+    def test_filename_with_fobj(self):
+
+        a = GenericInputFileArgParser(self._abc_fobj, True)
+        args = '-f {0} {1}'.format(
+            os.path.join(self.tempdir.path, 'a1.py'),
+            os.path.join(self.tempdir.path, 'b1.txt')
+                                ).split()
+#        print(args)
+        a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            a1
+                            b1""").splitlines())
+
+
+    def test_filename_with_path(self):
+
+        a = GenericInputFileArgParser(self._abc_path, False)
+        args = '-f {0} {1}'.format(
+            os.path.join(self.tempdir.path, 'a1.py'),
+            os.path.join(self.tempdir.path, 'b1.txt')
+                                ).split()
+#        print(args)
+        a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            a1.py
+                            b1.txt""").splitlines())
+
+
 
 if __name__ == '__main__':
 
