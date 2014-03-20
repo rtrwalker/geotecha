@@ -6,7 +6,7 @@ Code to timeout with processes.
 References
 ----------
 
-Code in this module comes from an activestate code recipe [1]_. For an 
+Code in this module comes from an activestate code recipe [1]_. For an
 asynchronous solution see the active activestate code recipe [2]_.
 
 ..  _synchronous: http://code.activestate.com/recipes/577853-timeout-decorator-with-multiprocessing/
@@ -28,9 +28,9 @@ TimeoutException: timed out after 2 seconds
 
 Notes
 -----
-The following commented examples from the original activestate code recipe 
-demonstrate how to use timeout as a decorator.  They don't seem to work for 
-me as the functions must be defined in __main__ to be pickled.  you get the 
+The following commented examples from the original activestate code recipe
+demonstrate how to use timeout as a decorator.  They don't seem to work for
+me as the functions must be defined in __main__ to be pickled.  you get the
 idea though
 
 #>>> @timeout(.5)
@@ -122,18 +122,15 @@ def timeout(seconds, force_kill=True):
 
 def _longcos(x, wait=0):
     """calc cos(x) after waiting `wait` seconds. max wait is 5 seconds"""
-    
+
     import math
     wait=min(wait,5)
     time.sleep(wait)
-    
-    return math.cos(x)
-    
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod(verbose=3)
-#    timed_longcos = timeout(5,force_kill=True)(_longcos)
-#    a=timed_longcos(1,2)
-#    print a
 
-    
+    return math.cos(x)
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])
+

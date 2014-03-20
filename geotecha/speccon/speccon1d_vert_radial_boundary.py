@@ -1192,7 +1192,9 @@ def program(reader, writer):
 
 
 if __name__ == '__main__':
-
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+##    nose.runmodule(argv=['nose', '--verbosity=3'])
 
 
     my_code = textwrap.dedent("""\

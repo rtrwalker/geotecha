@@ -731,11 +731,6 @@ class test_hms_string(unittest.TestCase):
 
 
 if __name__ == '__main__':
-
-#      a = test_make_array_into_dataframe()
-
-
-
     import nose
-    nose.runmodule(argv=['nose', '--verbosity=3'])
-#    nose.run(argv=[__file__, '--with-doctest', '-vv'])
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])

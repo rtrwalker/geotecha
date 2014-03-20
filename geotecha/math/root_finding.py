@@ -95,3 +95,7 @@ def find_n_roots(func, args=(), n=1, x0=0.001, dx=0.001, p=1.0, fsolve_kwargs={}
     return roots
 
 
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])

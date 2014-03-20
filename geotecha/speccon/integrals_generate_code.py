@@ -2525,60 +2525,7 @@ def tw(text, indents=3, width=100, break_long_words=False):
 
 
 if __name__ == '__main__':
-    #mp, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a'])
-    #print(mp)
-    #print(generate_gamma_code())
-    #print('#'*65)
-    #print(generate_psi_code())
-    #print(generate_theta_two_prop())
-    #print(generate_dim1sin_abf_linear())
-    #print(dim1sin_ab_linear())
-    #print(dim1sin_af_linear())
-    #print(dim1sin_abf_linear())
-    #print(dim1sin_D_aDf_linear())
-    #print(dim1sin_abc_linear())
-    #print(dim1sin_D_aDb_linear())
-    #print(EDload_linear())
-    #print(Eload_linear())
-    #print(dim1sin_a_linear_between())
-    #print(dim1_ab_linear_between())
-    #print(dim1sin_D_aDf_linear())
-    #print(dim1sin_D_aDf_linear_v2())
-    #print(dim1sin_af_linear_vectorize())
-    #print(dim1sin_af_linear_fortran())
-#    print(EDload_coslinear())
-    print(Eload_coslinear())
-
-#    for i in dim1sin_af_linear_implementations():
-#    for i in dim1sin_abf_linear_implementations():
-#    for i in dim1sin_D_aDf_linear_implementations():
-#    for i in dim1sin_ab_linear_implementations():
-#    for i in dim1sin_abc_linear_implementations():
-#    for i in dim1sin_D_aDb_linear_implementations():
-#        print(i)
-#        print('#'*35)
-#    #print(dim1sin_D_aDb_linear())
-#    pass
-
-
-#==============================================================================
-# from sympy import symbols
-# from sympy.utilities.codegen import codegen
-# from sympy import Eq
-# n,m = symbols('n m', integer=True)
-# A = IndexedBase('A')
-# x = IndexedBase('x')
-# y = IndexedBase('y')
-# i = Idx('i', m)
-# j = Idx('j', n)
-#
-# [(c_name, c_code), (h_name, c_header)] = \
-# codegen(name_expr=('matrix_vector', Eq(y[i], A[i, j]*x[j])), language = "F95",prefix = "file", header=False,
-#
-# empty=False)
-# print c_name
-# print c_code
-# print h_name
-# print c_header
-#==============================================================================
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])
 

@@ -47,5 +47,7 @@ def depth_to_reduced_level(z, H = 1.0, rlzero=None):
         return z * H
 
 
-if __name__ == "__main__":
-    pass
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])

@@ -1304,5 +1304,7 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
 #        return z * H
 
 
-if __name__=='__main__':
-    print(depth_to_reduced_level(z=1, H = 2.0, rlzero=None)        )
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])

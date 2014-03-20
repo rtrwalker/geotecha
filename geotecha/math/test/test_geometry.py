@@ -107,3 +107,8 @@ class test_geometry(object):
         ok_(np.allclose(polygon_centroid(self.shp['unit square']),[0.5,0.5,0]))
         ok_(np.allclose(polygon_centroid(self.shp['right tri']),[1/3.0,1/3.0,0]))
         ok_(np.allclose(polygon_centroid(self.shp['octahedral tri']),[1/3.0,1/3.0,1/3.0]))
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])

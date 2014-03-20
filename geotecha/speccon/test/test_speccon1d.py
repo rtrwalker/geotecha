@@ -39,7 +39,6 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
 
 if __name__ == '__main__':
-
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])

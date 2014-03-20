@@ -9813,27 +9813,7 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
             bt[0])*at[0]*sin(mi*zt[0]))
     return A
 
-if __name__=='__main__':
-#    eigs = np.array([2.46740110027, 22.2066099025])
-#    dic = {'loadtim': np.array([0,0]), 'loadmag': np.array([0, 100]), 'eigs': eigs, 'tvals': np.array([-1,0,1])}
-#    #print(EDload_linear(**dic))
-#    #
-#    dic = {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': eigs, 'tvals': np.array([-1,0,1])}
-#    #print (Eload_linear(**dic))
-
-
-    import math
-#    dic = {'m': [ math.pi/2,  3 * math.pi/2], 'at':[1],
-#        'ab':[1],'zt':[0], 'zb':[1], 'z': [[0, 1], [0.1, 0.2], [0.5, 1]]}
-#     print(dim1sin_a_linear_between(**dic))
-    n=100
-#    dic = {'m': m_from_sin_mx(np.arange(n),boundary=1),
-#           'at':[1], 'ab':[1],'zt':[0], 'zb':[1],
-#        'implementation': 'scalar'}
-
-    dic = {'m': m_from_sin_mx(np.arange(n),boundary=1),
-           'at':[1,2,1], 'ab':[2,1,2],'zt':[0,0.4,0.5], 'zb':[0.4,0.5,1],
-        'implementation': 'fortran'}
-
-
-    print(dim1sin_af_linear(**dic))
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])

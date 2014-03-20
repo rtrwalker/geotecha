@@ -44,12 +44,12 @@ def test_rgb_shade():
     """some tests for rgb_shade"""
 #    rgb_shade(rgb, factor=1, scaled=True)
     ok_(np.allclose(rgb_shade((0.4, 0.8, 0.2)), (0.4, 0.8, 0.2)))
-    
+
     ok_(np.allclose(rgb_shade((0.4, 0.8, 0.2), factor=0.5),
                         (0.2, 0.4, 0.1)))
     ok_(np.allclose(rgb_shade((0.4, 0.8, 0.2, 0.8), factor=0.5),
                         (0.2, 0.4, 0.1,0.8)))
-#    assert_equal(rgb_shade((0.4, 0.8, 0.2)), (0.4, 0.8, 0.2))                    
+#    assert_equal(rgb_shade((0.4, 0.8, 0.2)), (0.4, 0.8, 0.2))
 
     assert_raises(ValueError, rgb_shade,(0.5,0.5,0.5),factor=1.5)
     assert_raises(ValueError, rgb_shade,(0.5,0.5,0.5),factor=-0.5)
@@ -58,11 +58,11 @@ def test_rgb_tint():
     """some tests for rgb_tint"""
 #    rgb_tint(rgb, factor=1, scaled=True)
     ok_(np.allclose(rgb_tint((0.4, 0.8, 0.2)), (0.4, 0.8, 0.2)))
-    
+
     ok_(np.allclose(rgb_tint((0.4, 0.8, 0.2), factor=0.5),
                         (0.7, 0.9, 0.6)))
-    
-#    assert_equal(rgb_tint((0.4, 0.8, 0.2)), (0.4, 0.8, 0.2))                    
+
+#    assert_equal(rgb_tint((0.4, 0.8, 0.2)), (0.4, 0.8, 0.2))
 
     assert_raises(ValueError, rgb_tint,(0.5,0.5,0.5),factor=1.5)
     assert_raises(ValueError, rgb_tint,(0.5,0.5,0.5),factor=-0.5)
@@ -70,19 +70,19 @@ def test_rgb_tint():
     ok_(np.allclose(rgb_tint((155, 205, 55), factor=0.5, scaled=False),
                         (205, 230, 155)))
     ok_(np.allclose(rgb_tint((155, 205, 55, 0.5), factor=0.5, scaled=False),
-                        (205, 230, 155, 0.5)))                        
-                        
+                        (205, 230, 155, 0.5)))
+
 def test_copy_dict():
     """test for copy_dict"""
-    #copy_dict(source_dict, diffs)                        
+    #copy_dict(source_dict, diffs)
     ok_(copy_dict({'a':7, 'b':12}, {'c':13})=={'a':7, 'b':12, 'c':13})
 
-    ok_(copy_dict({'a':7, 'b':12}, {'a':21, 'c':13})=={'a':21, 'b':12, 'c':13})    
-    
+    ok_(copy_dict({'a':7, 'b':12}, {'a':21, 'c':13})=={'a':21, 'b':12, 'c':13})
+
 def test_MarkersDashesColors():
     """tests for MarkersDashesColors class"""
-    
-    
+
+
     a = MarkersDashesColors()
     a.color=(0.5, 0, 0)
     a.default_marker={       'markersize':5,
@@ -91,19 +91,19 @@ def test_MarkersDashesColors():
                              'markerfacecolor': a.color,
                              'alpha':0.9,
                              'color': a.color
-                             }    
-    
+                             }
+
     a.markers=[{'marker': 'o', 'markerfacecolor': 'none'},
                {'marker': 's'},
                {'marker': '^'},]
     a.colors=[(0, 0.5, 0),(0, 0, 0.5)]
-    
+
     a.dashes=[(None, None), [4, 4] ]
-    
-    a.merge_default_markers()               
-    
+
+    a.merge_default_markers()
+
     a.construct_styles()
-        
+
     assert_equal(a.styles[0]['marker'], 'o')
     assert_equal(a.styles[0]['markersize'], 5)
     assert_equal(a.styles[0]['markeredgecolor'], (0,0.5,0))
@@ -112,7 +112,7 @@ def test_MarkersDashesColors():
     assert_equal(a.styles[0]['alpha'], 0.9)
     assert_equal(a.styles[0]['color'], (0,0.5,0))
     assert_equal(a.styles[0]['dashes'], (None, None))
-         
+
     assert_equal(a.styles[1]['marker'], 's')
     assert_equal(a.styles[1]['markersize'], 5)
     assert_equal(a.styles[1]['markeredgecolor'], (0,0,0.5))
@@ -121,7 +121,7 @@ def test_MarkersDashesColors():
     assert_equal(a.styles[1]['alpha'], 0.9)
     assert_equal(a.styles[1]['color'], (0,0,0.5))
     assert_equal(a.styles[1]['dashes'], [4, 4])
-    
+
 
     assert_equal(a.styles[2]['marker'], '^')
     assert_equal(a.styles[2]['markersize'], 5)
@@ -133,7 +133,7 @@ def test_MarkersDashesColors():
     assert_equal(a.styles[2]['dashes'], (None, None))
 
 
-    styles = a(markers=[1,1])    
+    styles = a(markers=[1,1])
     assert_equal(styles[0]['marker'], 's')
     assert_equal(styles[0]['markersize'], 5)
     assert_equal(styles[0]['markeredgecolor'], (0.5,0,0))
@@ -141,8 +141,8 @@ def test_MarkersDashesColors():
     assert_equal(styles[0]['markerfacecolor'], (0.5,0,0))
     assert_equal(styles[0]['alpha'], 0.9)
     assert_equal(styles[0]['color'], (0.5,0,0))
-    assert_equal(styles[0]['linestyle'], 'None')    
-    
+    assert_equal(styles[0]['linestyle'], 'None')
+
     assert_equal(styles[1]['marker'], 's')
     assert_equal(styles[1]['markersize'], 5)
     assert_equal(styles[1]['markeredgecolor'], (0.5,0,0))
@@ -161,8 +161,8 @@ def test_MarkersDashesColors():
     assert_equal(styles[0]['markerfacecolor'], (0,0.5,0))
     assert_equal(styles[0]['alpha'], 0.9)
     assert_equal(styles[0]['color'], (0.5,0,0))
-    assert_equal(styles[0]['linestyle'], 'None')    
-    
+    assert_equal(styles[0]['linestyle'], 'None')
+
     assert_equal(styles[1]['marker'], 's')
     assert_equal(styles[1]['markersize'], 5)
     assert_equal(styles[1]['markeredgecolor'], (0,0.5,0))
@@ -171,7 +171,7 @@ def test_MarkersDashesColors():
     assert_equal(styles[1]['alpha'], 0.9)
     assert_equal(styles[1]['color'], (0.5,0,0))
     assert_equal(styles[1]['linestyle'],'None')
-    
+
     styles=a(markers=[1, 1], dashes=[1, 0], marker_colors=[0])
     assert_equal(styles[0]['marker'], 's')
     assert_equal(styles[0]['markersize'], 5)
@@ -180,8 +180,8 @@ def test_MarkersDashesColors():
     assert_equal(styles[0]['markerfacecolor'], (0,0.5,0))
     assert_equal(styles[0]['alpha'], 0.9)
     assert_equal(styles[0]['color'], (0.5,0,0))
-    assert_equal(styles[0]['dashes'], [4, 4])    
-    
+    assert_equal(styles[0]['dashes'], [4, 4])
+
     assert_equal(styles[1]['marker'], 's')
     assert_equal(styles[1]['markersize'], 5)
     assert_equal(styles[1]['markeredgecolor'], (0,0.5,0))
@@ -189,7 +189,7 @@ def test_MarkersDashesColors():
     assert_equal(styles[1]['markerfacecolor'], (0,0.5,0))
     assert_equal(styles[1]['alpha'], 0.9)
     assert_equal(styles[1]['color'], (0.5,0,0))
-    assert_equal(styles[1]['dashes'], (None, None))    
+    assert_equal(styles[1]['dashes'], (None, None))
 
     styles=a(markers=[1, 1], dashes=[1, None], marker_colors=[0])
     assert_equal(styles[0]['marker'], 's')
@@ -199,8 +199,8 @@ def test_MarkersDashesColors():
     assert_equal(styles[0]['markerfacecolor'], (0,0.5,0))
     assert_equal(styles[0]['alpha'], 0.9)
     assert_equal(styles[0]['color'], (0.5,0,0))
-    assert_equal(styles[0]['dashes'], [4, 4])    
-    
+    assert_equal(styles[0]['dashes'], [4, 4])
+
     assert_equal(styles[1]['marker'], 's')
     assert_equal(styles[1]['markersize'], 5)
     assert_equal(styles[1]['markeredgecolor'], (0,0.5,0))
@@ -209,7 +209,7 @@ def test_MarkersDashesColors():
     assert_equal(styles[1]['alpha'], 0.9)
     assert_equal(styles[1]['color'], (0.5,0,0))
     assert_equal(styles[1]['linestyle'], 'None')
-    
+
     styles=a(markers=[1, 1], dashes=[1, None], marker_colors=[0], line_colors=[1])
     assert_equal(styles[0]['marker'], 's')
     assert_equal(styles[0]['markersize'], 5)
@@ -218,8 +218,8 @@ def test_MarkersDashesColors():
     assert_equal(styles[0]['markerfacecolor'], (0,0.5,0))
     assert_equal(styles[0]['alpha'], 0.9)
     assert_equal(styles[0]['color'], (0,0,0.5))
-    assert_equal(styles[0]['dashes'], [4, 4])    
-    
+    assert_equal(styles[0]['dashes'], [4, 4])
+
     assert_equal(styles[1]['marker'], 's')
     assert_equal(styles[1]['markersize'], 5)
     assert_equal(styles[1]['markeredgecolor'], (0,0.5,0))
@@ -229,18 +229,18 @@ def test_MarkersDashesColors():
     assert_equal(styles[1]['color'], (0,0,0.5))
     assert_equal(styles[1]['linestyle'], 'None')
 
-        
+
     a.colors=[(0.4, 0.8, 0.2), (0.4, 0.8, 0.2)]
-    a.shade_colors(factor=0.5)    
+    a.shade_colors(factor=0.5)
     ok_(np.allclose(a.colors[0], (0.2, 0.4, 0.1)))
     ok_(np.allclose(a.colors[1], (0.2, 0.4, 0.1)))
-    
+
     a.colors=[(0.4, 0.8, 0.2), (0.4, 0.8, 0.2)]
-    a.tint_colors(factor=0.5)    
+    a.tint_colors(factor=0.5)
     ok_(np.allclose(a.colors[0], (0.7, 0.9, 0.6)))
     ok_(np.allclose(a.colors[1], (0.7, 0.9, 0.6)))
-    
-@cleanup   
+
+@cleanup
 def test_apply_dict_to_object():
     """test for apply_dict_to_object"""
     #apply_dict_to_object(obj, dic)
@@ -251,45 +251,43 @@ def test_apply_dict_to_object():
 
     obj = ax.get_lines()
     apply_dict_to_object(obj[0],{'marker':'^'})
-    assert_equal(obj[0].get_marker(), '^')        
-    
+    assert_equal(obj[0].get_marker(), '^')
+
     obj = ax.get_lines()[:2]
     apply_dict_to_object(obj,[{'marker':'s'}, {'marker':'h'}])
     assert_equal(obj[0].get_marker(), 's')
-    assert_equal(obj[1].get_marker(), 'h')    
-    
+    assert_equal(obj[1].get_marker(), 'h')
+
 def test_split_sequence_into_dict_and_nondicts():
     """test for split_sequence_into_dict_and_nondicts"""
     #split_sequence_into_dict_and_nondicts(*args)
-    
+
     assert_equal(split_sequence_into_dict_and_nondicts({'a': 2, 'b': 3},
                                    4,
                                    {'a':8, 'c':5},
                                    5),
                                    ([4,5], {'a': 8, 'b': 3, 'c':5}))
-    
-    
-def test_row_major_order_reverse_map():    
+
+
+def test_row_major_order_reverse_map():
     """test for row_major_order_reverse_map"""
     #row_major_order_reverse_map(shape, index_steps=None, transpose=False)
     ok_(np.allclose(row_major_order_reverse_map(shape=(3, 3), index_steps=None, transpose=False),
                  np.array([0, 1, 2, 3, 4, 5, 6, 7, 8])))
     ok_(np.allclose(row_major_order_reverse_map(shape=(3, 3), index_steps=(-1,1), transpose=False),
-                 np.array([6, 7, 8, 3, 4, 5, 0, 1, 2])))                 
+                 np.array([6, 7, 8, 3, 4, 5, 0, 1, 2])))
     ok_(np.allclose(row_major_order_reverse_map(shape=(3, 3), index_steps=(1,-1), transpose=False),
                  np.array([2, 1, 0, 5, 4, 3, 8, 7, 6])))
     ok_(np.allclose(row_major_order_reverse_map(shape=(3, 3), index_steps=(-1,-1), transpose=False),
                  np.array([8, 7, 6, 5, 4, 3, 2, 1, 0])))
     ok_(np.allclose(row_major_order_reverse_map(shape=(3, 3), index_steps=None, transpose=True),
-                 np.array([0, 3, 6, 1, 4, 7, 2, 5, 8])))                 
+                 np.array([0, 3, 6, 1, 4, 7, 2, 5, 8])))
 
 
 
 
-    
+
 if __name__ == '__main__':
     import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
-    nose.runmodule(argv=['nose', '--verbosity=3'])
-#    nose.run(argv=[__file__, '--with-doctest', '-vv'])    
-#    nose.suite.
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])

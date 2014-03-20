@@ -1955,27 +1955,32 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
 
 
 if __name__ == '__main__':
-    a = MarkersDashesColors()
-    a.color=(0.5, 0, 0)
-    a.default_marker={       'markersize':5,
-                             'markeredgecolor': a.color,
-                             'markeredgewidth':1,
-                             'markerfacecolor': a.color,
-                             'alpha':0.9,
-                             'color': a.color
-                             }
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])
 
-    a.markers=[{'marker': 'o', 'markerfacecolor': 'none'},
-               {'marker': 's'},
-               {'marker': '^'},]
-    a.colors=[(0, 0.5, 0), (0, 0, 0.5)]
 
-    a.dashes=[(None, None), [4, 4]]
-
-    a.merge_default_markers()
-
-    a.construct_styles()
-    a.demo_options()
+#    a = MarkersDashesColors()
+#    a.color=(0.5, 0, 0)
+#    a.default_marker={       'markersize':5,
+#                             'markeredgecolor': a.color,
+#                             'markeredgewidth':1,
+#                             'markerfacecolor': a.color,
+#                             'alpha':0.9,
+#                             'color': a.color
+#                             }
+#
+#    a.markers=[{'marker': 'o', 'markerfacecolor': 'none'},
+#               {'marker': 's'},
+#               {'marker': '^'},]
+#    a.colors=[(0, 0.5, 0), (0, 0, 0.5)]
+#
+#    a.dashes=[(None, None), [4, 4]]
+#
+#    a.merge_default_markers()
+#
+#    a.construct_styles()
+#    a.demo_options()
 
 
 
@@ -1993,61 +1998,61 @@ if __name__ == '__main__':
     #plot_data_in_grid(None,[(1,2),(4,5)],[(3,5)])
 
     #flat = [x for sublist in nested for x in sublist] #http://stackoverflow.com/a/2962856/2530083
-    if 1:
-        pleasing_defaults()
-        fig=plt.figure()
-        x = np.linspace(-np.pi,np.pi,100)
-        d2 = np.linspace(0,1,4)
-        d3 = np.linspace(0,1,2)
-        label1= ['{0:.3g}'.format(i) for i in d2]
-        y1 = np.sin(x)
-        y2 = 1000*np.cos(x[:,np.newaxis]-d2)
-        y3 = 1e-3*np.sin(x[:,np.newaxis]-d3)
-
-
-        data= [[[x,y2]],[[2*x, y1, dict(plot_type='scatter')]], [[1.5*x,y3]]]
-        y_axis_labels=['0','1', '2']
-        x_axis_labels=['Time', None, None]
-
-        #gs = gridspec.GridSpec(shape, hspace=0.08, wspace=0.1)
-        shape=(3,3)
-        gs = gridspec.GridSpec(*shape)
-        transpose = True
-        index_steps=(1,-1)
-        sharey=None
-        sharex=[None,0,None]
-
-        #plot_type=['plot','plot','scatter','plot']
-        gs_index = row_major_order_reverse_map(shape=shape,index_steps=index_steps, transpose=transpose)
-        gs_index = [np.s_[:2,:2],2,8]
-        #gs_index=[1,2,3,0]
-        ax = plot_data_in_grid(fig, data=data, gs=gs,
-                              gs_index=gs_index,
-                              sharex=sharex, sharey=sharey)
-
-
-        styles = MarkersDashesColors()()
-
-
-        [apply_dict_to_object(line, d) for line,d in zip(ax[0].get_lines(), styles)]
-
-
-
-
-
-
-        #apply ylabels to each axis
-        [plt.setp(ax[i], ylabel=label)
-            for i, label in enumerate(y_axis_labels) if not label is None]
-        #apply xlabels to each axis
-        [plt.setp(ax[i], xlabel=label)
-            for i,label in enumerate(x_axis_labels) if not label is None]
-        # turn x tick labels on or off
-        [plt.setp(ax[i].get_xticklabels(), visible=value)
-            for i, value in enumerate([True,False,False]) if not value is None]
-        #gs.tight_layout(fig)
-
-        fig.tight_layout()
+#    if 1:
+#        pleasing_defaults()
+#        fig=plt.figure()
+#        x = np.linspace(-np.pi,np.pi,100)
+#        d2 = np.linspace(0,1,4)
+#        d3 = np.linspace(0,1,2)
+#        label1= ['{0:.3g}'.format(i) for i in d2]
+#        y1 = np.sin(x)
+#        y2 = 1000*np.cos(x[:,np.newaxis]-d2)
+#        y3 = 1e-3*np.sin(x[:,np.newaxis]-d3)
+#
+#
+#        data= [[[x,y2]],[[2*x, y1, dict(plot_type='scatter')]], [[1.5*x,y3]]]
+#        y_axis_labels=['0','1', '2']
+#        x_axis_labels=['Time', None, None]
+#
+#        #gs = gridspec.GridSpec(shape, hspace=0.08, wspace=0.1)
+#        shape=(3,3)
+#        gs = gridspec.GridSpec(*shape)
+#        transpose = True
+#        index_steps=(1,-1)
+#        sharey=None
+#        sharex=[None,0,None]
+#
+#        #plot_type=['plot','plot','scatter','plot']
+#        gs_index = row_major_order_reverse_map(shape=shape,index_steps=index_steps, transpose=transpose)
+#        gs_index = [np.s_[:2,:2],2,8]
+#        #gs_index=[1,2,3,0]
+#        ax = plot_data_in_grid(fig, data=data, gs=gs,
+#                              gs_index=gs_index,
+#                              sharex=sharex, sharey=sharey)
+#
+#
+#        styles = MarkersDashesColors()()
+#
+#
+#        [apply_dict_to_object(line, d) for line,d in zip(ax[0].get_lines(), styles)]
+#
+#
+#
+#
+#
+#
+#        #apply ylabels to each axis
+#        [plt.setp(ax[i], ylabel=label)
+#            for i, label in enumerate(y_axis_labels) if not label is None]
+#        #apply xlabels to each axis
+#        [plt.setp(ax[i], xlabel=label)
+#            for i,label in enumerate(x_axis_labels) if not label is None]
+#        # turn x tick labels on or off
+#        [plt.setp(ax[i].get_xticklabels(), visible=value)
+#            for i, value in enumerate([True,False,False]) if not value is None]
+#        #gs.tight_layout(fig)
+#
+#        fig.tight_layout()
 #
 ##Note: axes.flat
 #
@@ -2084,7 +2089,7 @@ if __name__ == '__main__':
 #        iterable_method_call(fig.axes, 'set_xlabel', *x_axis_labels)
 #        xylabel_subplots(fig, y_axis_labels,x_axis_labels)
 
-        plt.show()
+#        plt.show()
 #    if 0:
 #        x = np.linspace(-np.pi,np.pi,100)
 #        d = np.linspace(0,1,4)

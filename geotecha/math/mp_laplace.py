@@ -144,8 +144,8 @@ class Talbot(object):
             return np.array([getattr(v, 'real') for v in inv_laplace])
 
 
-if __name__ == "__main__":
-    test = Talbot(f=lambda s: 1/(1+s), n=24, shift=0.0, dps=34)
-    a = Talbot(f=lambda s:1/(s-1), n=24, shift=1, dps=None)
-    print(a(1)-exp(1))
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])
 

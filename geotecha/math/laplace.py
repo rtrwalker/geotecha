@@ -116,11 +116,8 @@ class Talbot(object):
         else:
             return inv_laplace.real
 
-if __name__ == "__main__":
-    a = Talbot(lambda s: 1/(1+s), n=24, shift=0.0)
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])
 
-    for i in range(4, 28, 2):
-        n=i
-        print('n=', i)
-        a.n=n
-        print(a(1)-np.exp(-1))
