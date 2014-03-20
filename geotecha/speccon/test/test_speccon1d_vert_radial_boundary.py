@@ -31,7 +31,7 @@ import textwrap
 import matplotlib.pyplot as plt
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
-from geotecha.speccon.speccon1d_vert_radial_boundary import speccon1d_vr
+from geotecha.speccon.speccon1d_vert_radial_boundary import Speccon1dVR
 
 import geotecha.math.transformations as transformations
 
@@ -141,7 +141,7 @@ def test_terzaghi_1d_PTIB():
 
     for impl in ["scalar", "vectorized", "fortran"]:
         for dT in [0.1, 1, 10]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -202,7 +202,7 @@ def test_terzaghi_1d_PTPB():
 
     for impl in ["scalar", "vectorized", "fortran"]:
         for dT in [0.1]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -262,7 +262,7 @@ def test_BC_terzaghi_1d_PTIB():
 
     for impl in ["scalar", "vectorized", "fortran"]:
         for dT in [0.1, 1, 10]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -322,7 +322,7 @@ def test_BC_terzaghi_1d_PTPB():
 
     for impl in ["scalar", "vectorized", "fortran"]:
         for dT in [0.1]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -530,7 +530,7 @@ def test_schiffman_and_stein_1970():
 
     for impl in ["vectorized"]:
         for dT in [0.1]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -620,7 +620,7 @@ def test_fixed_ppress_terzaghi_PTPB():
 
     for impl in ["vectorized"]:
         for dT in [0.1, 1, 10]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -713,7 +713,7 @@ def test_fixed_ppress_BC_terzaghi_PTPB():
 
     for impl in ["vectorized"]:
         for dT in [0.1, 1, 10]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -798,7 +798,7 @@ def test_hansbo_avp():
 
     for impl in ["vectorized"]:
         for dT in [0.1, 1, 10]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -882,7 +882,7 @@ def test_hansbo_avp_vacuum():
 
     for impl in ["vectorized"]:
         for dT in [0.1,1,10]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -1016,7 +1016,7 @@ def test_terzaghi_1d_PTPB_bot_BC_gradient():
 
     for impl in ["vectorized"]:
         for dT in [0.1]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -1167,7 +1167,7 @@ def test_terzaghi_1d_pumping():
     #Note here that the pore pressure at z = 0.5 is slightly off.
     for impl in ["vectorized"]:
         for dT in [0.1]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -1362,7 +1362,7 @@ def test_tang_and_onitsuka_vert_and_radial():
 
     for impl in ["vectorized"]:
         for dT in [0.1]:
-            a = speccon1d_vr(reader + "\n" +
+            a = Speccon1dVR(reader + "\n" +
                             "implementation = '%s'" % impl + "\n" +
                             "dT = %s" % dT)
 
@@ -1544,9 +1544,9 @@ class test_omega_phase(unittest.TestCase):
         drn=0
         load_to_test='surcharge'
 
-        a = speccon1d_vr(self.reader %
+        a = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': True, 'load_to_test': load_to_test})
-        b = speccon1d_vr(self.reader %
+        b = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': False, 'load_to_test': load_to_test})
         a.make_all()
         b.make_all()
@@ -1559,9 +1559,9 @@ class test_omega_phase(unittest.TestCase):
         drn=0
         load_to_test='vacuum'
 
-        a = speccon1d_vr(self.reader %
+        a = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': True, 'load_to_test': load_to_test})
-        b = speccon1d_vr(self.reader %
+        b = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': False, 'load_to_test': load_to_test})
         a.make_all()
         b.make_all()
@@ -1574,9 +1574,9 @@ class test_omega_phase(unittest.TestCase):
         drn=0
         load_to_test='top'
 
-        a = speccon1d_vr(self.reader %
+        a = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': True, 'load_to_test': load_to_test})
-        b = speccon1d_vr(self.reader %
+        b = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': False, 'load_to_test': load_to_test})
         a.make_all()
         b.make_all()
@@ -1589,9 +1589,9 @@ class test_omega_phase(unittest.TestCase):
         drn=0
         load_to_test='bot'
 
-        a = speccon1d_vr(self.reader %
+        a = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': True, 'load_to_test': load_to_test})
-        b = speccon1d_vr(self.reader %
+        b = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': False, 'load_to_test': load_to_test})
         a.make_all()
         b.make_all()
@@ -1604,9 +1604,9 @@ class test_omega_phase(unittest.TestCase):
         drn=1
         load_to_test='bot'
 
-        a = speccon1d_vr(self.reader %
+        a = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': True, 'load_to_test': load_to_test})
-        b = speccon1d_vr(self.reader %
+        b = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': False, 'load_to_test': load_to_test})
         a.make_all()
         b.make_all()
@@ -1620,9 +1620,9 @@ class test_omega_phase(unittest.TestCase):
 #        drn=0
 #        load_to_test='fixed_ppress'
 #
-#        a = speccon1d_vr(self.reader %
+#        a = Speccon1dVR(self.reader %
 #            {'drn': drn, 'use_actual': True, 'load_to_test': load_to_test})
-#        b = speccon1d_vr(self.reader %
+#        b = Speccon1dVR(self.reader %
 #            {'drn': drn, 'use_actual': False, 'load_to_test': load_to_test})
 #        a.make_all()
 #        b.make_all()
@@ -1635,9 +1635,9 @@ class test_omega_phase(unittest.TestCase):
         drn=0
         load_to_test='pumping'
 
-        a = speccon1d_vr(self.reader %
+        a = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': True, 'load_to_test': load_to_test})
-        b = speccon1d_vr(self.reader %
+        b = Speccon1dVR(self.reader %
             {'drn': drn, 'use_actual': False, 'load_to_test': load_to_test})
         a.make_all()
         b.make_all()

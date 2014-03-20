@@ -50,7 +50,7 @@ except ImportError:
 
 
 
-class speccon1d_vr(speccon1d.Speccon1d):
+class Speccon1dVR(speccon1d.Speccon1d):
     """
     speccon1d(reader)
 
@@ -1279,7 +1279,7 @@ figure_ext='.pdf'
 #    program(my_code, writer)
 #    print('writer\n%s' % writer.getvalue())
     #a = calculate_normalised(my_code)
-    a = speccon1d_vr(my_code)
+    a = Speccon1dVR(my_code)
 #    writer = a.create_parsed_input()
 #    print(writer.getvalue())
     a.make_all()
