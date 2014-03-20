@@ -31,7 +31,7 @@ import textwrap
 import matplotlib.pyplot as plt
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
-from geotecha.speccon.speccon1d_vert_radial_boundary import Speccon1dVR
+from geotecha.speccon.speccon1d_vr import Speccon1dVR
 
 import geotecha.math.transformations as transformations
 
