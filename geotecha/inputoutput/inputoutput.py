@@ -1084,7 +1084,7 @@ class InputFileLoaderAndChecker(object):
             syn_checker=SyntaxChecker(['ast','builtin','numpy','PolyLine'])
 #            syntax_checker=None
 
-            copy_attributes_from_text_to_object(reader,
+            copy_attributes_from_text_to_object(self._input_text,
                 self,
                 self._attributes, self._attribute_defaults,
                 not_found_value = None, syntax_checker=syn_checker)
@@ -1712,12 +1712,12 @@ class GenericInputFileArgParser(object):
         """
         if self.pass_open_file:
             with open(path,'r') as f:
-                self.obj(f)
+                a = self.obj(f)
         else:
-            self.obj(path)
+            a = self.obj(path)
 
         for s in self.methods:
-            getattr(self.obj, s)()
+            getattr(a, s)()
 
 
     def main(self, argv=None):

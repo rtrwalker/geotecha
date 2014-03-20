@@ -149,6 +149,10 @@ for v in baseline_module_names:
 ##png_files=[v.split(osp.sep)[v.split()]]
 #png_module_names = ['.'.join(osp.split(v)[0].split(osp.sep)) for v in png_files]
 
+ENTRY_POINTS = {
+        'console_scripts': [
+            'speccon1d_vr = geotecha.speccon.speccon1d_vr:main',
+        ]}
 
 setup(
     name=NAME,
@@ -172,6 +176,7 @@ setup(
     tests_require=TESTS_REQUIRE,
     package_data=PACKAGE_DATA,
     ext_modules=EXT_MODULES,
+    entry_points=ENTRY_POINTS,
     )
 ########################################################
 

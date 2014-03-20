@@ -572,6 +572,19 @@ class test_save_grid_data_to_file(unittest.TestCase):
 
 
 
+class HelperForGenericInputFileArgParser(object):
+    def __init__(self, path):
+        self.path=path
+        self.oname = os.path.join(os.path.dirname(path), 'out.zebra')
+
+        with open(self.oname, 'a') as f:
+            f.write(os.path.basename(path)+'\n')
+        return
+
+    def dog(self):
+        with open(self.oname, 'a') as f:
+            f.write('dog\n')
+
 
 
 class test_GenericInputFileArgParser(unittest.TestCase):
@@ -598,9 +611,9 @@ class test_GenericInputFileArgParser(unittest.TestCase):
         with open(os.path.join(self.tempdir.path, 'out.zebra'), 'a') as f:
             f.write(os.path.basename(path)+'\n')
         return
-    def dog(self):
-        with open(os.path.join(self.tempdir.path, 'out.zebra'), 'a') as f:
-            f.write('dog\n')
+#    def dog(self):
+#        with open(os.path.join(self.tempdir.path, 'out.zebra'), 'a') as f:
+#            f.write('dog\n')
 
     def test_directory_with_path(self):
 
@@ -698,11 +711,11 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 
     def test_methods_with_path(self):
 
-        self._abc_path.__func__.dog=self.dog
-        #why the __func__? see http://stackoverflow.com/q/7034063/2530083
-        # I'm not sure... it just works
 
-        a = GenericInputFileArgParser(self._abc_path, False, ['dog'])
+
+
+        a = GenericInputFileArgParser(HelperForGenericInputFileArgParser,
+                                      False, ['dog'])
 
         args = '-f {0} {1}'.format(
             os.path.join(self.tempdir.path, 'a1.py'),
