@@ -57,6 +57,7 @@ from geotecha.inputoutput.inputoutput import make_array_into_dataframe
 from geotecha.inputoutput.inputoutput import save_grid_data_to_file
 from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 from geotecha.inputoutput.inputoutput import working_directory
+from geotecha.inputoutput.inputoutput import hms_string
 
 class EmptyClass(object):
     """empty class for assigning attributes fot object testing"""
@@ -597,20 +598,9 @@ class test_GenericInputFileArgParser(unittest.TestCase):
         with open(os.path.join(self.tempdir.path, 'out.zebra'), 'a') as f:
             f.write(os.path.basename(path)+'\n')
         return
-
-
-    def test_default_directory(self):
-
-        a = GenericInputFileArgParser(self._abc_path, False)
-        args = '-d -p'.format(self.tempdir.path).split()
-
-        with working_directory(self.tempdir.path):
-            a.main(argv=args)
-
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
-                            textwrap.dedent("""\
-                            a1.py
-                            a2.py""").splitlines())
+    def dog(self):
+        with open(os.path.join(self.tempdir.path, 'out.zebra'), 'a') as f:
+            f.write('dog\n')
 
     def test_directory_with_path(self):
 
@@ -691,6 +681,53 @@ class test_GenericInputFileArgParser(unittest.TestCase):
                             a1.py
                             b1.txt""").splitlines())
 
+
+
+    def test_default_directory(self):
+
+        a = GenericInputFileArgParser(self._abc_path, False)
+        args = '-d -p'.format(self.tempdir.path).split()
+
+        with working_directory(self.tempdir.path):
+            a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            a1.py
+                            a2.py""").splitlines())
+
+    def test_methods_with_path(self):
+
+        self._abc_path.__func__.dog=self.dog
+        #why the __func__? see http://stackoverflow.com/q/7034063/2530083
+        # I'm not sure... it just works
+
+        a = GenericInputFileArgParser(self._abc_path, False, ['dog'])
+
+        args = '-f {0} {1}'.format(
+            os.path.join(self.tempdir.path, 'a1.py'),
+            os.path.join(self.tempdir.path, 'b1.txt')
+                                ).split()
+
+        a.main(argv=args)
+
+        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+                            textwrap.dedent("""\
+                            a1.py
+                            dog
+                            b1.txt
+                            dog
+                            """).splitlines())
+
+class test_hms_string(unittest.TestCase):
+    """tests hms_string"""
+    #hms_string(sec_elapsed)
+
+    def test_20s(self):
+        assert_equal(hms_string(20),"0:00:20.00")
+
+    def test_130p5s(self):
+        assert_equal(hms_string(130.5),"0:02:10.50")
 
 
 if __name__ == '__main__':

@@ -33,7 +33,7 @@ import re
 import os
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import time
 import wx
 import fnmatch
 import argparse
@@ -1613,20 +1613,44 @@ def save_grid_data_to_file(data_dicts, directory=None, file_stem='out_000',
 
 
 
+def hms_string(sec_elapsed):
+    """Convert seconds to human readable h:min:seconds
+
+    Parameters
+    ----------
+    sec_elapsed: float
+        elapsed seconds
+
+    References
+    ----------
+    copied verbatim from http://arcpy.wordpress.com/2012/04/20/146/
+
+    """
+
+    h = int(sec_elapsed / (60 * 60))
+    m = int((sec_elapsed % (60 * 60)) / 60)
+    s = sec_elapsed % 60.
+    return "{}:{:>02}:{:>05.2f}".format(h, m, s)
+
+
 class GenericInputFileArgParser(object):
-    """Pass input files to a class/function that accepts a file
+    """Pass input files to a class/function , then call methods on the object
 
     see self.main for use in scripts.
 
     The working directory will be changed to the location of each input file
 
+    Basically the path of each input file is passed to the method self.process.
+
 
     Parameters
     ----------
     obj : object/callable
-        object to call with input file
+        object to call with input file as argument
+    methods : sequence of string, optional
+        names of obj.method to call after initialization.  default=[]
     pass_open_file: True/False, optional
-        if True then input files willed be passed to obj as open file objects.
+        if True then input files will be passed to obj as open file objects.
          If False then paths of the input files will be passed to obj.
         default = True
     prog : string, optional
@@ -1654,27 +1678,47 @@ class GenericInputFileArgParser(object):
 
     def __init__(self, obj,
                  pass_open_file=True,
+                 methods=[],
                  prog = None,
                  description = "Process some input files",
                  epilog = ('If no options are specifyied then the user '
                            'will be prompted to select files.')):
-        """
 
-        Parameters
-        ----------
-        obj : callable object
-            object to call with object file
-        pass_open_file : True/False, optional
-            If True (default) then open files will be passed to obj.  If False
-            then the
-
-        """
 
         self.obj = obj
         self.pass_open_file = pass_open_file
+        self.methods = methods
         self._prog = prog
         self._description = description
         self._epilog = epilog
+
+    def process(self, path):
+        """process the input file path
+
+        The default behaviour of self.process depends on `self.pass_open_file`.
+        If True then `path` will be opened and then self.obj will be called
+        with the opened file as the argument. If False then then `self.obj`
+        will be called with the path itself as argument.
+
+        If you need more complicated behaviour to process your input file
+        (e.g. initalize self.obj with a path and then call one of it's methods)
+        then over wr
+
+        Parameters
+        ----------
+        path : string
+            absolute path to input file
+
+        """
+        if self.pass_open_file:
+            with open(path,'r') as f:
+                self.obj(f)
+        else:
+            self.obj(path)
+
+        for s in self.methods:
+            getattr(self.obj, s)()
+
 
     def main(self, argv=None):
         """Accept command line arguments and pass files/paths to self.obj
@@ -1770,22 +1814,43 @@ class GenericInputFileArgParser(object):
             filenames = get_filepaths(wildcard="")
 
 
+        level = logging.getLogger().level
+        logging.getLogger().setLevel(logging.INFO)
+        logging.info(time.strftime("%Y-%m-%d %H:%M:%S") +
+            ' Start processing files')
+        start_time= time.time()
+        for i, path in enumerate(filenames):
 
-
-        for path in filenames:
             try:
+
+#                time.sleep(0.5)
+                if i>0:
+                    time_remaining = ((time.time() - start_time)/(i+1) *
+                                        (len(filenames)-i))
+
+                    time_remaining = (', estimated. time remaining ' +
+                                    hms_string(time_remaining))
+                else:
+                    time_remaining= "."
+                logging.info("{0}, processing {1}, File {2} of {3}{4}".format(
+                                time.strftime("%Y-%m-%d %H:%M:%S"),
+                                path,
+                                i+1,
+                                len(filenames),
+                                time_remaining))
+
                 with working_directory(os.path.dirname(path)):
-                    if self.pass_open_file:
-                        with open(path,'r') as f:
-                            self.obj(f)
-                    else:
-                        self.obj(path)
+
+                    self.process(path)
 
             except Exception:
                 logging.exception("problem with file {0}:\n".format(path))
             finally:
-                pass
 
+                pass
+        logging.info(time.strftime("%Y-%m-%d %H:%M:%S") +
+            ' End processing files')
+        logging.getLogger().setLevel(level)
 
 
 
