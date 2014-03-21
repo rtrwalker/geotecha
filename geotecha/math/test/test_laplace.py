@@ -27,8 +27,11 @@ from numpy.testing import assert_allclose
 import numpy as np
 import textwrap
 import matplotlib.pyplot as plt
+import unittest
 
 from geotecha.math.laplace import Talbot
+from geotecha.math.laplace import cot
+from geotecha.math.laplace import csc
 
 def f1(s):
     "L-1{1/(1+s)} = e^(-t)"
@@ -46,7 +49,7 @@ def f4(s, a):
     "L-1{2*a*s/(s**2+a**2)**2} = t*sin(a*t)"
     return 2*a*s/(s**2+a**2)**2
 
-def  test_talbot():
+def test_talbot():
     """test for Talbot numerical inverse Laplace"""
 
     a = Talbot(f=f1, n=24, shift=0.0)
@@ -66,6 +69,24 @@ def  test_talbot():
     d = Talbot(f=f4, n=24, shift=0.0)
     assert_allclose(c(1), np.exp(1))
 
+
+class test_cot(unittest.TestCase):
+    """tests for cot"""
+
+    def test_single(self):
+        assert_allclose(cot(1), 0.6420926)
+
+    def test_multiple(self):
+        assert_allclose(cot(np.array([1,0.5])), [0.6420926, 1.8304877])
+
+class test_csc(unittest.TestCase):
+    """tests for csc"""
+
+    def test_single(self):
+        assert_allclose(csc(1), 1.1883951)
+
+    def test_multiple(self):
+        assert_allclose(csc(np.array([1,0.5])), [1.1883951, 2.0858296])
 
 
 
