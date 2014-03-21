@@ -1148,7 +1148,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
 
 def main():
     a = GenericInputFileArgParser(obj=Speccon1dVR,
-                                  methods=['make_all'],
+                                  methods=[('make_all', [], {})],
                                  pass_open_file=True)
 
     a.main()

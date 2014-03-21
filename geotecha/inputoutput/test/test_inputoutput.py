@@ -715,7 +715,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 
 
         a = GenericInputFileArgParser(HelperForGenericInputFileArgParser,
-                                      False, ['dog'])
+                                      False, [('dog',[],{})])
 
         args = '-f {0} {1}'.format(
             os.path.join(self.tempdir.path, 'a1.py'),

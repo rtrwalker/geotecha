@@ -1647,7 +1647,12 @@ class GenericInputFileArgParser(object):
     ----------
     obj : object/callable
         object to call with input file as argument
-    methods : sequence of string, optional
+    methods : sequence of 3 element tuples, optional
+        Each element of methods is a 3 elemetn tuple (method_name, args,
+        kwargs). After `obj` has been initialized the obj's method called
+        'method_name' will be called with unpacked args and kwargs. i.e.
+        obj(filename).method_name(*args, **kwargs). defult = []
+    sequence of string, optional
         names of obj.method to call after initialization.  default=[]
     pass_open_file: True/False, optional
         if True then input files will be passed to obj as open file objects.
@@ -1716,8 +1721,8 @@ class GenericInputFileArgParser(object):
         else:
             a = self.obj(path)
 
-        for s in self.methods:
-            getattr(a, s)()
+        for s, args, kwargs in self.methods:
+            getattr(a, s)(*args, **kwargs)
 
 
     def main(self, argv=None):
