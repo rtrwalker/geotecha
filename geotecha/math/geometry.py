@@ -127,7 +127,7 @@ def integrate_f_over_polygon_code(f):
     Returns
     -------
     out : str
-        multiline string of funciton code
+        multiline string of function code
 
     """
     x,y,z=sympy.symbols('x,y,z')
@@ -374,10 +374,17 @@ def polyhedron_volume(faces):
     faces : list
         a list of pts arrays defining x,y,z coords of face vertices
 
+
     Returns
     -------
     v : float
         volume of polyhedron
+
+    Notes
+    -----
+    I think points on a face have to be defined in anti clockwise order to
+    give a positive volume.
+
 
     """
 
@@ -406,13 +413,33 @@ def make_hexahedron(coords):
 
     Parameters
     ----------
-    pts : 8 by 3 ndarray
-        x,y,z coords of 8 corner nodes of hexahedron.  node numbering is as per Smith and Grifiths.
+    coords : 8 by 3 ndarray
+        x,y,z coords of 8 corner nodes of hexahedron.  node numbering is as
+        per Smith and Grifiths.
 
     Returns
     -------
     faces : list of pts arrays
         list of pts arrays.  Each list defines vertices of a face
+
+    Notes
+    -----
+    Node numbering:
+
+    ::
+
+                                x
+            (6)-------(7)       ^
+            /         /|        |  y
+           /         / |        | /
+          /         /  |        |/
+        (2)-------(3) (8)       |-------->x
+         |         |   /
+         |         |  /
+         |         | /
+        (1)-------(4)
+
+
 
     """
     coords = np.asarray(coords)
@@ -421,8 +448,51 @@ def make_hexahedron(coords):
     return [coords[v,:] for v in face_nodes]
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+
+#    a = [[-1,-1,-1],
+#         [-1,-1, 1],
+#        [1,-1, 1],
+#        [1,-1,-1],
+#        [-1,1,-1],
+#        [-1,1,1],
+#        [1,1,1],
+#        [1,1,-1]]
+#
+#
+#    b = [
+#            [[0,0,0],
+#            [0,0,1],
+#            [1,0,0],
+#            [0,0,0]],
+#
+#            [[1,0,0],
+#            [0,0,1],
+#            [0,1,0],
+#            [1,0,0]],
+#
+#            [[0,1,0],
+#            [0,0,1],
+#            [0,0,0],
+#            [0,1,0]],
+#
+#            [[0,0,0],
+#            [1,0,0],
+#            [0,1,0],
+#            [0,0,0]]
+#        ]
+#    c = [[[0, 0, 0], [1, 0, 0], [0, 0, 1], [0, 0, 0]],
+#         [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]],
+#         [[0, 1, 0], [0, 0, 0], [0, 0, 1], [0, 1, 0]],
+#         [[0, 0, 0], [0, 1, 0], [1, 0, 0], [0, 0, 0]]]
+##    for v in b:
+##        print(v[::-1])
+#    c = [v[::-1] for v in b]
+#    print(c)
+##    b= make_hexahedron(a)
+##    print(b)
+#    print(polyhedron_volume(c))
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
 
 
