@@ -87,6 +87,8 @@ from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multiply_integrate_x1b
 from geotecha.piecewise.piecewise_linear_1d import subdivide_x_y_into_segments
 from geotecha.piecewise.piecewise_linear_1d import subdivide_x_into_segments
 
+
+
 class test_linear_piecewise(object):
     """Some piecewise distributions for testing"""
 
