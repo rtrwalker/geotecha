@@ -59,6 +59,10 @@ from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 from geotecha.inputoutput.inputoutput import working_directory
 from geotecha.inputoutput.inputoutput import hms_string
 
+from geotecha.inputoutput.inputoutput import fcode_one_large_expr
+
+
+
 class EmptyClass(object):
     """empty class for assigning attributes fot object testing"""
     def __init__(self):
@@ -743,7 +747,51 @@ class test_hms_string(unittest.TestCase):
         assert_equal(hms_string(130.5),"0:02:10.50")
 
 
+
+class test_fcode_one_large_expr(unittest.TestCase):
+    """tests for fcode_one_large_expr"""
+
+    #fcode_one_large_expr(expr, prepend=None, **settings)
+
+    import sympy
+    from sympy import symbols, sin
+
+    n= 8
+    sss = symbols(','.join(['a%d' % v for v in range(n)]))
+
+    e1 = 0
+    for i in sss:
+        e1+=sin(i)
+
+    m = sympy.tensor.IndexedBase('m')
+    j = sympy.tensor.Idx('j')
+    e2 = m[j] + m[j+1]
+
+    def test_line_wrap(self):
+        assert_equal(fcode_one_large_expr(self.e1).splitlines(),
+                     '      (sin(a0) + sin(a1) + sin(a2) + sin(a3) '
+                     '+ sin(a4) + sin(a5) + sin(&\n      a6) + '
+                     'sin(a7))'.splitlines())
+
+    def test_prepend(self):
+        assert_equal(fcode_one_large_expr(self.e1, prepend='k=').splitlines(),
+                     '      k=(sin(a0) + sin(a1) + sin(a2) + sin(a3) + '
+                     'sin(a4) + sin(a5) + sin&\n      (a6) + '
+                     'sin(a7))'.splitlines())
+    def test_settings(self):
+        #note this only tests to see if setting s is passed correctly
+        assert_equal(fcode_one_large_expr(self.e1,
+                                          source_format="free").splitlines(),
+                     '(sin(a0) + sin(a1) + sin(a2) + sin(a3) + sin(a4) + '
+                     'sin(a5) + sin(a6) + sin(a7))'.splitlines())
+
+    def test_parentheses(self):
+        assert_equal(fcode_one_large_expr(self.e2),
+                     '      (m(j + 1) + m(j))')
+
+
 if __name__ == '__main__':
+
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])

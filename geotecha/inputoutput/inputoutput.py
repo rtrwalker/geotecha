@@ -603,7 +603,8 @@ def fcode_one_large_expr(expr, prepend=None, **settings):
         for your prepend it will be put in for you). e.g.
         prepend = 'a(i, i) = a(i, i) + '.
     settings:
-        see `fcode` docs
+        see `sympy.printing.fcode` docs, specifically FCodePrinter.__init__ .
+        Note that 'assign_to will not work'
 
     Returns
     -------
