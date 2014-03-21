@@ -789,6 +789,27 @@ class test_fcode_one_large_expr(unittest.TestCase):
         assert_equal(fcode_one_large_expr(self.e2),
                      '      (m(j + 1) + m(j))')
 
+class test_working_directory(unittest.TestCase):
+    """tests working_direcroty"""
+
+    def setUp(self):
+        self.tempdir = TempDirectory()
+        self.original_dir = os.getcwd()
+
+    def tearDown(self):
+        os.chdir(self.original_dir)
+        self.tempdir.cleanup()
+
+    def test_directory_change(self):
+
+        assert_equal(os.getcwd(), self.original_dir)
+
+        with working_directory(self.tempdir.path):
+            assert_equal(os.getcwd(), self.tempdir.path)
+
+        assert_equal(os.getcwd(), self.original_dir)
+
+
 
 if __name__ == '__main__':
 
