@@ -104,7 +104,7 @@ class test_dim1sin_f(unittest.TestCase):
 
     def test_bot_vs_time_top_vs_time_drn_1(self):
         #expected is from:
-        #test no_bc + bot_vs time interplolated at tvals and depth z (mag_vs_depth is uniform from top plus reduces to zero at top)
+        #test no_bc + top_vs_time and bot_vs time interplolated at tvals and depth z (mag_vs_depth is uniform from top plus reduces to zero at top)
 
         assert_allclose(dim1sin_f(self.m,
                                   self.outz,
@@ -146,7 +146,20 @@ class test_dim1sin_f(unittest.TestCase):
                                   np.array([[ 1*0.2*np.cos(1*1+2)+1.15273015,  2*0.2*np.cos(1*3+2)+1.15273015],
                                             [ 1*0.4*np.cos(1*1+2)+2.03881352,  2*0.4*np.cos(1*3+2)+2.03881352]]))
 
+    def test_bot_vs_time_top_vs_time_drn_1_double_loads(self):
+        #expected is from:
+        #test no_bc + top_vs_time and bot_vs time interplolated at tvals and depth z (mag_vs_depth is uniform from top plus reduces to zero at top)
 
+        assert_allclose(dim1sin_f(self.m,
+                                  self.outz,
+                                  self.tvals,
+                                  self.v_E_Igamv_the,
+                                  drn=1,
+                                  top_vs_time = [self.top_vs_time, self.top_vs_time],
+                                  bot_vs_time = [self.bot_vs_time, self.bot_vs_time]),
+
+                                  np.array([[ 2+2*0.2+1.15273015,  4+4*0.2+1.15273015],
+                                            [ 2+2*0.4+2.03881352,  4+4*0.4+2.03881352]]))
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
