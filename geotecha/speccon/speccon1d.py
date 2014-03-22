@@ -628,7 +628,7 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time=None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the

@@ -35,6 +35,8 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 from geotecha.speccon.speccon1d import dim1sin_f
 from geotecha.speccon.speccon1d import dim1sin_avgf
 from geotecha.speccon.speccon1d import dim1sin_integrate_af
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_abf_linear
+
 
 class test_dim1sin_f(unittest.TestCase):
     """tests for dim1sin_f"""
@@ -428,9 +430,130 @@ class test_dim1sin_integrate_af(unittest.TestCase):
                                   np.array([[ 1.10345899,  1.78079232],
                                             [ 1.59190524,  2.49323858]]))
 
+class test_dim1sin_E_Igamv_the_BC_abf_linear(unittest.TestCase):
+    """tests for dim1sin_E_Igamv_the_BC_abf_linear
+
+    see geotecha.speccon.test.speccon1d_test_data_gen.py
+    for test case data generation
+
+    """
+    #dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+
+    outz = np.array([[0.2, 0.4], [0.4, 0.6]])
+    z1 = outz[:, 0]
+    z2 = outz[:, 1]
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    top_vs_time = PolyLine([0,2,4],[0,2,2])
+    bot_vs_time = PolyLine([0,2,4],[0,2,2])
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+
+    def test_no_BC(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 0, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b, 'top_vs_time': None, 'bot_vs_time':None}),
+
+                                  np.array([[ 0.,  0.],
+                                            [ 0.,  0.],
+                                            [ 0.,  0.]]))
+
+    def test_top_vs_time_drn_0(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 0, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b, 'top_vs_time': [self.top_vs_time], 'bot_vs_time':None}),
+
+                                  np.array([[ 0.13262919,  0.60636726],
+                                       [ 0.21993155,  1.00550484],
+                                       [ 0.23855946,  1.09066975]]))
+
+
+    def test_top_vs_time_drn_1(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 1, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b, 'top_vs_time': [self.top_vs_time], 'bot_vs_time':None}),
+
+                                  np.array([[ 0.47282784,  2.1617211 ],
+                                       [ 0.69439245,  3.17469213],
+                                       [ 0.57706911,  2.63830166]]))
+
+
+    def test_bot_vs_time_drn_0(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 0, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b, 'top_vs_time': None, 'bot_vs_time':[self.bot_vs_time]}),
+
+                                  np.array([[ 0.34019865,  1.55535384],
+                                   [ 0.4744609 ,  2.16918729],
+                                   [ 0.33850965,  1.54763191]]))
+
+    def test_bot_vs_time_top_vs_time_drn_1(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 1, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b, 'top_vs_time': [self.top_vs_time], 'bot_vs_time':[self.bot_vs_time]}),
+
+                                  np.array([[ 0.81302649,  3.71707495],
+                                       [ 1.16885336,  5.34387942],
+                                       [ 0.91557876,  4.18593358]]))
+
+    def test_top_vs_time_drn_0_omega_phase(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 0, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b,
+            'top_vs_time': [self.top_vs_time],
+            'bot_vs_time':None,
+            'top_omega_phase': [self.omega_phase]}),
+
+                                  np.array([[-0.1181581 , -0.18510014],
+                                   [-0.19593495, -0.30694118],
+                                   [-0.21253038, -0.33293869]]))
+
+    def test_bot_vs_time_drn_0_omega_phase(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 0, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b,
+            'top_vs_time': None,
+            'bot_vs_time':[self.bot_vs_time],
+            'bot_omega_phase': [self.omega_phase]}),
+
+                                  np.array([[-0.30307978, -0.47478852],
+                                   [-0.42269275, -0.66216779],
+                                   [-0.30157506, -0.47243132]]))
+
+    def test_bot_vs_time_top_vs_time_drn_1_double_loads(self):
+        assert_allclose(dim1sin_E_Igamv_the_BC_abf_linear(
+            **{'drn': 1, 'm': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+            'a': self.a, 'b':self.b, 'top_vs_time': [self.top_vs_time,self.top_vs_time], 'bot_vs_time':[self.bot_vs_time,self.bot_vs_time]}),
+
+                                  np.array([[  1.62605298,   7.43414989],
+                                   [  2.33770671,  10.68775884],
+                                   [  1.83115753,   8.37186715]]))
+
+
+#    def test_bot_vs_time_top_vs_time_drn_1_double_loads(self):
+#
+#        assert_allclose(dim1sin_integrate_af(self.m,
+#                                  self.outz,
+#                                  self.tvals,
+#                                  self.v_E_Igamv_the,
+#                                  drn=1,
+#                                  a=self.a,
+#                                  top_vs_time = [self.top_vs_time, self.top_vs_time],
+#                                  bot_vs_time = [self.bot_vs_time, self.bot_vs_time]),
+#
+#                                  np.array([[ 1.10345899,  1.78079232],
+#                                            [ 1.59190524,  2.49323858]]))
+
+
 
 if __name__ == '__main__':
 
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])

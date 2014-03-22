@@ -33,9 +33,11 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 from numpy import cos, sin
 from geotecha.inputoutput.inputoutput import PrefixNumpyArrayString
 
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_abf_linear
+
 SAFE=False
 
-def dim1sin_integrate_af():
+def gen_dim1sin_integrate_af():
     """test case data generation for speccond1d.dim1sin_integrate_af"""
 
 
@@ -102,8 +104,61 @@ def dim1sin_integrate_af():
             print(no_bc + eval(sout))
         print('#'*10+'\n')
 
+def gen_dim1sin_E_Igamv_the_BC_abf_linear():
+    """test case generation for dim1sin_E_Igamv_the_BC_abf_linear
+
+    2014-03-22"""
+
+    #dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+    outz = np.array([[0.2, 0.4], [0.4, 0.6]])
+    z1 = outz[:, 0]
+    z2 = outz[:, 1]
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    top_vs_time = PolyLine([0,2,4],[0,2,2])
+    bot_vs_time = PolyLine([0,2,4],[0,2,2])
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+
+    fn=OrderedDict()
+
+    fn['no_bc'] = {'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+        'a': a, 'b':b, 'top_vs_time': None, 'bot_vs_time':None}
+    fn['top_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a, 'b':b, 'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a, 'b':b, 'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['bot_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a, 'b':b, 'top_vs_time': None,'bot_vs_time':[bot_vs_time]}
+    fn['bot_vs_time_top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a, 'b':b, 'top_vs_time': [top_vs_time],'bot_vs_time':[bot_vs_time]}
+    fn['test_top_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a, 'b':b,
+            'top_vs_time': [top_vs_time],
+            'bot_vs_time':None,
+            'top_omega_phase': [omega_phase]}
+    fn['test_bot_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a, 'b':b,
+            'top_vs_time': None,
+            'bot_vs_time':[bot_vs_time],
+            'bot_omega_phase': [omega_phase]}
+    fn['bot_vs_time_top_vs_time_drn_1_double_loads']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a, 'b':b, 'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+#    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+
+    for k, v in fn.iteritems():
+        print(k)
+        print (dim1sin_E_Igamv_the_BC_abf_linear(**v))
+        print('#'*10+'\n')
 
 
 if __name__=='__main__':
     PrefixNumpyArrayString().turn_on()
-    dim1sin_integrate_af()
+#    gen_dim1sin_integrate_af()
+    gen_dim1sin_E_Igamv_the_BC_abf_linear()
