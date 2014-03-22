@@ -34,6 +34,11 @@ from numpy import cos, sin
 from geotecha.inputoutput.inputoutput import PrefixNumpyArrayString
 
 from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_abf_linear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_D_aDf_linear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_aDfDt_linear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_deltaf_linear
+
+
 
 SAFE=False
 
@@ -157,8 +162,195 @@ def gen_dim1sin_E_Igamv_the_BC_abf_linear():
         print (dim1sin_E_Igamv_the_BC_abf_linear(**v))
         print('#'*10+'\n')
 
+def gen_dim1sin_E_Igamv_the_BC_D_aDf_linear():
+    """test case generation for dim1sin_E_Igamv_the_BC_D_aDf_linear
+
+    2014-03-22"""
+
+    #dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+    outz = np.array([[0.2, 0.4], [0.4, 0.6]])
+    z1 = outz[:, 0]
+    z2 = outz[:, 1]
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    top_vs_time = PolyLine([0,2,4],[0,2,2])
+    bot_vs_time = PolyLine([0,2,4],[0,2,2])
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+
+    fn=OrderedDict()
+
+    fn['no_bc'] = {'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+        'a': a,  'top_vs_time': None, 'bot_vs_time':None}
+    fn['top_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['bot_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': None,'bot_vs_time':[bot_vs_time]}
+    fn['bot_vs_time_top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time],'bot_vs_time':[bot_vs_time]}
+    fn['test_top_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,
+            'top_vs_time': [top_vs_time],
+            'bot_vs_time':None,
+            'top_omega_phase': [omega_phase]}
+    fn['test_bot_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,
+            'top_vs_time': None,
+            'bot_vs_time':[bot_vs_time],
+            'bot_omega_phase': [omega_phase]}
+    fn['bot_vs_time_top_vs_time_drn_1_double_loads']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+#    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+
+    for k, v in fn.iteritems():
+        print(k)
+        print (dim1sin_E_Igamv_the_BC_D_aDf_linear(**v))
+        print('#'*10+'\n')
+
+
+
+def gen_dim1sin_E_Igamv_the_BC_aDfDt_linear():
+    """test case generation for dim1sin_E_Igamv_the_BC_aDfDt_linear
+
+    2014-03-22"""
+
+    #dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+    outz = np.array([[0.2, 0.4], [0.4, 0.6]])
+    z1 = outz[:, 0]
+    z2 = outz[:, 1]
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    top_vs_time = PolyLine([0,2,4],[0,2,2])
+    bot_vs_time = PolyLine([0,2,4],[0,2,2])
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+
+    fn=OrderedDict()
+
+    fn['no_bc'] = {'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+        'a': a,  'top_vs_time': None, 'bot_vs_time':None}
+    fn['top_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['bot_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': None,'bot_vs_time':[bot_vs_time]}
+    fn['bot_vs_time_top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time],'bot_vs_time':[bot_vs_time]}
+    fn['test_top_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,
+            'top_vs_time': [top_vs_time],
+            'bot_vs_time':None,
+            'top_omega_phase': [omega_phase]}
+    fn['test_bot_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,
+            'top_vs_time': None,
+            'bot_vs_time':[bot_vs_time],
+            'bot_omega_phase': [omega_phase]}
+    fn['bot_vs_time_top_vs_time_drn_1_double_loads']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+#    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+
+    for k, v in fn.iteritems():
+        print(k)
+        print (dim1sin_E_Igamv_the_BC_aDfDt_linear(**v))
+        print('#'*10+'\n')
+
+def gen_dim1sin_E_Igamv_the_BC_deltaf_linear():
+    """test case generation for dim1sin_E_Igamv_the_BC_deltaf_linear
+
+    2014-03-22"""
+
+    #dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseudo_k, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+    outz = np.array([[0.2, 0.4], [0.4, 0.6]])
+    z1 = outz[:, 0]
+    z2 = outz[:, 1]
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    top_vs_time = PolyLine([0,2,4],[0,2,2])
+    bot_vs_time = PolyLine([0,2,4],[0,2,2])
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+    zvals=[0.2]
+    pseudo_k=[1000]
+
+    fn=OrderedDict()
+
+    fn['no_bc'] = {'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+
+        'zvals':zvals,
+        'pseudo_k': pseudo_k,
+        'top_vs_time': None, 'bot_vs_time':None}
+    fn['top_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+
+        'zvals':zvals,
+        'pseudo_k': pseudo_k,
+          'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+
+        'zvals':zvals,
+        'pseudo_k': pseudo_k,
+          'top_vs_time': [top_vs_time], 'bot_vs_time':None}
+    fn['bot_vs_time_drn_0']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+
+        'zvals':zvals,
+        'pseudo_k': pseudo_k,
+          'top_vs_time': None,'bot_vs_time':[bot_vs_time]}
+    fn['bot_vs_time_top_vs_time_drn_1']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+
+        'zvals':zvals,
+        'pseudo_k': pseudo_k,
+          'top_vs_time': [top_vs_time],'bot_vs_time':[bot_vs_time]}
+    fn['test_top_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+
+        'zvals':zvals,
+        'pseudo_k': pseudo_k,
+
+            'top_vs_time': [top_vs_time],
+            'bot_vs_time':None,
+            'top_omega_phase': [omega_phase]}
+    fn['test_bot_vs_time_drn_0_omega_phase']={'drn': 0, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+            'zvals':zvals,
+        'pseudo_k': pseudo_k,
+            'top_vs_time': None,
+            'bot_vs_time':[bot_vs_time],
+            'bot_omega_phase': [omega_phase]}
+    fn['bot_vs_time_top_vs_time_drn_1_double_loads']={'drn': 1, 'm': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+
+        'zvals':zvals,
+        'pseudo_k': pseudo_k,
+          'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+#    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+
+    for k, v in fn.iteritems():
+        print(k)
+        print (dim1sin_E_Igamv_the_BC_deltaf_linear(**v))
+        print('#'*10+'\n')
+
 
 if __name__=='__main__':
     PrefixNumpyArrayString().turn_on()
 #    gen_dim1sin_integrate_af()
-    gen_dim1sin_E_Igamv_the_BC_abf_linear()
+#    gen_dim1sin_E_Igamv_the_BC_abf_linear()
+#    gen_dim1sin_E_Igamv_the_BC_D_aDf_linear()
+#    gen_dim1sin_E_Igamv_the_BC_aDfDt_linear()
+    gen_dim1sin_E_Igamv_the_BC_deltaf_linear()
