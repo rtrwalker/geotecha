@@ -37,8 +37,9 @@ from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_abf_linear
 from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_D_aDf_linear
 from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_aDfDt_linear
 from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_deltaf_linear
-
-
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_abmag_bilinear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_aDmagDt_bilinear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_deltamag_linear
 
 SAFE=False
 
@@ -346,6 +347,117 @@ def gen_dim1sin_E_Igamv_the_BC_deltaf_linear():
         print (dim1sin_E_Igamv_the_BC_deltaf_linear(**v))
         print('#'*10+'\n')
 
+def gen_dim1sin_E_Igamv_the_abmag_bilinear():
+    """test case generation for dim1sin_E_Igamv_the_abmag_bilinear
+
+    2014-03-22"""
+
+    #dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth, mag_vs_time, omega_phase=None, dT=1.0):
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    mag_vs_time = PolyLine([0,2,4],[0,2,2])
+    mag_vs_depth = PolyLine([0, 1], [1, 2])#y = (1+z)
+
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+    fn=OrderedDict()
+
+    fn['single_load'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'a':a, 'b':b,
+                'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time]}
+    fn['double_load'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'a':a, 'b':b,
+                'mag_vs_depth': [mag_vs_depth]*2, 'mag_vs_time': [mag_vs_time]*2}
+    fn['omega_phase'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'a':a, 'b':b,
+                'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+
+    for k, v in fn.iteritems():
+        print(k)
+        print (dim1sin_E_Igamv_the_abmag_bilinear(**v))
+        print('#'*10+'\n')
+
+
+def gen_dim1sin_E_Igamv_the_aDmagDt_bilinear():
+    """test case generation for dim1sin_E_Igamv_the_aDmagDt_bilinear
+
+    2014-03-22"""
+
+    #dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth, mag_vs_time, omega_phase = None, dT=1.0):
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    mag_vs_time = PolyLine([0,2,4],[0,2,2])
+    mag_vs_depth = PolyLine([0, 1], [1, 2])#y = (1+z)
+
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+    fn=OrderedDict()
+
+    fn['single_load'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'a':a,
+                'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time]}
+    fn['double_load'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'a':a,
+                'mag_vs_depth': [mag_vs_depth]*2, 'mag_vs_time': [mag_vs_time]*2}
+    fn['omega_phase'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'a':a,
+                'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+
+    for k, v in fn.iteritems():
+        print(k)
+        print (dim1sin_E_Igamv_the_aDmagDt_bilinear(**v))
+        print('#'*10+'\n')
+
+def gen_dim1sin_E_Igamv_the_deltamag_linear():
+    """test case generation for dim1sin_E_Igamv_the_deltamag_linear
+
+    2014-03-22"""
+
+    #dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, a, mag_vs_time, omega_phase=None, dT=1.0):
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    mag_vs_time = PolyLine([0,2,4],[0,2,2])
+    mag_vs_depth = PolyLine([0, 1], [1, 2])#y = (1+z)
+
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+    zvals=[0.2]
+    pseudo_k=[1000]
+
+    fn=OrderedDict()
+
+    fn['single_load'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'zvals': zvals, 'pseudo_k':pseudo_k,
+                'mag_vs_time': [mag_vs_time], 'omega_phase': [None]}
+    fn['double_load'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'zvals': zvals*2, 'pseudo_k':pseudo_k*2,
+                'mag_vs_time': [mag_vs_time]*2, 'omega_phase': [None]*2}
+    fn['omega_phase'] = {'m': m, 'eigs':eigs, 'tvals':tvals,'Igamv':Igamv,
+               'zvals': zvals, 'pseudo_k':pseudo_k,
+                'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+
+    for k, v in fn.iteritems():
+        print(k)
+        print (dim1sin_E_Igamv_the_deltamag_linear(**v))
+        print('#'*10+'\n')
+
 
 if __name__=='__main__':
     PrefixNumpyArrayString().turn_on()
@@ -353,4 +465,7 @@ if __name__=='__main__':
 #    gen_dim1sin_E_Igamv_the_BC_abf_linear()
 #    gen_dim1sin_E_Igamv_the_BC_D_aDf_linear()
 #    gen_dim1sin_E_Igamv_the_BC_aDfDt_linear()
-    gen_dim1sin_E_Igamv_the_BC_deltaf_linear()
+#    gen_dim1sin_E_Igamv_the_BC_deltaf_linear()
+#    gen_dim1sin_E_Igamv_the_abmag_bilinear()
+#    gen_dim1sin_E_Igamv_the_aDmagDt_bilinear()
+    gen_dim1sin_E_Igamv_the_deltamag_linear()

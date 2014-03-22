@@ -989,7 +989,7 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, a, mag_vs_time, omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, mag_vs_time, omega_phase=None, dT=1.0):
     """Loading dependant E_Igamv_the matrix for a * delta(z-zd)*mag(t) where mag is piecewise linear in time multiple by cos(omega * t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
@@ -1013,7 +1013,7 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, a, mag_vs_
         speccon matrix
     zvals : list of float
         z values of each delta function
-    a: list of float
+    pseudo_k: list of float
         coefficents to multiply each delta function by
     mag_vs_time : list of PolyLine
         Piecewise linear magnitude vs time
@@ -1041,7 +1041,7 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, a, mag_vs_
     if omega_phase is None:
             omega_phase = [None] * len(mag_vs_time)
 
-    for z, k, mag_vs_t, om_ph in zip(zvals, a, mag_vs_time, omega_phase):
+    for z, k, mag_vs_t, om_ph in zip(zvals, pseudo_k, mag_vs_time, omega_phase):
         if mag_vs_t is None:
             continue
         theta = k * np.sin(z * m)

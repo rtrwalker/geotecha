@@ -448,7 +448,9 @@ def make_hexahedron(coords):
     return [coords[v,:] for v in face_nodes]
 
 if __name__ == '__main__':
-
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])
 #    a = [[-1,-1,-1],
 #         [-1,-1, 1],
 #        [1,-1, 1],
@@ -491,9 +493,7 @@ if __name__ == '__main__':
 ##    b= make_hexahedron(a)
 ##    print(b)
 #    print(polyhedron_volume(c))
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
-#    nose.runmodule(argv=['nose', '--verbosity=3'])
+
 
 
 #    shp = dict()

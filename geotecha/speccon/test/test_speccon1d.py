@@ -39,6 +39,9 @@ from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_abf_linear
 from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_D_aDf_linear
 from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_aDfDt_linear
 from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_BC_deltaf_linear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_abmag_bilinear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_aDmagDt_bilinear
+from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_deltamag_linear
 
 class test_dim1sin_f(unittest.TestCase):
     """tests for dim1sin_f
@@ -910,6 +913,189 @@ class test_dim1sin_E_Igamv_the_BC_deltaf_linear(unittest.TestCase):
                                   np.array([[  175.40726974,   801.94431061],
        [  343.82160516,  1571.91763224],
        [  498.52885818,  2279.22355834]]))
+
+
+
+
+class test_dim1sin_E_Igamv_the_abmag_bilinear(unittest.TestCase):
+    """tests for dim1sin_E_Igamv_the_abmag_bilinear
+
+    see geotecha.speccon.test.speccon1d_test_data_gen.py
+    for test case data generation
+
+    because this fn is basically a glorified wrapper we really just need to
+    test if all the args are passed properly.
+
+    """
+    #dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth, mag_vs_time, omega_phase=None, dT=1.0):
+
+
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    mag_vs_time = PolyLine([0,2,4],[0,2,2])
+    mag_vs_depth = PolyLine([0, 1], [1, 2])#y = (1+z)
+
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+
+
+
+
+    def test_single_load(self):
+        assert_allclose(dim1sin_E_Igamv_the_abmag_bilinear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'a':self.a, 'b':self.b,
+                'mag_vs_depth': [self.mag_vs_depth], 'mag_vs_time': [self.mag_vs_time]}),
+
+                                  np.array([[ 0.81302649,  3.71707495],
+                                            [ 1.16885336,  5.34387942],
+                                            [ 0.91557876,  4.18593358]]))
+
+    def test_double_load(self):
+        assert_allclose(dim1sin_E_Igamv_the_abmag_bilinear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'a':self.a, 'b':self.b,
+                'mag_vs_depth': [self.mag_vs_depth]*2, 'mag_vs_time': [self.mag_vs_time]*2}),
+
+                                  2*np.array([[ 0.81302649,  3.71707495],
+                                            [ 1.16885336,  5.34387942],
+                                            [ 0.91557876,  4.18593358]]))
+    def test_omega_phase(self):
+        assert_allclose(dim1sin_E_Igamv_the_abmag_bilinear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'a':self.a, 'b':self.b,
+                'mag_vs_depth': [self.mag_vs_depth], 'mag_vs_time': [self.mag_vs_time], 'omega_phase': [self.omega_phase]}),
+
+                                  np.array([[-0.72431765, -1.13467717],
+                                           [-1.04132046, -1.63127676],
+                                           [-0.81568051, -1.27780132]]))
+
+
+
+
+class test_dim1sin_E_Igamv_the_aDmagDt_bilinear(unittest.TestCase):
+    """tests for dim1sin_E_Igamv_the_aDmagDt_bilinear
+
+    see geotecha.speccon.test.speccon1d_test_data_gen.py
+    for test case data generation
+
+    because this fn is basically a glorified wrapper we really just need to
+    test if all the args are passed properly.
+
+    """
+    #dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth, mag_vs_time, omega_phase = None, dT=1.0):
+
+
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    mag_vs_time = PolyLine([0,2,4],[0,2,2])
+    mag_vs_depth = PolyLine([0, 1], [1, 2])#y = (1+z)
+
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+
+
+
+
+
+    def test_single_load(self):
+        assert_allclose(dim1sin_E_Igamv_the_aDmagDt_bilinear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'a':self.a,
+                'mag_vs_depth': [self.mag_vs_depth], 'mag_vs_time': [self.mag_vs_time]}),
+
+                                  np.array([[ 0.81245149,  0.40883755],
+                                       [ 1.19316194,  0.60041665],
+                                       [ 0.99156737,  0.4989713 ]]))
+
+    def test_double_load(self):
+        assert_allclose(dim1sin_E_Igamv_the_aDmagDt_bilinear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'a':self.a,
+                'mag_vs_depth': [self.mag_vs_depth]*2, 'mag_vs_time': [self.mag_vs_time]*2}),
+
+                                  2*np.array([[ 0.81245149,  0.40883755],
+                                       [ 1.19316194,  0.60041665],
+                                       [ 0.99156737,  0.4989713 ]]))
+    def test_omega_phase(self):
+        assert_allclose(dim1sin_E_Igamv_the_aDmagDt_bilinear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'a':self.a,
+                'mag_vs_depth': [self.mag_vs_depth], 'mag_vs_time': [self.mag_vs_time], 'omega_phase': [self.omega_phase]}),
+
+                                  np.array([[-0.85117901,  1.38905894],
+                                           [-1.25003698,  2.03996458],
+                                           [-1.0388329 ,  1.69529571]]))
+
+class test_dim1sin_E_Igamv_the_deltamag_linear(unittest.TestCase):
+    """tests for dim1sin_E_Igamv_the_deltamag_linear
+
+    see geotecha.speccon.test.speccon1d_test_data_gen.py
+    for test case data generation
+
+    because this fn is basically a glorified wrapper we really just need to
+    test if all the args are passed properly.
+
+    """
+    #dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, a, mag_vs_time, omega_phase=None, dT=1.0):
+
+
+    m = np.array([1.0,2.0, 3.0])
+    v_E_Igamv_the = np.ones((3,2), dtype=float)
+    tvals = np.array([1.0, 3])
+    mag_vs_time = PolyLine([0,2,4],[0,2,2])
+    mag_vs_depth = PolyLine([0, 1], [1, 2])#y = (1+z)
+
+    omega_phase = (1,2)
+    a = PolyLine([0, 1], [1, 2])# y = 1 + z
+    b = PolyLine([0, 1], [1, 2])# y = 1 + z
+    g = np.array([1.0,2.0])# this is interpolated from top_vs_time at t = 1, 3
+    Igamv = np.identity(3)
+    eigs = np.ones(3)
+    zvals=[0.2]
+    pseudo_k=[1000]
+
+
+
+    def test_single_load(self):
+        assert_allclose(dim1sin_E_Igamv_the_deltamag_linear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'zvals':self.zvals, 'pseudo_k':self.pseudo_k,
+                'mag_vs_time': [self.mag_vs_time]}),
+
+                                  np.array([[  73.08636239,  334.14346275],
+                                       [ 143.25900215,  654.9656801 ],
+                                       [ 207.72035757,  949.67648264]]))
+
+    def test_double_load(self):
+        assert_allclose(dim1sin_E_Igamv_the_deltamag_linear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'zvals':self.zvals*2, 'pseudo_k':self.pseudo_k*2,
+                 'mag_vs_time': [self.mag_vs_time]*2}),
+
+                                  2*np.array([[  73.08636239,  334.14346275],
+                                               [ 143.25900215,  654.9656801 ],
+                                               [ 207.72035757,  949.67648264]]))
+    def test_omega_phase(self):
+        assert_allclose(dim1sin_E_Igamv_the_deltamag_linear(
+            **{'m': self.m, 'eigs':self.eigs, 'tvals':self.tvals,'Igamv':self.Igamv,
+               'zvals':self.zvals, 'pseudo_k':self.pseudo_k,
+                'mag_vs_time': [self.mag_vs_time], 'omega_phase': [self.omega_phase]}),
+
+                                  np.array([[ -65.11195277, -102.00089187],
+                                           [-127.62809745, -199.93533007],
+                                           [-185.05611264, -289.89897759]]))
 
 
 if __name__ == '__main__':
