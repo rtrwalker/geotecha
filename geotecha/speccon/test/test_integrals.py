@@ -25,6 +25,9 @@ from nose.tools.trivial import assert_almost_equal
 from nose.tools.trivial import assert_raises
 from nose.tools.trivial import ok_
 
+import unittest
+from numpy.testing import assert_allclose
+
 from math import pi
 import numpy as np
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
@@ -43,6 +46,8 @@ from geotecha.speccon.integrals import dim1sin_D_aDf_linear
 from geotecha.speccon.integrals import dim1sin_D_aDf_linear_v2
 from geotecha.speccon.integrals import Eload_linear
 from geotecha.speccon.integrals import EDload_linear
+from geotecha.speccon.integrals import EDload_coslinear
+from geotecha.speccon.integrals import Eload_coslinear
 
 from geotecha.speccon.integrals import pdim1sin_a_linear_between
 from geotecha.speccon.integrals import pdim1sin_af_linear
@@ -54,7 +59,8 @@ from geotecha.speccon.integrals import pdim1sin_D_aDf_linear
 from geotecha.speccon.integrals import pdim1sin_D_aDf_linear_v2
 from geotecha.speccon.integrals import pEload_linear
 from geotecha.speccon.integrals import pEDload_linear
-
+from geotecha.speccon.integrals import pEDload_coslinear
+from geotecha.speccon.integrals import pEload_coslinear
 
 
 #from spec1d.spec1d import m_func, make_gamma, make_psi, make_theta_two_prop
@@ -871,7 +877,7 @@ class test_EDload_linear(base_t_ester):
         base_t_ester.__init__(self, EDload_linear, prefix = self.__class__.__name__)
         self.eigs = np.array([2.46740110027, 22.2066099025])
         self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
-        #Eload_linear(loadtim, loadmag, eigs, tvals)
+        #EDload_linear(loadtim, loadmag, eigs, tvals)
 
 
         self.cases = [
@@ -904,7 +910,7 @@ class test_pEDload_linear(base_t_ester):
         base_t_ester.__init__(self, pEDload_linear, prefix = self.__class__.__name__)
         self.eigs = np.array([2.46740110027, 22.2066099025])
         self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
-        #Eload_linear(loadtim, loadmag, eigs, tvals)
+        #EDload_linear(loadtim, loadmag, eigs, tvals)
 
 
         self.cases = [
@@ -923,6 +929,73 @@ class test_pEDload_linear(base_t_ester):
 
 
             ]
+
+
+class test_EDload_coslinear(base_t_ester):
+    """A suite of tests for the EDload_coslinear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, EDload_coslinear, prefix = self.__class__.__name__)
+        self.eigs = np.array([2.46740110027, 22.2066099025])
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #EDload_coslinear(loadtim, loadmag, omega_phase, eigs, tvals)
+
+#        EDload_coslinear(loadtim, loadmag, omega_phase, eigs, tvals)
+
+        self.cases = [
+
+            ['instantaneous load at 0',
+             {'loadtim': np.array([0,0]), 'loadmag': np.array([0, 100]), 'eigs': self.eigs, 'tvals': np.array([-1,0,1]),
+              'omega':0.5, 'phase': 0.2},
+             np.array([[  0.00000000e+00,   0.00000000e+00],
+                       [  9.80066578e+01,   9.80066578e+01],
+                       [  8.31145192e+00,   2.22355275e-08]])],
+
+            ['instantaneous load at 0, dT=2',
+             {'loadtim': np.array([0,0]), 'loadmag': np.array([0, 100]), 'eigs': self.eigs_dT2, 'tvals': np.array([-1,0,1]), 'dT':2.0,
+              'omega':0.5, 'phase': 0.2},
+             np.array([[  0.00000000e+00,   0.00000000e+00],
+                   [  9.80066578e+01,   9.80066578e+01],
+                   [  8.31145192e+00,   2.22355275e-08]])],
+
+            ['two ramp loads',
+             {'loadtim': np.array([0, 0.3, 0.5, 0.8]), 'loadmag': np.array([0, 40, 40, 80]), 'eigs': self.eigs, 'tvals': np.array([-1,0.1, 0.3, 0.4, 0.5, 0.7, 1]),
+              'omega':0.5, 'phase': 0.2},
+             np.array([[  0.        ,   0.        ],
+                       [ 11.44269979,   5.16431147],
+                       [ 26.38732808,   5.42703637],
+                       [ 19.9667803 ,   0.28859474],
+                       [ 14.86855537,  -0.30595091],
+                       [ 25.41014088,   4.43257565],
+                       [ 17.08400339,   0.04842211]])],
+
+
+            ]
+
+class test_pEDload_coslinear(base_t_ester):
+    """A suite of tests for the pEDload_coslinear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, pEDload_coslinear, prefix = self.__class__.__name__)
+        self.eigs = np.array([2.46740110027, 22.2066099025])
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #pEDload_coslinear(a, omega, phase, eigs, tvals)
+
+        self.cases = [
+
+
+            ['two ramp loads',
+             {'a': PolyLine(np.array([0, 0.3, 0.5, 0.8]), np.array([0, 40, 40, 80])), 'eigs': self.eigs, 'tvals': np.array([-1,0.1, 0.3, 0.4, 0.5, 0.7, 1]),
+              'omega':0.5, 'phase': 0.2},
+             np.array([[  0.        ,   0.        ],
+                       [ 11.44269979,   5.16431147],
+                       [ 26.38732808,   5.42703637],
+                       [ 19.9667803 ,   0.28859474],
+                       [ 14.86855537,  -0.30595091],
+                       [ 25.41014088,   4.43257565],
+                       [ 17.08400339,   0.04842211]])],
+
+
+            ]
+
 
 class test_Eload_linear(base_t_ester):
     """A suite of tests for the Eload_linear function"""
@@ -979,6 +1052,72 @@ class test_pEload_linear(base_t_ester):
                [-14.219631734, -2.7348770607],
                [-23.3938601792, -3.59934982888],
                ]],
+
+
+            ]
+
+
+class test_Eload_coslinear(base_t_ester):
+    """A suite of tests for the Eload_coslinear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, Eload_coslinear, prefix = self.__class__.__name__)
+        self.eigs = np.array([2.46740110027, 22.2066099025])
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals)
+
+
+        self.cases = [
+
+            ['instantaneous load at 0',
+             {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': self.eigs, 'tvals': np.array([-1,0,1]),
+              'omega':0.5, 'phase': 0.2},
+             np.array([[  0.        ,   0.        ],
+                       [  0.        ,   0.        ],
+                       [-31.48878032,  -3.50775008]])],
+
+            ['instantaneous load at 0, dT=2',
+             {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': self.eigs_dT2, 'tvals': np.array([-1,0,1]), 'dT':2.0,
+              'omega':0.5, 'phase': 0.2},
+             np.array([[  0.        ,   0.        ],
+                       [  0.        ,   0.        ],
+                       [-31.48878032,  -3.50775008]])],
+
+            ['two ramp loads',
+             {'loadtim': [0, 0.3, 0.5, 0.8, 10], 'loadmag': [0, -40, -40, -80, -80], 'eigs': self.eigs, 'tvals': [-1,0.1, 0.3, 0.4, 0.5, 0.7, 1],
+              'omega':0.5, 'phase': 0.2},
+              np.array([[  0.        ,   0.        ],
+                       [ -0.59825397,  -0.34919877],
+                       [ -4.53415557,  -1.44767131],
+                       [ -6.83944717,  -1.64607949],
+                       [ -8.57150008,  -1.63572176],
+                       [-12.73600277,  -2.35976553],
+                       [-19.4308577 ,  -2.80349801]])],
+
+
+            ]
+
+
+class test_pEload_coslinear(base_t_ester):
+    """A suite of tests for the pEload_coslinear function"""
+    def __init__(self):
+        base_t_ester.__init__(self, pEload_coslinear, prefix = self.__class__.__name__)
+        self.eigs = np.array([2.46740110027, 22.2066099025])
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #pEload_coslinear(a, omega, phase, eigs, tvals)
+
+
+        self.cases = [
+
+            ['two ramp loads',
+             {'a': PolyLine([0, 0.3, 0.5, 0.8, 10], [0, -40, -40, -80, -80]), 'eigs': self.eigs, 'tvals': [-1,0.1, 0.3, 0.4, 0.5, 0.7, 1],
+              'omega':0.5, 'phase': 0.2},
+              np.array([[  0.        ,   0.        ],
+                   [ -0.59825397,  -0.34919877],
+                   [ -4.53415557,  -1.44767131],
+                   [ -6.83944717,  -1.64607949],
+                   [ -8.57150008,  -1.63572176],
+                   [-12.73600277,  -2.35976553],
+                   [-19.4308577 ,  -2.80349801]])],
 
 
             ]
