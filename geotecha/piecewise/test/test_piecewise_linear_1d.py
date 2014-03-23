@@ -33,6 +33,7 @@ from numpy.testing import assert_allclose
 
 from math import pi
 import numpy as np
+from numpy.testing import assert_allclose
 
 from geotecha.piecewise.piecewise_linear_1d import has_steps
 from geotecha.piecewise.piecewise_linear_1d import is_initially_increasing
@@ -87,7 +88,9 @@ from geotecha.piecewise.piecewise_linear_1d import pxa_ya_multiply_integrate_x1b
 from geotecha.piecewise.piecewise_linear_1d import subdivide_x_y_into_segments
 from geotecha.piecewise.piecewise_linear_1d import subdivide_x_into_segments
 
-
+from geotecha.piecewise.piecewise_linear_1d import xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+from geotecha.piecewise.piecewise_linear_1d import pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+from geotecha.piecewise.piecewise_linear_1d import pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super
 
 class test_linear_piecewise(object):
     """Some piecewise distributions for testing"""
@@ -1040,6 +1043,14 @@ class test_linear_piecewise(object):
                      [0.5*0.5,0.5*1,0.5*2.5,0.5*3]]))
 
 
+
+
+
+
+
+
+
+
 def test_PolyLine():
     #define with x and y
     ok_(np.allclose(PolyLine([0,1],[3,4]).xy,
@@ -1423,6 +1434,86 @@ class test_subdivide_x_into_segments(unittest.TestCase):
         x= subdivide_x_into_segments([0,10],
                             dx=None, min_segments=2, logx=True, logxzero=0.1)
         assert_allclose(x, [0.1, 1, 10])
+
+
+
+
+
+class test_xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(unittest.TestCase):
+        """tests fro xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between"""
+        #xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa, ya, omega, phase, x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False):
+        def test_achose_max_false(self):
+            assert_allclose(
+                        xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                            **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                               'omega':0.5, 'phase':0.3,
+                               'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[1],
+                               'x1c':[0],'x2c':[0.5],'y1c':[2], 'y2c':[2],
+                               'xai':[0.5, 1, 1.5, 2],
+                               'xbi':[0,0], 'xbj':[0.5, 0.25],
+                                'achoose_max': False
+                               }),
+                np.array([[1*0.5,   1*1, 1*2.5, 1*3],
+                          [0.5*0.5, 0.5*1, 0.5*2.5, 0.5*3]])*np.cos(0.5*np.array([0.5,1,1.5,2])+0.3))
+        def test_achoose_max_True(self):
+
+            assert_allclose(
+                        xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                            **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                               'omega':0.5, 'phase':0.3,
+                               'x1b':[0],'x2b':[0.5],'y1b':[1], 'y2b':[1],
+                               'x1c':[0],'x2c':[0.5],'y1c':[2], 'y2c':[2],
+                               'xai':[0.5, 1, 1.5, 2],
+                               'xbi':[0,0], 'xbj':[0.5, 0.25],
+                                'achoose_max': True
+                               }),
+                        np.array([[1*0.5,1*2,1*2.5,1*3],
+                         [0.5*0.5,0.5*2,0.5*2.5,0.5*3]])*np.cos(0.5*np.array([0.5,1,1.5,2])+0.3))
+
+        def test_different_x_values_error(self):
+            assert_raises(ValueError, xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between,
+                          **{'xa':[0,1,1,2],'ya':[0,1,2,3],
+                             'omega':0.5, 'phase':0.3,
+                               'x1b':[0],'x2b':[1],'y1b':[1], 'y2b':[1],
+                               'x1c':[0],'x2c':[9],'y1c':[2], 'y2c':[2],
+                               'xai':[0.5, 1, 1.5, 2],
+                               'xbi':[0,0], 'xbj':[0.5, 0.25],
+                                'achoose_max': True
+                               })
+
+class test_pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(unittest.TestCase):
+    """test_pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between"""
+    #pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a, omega, phase, b, c, xai,xbi,xbj, **kwargs):
+    def test_arument_wrapper(self):
+        assert_allclose(
+                    pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(
+                        **{'a': PolyLine([0,1,1,2],[0,1,2,3]),
+                           'omega':0.5, 'phase':0.3,
+                           'b': PolyLine([0],[0.5],[1],[1]),
+                           'c': PolyLine([0],[0.5],[2],[2]),
+                           'xai':[0.5, 1, 1.5, 2],
+                           'xbi':[0,0], 'xbj':[0.5, 0.25],
+                            'achoose_max': False
+                           }),
+                    np.array([[1*0.5,1*1,1*2.5,1*3],
+                     [0.5*0.5,0.5*1,0.5*2.5,0.5*3]]) * np.cos(0.5*np.array([0.5,1,1.5,2])+0.3) )
+
+class test_pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(unittest.TestCase):
+    """test_pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super"""
+    #pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(a,b,c, xai, xbi, xbj, omega_phase=None, **kwargs):
+    def test_simple_superposition(self):
+        assert_allclose(
+                pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(
+                    **{'a': [PolyLine([0,1,1,2],[0,1,2,3]), PolyLine([0,1,1,2],[0,1,2,3])],
+                        'omega_phase':[(0.5,0.3),(0.5,0.3)],
+                       'b': [PolyLine([0],[0.5],[0.5],[0.5]),PolyLine([0,0.2],[0.2,0.5],[0.5,0.5],[0.5,0.5])],
+                       'c': PolyLine([0],[0.5],[2],[2]),
+                       'xai':[0.5, 1, 1.5, 2],
+                       'xbi':[0,0], 'xbj':[0.5, 0.25],
+                        'achoose_max': False
+                       }),
+                np.array([[1*0.5,1*1,1*2.5,1*3],
+                 [0.5*0.5,0.5*1,0.5*2.5,0.5*3]]) * np.cos(0.5*np.array([0.5,1,1.5,2])+0.3))
 
 
 

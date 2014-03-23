@@ -1674,6 +1674,7 @@ def xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_betwee
 
     """
 
+    xai = np.asarray(xai)
     yai = interp_x_y(xa, ya, xai, choose_max=achoose_max) * np.cos(omega * xai + phase)
 
     ybi = integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1b, x2b, y1b, y2b, x1c, x2c, y1c, y2c, xbi, xbj)
