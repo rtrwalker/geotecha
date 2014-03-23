@@ -24,12 +24,21 @@ from nose.tools.trivial import assert_equal
 from nose.tools.trivial import assert_raises
 from nose.tools.trivial import ok_
 
-
+import unittest
 from math import pi
 import numpy as np
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+from matplotlib.testing.decorators import cleanup
+
+try:
+    from matplotlib.testing.decorators import CleanupTestCase
+    temp_cls = CleanupTestCase
+except ImportError:
+    temp_cls = unittest.TestCase
+
 
 from geotecha.plotting.one_d import rgb_shade
 from geotecha.plotting.one_d import rgb_tint
@@ -38,7 +47,8 @@ from geotecha.plotting.one_d import MarkersDashesColors
 from geotecha.plotting.one_d import apply_dict_to_object
 from geotecha.plotting.one_d import split_sequence_into_dict_and_nondicts
 from geotecha.plotting.one_d import row_major_order_reverse_map
-from matplotlib.testing.decorators import cleanup
+from geotecha.plotting.one_d import xylabel_subplots
+from geotecha.plotting.one_d import iterable_method_call
 
 def test_rgb_shade():
     """some tests for rgb_shade"""
@@ -284,6 +294,107 @@ def test_row_major_order_reverse_map():
                  np.array([0, 3, 6, 1, 4, 7, 2, 5, 8])))
 
 
+
+
+
+
+class test_xylabel_subplots(temp_cls):
+    """tests for xylabel_subplots"""
+    #xylabel_subplots(fig, y_axis_labels=None, x_axis_labels=None):
+
+
+#    @cleanup
+    def test_defaults(self):
+        fig = plt.figure()
+        ax1=fig.add_subplot('211')
+        ax1.plot([1],[2])
+        ax2=fig.add_subplot('212')
+        ax2.plot([3],[4])
+
+        xylabel_subplots(fig)
+
+        assert_equal(fig.axes[0].get_xlabel(),"")
+        assert_equal(fig.axes[1].get_xlabel(),"")
+        assert_equal(fig.axes[0].get_ylabel(),"")
+        assert_equal(fig.axes[1].get_ylabel(),"")
+
+    def test_x_y_lables(self):
+        fig = plt.figure()
+        ax1=fig.add_subplot('211')
+        ax1.plot([1],[2])
+        ax2=fig.add_subplot('212')
+        ax2.plot([3],[4])
+
+        xylabel_subplots(fig,['y1','y2'],['x1','x2'])
+
+        assert_equal(fig.axes[0].get_xlabel(),"x1")
+        assert_equal(fig.axes[1].get_xlabel(),"x2")
+        assert_equal(fig.axes[0].get_ylabel(),"y1")
+        assert_equal(fig.axes[1].get_ylabel(),"y2")
+
+class test_iterable_method_call(temp_cls):
+    """tests for iterable_method_call"""
+    #iterable_method_call(iterable, method, unpack, *args)
+
+
+#    iterable_method_call(fig.axes, 'set_ylabel', *y_axis_labels)
+
+    def test_one_to_one(self):
+        fig = plt.figure()
+        ax1=fig.add_subplot('311')
+        ax1.plot([1],[2])
+        ax2=fig.add_subplot('312')
+        ax2.plot([3],[4])
+        ax3=fig.add_subplot('313')
+        ax3.plot([5],[6])
+
+        iterable_method_call(fig.axes,
+                             'set_xlabel',
+                             False,
+                             *['x1', None, 'x3'])
+
+        assert_equal(fig.axes[0].get_xlabel(),"x1")
+        assert_equal(fig.axes[1].get_xlabel(),"")
+        assert_equal(fig.axes[2].get_xlabel(),"x3")
+
+    def test_single_arg(self):
+        fig = plt.figure()
+        ax1=fig.add_subplot('311')
+        ax1.plot([1],[2])
+        ax2=fig.add_subplot('312')
+        ax2.plot([3],[4])
+        ax3=fig.add_subplot('313')
+        ax3.plot([5],[6])
+
+        iterable_method_call(fig.axes,
+                             'set_xlabel',
+                             False,
+                             'xx')
+
+        assert_equal(fig.axes[0].get_xlabel(),"xx")
+        assert_equal(fig.axes[1].get_xlabel(),"xx")
+        assert_equal(fig.axes[2].get_xlabel(),"xx")
+
+
+    def test_unpack(self):
+
+        fig = plt.figure()
+        ax1=fig.add_subplot('311')
+        ax1.plot([1],[2])
+        ax2=fig.add_subplot('312')
+        ax2.plot([3],[4])
+        ax3=fig.add_subplot('313')
+        ax3.plot([5],[6])
+
+        #this is a bad test because with xlim expect the same answer from unpack =True or unpack=False
+        iterable_method_call(fig.axes,
+                             'set_xlim',
+                             True,
+                             (5,8), None, (1, 6))
+
+        assert_equal(fig.axes[0].get_xlim(),(5,8))
+#        assert_equal(fig.axes[1].get_xlim(),None)
+        assert_equal(fig.axes[2].get_xlim(),(1,6))
 
 
 
