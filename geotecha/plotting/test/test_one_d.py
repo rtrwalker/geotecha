@@ -20,6 +20,7 @@ from __future__ import division, print_function
 
 from nose import with_setup
 from nose.tools.trivial import assert_almost_equal
+
 from nose.tools.trivial import assert_equal
 from nose.tools.trivial import assert_raises
 from nose.tools.trivial import ok_
@@ -50,7 +51,7 @@ from geotecha.plotting.one_d import row_major_order_reverse_map
 from geotecha.plotting.one_d import xylabel_subplots
 from geotecha.plotting.one_d import iterable_method_call
 from geotecha.plotting.one_d import apply_markevery_to_sequence_of_lines
-
+from geotecha.plotting.one_d import plot_vs_time
 def test_rgb_shade():
     """some tests for rgb_shade"""
 #    rgb_shade(rgb, factor=1, scaled=True)
@@ -505,6 +506,111 @@ class test_apply_markevery_to_sequence_of_lines(temp_cls):
             assert_equal(ax.get_lines()[0].get_markevery(), 4)
             assert_equal(ax.get_lines()[1].get_markevery(), 4)
             assert_equal(ax.get_lines()[2].get_markevery(), 4)
+
+
+
+class test_plot_vs_time(temp_cls):
+    """tests for plot_vs_time"""
+
+    #plot_vs_time(t, y, line_labels, prop_dict={})
+    t = np.array([ 0.,  2.,  4.,  6.,  8.])
+    y = np.array([[  1.,   2.,   3.],
+                  [  3.,   4.,   5.],
+                  [  5.,   6.,   7.],
+                  [  7.,   8.,   9.],
+                  [  9.,  10.,  11.]])
+
+    def test_defaults(self):
+        fig = plot_vs_time(self.t, self.y, None)
+        ax = fig.get_axes()[0]
+
+        assert_allclose(ax.get_lines()[0].get_xydata(),
+                     np.array([[ 0.,  1.],
+                               [ 2.,  3.],
+                               [ 4.,  5.],
+                               [ 6.,  7.],
+                               [ 8.,  9.]]))
+        assert_allclose(ax.get_lines()[1].get_xydata(),
+                     np.array([[  0.,   2.],
+                               [  2.,   4.],
+                               [  4.,   6.],
+                               [  6.,   8.],
+                               [  8.,  10.]]))
+        assert_allclose(ax.get_lines()[2].get_xydata(),
+                     np.array([[  0.,   3.],
+                               [  2.,   5.],
+                               [  4.,   7.],
+                               [  6.,   9.],
+                               [  8.,  11.]]))
+
+        assert_equal(ax.get_lines()[0].get_label(), '_line0')
+        assert_equal(ax.get_lines()[1].get_label(), '_line1')
+        assert_equal(ax.get_lines()[2].get_label(), '_line2')
+
+        assert_equal(ax.get_xlabel(), 'Time, t')
+        assert_equal(ax.get_ylabel(), 'y')
+
+        assert_equal(ax.get_legend(), None)
+
+    def test_line_labels(self):
+        fig = plot_vs_time(self.t,self.y, ['a', 'b', 'c'])
+        ax = fig.get_axes()[0]
+
+        assert_allclose(ax.get_lines()[0].get_xydata(),
+                     np.array([[ 0.,  1.],
+                               [ 2.,  3.],
+                               [ 4.,  5.],
+                               [ 6.,  7.],
+                               [ 8.,  9.]]))
+        assert_allclose(ax.get_lines()[1].get_xydata(),
+                     np.array([[  0.,   2.],
+                               [  2.,   4.],
+                               [  4.,   6.],
+                               [  6.,   8.],
+                               [  8.,  10.]]))
+        assert_allclose(ax.get_lines()[2].get_xydata(),
+                     np.array([[  0.,   3.],
+                               [  2.,   5.],
+                               [  4.,   7.],
+                               [  6.,   9.],
+                               [  8.,  11.]]))
+
+        assert_equal(ax.get_lines()[0].get_label(), 'a')
+        assert_equal(ax.get_lines()[1].get_label(), 'b')
+        assert_equal(ax.get_lines()[2].get_label(), 'c')
+        ok_(not ax.get_legend() is None)
+        assert_equal(ax.get_legend().get_title().get_text(), 'Depth interval:')
+
+    def test_propdict_xylabels(self):
+
+
+        fig = plot_vs_time(self.t, self.y, ['a', 'b', 'c'],
+                           prop_dict={'xlabel':'xxx', 'ylabel':'yyy'})
+        ax = fig.get_axes()[0]
+
+        assert_equal(ax.get_xlabel(), 'xxx')
+        assert_equal(ax.get_ylabel(), 'yyy')
+
+    def test_propdict_has_legend(self):
+
+
+        fig = plot_vs_time(self.t, self.y, ['a', 'b', 'c'],
+                           prop_dict={'has_legend': False})
+        ax = fig.get_axes()[0]
+
+        assert_equal(ax.get_legend(), None)
+
+
+    def test_propdict_fig_prop_figsize(self):
+        fig = plot_vs_time(self.t, self.y, ['a', 'b', 'c'],
+                           prop_dict={'fig_prop':{'figsize':(8,9)}})
+        assert_allclose(fig.get_size_inches(), (8,9))
+
+    def test_propdict_legend_prop_title(self):
+        fig = plot_vs_time(self.t, self.y, ['a', 'b', 'c'],
+                           prop_dict={'legend_prop':{'title':'abc'}})
+        ax = fig.get_axes()[0]
+        assert_equal(ax.get_legend().get_title().get_text(), 'abc')
 
 if __name__ == '__main__':
     import nose

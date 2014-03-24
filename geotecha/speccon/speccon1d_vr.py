@@ -965,8 +965,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
         t = self.tvals[self.avg_ppress_z_pairs_tval_indexes]
         z_pairs = transformations.depth_to_reduced_level(
             np.asarray(self.avg_ppress_z_pairs), self.H, self.RLzero)
-        line_labels = [{'label': '%.3g to %.3g' % (z1, z2)} for
-            z1, z2 in z_pairs]
+        line_labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
 
         avp_prop = self.plot_properties.pop('avp', dict())
         if not 'ylabel' in avp_prop:
@@ -984,8 +983,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
         t = self.tvals[self.settlement_z_pairs_tval_indexes]
         z_pairs = transformations.depth_to_reduced_level(
             np.asarray(self.settlement_z_pairs), self.H, self.RLzero)
-        line_labels = [{'label': '%.3g to %.3g' % (z1, z2)} for
-            z1, z2 in z_pairs]
+        line_labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
 
         set_prop = self.plot_properties.pop('set', dict())
         if not 'ylabel' in set_prop:

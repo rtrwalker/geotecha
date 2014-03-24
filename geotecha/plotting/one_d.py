@@ -1589,7 +1589,7 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
         fig.tight_layout()
     return fig
 
-def plot_vs_time(t, y, line_labels, prop_dict={}):
+def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     """Plot y vs t with some options
 
     Originally used for plotting things like average excess pore pressure
@@ -1611,8 +1611,8 @@ def plot_vs_time(t, y, line_labels, prop_dict={}):
         time values
     y :  one or two dimensional ndarray
         y values to plot.  basically plt.plot(t,y) will be used
-    line_labels : list of string
-        label for each line in y
+    line_labels : list of string, optional
+        label for each line in y.  Default=None, i.e. no labels
     prop_dict : dict of dict, optional
         dictionary containing certain properties used to set various plot
         options.
@@ -1697,10 +1697,13 @@ def plot_vs_time(t, y, line_labels, prop_dict={}):
 #    except ValueError:
 #        pass
 
-    [apply_dict_to_object(line, d)
-        for line, d in zip(fig.gca().get_lines(), line_labels)]
-
-    has_legend = prop_dict.pop('has_legend', True)
+    if (not line_labels is None):
+        labels = [{'label': v} for v in line_labels]
+        [apply_dict_to_object(line, d)
+            for line, d in zip(fig.gca().get_lines(), labels)]
+        has_legend = prop_dict.pop('has_legend', True)
+    else:
+        has_legend=False
 
     if has_legend:
         leg = fig.gca().legend(**legend_prop)
