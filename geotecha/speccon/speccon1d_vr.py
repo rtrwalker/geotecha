@@ -945,7 +945,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
 
         """
         t = self.tvals[self.ppress_z_tval_indexes]
-        line_labels = [{'label': '%.3g' % v} for v in t]
+        line_labels = ['%.3g' % v for v in t]
         por_prop = self.plot_properties.pop('por', dict())
         if not 'xlabel' in por_prop:
             por_prop['xlabel'] = 'Pore pressure'

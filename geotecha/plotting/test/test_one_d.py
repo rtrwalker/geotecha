@@ -52,6 +52,8 @@ from geotecha.plotting.one_d import xylabel_subplots
 from geotecha.plotting.one_d import iterable_method_call
 from geotecha.plotting.one_d import apply_markevery_to_sequence_of_lines
 from geotecha.plotting.one_d import plot_vs_time
+from geotecha.plotting.one_d import plot_vs_depth
+
 def test_rgb_shade():
     """some tests for rgb_shade"""
 #    rgb_shade(rgb, factor=1, scaled=True)
@@ -612,6 +614,175 @@ class test_plot_vs_time(temp_cls):
         ax = fig.get_axes()[0]
         assert_equal(ax.get_legend().get_title().get_text(), 'abc')
 
+
+
+
+class test_plot_vs_depth(temp_cls):
+    """tests for plot_vs_depth"""
+    #plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None, prop_dict={})
+
+    z = np.array([ 0.,  2.,  4.,  6.,  8.])
+    x = np.array([[  1.,   2.,   3.],
+                  [  3.,   4.,   5.],
+                  [  5.,   6.,   7.],
+                  [  7.,   8.,   9.],
+                  [  9.,  10.,  11.]])
+
+    def test_defaults(self):
+        fig = plot_vs_depth(self.x, self.z, None)
+        ax = fig.get_axes()[0]
+
+        assert_allclose(ax.get_lines()[0].get_xydata(),
+                     np.array([[ 1.,  0.],
+                               [ 3.,  2.],
+                               [ 5.,  4.],
+                               [ 7.,  6.],
+                               [ 9.,  8.]]))
+        assert_allclose(ax.get_lines()[1].get_xydata(),
+                     np.array([[  2.,   0.],
+                               [  4.,   2.],
+                               [  6.,   4.],
+                               [  8.,   6.],
+                               [ 10.,   8.]]))
+        assert_allclose(ax.get_lines()[2].get_xydata(),
+                     np.array([[  3.,   0.],
+                               [  5.,   2.],
+                               [  7.,   4.],
+                               [  9.,   6.],
+                               [ 11.,   8.]]))
+
+        assert_equal(ax.get_lines()[0].get_label(), '_line0')
+        assert_equal(ax.get_lines()[1].get_label(), '_line1')
+        assert_equal(ax.get_lines()[2].get_label(), '_line2')
+
+        assert_equal(ax.get_xlabel(), 'x')
+        assert_equal(ax.get_ylabel(), 'Depth, z')
+
+        assert_equal(ax.get_legend(), None)
+
+    def test_line_labels(self):
+        fig = plot_vs_depth(self.x,self.z, ['a', 'b', 'c'])
+        ax = fig.get_axes()[0]
+
+        assert_allclose(ax.get_lines()[0].get_xydata(),
+                     np.array([[ 1.,  0.],
+                               [ 3.,  2.],
+                               [ 5.,  4.],
+                               [ 7.,  6.],
+                               [ 9.,  8.]]))
+        assert_allclose(ax.get_lines()[1].get_xydata(),
+                     np.array([[  2.,   0.],
+                               [  4.,   2.],
+                               [  6.,   4.],
+                               [  8.,   6.],
+                               [ 10.,   8.]]))
+        assert_allclose(ax.get_lines()[2].get_xydata(),
+                     np.array([[  3.,   0.],
+                               [  5.,   2.],
+                               [  7.,   4.],
+                               [  9.,   6.],
+                               [ 11.,   8.]]))
+
+        assert_equal(ax.get_lines()[0].get_label(), 'a')
+        assert_equal(ax.get_lines()[1].get_label(), 'b')
+        assert_equal(ax.get_lines()[2].get_label(), 'c')
+        ok_(not ax.get_legend() is None)
+        assert_equal(ax.get_legend().get_title().get_text(), 'time:')
+
+    def test_propdict_xylabels(self):
+
+
+        fig = plot_vs_depth(self.x, self.z, ['a', 'b', 'c'],
+                           prop_dict={'xlabel':'xxx', 'ylabel':'yyy'})
+        ax = fig.get_axes()[0]
+
+        assert_equal(ax.get_xlabel(), 'xxx')
+        assert_equal(ax.get_ylabel(), 'yyy')
+
+    def test_propdict_has_legend(self):
+
+
+        fig = plot_vs_depth(self.x, self.z, ['a', 'b', 'c'],
+                           prop_dict={'has_legend': False})
+        ax = fig.get_axes()[0]
+
+        assert_equal(ax.get_legend(), None)
+
+
+    def test_propdict_fig_prop_figsize(self):
+        fig = plot_vs_depth(self.x, self.z, ['a', 'b', 'c'],
+                           prop_dict={'fig_prop':{'figsize':(8,9)}})
+        assert_allclose(fig.get_size_inches(), (8,9))
+
+    def test_propdict_legend_prop_title(self):
+        fig = plot_vs_depth(self.x, self.z, ['a', 'b', 'c'],
+                           prop_dict={'legend_prop':{'title':'abc'}})
+        ax = fig.get_axes()[0]
+        assert_equal(ax.get_legend().get_title().get_text(), 'abc')
+
+    def test_H(self):
+        fig = plot_vs_depth(self.x, self.z, None, H=2.0)
+        ax = fig.get_axes()[0]
+
+        assert_allclose(ax.get_lines()[0].get_xydata(),
+                     np.array([[ 1.,  0.],
+                               [ 3.,  4.],
+                               [ 5.,  8.],
+                               [ 7.,  12.],
+                               [ 9.,  16.]]))
+        assert_allclose(ax.get_lines()[1].get_xydata(),
+                     np.array([[  2.,   0.],
+                               [  4.,   4.],
+                               [  6.,   8.],
+                               [  8.,   12.],
+                               [ 10.,   16.]]))
+        assert_allclose(ax.get_lines()[2].get_xydata(),
+                     np.array([[  3.,   0.],
+                               [  5.,   4.],
+                               [  7.,   8.],
+                               [  9.,   12.],
+                               [ 11.,   16.]]))
+
+        assert_equal(ax.get_lines()[0].get_label(), '_line0')
+        assert_equal(ax.get_lines()[1].get_label(), '_line1')
+        assert_equal(ax.get_lines()[2].get_label(), '_line2')
+
+        assert_equal(ax.get_xlabel(), 'x')
+        assert_equal(ax.get_ylabel(), 'Depth, z')
+
+        assert_equal(ax.get_legend(), None)
+
+    def test_Rlzero(self):
+        fig = plot_vs_depth(self.x, self.z, None, H=2.0, RLzero=0)
+        ax = fig.get_axes()[0]
+
+        assert_allclose(ax.get_lines()[0].get_xydata(),
+                     np.array([[ 1.,  0.],
+                               [ 3.,  -4.],
+                               [ 5.,  -8.],
+                               [ 7.,  -12.],
+                               [ 9.,  -16.]]))
+        assert_allclose(ax.get_lines()[1].get_xydata(),
+                     np.array([[  2.,   0.],
+                               [  4.,   -4.],
+                               [  6.,   -8.],
+                               [  8.,   -12.],
+                               [ 10.,   -16.]]))
+        assert_allclose(ax.get_lines()[2].get_xydata(),
+                     np.array([[  3.,   0.],
+                               [  5.,   -4.],
+                               [  7.,   -8.],
+                               [  9.,   -12.],
+                               [ 11.,   -16.]]))
+
+        assert_equal(ax.get_lines()[0].get_label(), '_line0')
+        assert_equal(ax.get_lines()[1].get_label(), '_line1')
+        assert_equal(ax.get_lines()[2].get_label(), '_line2')
+
+        assert_equal(ax.get_xlabel(), 'x')
+        assert_equal(ax.get_ylabel(), 'RL')
+
+        assert_equal(ax.get_legend(), None)
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])

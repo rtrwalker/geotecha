@@ -1954,8 +1954,8 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
         y values to plot.  basically plt.plot(t,y) will be used
     z : one d array of float
         depth values
-    line_labels : list of string
-        label for each line in y
+    line_labels : list of string, optional
+        label for each line in y.  Default=None, i.e. no line labels
     H : float, optional
         height of soil profile.  Default H=1.0.  Used to transform
         normalised depth to actual depth
@@ -2058,10 +2058,19 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
 
     #apply label to each line
     #line_labels = [{'label': '%.3g' % v} for v in t]
-    [apply_dict_to_object(line, d)
-        for line, d in zip(fig.gca().get_lines(), line_labels)]
 
-    has_legend = prop_dict.pop('has_legend', True)
+    if (not line_labels is None):
+        labels = [{'label': v} for v in line_labels]
+        [apply_dict_to_object(line, d)
+            for line, d in zip(fig.gca().get_lines(), labels)]
+        has_legend = prop_dict.pop('has_legend', True)
+    else:
+        has_legend=False
+
+#    [apply_dict_to_object(line, d)
+#        for line, d in zip(fig.gca().get_lines(), line_labels)]
+#
+#    has_legend = prop_dict.pop('has_legend', True)
 
     if has_legend:
         leg = fig.gca().legend(**legend_prop)
