@@ -31,7 +31,7 @@ import itertools
 import geotecha.math.transformations as transformations
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.piecewise.piecewise_linear_1d as pwise
-
+import warnings
 
 def rgb_shade(rgb, factor=1, scaled=True):
     """apply shade (darken) to an rgb triplet
@@ -1392,8 +1392,7 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
         then all depths will be reported  z*H (i.e. positive numbers).
     prop_dict : dict of dict, optional
         dictionary containing certain properties used to set various plot
-        options. If a dict within prop_dict is not None then all defaults
-        will be lost and you will have to specify all values.
+        options.
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
@@ -1428,10 +1427,13 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
     """
 
 
-
-    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples)) })
-    legend_prop = prop_dict.pop('legend_prop',
-                               {'title': 'Load:', 'fontsize': 9})
+    fig_prop = copy_dict({'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples))},
+                          prop_dict.pop('fig_prop', {}))
+#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples)) })
+    legend_prop = copy_dict({'title': 'Load:', 'fontsize': 9},
+                            prop_dict.pop('legend_prop',{}))
+#    legend_prop = prop_dict.pop('legend_prop',
+#                               {'title': 'Load:', 'fontsize': 9})
 
     styles = prop_dict.pop('style', None)
     if styles is None:
@@ -1493,11 +1495,11 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 
 
             dx = (tmax-tmin)/20.0
-            markevery=None
+
             if not omega_phase is None:
                 omega, phase = omega_phase
                 dx = min(dx, 1/(omega/(2*np.pi))/40)
-            markevery = 0.1
+
 
 #                print(dx, omega)
 
@@ -1520,8 +1522,19 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 
             linename = name + str(j)
 
-            ax1[-1].plot(x, y, label=linename, markevery=markevery, **style)
-
+#            ax1[-1].plot(x, y, label=linename, markevery=markevery, **style)
+            ax1[-1].plot(x, y, label=linename, **style)
+            apply_markevery_to_sequence_of_lines(ax1[-1].get_lines(),
+                                         markevery=0.1,
+                                         random_start=True, seed=1)
+#            try:
+#                random.seed(1)
+#                [apply_dict_to_object(line, d)
+#                    for line, d in
+#                        zip(ax1[-1].get_lines(),
+#                            [{'markevery': (random.random()* 0.1, 0.1)} for v in ax1[-1].get_lines()])]
+#            except ValueError:
+#                pass
             #TODO: add some more points in the z direction, account for when only one point
 
             if isinstance(vs_depth, PolyLine):
@@ -1602,8 +1615,7 @@ def plot_vs_time(t, y, line_labels, prop_dict={}):
         label for each line in y
     prop_dict : dict of dict, optional
         dictionary containing certain properties used to set various plot
-        options. If a dict within prop_dict is not None then all defaults
-        will be lost and you will have to specify all values.
+        options.
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
@@ -1632,9 +1644,16 @@ def plot_vs_time(t, y, line_labels, prop_dict={}):
 
     """
 
-    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
-    legend_prop = prop_dict.pop('legend_prop',
-                               {'title': 'Depth interval:', 'fontsize': 9})
+    fig_prop = copy_dict({'figsize':(18/2.54, 18/1.61/2.54)},
+                          prop_dict.pop('fig_prop', {}))
+
+#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+
+    legend_prop = copy_dict({'title': 'Depth interval:', 'fontsize': 9},
+                            prop_dict.pop('legend_prop',{}))
+
+#    legend_prop = prop_dict.pop('legend_prop',
+#                               {'title': 'Depth interval:', 'fontsize': 9})
 
     styles = prop_dict.pop('style', None)
     if styles is None:
@@ -1666,11 +1685,17 @@ def plot_vs_time(t, y, line_labels, prop_dict={}):
     [apply_dict_to_object(line, d)
         for line, d in zip(fig.gca().get_lines(), styles)]
     #apply markevery to each line
-    random.seed(1)
-    [apply_dict_to_object(line, d)
-        for line, d in
-            zip(fig.gca().get_lines(),
-                [{'markevery': (random.random()* 0.1, 0.1)} for v in y])]
+    apply_markevery_to_sequence_of_lines(fig.gca().get_lines(),
+                                         markevery=0.1,
+                                         random_start=True, seed=1)
+#    try:
+#        random.seed(1)
+#        [apply_dict_to_object(line, d)
+#            for line, d in
+#                zip(fig.gca().get_lines(),
+#                    [{'markevery': (random.random()* 0.1, 0.1)} for v in y])]
+#    except ValueError:
+#        pass
 
     [apply_dict_to_object(line, d)
         for line, d in zip(fig.gca().get_lines(), line_labels)]
@@ -1716,8 +1741,7 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
         then all depths will be reported  z*H (i.e. positive numbers).
     prop_dict : dict of dict, optional
         dictionary containing certain properties used to set various plot
-        options. If a dict within prop_dict is not None then all defaults
-        will be lost and you will have to specify all values.
+        options.
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
@@ -1738,7 +1762,11 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
 
 
     n = len(z_x)
-    fig_prop = prop_dict.pop('fig_prop', {'figsize':(2 * n, 18/1.61/2.54)})
+
+    fig_prop = copy_dict({'figsize':(2 * n, 18/1.61/2.54)},
+                          prop_dict.pop('fig_prop', {}))
+
+#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(2 * n, 18/1.61/2.54)})
 
     styles = prop_dict.pop('style', None)
     if styles is None:
@@ -1826,6 +1854,75 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
     return fig
 
 
+def apply_markevery_to_sequence_of_lines(lines, markevery=None ,
+                                         random_start=True, seed=None):
+    """apply_markevery to sequence of lines
+
+    Allows for a random start so that marker on different lines do not
+    line up
+
+    Parameters
+    ----------
+    lines: sequence of matplotlib lines
+        lines to apply markevery to
+    markevery : int or float, optional
+        value of markevery property. default = None, i.e. markevery will be
+        turned off and all points will have markers.
+    random_start : True/False
+        if True then first marker shown will be random between start marker
+        and the markevery property, default=True
+    seed : int, optional
+        random seed.  Default = None which does not specify the random seed
+
+    """
+    import random
+
+
+
+
+    if isinstance(markevery, int):
+        if random_start:
+            if not seed is None:
+                random.seed(seed)
+            [apply_dict_to_object(line, d)
+            for line, d in
+                zip(lines,[{'markevery': (random.randint(0, markevery),
+                                          markevery)} for v in lines])]
+        else:
+            [apply_dict_to_object(line, d)
+            for line, d in zip(lines,[{'markevery': markevery} for
+            v in lines])]
+    elif isinstance(markevery, float):
+
+        try:
+            from matplotlib.lines import _mark_every_path
+            # the above import should fail for matplotlib <1.4.
+            # However, since it was my addition to matplotlib I may have hardwired
+            # all the markevery code it in to my own matplotlib.lines file.
+
+            if random_start:
+                if not seed is None:
+                    random.seed(seed)
+                [apply_dict_to_object(line, d)
+                for line, d in
+                    zip(lines,[{'markevery': (random.random()*markevery,
+                                              markevery)} for v in lines])]
+            else:
+                [apply_dict_to_object(line, d)
+                    for line, d in zip(lines,[{'markevery': markevery} for
+                    v in lines])]
+        except ImportError:
+            warnings.warn('markevery=float not available, markevery ignored')
+
+    else:
+        #straight application of markevery
+        [apply_dict_to_object(line, d)
+            for line, d in zip(lines,[{'markevery': markevery} for
+            v in lines])]
+
+
+
+
 
 
 def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
@@ -1866,8 +1963,7 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
         then all depths will be reported  z*H (i.e. positive numbers).
     prop_dict : dict of dict, optional
         dictionary containing certain properties used to set various plot
-        options. If a dict within prop_dict is not None then all defaults
-        will be lost and you will have to specify all values.
+        options.
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
@@ -1897,9 +1993,15 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
 
     """
 
-    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
-    legend_prop = prop_dict.pop('legend_prop',
-                               {'title': 'time:', 'fontsize': 9})
+    fig_prop = copy_dict({'figsize':(18/2.54, 18/1.61/2.54)},
+                          prop_dict.pop('fig_prop', {}))
+
+#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+
+    legend_prop = copy_dict({'title': 'time:', 'fontsize': 9},
+                            prop_dict.pop('legend_prop', {}))
+#    legend_prop = prop_dict.pop('legend_prop',
+#                               {'title': 'time:', 'fontsize': 9})
 
     styles = prop_dict.pop('style', None)
     if styles is None:
@@ -1933,12 +2035,24 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
     #apply style to each line
     [apply_dict_to_object(line, d)
         for line, d in zip(fig.gca().get_lines(), styles)]
+
     #apply markevery to each line
-    random.seed(1)
-    [apply_dict_to_object(line, d)
-        for line, d in
-            zip(fig.gca().get_lines(),
-                [{'markevery': (random.random()* 0.1, 0.1)} for v in x])]
+    apply_markevery_to_sequence_of_lines(fig.gca().get_lines(),
+                                         markevery=0.1,
+                                         random_start=True, seed=1)
+#    try:
+#        from matplotlib.lines import _mark_every_path
+#        # the above import should fail for matplotlib <1.4.
+#        # However, since it was my addition to matplotlib I may have hardwired
+#        # all the markevery code it in to my own matplotlib.lines file.
+#        random.seed(1)
+#        [apply_dict_to_object(line, d)
+#            for line, d in
+#                zip(fig.gca().get_lines(),
+#                    [{'markevery': (random.random()* 0.1, 0.1)} for v in x])]
+#    except ImportError:
+#        pass
+
     #apply label to each line
     #line_labels = [{'label': '%.3g' % v} for v in t]
     [apply_dict_to_object(line, d)

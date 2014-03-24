@@ -32,7 +32,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from matplotlib.testing.decorators import cleanup
-
+from numpy.testing import assert_allclose
 try:
     from matplotlib.testing.decorators import CleanupTestCase
     temp_cls = CleanupTestCase
@@ -49,6 +49,7 @@ from geotecha.plotting.one_d import split_sequence_into_dict_and_nondicts
 from geotecha.plotting.one_d import row_major_order_reverse_map
 from geotecha.plotting.one_d import xylabel_subplots
 from geotecha.plotting.one_d import iterable_method_call
+from geotecha.plotting.one_d import apply_markevery_to_sequence_of_lines
 
 def test_rgb_shade():
     """some tests for rgb_shade"""
@@ -396,9 +397,117 @@ class test_iterable_method_call(temp_cls):
 #        assert_equal(fig.axes[1].get_xlim(),None)
         assert_equal(fig.axes[2].get_xlim(),(1,6))
 
+class test_apply_markevery_to_sequence_of_lines(temp_cls):
+    """tests for apply_markevery_to_sequence_of_lines"""
+    #apply_markevery_to_sequence_of_lines(lines, markevery=None ,
+#                                         random_start=True, seed=None)
 
+    def test_defaults(self):
+
+        fig=plt.figure()
+        ax = fig.add_subplot('111')
+
+        ax.plot([3,4], [8,6], markevery=4)
+        ax.plot([3,5], [8,7], markevery=4)
+        ax.plot([3,6], [8,8], markevery=4)
+
+        apply_markevery_to_sequence_of_lines(ax.get_lines(), markevery=None ,
+                                         random_start=True, seed=None)
+
+        assert_equal(ax.get_lines()[0].get_markevery(), None)
+        assert_equal(ax.get_lines()[1].get_markevery(), None)
+        assert_equal(ax.get_lines()[2].get_markevery(), None)
+
+    def test_int(self):
+
+
+        fig=plt.figure()
+        ax = fig.add_subplot('111')
+
+        ax.plot([3,4], [8,6])
+        ax.plot([3,5], [8,7])
+        ax.plot([3,6], [8,8])
+
+        apply_markevery_to_sequence_of_lines(ax.get_lines(), markevery=8,
+                                         random_start=False, seed=None)
+
+        assert_equal(ax.get_lines()[0].get_markevery(), 8)
+        assert_equal(ax.get_lines()[1].get_markevery(), 8)
+        assert_equal(ax.get_lines()[2].get_markevery(), 8)
+
+    def test_int_random_start(self):
+
+        fig=plt.figure()
+        ax = fig.add_subplot('111')
+
+        ax.plot([3,4], [8,6])
+        ax.plot([3,5], [8,7])
+        ax.plot([3,6], [8,8])
+
+        apply_markevery_to_sequence_of_lines(ax.get_lines(), markevery=8,
+                                         random_start=True, seed=1)
+
+        assert_equal(ax.get_lines()[0].get_markevery(), (1,8))
+        assert_equal(ax.get_lines()[1].get_markevery(), (7,8))
+        assert_equal(ax.get_lines()[2].get_markevery(), (6,8))
+
+    def test_int(self):
+
+
+        fig=plt.figure()
+        ax = fig.add_subplot('111')
+
+        ax.plot([3,4], [8,6], markevery=4)
+        ax.plot([3,5], [8,7], markevery=4)
+        ax.plot([3,6], [8,8], markevery=4)
+
+        apply_markevery_to_sequence_of_lines(ax.get_lines(), markevery=0.1,
+                                         random_start=False, seed=None)
+
+        try:
+
+            from matplotlib.lines import _mark_every_path
+            # the above import should fail for matplotlib <1.4.
+            # However, since it was my addition to matplotlib I may have hardwired
+            # all the markevery code it in to my own matplotlib.lines file.
+            assert_equal(ax.get_lines()[0].get_markevery(), 0.1)
+            assert_equal(ax.get_lines()[1].get_markevery(), 0.1)
+            assert_equal(ax.get_lines()[2].get_markevery(), 0.1)
+        except ImportError:
+            assert_equal(ax.get_lines()[0].get_markevery(), 4)
+            assert_equal(ax.get_lines()[1].get_markevery(), 4)
+            assert_equal(ax.get_lines()[2].get_markevery(), 4)
+
+
+
+    def test_float_random_start(self):
+
+        fig=plt.figure()
+        ax = fig.add_subplot('111')
+
+        ax.plot([3,4], [8,6], markevery=4)
+        ax.plot([3,5], [8,7], markevery=4)
+        ax.plot([3,6], [8,8], markevery=4)
+
+        apply_markevery_to_sequence_of_lines(ax.get_lines(), markevery=0.1,
+                                         random_start=False, seed=1)
+
+
+        try:
+            from matplotlib.lines import _mark_every_path
+            # the above import should fail for matplotlib <1.4.
+            # However, since it was my addition to matplotlib I may have hardwired
+            # all the markevery code it in to my own matplotlib.lines file.
+            assert_allclose(ax.get_lines()[0].get_markevery(), (0.0134364244112, 0.5))
+            assert_allclose(ax.get_lines()[1].get_markevery(), (0.0847433736937, 0.5))
+            assert_allclose(ax.get_lines()[2].get_markevery(), (0.07637746189766, 0.5))
+        except ImportError:
+            assert_equal(ax.get_lines()[0].get_markevery(), 4)
+            assert_equal(ax.get_lines()[1].get_markevery(), 4)
+            assert_equal(ax.get_lines()[2].get_markevery(), 4)
 
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
+#    plt.show()
