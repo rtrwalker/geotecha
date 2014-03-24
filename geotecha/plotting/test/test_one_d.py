@@ -490,7 +490,7 @@ class test_apply_markevery_to_sequence_of_lines(temp_cls):
         ax.plot([3,6], [8,8], markevery=4)
 
         apply_markevery_to_sequence_of_lines(ax.get_lines(), markevery=0.1,
-                                         random_start=False, seed=1)
+                                         random_start=True, seed=1)
 
 
         try:
@@ -498,9 +498,9 @@ class test_apply_markevery_to_sequence_of_lines(temp_cls):
             # the above import should fail for matplotlib <1.4.
             # However, since it was my addition to matplotlib I may have hardwired
             # all the markevery code it in to my own matplotlib.lines file.
-            assert_allclose(ax.get_lines()[0].get_markevery(), (0.0134364244112, 0.5))
-            assert_allclose(ax.get_lines()[1].get_markevery(), (0.0847433736937, 0.5))
-            assert_allclose(ax.get_lines()[2].get_markevery(), (0.07637746189766, 0.5))
+            assert_allclose(ax.get_lines()[0].get_markevery(), (0.0134364244112, 0.1))
+            assert_allclose(ax.get_lines()[1].get_markevery(), (0.0847433736937, 0.1))
+            assert_allclose(ax.get_lines()[2].get_markevery(), (0.07637746189766, 0.1))
         except ImportError:
             assert_equal(ax.get_lines()[0].get_markevery(), 4)
             assert_equal(ax.get_lines()[1].get_markevery(), 4)
