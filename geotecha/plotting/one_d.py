@@ -1404,8 +1404,6 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
                             See
                             MarkersDashesColors
                             defaults give black and white markersize 5
-        xlabel              x-axis label.
-        ylabel              y-axis label.
         time_axis_label     label for x axis in load_vs_time plots.
                             default = 'Time'
         depth_axis_label    label for y axis in load_vs_depth plot
@@ -1448,7 +1446,9 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
     else:
         styles = itertools.cycle(styles)
 
-
+    has_legend = prop_dict.pop('has_legend', True)
+    xlabel1 = prop_dict.pop('time_axis_label', 'Time')
+    xlabel2 = prop_dict.pop('depth_axis_label', 'Load factor')
     n = len(load_triples)
 
     gs = mpl.gridspec.GridSpec(n,2, width_ratios=[5,1])
@@ -1456,25 +1456,30 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 
     #plt.subplot(gs[0])
 
-    #determine tmax etc
+    if ylabels is None:
+        ylabels = ['y%d' % v for v in range(n)]
+
+    #determine tmax, tmin
     if trange is None:
         for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
             for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
-                if not vs_time is None:
+                if i==0 and j==0:
                     tmin = np.min(vs_time.x)
                     tmax = np.max(vs_time.x)
+                else:
+                    tmin = min(tmin, np.min(vs_time.x))
+                    tmax = max(tmax, np.max(vs_time.x))
     else:
         tmin, tmax = trange
 
-    if ylabels is None:
-        ylabels = ['y%d' % v for v in range(n)]
+
 
 
 
     ax1 = []
     ax2 = []
     for i, (triples, name, ylabel)  in enumerate(zip(load_triples, load_names, ylabels)):
-        style = styles.next()
+
         sharex1 = None
         sharex2 = None
         sharey1 = None
@@ -1488,6 +1493,7 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
         ax2.append(plt.subplot(gs[i, 1], sharex=sharex2, sharey=sharey2 ))
 
         for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+            style = styles.next()
             if vs_time is None: #allow for fixed ppress
                 vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
 
@@ -1562,21 +1568,24 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 
 
         #load_vs_time plot stuff
-        xlabel = prop_dict.pop('time_axis_label', 'Time')
+
         if i==len(load_triples)-1:
-            ax1[-1].set_xlabel(xlabel)
+            ax1[-1].set_xlabel(xlabel1)
         ax1[-1].set_ylabel(ylabel)
 
-        has_legend = prop_dict.pop('has_legend', True)
+        if not trange is None:
+            ax1[-1].set_xlim((tmin, tmax))
+
+
 
         if has_legend:
             leg = ax1[-1].legend(**legend_prop)
             leg.draggable(True)
-
+            plt.setp(leg.get_title(),fontsize=legend_prop['fontsize'])
         #load_vs_depth plot stuff
-        xlabel = prop_dict.pop('depth_axis_label', 'Load factor')
+
         if i==len(load_triples)-1:
-            ax2[-1].set_xlabel(xlabel)
+            ax2[-1].set_xlabel(xlabel2)
 
         if RLzero is None:
             ax2[-1].invert_yaxis()
@@ -1712,7 +1721,7 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     if has_legend:
         leg = fig.gca().legend(**legend_prop)
         leg.draggable(True)
-
+        plt.setp(leg.get_title(),fontsize=legend_prop['fontsize'])
     return fig
 
 def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
@@ -2083,7 +2092,7 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
     if has_legend:
         leg = fig.gca().legend(**legend_prop)
         leg.draggable(True)
-
+        plt.setp(leg.get_title(),fontsize=legend_prop['fontsize'])
     return fig
 
 
