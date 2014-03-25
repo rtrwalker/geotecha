@@ -53,6 +53,8 @@ from geotecha.plotting.one_d import iterable_method_call
 from geotecha.plotting.one_d import apply_markevery_to_sequence_of_lines
 from geotecha.plotting.one_d import plot_vs_time
 from geotecha.plotting.one_d import plot_vs_depth
+from geotecha.plotting.one_d import plot_single_material_vs_depth
+
 
 def test_rgb_shade():
     """some tests for rgb_shade"""
@@ -615,7 +617,26 @@ class test_plot_vs_time(temp_cls):
         assert_equal(ax.get_legend().get_title().get_text(), 'abc')
 
 
+    def test_prop_dict_styles(self):
+        fig = plot_vs_time(self.t, self.y, ['a', 'b', 'c'],
+                           prop_dict={'styles':[{'markersize': 12,
+                                                 'marker': '^'},
+                                                 {'markersize': 3,
+                                                 'marker': 's'}]})
 
+        ax = fig.get_axes()[0]
+        line1= ax.get_lines()[0]
+        line2= ax.get_lines()[1]
+        line3= ax.get_lines()[2]
+
+
+
+        assert_equal(line1.get_marker(),'^')
+        assert_equal(line1.get_markersize(),12)
+        assert_equal(line2.get_marker(),'s')
+        assert_equal(line2.get_markersize(),3)
+        assert_equal(line3.get_marker(),'^')
+        assert_equal(line3.get_markersize(),12)
 
 class test_plot_vs_depth(temp_cls):
     """tests for plot_vs_depth"""
@@ -783,6 +804,141 @@ class test_plot_vs_depth(temp_cls):
         assert_equal(ax.get_ylabel(), 'RL')
 
         assert_equal(ax.get_legend(), None)
+
+    def test_prop_dict_styles(self):
+        fig = plot_vs_depth(self.x, self.z, None,
+                            prop_dict={'styles':[{'markersize': 12,
+                                                 'marker': '^'},
+                                                 {'markersize': 3,
+                                                 'marker': 's'}]})
+        ax = fig.get_axes()[0]
+        line1= ax.get_lines()[0]
+        line2= ax.get_lines()[1]
+        line3= ax.get_lines()[2]
+
+
+
+        assert_equal(line1.get_marker(),'^')
+        assert_equal(line1.get_markersize(),12)
+        assert_equal(line2.get_marker(),'s')
+        assert_equal(line2.get_markersize(),3)
+        assert_equal(line3.get_marker(),'^')
+        assert_equal(line3.get_markersize(),12)
+
+class test_plot_single_material_vs_depth(temp_cls):
+    """tests for plot_single_material_vs_depth"""
+
+#    plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
+#                    prop_dict={})
+
+    z1 = np.array([ 0. ,  0.5,  1. ])
+    x1 = np.array([ 1. ,  1.5,  2. ])
+    x2 = np.array([ 2. ,  2.5,  3. ])
+
+    a = PolyLine(z1, x1)
+    b = PolyLine(z1, x2)
+
+    xlabels = ['a','b']
+
+    def test_defaults(self):
+        fig = plot_single_material_vs_depth((self.a, self.b), self.xlabels)
+
+        assert_equal(len(fig.get_axes()), 2)
+        ax1 = fig.get_axes()[0]
+        line1= ax1.get_lines()[0]
+
+        ax2 = fig.get_axes()[1]
+        line2 = ax2.get_lines()[0]
+
+        assert_allclose(line1.get_xydata()[0],
+                     np.array([ 1., 0.]))
+        assert_allclose(line1.get_xydata()[-1],
+                     np.array([ 2., 1]))
+
+        assert_allclose(line2.get_xydata()[0],
+                     np.array([ 2., 0.]))
+        assert_allclose(line2.get_xydata()[-1],
+                     np.array([ 3., 1]))
+
+        assert_equal(ax1.get_xlabel(), 'a')
+        assert_equal(ax2.get_xlabel(), 'b')
+
+        assert_equal(ax1.get_ylabel(), 'Depth, z')
+        assert_equal(ax2.get_ylabel(), '')
+
+    def test_prop_dict_ylabel(self):
+        fig = plot_single_material_vs_depth((self.a, self.b),
+                                            self.xlabels,
+                                            prop_dict={'ylabel': 'hello'})
+        ax1 = fig.get_axes()[0]
+
+        assert_equal(ax1.get_ylabel(), 'hello')
+
+    def test_H(self):
+
+        fig = plot_single_material_vs_depth((self.a, self.b), self.xlabels,
+                                            H=2)
+
+        ax1 = fig.get_axes()[0]
+        line1= ax1.get_lines()[0]
+
+        ax2 = fig.get_axes()[1]
+        line2 = ax2.get_lines()[0]
+
+        assert_allclose(line1.get_xydata()[0],
+                     np.array([ 1., 0.]))
+        assert_allclose(line1.get_xydata()[-1],
+                     np.array([ 2., 2]))
+
+        assert_allclose(line2.get_xydata()[0],
+                     np.array([ 2., 0.]))
+        assert_allclose(line2.get_xydata()[-1],
+                     np.array([ 3., 2]))
+    def test_RLzero(self):
+
+        fig = plot_single_material_vs_depth((self.a, self.b), self.xlabels,
+                                            H=2, RLzero=1)
+
+        ax1 = fig.get_axes()[0]
+        line1= ax1.get_lines()[0]
+
+        ax2 = fig.get_axes()[1]
+        line2 = ax2.get_lines()[0]
+
+        assert_allclose(line1.get_xydata()[0],
+                     np.array([ 1., 1]))
+        assert_allclose(line1.get_xydata()[-1],
+                     np.array([ 2., -1]))
+
+        assert_allclose(line2.get_xydata()[0],
+                     np.array([ 2., 1]))
+        assert_allclose(line2.get_xydata()[-1],
+                     np.array([ 3., -1]))
+
+    def test_propdict_fig_prop_figsize(self):
+        fig = plot_single_material_vs_depth((self.a, self.b), self.xlabels,
+
+                           prop_dict={'fig_prop':{'figsize':(8,9)}})
+        assert_allclose(fig.get_size_inches(), (8,9))
+
+
+
+    def test_prop_dict_styles(self):
+        fig = plot_single_material_vs_depth((self.a, self.b), self.xlabels,
+
+                           prop_dict={'styles':[{'markersize': 12,
+                                                 'marker': '^'}]})
+        ax1 = fig.get_axes()[0]
+        line1= ax1.get_lines()[0]
+
+        ax2 = fig.get_axes()[1]
+        line2 = ax2.get_lines()[0]
+
+        assert_equal(line1.get_marker(),'^')
+        assert_equal(line1.get_markersize(),12)
+        assert_equal(line2.get_marker(),'^')
+        assert_equal(line2.get_markersize(),12)
+
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])

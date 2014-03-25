@@ -1435,16 +1435,18 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 #    legend_prop = prop_dict.pop('legend_prop',
 #                               {'title': 'Load:', 'fontsize': 9})
 
-    styles = prop_dict.pop('style', None)
+    styles = prop_dict.pop('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
-            markersize=5)
+            markersize= 7)
         mcd.construct_styles(markers = range(32), dashes=[0],
                              marker_colors=None, line_colors=None)
 
 
-    styles = itertools.cycle(mcd.styles)
+        styles = itertools.cycle(mcd.styles)
+    else:
+        styles = itertools.cycle(styles)
 
 
     n = len(load_triples)
@@ -1655,16 +1657,18 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
 #    legend_prop = prop_dict.pop('legend_prop',
 #                               {'title': 'Depth interval:', 'fontsize': 9})
 
-    styles = prop_dict.pop('style', None)
+    styles = prop_dict.pop('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
-            markersize=7)
+            markersize= 7)
         mcd.construct_styles(markers = range(32), dashes=[0],
                              marker_colors=None, line_colors=None)
 
 
-    styles = itertools.cycle(mcd.styles)
+        styles = itertools.cycle(mcd.styles)
+    else:
+        styles = itertools.cycle(styles)
 
 
 
@@ -1771,7 +1775,7 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
 
 #    fig_prop = prop_dict.pop('fig_prop', {'figsize':(2 * n, 18/1.61/2.54)})
 
-    styles = prop_dict.pop('style', None)
+    styles = prop_dict.pop('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
@@ -1780,7 +1784,9 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
                              marker_colors=None, line_colors=None)
 
 
-    styles = itertools.cycle(mcd.styles)
+        styles = itertools.cycle(mcd.styles)
+    else:
+        styles = itertools.cycle(styles)
 
 
     gs = mpl.gridspec.GridSpec(1,n, width_ratios=None, wspace=0.13)
@@ -1850,7 +1856,7 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
         ylabel = prop_dict.pop('ylabel', 'Depth, z')
     else:
         ylabel = prop_dict.pop('ylabel', 'RL')
-        ax1[0].set_ylabel(ylabel)
+    ax1[0].set_ylabel(ylabel)
     #ax1[-1].yaxis.set_ticklabels([])
 
     #fig.tight_layout()
@@ -2006,7 +2012,7 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
 #    legend_prop = prop_dict.pop('legend_prop',
 #                               {'title': 'time:', 'fontsize': 9})
 
-    styles = prop_dict.pop('style', None)
+    styles = prop_dict.pop('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
@@ -2015,7 +2021,9 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
                              marker_colors=None, line_colors=None)
 
 
-    styles = itertools.cycle(mcd.styles)
+        styles = itertools.cycle(mcd.styles)
+    else:
+        styles = itertools.cycle(styles)
 
 
 
