@@ -1191,7 +1191,7 @@ def plot_data_in_grid(fig, data, gs,
         data[i] = Data for the ith subplot.
         data[i][j] = jth (x, y) data set for the ith subplot.
         Each set of (x,y) data will be plotted using matplotlib.plot fn
-        e.g. data=[([x0,y0]), ([x1,y1]), ([x2a, y2a], [x2b, x2b]))
+        e.g. data=[([x0,y0],), ([x1,y1],), ([x2a, y2a], [x2b, x2b])]
         Note that data[i][j] will be split into list of all the non-dict items
         and a merged dict of all the dict items.  Both the list and the merged
         dict will be unpacked and passed to the `plot_type` function.  This
@@ -1199,7 +1199,10 @@ def plot_data_in_grid(fig, data, gs,
         'plot_type' it's value should be a string indicating a method of
         matplotlib.Axes that can be used to create the subplot.  If
         'plot_type' is not found then the default matplotlib.Axes.plot will
-        be used.
+        be used. Be careful when using () to group data if there is only
+        one item in the (item) then they are just parentheses and you are
+        just saying 'item'; put a comma after the item to make it a tuple
+        which is usually what you want when specifying data in this function
     gs: matplotlib.gridspec.GridSpec instance
         defines the grid in which subplots will be created
     gs_index: list of int or list of slice, optional
@@ -1208,7 +1211,8 @@ def plot_data_in_grid(fig, data, gs,
         row-major ordering in the grid (e.g. for a 3x3 grid, index 3 will be
         second row, first column), or 2) a tuple of (row,column), or 3) a slice
         (e.g. index of np.s_[:1,:1] will span from first row, first column to
-        second row, second column)
+        second row, second column).  Another slice method is slice(3,7) which
+        will span from position 3 to position 7.
         Default=None subplots are added in row-major ordering
     sharex: sequence of int
         subplot index to share x-axis with. Default=None i.e. no sharing.
@@ -1227,6 +1231,12 @@ def plot_data_in_grid(fig, data, gs,
     Returns
     -------
     ax: list of :class:`matplotlib.pyplot.Axes` instances.
+
+    Notes
+    -----
+    You may be wondering how to apply axes labels and such.  do something like
+     [a.set_xlabel(v) for a, v in zip(fig.get_axes(), [xlabel1, xlabel2, ...])]
+
 
     """
 
@@ -1265,7 +1275,7 @@ def plot_data_in_grid(fig, data, gs,
         sharey[i] = None
 
     ax = []
-    for i, sublot_data in enumerate(data):
+    for i, subplot_data in enumerate(data):
         #subplot_data is all [x,y,dict] for each subplot
         j = gs_index[i]
         if sharex[i] is None:
@@ -1278,9 +1288,9 @@ def plot_data_in_grid(fig, data, gs,
         else:
             shy=ax[sharey[i]]
 
-        ax.append()
+        ax.append(fig.add_subplot(gs[j]))
 
-        for j, xy_etc in enumerate(sublot_data):
+        for j, xy_etc in enumerate(subplot_data):
             #xy_etc is a single [x,y,dict] to send to plt.plot, or plt.plot_type
             args_, kwargs_ = split_sequence_into_dict_and_nondicts(*xy_etc)
             plot_type = kwargs_.pop('plot_type', 'plot')
