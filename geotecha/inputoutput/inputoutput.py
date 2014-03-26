@@ -736,8 +736,8 @@ def check_attribute_PolyLines_have_same_x_limits(obj, attributes=[]):
     ----------
     obj: object
         object with attributes to check
-    attributes: list of strings
-        a list of attribute names to check
+    attributes: list of list of strings
+        each sublist is a list of attribute names to check
 
     Returns
     -------
@@ -747,29 +747,30 @@ def check_attribute_PolyLines_have_same_x_limits(obj, attributes=[]):
 
     g = obj.__getattribute__
 
-    #find first x values
-    for v in attributes:
-        if not g(v) is None:
-            if isinstance(g(v), list):
-                xcheck = np.array([g(v)[0].x[0], g(v)[0].x[-1]])
-                xstr = v
-                break
-            else:
-                a = g(v).x[0]
+    for sublist in attributes:
+        #find first x values
+        for v in sublist:
+            if not g(v) is None:
+                if isinstance(g(v), list):
+                    xcheck = np.array([g(v)[0].x[0], g(v)[0].x[-1]])
+                    xstr = v
+                    break
+                else:
+                    a = g(v).x[0]
 
-                xcheck = np.array([g(v).x[0], g(v).x[-1]])
-                xstr = v
-                break
-    #check against other x values
-    for v in attributes:
-        if not g(v) is None:
-            if isinstance(g(v), list):
-                for j, u in enumerate(g(v)):
-                    if not np.allclose([u.x[0], u.x[-1]], xcheck):
+                    xcheck = np.array([g(v).x[0], g(v).x[-1]])
+                    xstr = v
+                    break
+        #check against other x values
+        for v in sublist:
+            if not g(v) is None:
+                if isinstance(g(v), list):
+                    for j, u in enumerate(g(v)):
+                        if not np.allclose([u.x[0], u.x[-1]], xcheck):
+                            raise ValueError('All upper and lower x limits must be the same.  Check ' + v + ' and ' + xstr + '.')
+                else:
+                    if not np.allclose([g(v).x[0], g(v).x[-1]], xcheck):
                         raise ValueError('All upper and lower x limits must be the same.  Check ' + v + ' and ' + xstr + '.')
-            else:
-                if not np.allclose([g(v).x[0], g(v).x[-1]], xcheck):
-                    raise ValueError('All upper and lower x limits must be the same.  Check ' + v + ' and ' + xstr + '.')
     return
 
 
@@ -1000,9 +1001,17 @@ def code_for_explicit_attribute_initialization(
     return out
 
 
-class InputFileLoaderAndChecker(object):
-    """
+class InputFileLoaderCheckerSaver(object):
+    """A class for accepting an input file, running checks on attributes etc.
 
+    Options to:
+
+     - Accept an inputfile with python syntax
+     - Copy attribute value from a text file (i.e. text such as 'b = 34' in
+       the input file will be result in self.b=34)
+     - Run checks on the attributes.
+     - Save data to file
+     - Save figures to file
 
     Attributes
     ----------
@@ -1065,6 +1074,51 @@ class InputFileLoaderAndChecker(object):
         self._debug = False
         self._setup()
 
+        if hasattr(self, '_attributes'):
+            self._initialize_attributes()
+
+
+        self._input_text = None
+        if not reader is None:
+            if isinstance(reader, str):
+                self._input_text = reader
+            else:
+                self._input_text = reader.read()
+
+            self._transfer_attributes_from_inputfile()
+
+
+
+    def _transfer_attributes_from_inputfile(self):
+        """transfer attributes from input file using restricted syntax.
+
+        For safety reasons the inputfile syntax is restricted.  If you wish
+        to remove these restrictions then overwrite this method with
+        syn_checker=None
+
+        """
+
+        if not hasattr(self, '_attributes'):
+            raise ValueError("No 'self._attributes' defined in object.")
+
+        attribute_defaults = getattr(self, '_attribute_defaults', dict())
+
+        syn_checker=SyntaxChecker(['ast','builtin','numpy','PolyLine'])
+#        syntax_checker=None
+
+
+        copy_attributes_from_text_to_object(self._input_text,
+            self,
+            self._attributes, attribute_defaults,
+            not_found_value = None, syntax_checker=syn_checker)
+
+
+    def _initialize_attributes(self):
+        """Initialize attributes
+
+        relies on presence of self._attributes
+        """
+
         if not hasattr(self, '_attributes'):
             raise ValueError("No 'self._attributes' defined in object.")
 
@@ -1075,24 +1129,6 @@ class InputFileLoaderAndChecker(object):
                                       attribute_defaults,
                                       not_found_value = None)
 
-        self._input_text = None
-        if not reader is None:
-            if isinstance(reader, str):
-                self._input_text = reader
-            else:
-                self._input_text = reader.read()
-
-            syn_checker=SyntaxChecker(['ast','builtin','numpy','PolyLine'])
-#            syntax_checker=None
-
-            copy_attributes_from_text_to_object(self._input_text,
-                self,
-                self._attributes, self._attribute_defaults,
-                not_found_value = None, syntax_checker=syn_checker)
-
-#        self._determine_output_stem()
-
-
     def _determine_output_stem(self):
         """Determine the stem for outputting files"""
         prefix = getattr(self, 'prefix', None)
@@ -1100,7 +1136,7 @@ class InputFileLoaderAndChecker(object):
             prefix='out'
         directory = getattr(self, 'directory', None)
         if directory is None:
-            directory = os.curdir()
+            directory = os.curdir
         overwrite = getattr(self, 'overwrite', None)
         if overwrite is None:
             overwrite = False
@@ -1127,6 +1163,9 @@ class InputFileLoaderAndChecker(object):
          -
 
         """
+        if not getattr(self, 'save_figures_to_file', False):
+            return
+
         if getattr(self, '_figures', None) is None:
             return
 
@@ -1140,7 +1179,7 @@ class InputFileLoaderAndChecker(object):
 
 #        directory = getattr(self, 'directory', None)
 #        if directory is None:
-#            directory = os.curdir()
+#            directory = os.curdir
 #
 #        create_directory = getattr(self, 'create_directory', True)
 
@@ -1152,7 +1191,7 @@ class InputFileLoaderAndChecker(object):
                 figname = "Figure_%s" % str(i).zfill(2)
             filename = self._file_stem +'_' + figname + getattr(self, 'figure_ext',
                                                                '.eps')
-            fig.savefig(filename, dpi=600, bbox_inches='tight')
+            fig.savefig(filename, dpi=fig.dpi, bbox_inches='tight')
 
     def _save_data(self):
 
@@ -1162,22 +1201,8 @@ class InputFileLoaderAndChecker(object):
         if getattr(self, '_file_stem', None) is None:
             self._determine_output_stem()
 
-
-
-#        directory = getattr(self, 'directory', None)
-#        if directory is None:
-#            directory = os.curdir()
-
-#        create_directory=getattr(self, 'create_directory', True)
-
         #original input
         if not getattr(self, '_input_text', None) is None:
-#            if create_directory:
-#                filename = os.path.join(directory, self.file_stem,
-#                                    self._file_stem + "_original_input.txt")
-#            else:
-#                filename = os.path.join(directory, self._file_stem +
-#                    "_original_input.txt")
             filename = (self._file_stem + "_input_original" +
                 getattr(self, 'input_ext', '.py'))
 
@@ -1185,29 +1210,23 @@ class InputFileLoaderAndChecker(object):
                 myfile.write(self._input_text)
 
         #parsed input
-#        if create_directory:
-#            filename = os.path.join(directory, self._file_stem,
-#                                    self._file_stem + "_parsed_input.txt")
-#        else:
-#            filename = os.path.join(directory, self._file_stem +
-#                    "_parsed_input.txt")
-        filename = (self._file_stem + "_input_parsed" +
-                getattr(self, 'input_ext', '.py'))
-        text = string_of_object_attributes(obj=self,
-                        attributes=self._attributes, none_at_bottom=True,
-                                    numpy_array_prefix = "np.")
-        with open(filename, 'w') as myfile:
-            myfile.write(text)
+        if hasattr(self, '_attributes'):
+            filename = (self._file_stem + "_input_parsed" +
+                    getattr(self, 'input_ext', '.py'))
+            text = string_of_object_attributes(obj=self,
+                            attributes=self._attributes, none_at_bottom=True,
+                                        numpy_array_prefix = "np.")
+            with open(filename, 'w') as myfile:
+                myfile.write(text)
 
 
         #grid data
-        if getattr(self, '_grid_data_dicts', None) is None: #no data
-            return
-        save_grid_data_to_file(data_dicts=self._grid_data_dicts,
-               directory=os.path.dirname(self._file_stem),
-               file_stem=os.path.basename(self._file_stem),
-               create_directory=False,# already in file stem getattr(self, 'create_directory', True),
-               ext=getattr(self, 'data_ext', '.csv'))
+        if not getattr(self, '_grid_data_dicts', None) is None: #no data
+            save_grid_data_to_file(data_dicts=self._grid_data_dicts,
+                   directory=os.path.dirname(self._file_stem),
+                   file_stem=os.path.basename(self._file_stem),
+                   create_directory=False,# already in file stem getattr(self, 'create_directory', True),
+                   ext=getattr(self, 'data_ext', '.csv'))
 
 
 
@@ -1263,9 +1282,9 @@ class InputFileLoaderAndChecker(object):
         attributes_to_force_same_len = getattr(self,
              '_attributes_to_force_same_len', [])
         attributes_that_should_have_same_x_limits = getattr(self,
-            '_attributes_that_should_have_same_x_limits ', [])
+            '_attributes_that_should_have_same_x_limits', [])
         attributes_that_should_have_same_len_pairs = getattr(self,
-            '_attributes_that_should_have_same_len_pairs ', [])
+            '_attributes_that_should_have_same_len_pairs', [])
 
 
 
@@ -1288,7 +1307,7 @@ class InputFileLoaderAndChecker(object):
 
         return
 
-#    def _save_data_to_file(self):
+
 
 
 
@@ -1819,6 +1838,8 @@ class GenericInputFileArgParser(object):
             #prompt for files
             filenames = get_filepaths(wildcard="")
 
+        if filenames is None:
+            return
 
         level = logging.getLogger().level
         logging.getLogger().setLevel(logging.INFO)

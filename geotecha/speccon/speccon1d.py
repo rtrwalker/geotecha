@@ -32,7 +32,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import geotecha.inputoutput.inputoutput as inputoutput
 
-class Speccon1d(inputoutput.InputFileLoaderAndChecker):
+class Speccon1d(inputoutput.InputFileLoaderCheckerSaver):
     """solve 1D parabolic partial differential equation using spectral method
 
     """

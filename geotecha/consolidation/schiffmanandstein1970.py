@@ -69,7 +69,7 @@ def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
 
 
-class SchiffmanAndStein1970(inputoutput.InputFileLoaderAndChecker):
+class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
     """Multi-layer consolidation
 
 

@@ -75,7 +75,7 @@ def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
 
 
-class NogamiAndLi2003(inputoutput.InputFileLoaderAndChecker):
+class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
     """Multi-layer consolidation
 
 

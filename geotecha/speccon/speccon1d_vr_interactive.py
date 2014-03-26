@@ -75,10 +75,12 @@ mv = PolyLine([0,1], [0.5,0.5])
 kv = PolyLine([0,1], [5,5])
 #et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
 #et = PolyLine([0,1], [1,1])
-surcharge_vs_depth = PolyLine([0,1], [1,1])
-surcharge_vs_time = PolyLine([0,0,10], [0,10,10])
+#surcharge_vs_depth = PolyLine([0,1], [1,1]),
+#surcharge_vs_time = PolyLine([0,0,10], [0,10,10])
 #surcharge_omega_phase = (2*np.pi*0.5, -np.pi/2)
-
+surcharge_vs_depth = [PolyLine([0,1], [1,1]), PolyLine([0,1], [1,1])]
+surcharge_vs_time = [PolyLine([0,0,10], [0,10,10]), PolyLine([0,0,10], [0,10,10])]
+surcharge_omega_phase = [(2*np.pi*0.5, -np.pi/2), None]
 
 #vacuum_vs_depth = PolyLine([0,1], [1,1])
 #vacuum_vs_time = PolyLine([0,0,7], [0,-20,-20])
@@ -107,7 +109,7 @@ tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
 tvals = np.linspace(0, 5, 100)
 tvals = np.logspace(-2, 0.3,50)
 ppress_z_tval_indexes = np.arange(len(tvals))[::len(tvals)//7]
-#avg_ppress_z_pairs_tval_indexes = slice(None,None)#[0,4,6]
+#avg_ppress_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
 #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
 
 implementation='scalar'
@@ -119,7 +121,7 @@ plot_properties={}
 directory= r"C:\\Users\\Rohan Walker\\Documents\\temp" #may always need the r
 save_data_to_file= True
 save_figures_to_file= True
-show_figures= False
+show_figures= True
 overwrite=True
 
 #prefix="silly"
@@ -127,7 +129,7 @@ overwrite=True
 #create_directory=True
 #data_ext = '.csv'
 #input_ext='.py'
-figure_ext='.pdf'
+figure_ext='.png'
 
     """)
 

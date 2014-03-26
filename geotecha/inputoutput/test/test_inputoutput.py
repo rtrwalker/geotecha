@@ -36,6 +36,7 @@ import pandas as pd
 from pandas.util.testing import assert_frame_equal
 import os
 
+import matplotlib
 
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
@@ -58,8 +59,9 @@ from geotecha.inputoutput.inputoutput import save_grid_data_to_file
 from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 from geotecha.inputoutput.inputoutput import working_directory
 from geotecha.inputoutput.inputoutput import hms_string
-
 from geotecha.inputoutput.inputoutput import fcode_one_large_expr
+from geotecha.inputoutput.inputoutput import InputFileLoaderCheckerSaver
+
 
 
 
@@ -147,13 +149,13 @@ def test_check_attribute_PolyLines_have_same_x_limits():
     a.d = PolyLine([0,2,4], [3,2,4])
 
     assert_raises(ValueError, check_attribute_PolyLines_have_same_x_limits, a,
-                  attributes=['a','b','c','d'])
+                  attributes=[['a','b','c','d']])
 
     assert_raises(ValueError, check_attribute_PolyLines_have_same_x_limits, a,
-                  attributes=['c'])
+                  attributes=[['c']])
 
     assert_equal(check_attribute_PolyLines_have_same_x_limits(a,
-                  attributes=['a','b','d']), None)
+                  attributes=[['a','b','d']]), None)
 
 def test_check_attribute_pairs_have_equal_length():
     """test for check_attribute_pairs_have_equal_length function"""
@@ -808,6 +810,236 @@ class test_working_directory(unittest.TestCase):
             assert_equal(os.getcwd(), self.tempdir.path)
 
         assert_equal(os.getcwd(), self.original_dir)
+
+
+class test_InputFileLoaderCheckerSaver(unittest.TestCase):
+    """tests for InputFileLoaderCheckerSaver"""
+
+    def setUp(self):
+        self.dir = os.path.abspath(os.curdir)
+
+        self.tempdir = TempDirectory()
+        self.tempdir.write('inp1.py', b'a=4\nb=6')
+        self.tempdir.write('out0001.py', b'a=4\nb=6')
+        self.tempdir.write(('what', 'out0001.py'), b'a=4\nb=6')
+#        self.tempdir.write('a_005', b'some text a5')
+#        self.tempdir.write('b_002.txt', b'some text b2')
+#        self.tempdir.write('b_008.out', b'some text b8')
+#        self.tempdir.write(('c_010', 'por'), b'some text c5por')
+        os.chdir(self.tempdir.path)
+
+    def tearDown(self):
+        os.chdir(self.dir)
+        self.tempdir.cleanup()
+
+    def test_init_from_str(self):
+        a = InputFileLoaderCheckerSaver()
+        a._attributes = "a b".split()
+        a._initialize_attributes()
+        a.__init__('a=4\nb=6')
+
+        assert_equal(a.a, 4)
+        assert_equal(a.b, 6)
+        assert_equal(a._input_text, 'a=4\nb=6')
+
+    def test_init_from_fileobj(self):
+        a = InputFileLoaderCheckerSaver()
+        a._attributes = "a b".split()
+        a._initialize_attributes()
+        with open(os.path.join(self.tempdir.path, 'inp1.py'), 'rb') as f:
+            a.__init__(f)
+
+        assert_equal(a.a, 4)
+        assert_equal(a.b, 6)
+        assert_equal(a._input_text, 'a=4\nb=6')
+
+
+    def test_attribute_defaults(self):
+        a = InputFileLoaderCheckerSaver()
+        a._input_text = 'b=6'
+        a._attributes = "a b".split()
+        a._attribute_defaults = {'a': 24}
+        a._initialize_attributes()
+        a._transfer_attributes_from_inputfile()
+
+        assert_equal(a.a, 24)
+        assert_equal(a.b, 6)
+        assert_equal(a._input_text, 'b=6')
+
+    def test_check_attributes_that_should_be_lists(self):
+        a = InputFileLoaderCheckerSaver()
+        a.a=4
+        a.b=6
+        a._attributes_that_should_be_lists = ['b']
+        a.check_input_attributes()
+
+        assert_equal(a.a, 4)
+        assert_equal(a.b, [6])
+
+    def test_check_zero_or_all(self):
+        a = InputFileLoaderCheckerSaver()
+        a.a=4
+        a.b=6
+        a.c=None
+        a._zero_or_all = ['a b c'.split()]
+
+        assert_raises(ValueError, a.check_input_attributes)
+
+    def test_check_at_least_one(self):
+        a = InputFileLoaderCheckerSaver()
+        a.c=None
+        a._at_least_one = ['c'.split()]
+
+        assert_raises(ValueError, a.check_input_attributes)
+
+    def test_check_one_implies_others(self):
+        a = InputFileLoaderCheckerSaver()
+        a.a = 4
+        a.c=None
+        a._one_implies_others = ['a c'.split()]
+        assert_raises(ValueError, a.check_input_attributes)
+
+    def test_check_attributes_to_force_same_len(self):
+        a = InputFileLoaderCheckerSaver()
+        a.a = [4,5]
+        a.c=None
+        a._attributes_to_force_same_len = ['a c'.split()]
+        a.check_input_attributes()
+
+        assert_equal(a.c, [None, None])
+
+    def test_check_attributes_that_should_have_same_x_limits(self):
+        a = InputFileLoaderCheckerSaver()
+        a.a = PolyLine([0,1], [2,5])
+        a.c = PolyLine([0,7], [5,6])
+        a._attributes_that_should_have_same_x_limits = ['a c'.split()]
+        assert_raises(ValueError, a.check_input_attributes)
+
+    def test_check_attributes_that_should_have_same_len_pairs(self):
+        a = InputFileLoaderCheckerSaver()
+        a.a = [2, 3]
+        a.c = [3]
+        a._attributes_that_should_have_same_len_pairs = ['a c'.split()]
+        assert_raises(ValueError, a.check_input_attributes)
+
+    def test_determine_output_stem_defaults(self):
+        a = InputFileLoaderCheckerSaver()
+        a._determine_output_stem()
+
+        assert_equal(a._file_stem, '.\\out0002\\out0002')
+
+    def test_determine_output_stem_overwrite(self):
+        a = InputFileLoaderCheckerSaver()
+        a.overwrite = True
+        a._determine_output_stem()
+        assert_equal(a._file_stem, '.\\out0001\\out0001')
+
+    def test_determine_output_stem_create_directory(self):
+        a = InputFileLoaderCheckerSaver()
+        a.create_directory = False
+        a._determine_output_stem()
+        assert_equal(a._file_stem, '.\\out0002')
+
+    def test_determine_output_stem_prefix(self):
+        a = InputFileLoaderCheckerSaver()
+        a.prefix = 'hello_'
+        a._determine_output_stem()
+        assert_equal(a._file_stem, '.\\hello_0001\\hello_0001')
+    def test_determine_output_stem_directory(self):
+        a = InputFileLoaderCheckerSaver()
+        a.directory = os.path.join(self.tempdir.path, 'what')
+        a._determine_output_stem()
+
+        assert_equal(a._file_stem, os.path.join(self.tempdir.path,'what', 'out0002', 'out0002'))
+
+    def test_save_data_parsed(self):
+        a = InputFileLoaderCheckerSaver()
+        a._attributes = "a b ".split()
+        a.save_data_to_file=True
+#        a._initialize_attributes()
+        a.a=4
+        a.b=6
+
+        a._save_data()
+#        print(os.listdir(self.tempdir.path))
+#        print(os.listdir(os.path.join(self.tempdir.path,'out0002')))
+        assert_equal(self.tempdir.read(
+                ('out0002','out0002_input_parsed.py')).strip().splitlines(),
+                     'a = 4\nb = 6'.splitlines())
+
+    def test_save_data_input_text(self):
+        a = InputFileLoaderCheckerSaver()
+        a._input_text= "hello"
+        a.save_data_to_file=True
+        a._save_data()
+        assert_equal(self.tempdir.read(
+                ('out0002','out0002_input_original.py')).strip().splitlines(),
+                     'hello'.splitlines())
+
+    def test_save_data_input_ext(self):
+        a = InputFileLoaderCheckerSaver()
+        a._input_text= "hello"
+        a.input_ext= '.txt'
+        a.save_data_to_file=True
+        a._save_data()
+
+        ok_(os.path.isfile(os.path.join(
+            self.tempdir.path, 'out0002','out0002_input_original.txt')))
+
+    def test_save_data_grid_data_dicts(self):
+        a = InputFileLoaderCheckerSaver()
+        a._grid_data_dicts= {'data': np.arange(6).reshape(3,2)}
+        a.save_data_to_file=True
+        a._save_data()
+
+#        print(os.listdir(os.path.join(self.tempdir.path,'out0002')))
+        ok_(os.path.isfile(os.path.join(
+            self.tempdir.path, 'out0002','out0002.csv')))
+
+
+    def test_save_data_grid_data_dicts_data_ext(self):
+        a = InputFileLoaderCheckerSaver()
+        a._grid_data_dicts= {'data': np.arange(6).reshape(3,2)}
+        a.save_data_to_file=True
+        a.data_ext = ".txt"
+        a._save_data()
+
+#        print(os.listdir(os.path.join(self.tempdir.path,'out0002')))
+        ok_(os.path.isfile(os.path.join(
+            self.tempdir.path, 'out0002','out0002.txt')))
+
+
+    def test_save_figures(self):
+        a = InputFileLoaderCheckerSaver()
+        a.save_figures_to_file=True
+        fig = matplotlib.pyplot.figure()
+        ax = fig.add_subplot('111')
+        ax.plot(4,5)
+        fig.set_label('sing')
+        a._figures=[fig]
+        a._save_figures()
+        a._figures=None
+        matplotlib.pyplot.clf()
+#        print(os.listdir(os.path.join(self.tempdir.path,'out0002')))
+        ok_(os.path.isfile(os.path.join(
+            self.tempdir.path, 'out0002','out0002_sing.eps')))
+
+    def test_save_figures_figure_ext(self):
+        a = InputFileLoaderCheckerSaver()
+        a.save_figures_to_file=True
+        a.figure_ext='.pdf'
+
+        fig = matplotlib.pyplot.figure()
+        ax = fig.add_subplot('111')
+        ax.plot(4,5)
+        fig.set_label('sing')
+        a._figures=[fig]
+        a._save_figures()
+        a._figures=None
+        matplotlib.pyplot.clf()
+#        print(os.listdir(os.path.join(self.tempdir.path,'out0002')))
+        ok_(os.path.isfile(os.path.join(
+            self.tempdir.path, 'out0002','out0002_sing.pdf')))
 
 
 

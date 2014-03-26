@@ -360,8 +360,8 @@ class Speccon1dVR(speccon1d.Speccon1d):
             'fixed_ppress fixed_ppress_omega_phase '
             'pumping pumping_omega_phase').split()
 
-        self._attributes_that_should_have_same_x_limits = (
-            'mv kv kh et surcharge_vs_depth vacuum_vs_depth').split()
+        self._attributes_that_should_have_same_x_limits = [
+            'mv kv kh et surcharge_vs_depth vacuum_vs_depth'.split()]
 
         self._attributes_that_should_have_same_len_pairs = [
             'surcharge_vs_depth surcharge_vs_time'.split(),
@@ -1000,6 +1000,8 @@ class Speccon1dVR(speccon1d.Speccon1d):
 
         geotecha.plotting.one_d.pleasing_defaults()
 
+#        matplotlib.rcParams['figure.dpi'] = 80
+#        matplotlib.rcParams['savefig.dpi'] = 80
 
         matplotlib.rcParams.update({'font.size': 11})
         matplotlib.rcParams.update({'font.family': 'serif'})
