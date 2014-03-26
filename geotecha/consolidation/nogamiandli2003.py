@@ -114,13 +114,13 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         self._attribute_defaults = {'bctop':0, 'bcbot':0}
         self._attributes = ('z t tpor nv nh h kv kh mv bctop bcbot '
             'surcharge_vs_time r0 r1').split()
-        self._attributes_that_should_have_same_len_pairs = (
-            'h kv '
-            'kv mv '
-            'h mv '
-            'h kh '
-            'h kv '
-            'h mv').split() #pairs that should have the same length
+        self._attributes_that_should_have_same_len_pairs = [
+            'h kv'.split(),
+            'kv mv'.split(),
+            'h mv'.split(),
+            'h kh'.split(),
+            'h kv'.split(),
+            'h mv'.split()] #pairs that should have the same length
 
         self._attributes_that_should_be_lists= []
         self._attributes_that_should_have_same_x_limits = []
@@ -715,8 +715,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 if __name__ == '__main__':
 
     my_code = textwrap.dedent("""\
-from geotecha.piecewise.piecewise_linear_1d import PolyLine
-import numpy as np
+#from geotecha.piecewise.piecewise_linear_1d import PolyLine
+#import numpy as np
 
 #surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
 #h = np.array([10, 20, 30, 20])
@@ -758,46 +758,20 @@ import numpy as np
 #     1.81393069e+04,   2.39502662e+04,   3.16227766e+04])
 ################################################
 
-#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-#h = np.array([0.5,0.5])
-##f = 0.001
-#cv = np.array([1,1) * 0.1
-#mv = np.array([1,1])
-#
-##h = np.array([1])
-##cv = np.array([1])
-##mv = np.array([1])
-#
-#kv = cv*mv
-#kh = kv
-#kh = np.array([1,1])
-#r0 = 0.1
-#r1 = 20 * r0
-#
-#
-#bctop = 0
-#
-#bcbot = 1
-#
-#
-#nv = 4
-#nh = 3
-#
-#z = np.linspace(0,np.sum(h),100)
-#tpor = np.array([0.0,0.1, 0.3, 1])
-#t = np.linspace(0,3, 50)
-
-
 surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
+h = np.array([0.5,0.5])
+#f = 0.001
+cv = np.array([1,1]) * 0.1
+mv = np.array([1,1])
 
-hs=0.05
-h = np.array([1, hs, hs, 1, hs, hs, 0.5])
-lam = 100
-kv = np.array([1,lam/hs, lam/hs, 1, lam/hs, lam/hs, 1])
-mv = np.array([1,1, 1, 1, 1, 1, 1])
+#h = np.array([1])
+#cv = np.array([1])
+#mv = np.array([1])
+
+kv = cv*mv
 kh = kv
-
-r0 = 0.05
+kh = np.array([1,2])
+r0 = 0.1
 r1 = 20 * r0
 
 
@@ -806,12 +780,38 @@ bctop = 0
 bcbot = 1
 
 
-nv = 6
+nv = 4
 nh = 5
 
 z = np.linspace(0,np.sum(h),100)
-tpor = np.array([0,0.01,0.1, 0.4])
+tpor = np.array([0.0,0.1, 0.3, 1])
 t = np.linspace(0,3, 50)
+
+
+#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
+#
+#hs=0.05
+#h = np.array([1, hs, hs, 1, hs, hs, 0.5])
+#lam = 100
+#kv = np.array([1,lam/hs, lam/hs, 1, lam/hs, lam/hs, 1])
+#mv = np.array([1,1, 1, 1, 1, 1, 1])
+#kh = kv
+#
+#r0 = 0.05
+#r1 = 20 * r0
+#
+#
+#bctop = 0
+#
+#bcbot = 1
+#
+#
+#nv = 6
+#nh = 5
+#
+#z = np.linspace(0,np.sum(h),100)
+#tpor = np.array([0,0.01,0.1, 0.4])
+#t = np.linspace(0,3, 50)
 
 
 
@@ -859,27 +859,34 @@ t = np.linspace(0,3, 50)
 
     if 1:
         i = 2
-        s = a._sn[i]
-        amin=a._alp_min()[i]
-        amin=0.001
-        amin = a._alp[i,0]-0.1
-        x = np.linspace(amin, a._alp[i,-1], 200)
+
+        fig = plt.figure()
+        ax = fig.add_subplot('111')
+        for i in range(a.nh):
+            s = a._sn[i]
+            amin=a._alp_min()[i]
+            amin=0.001
+            amin = a._alp[i,0]-0.1
+            x = np.linspace(amin, a._alp[i,-1], 200)
 
 
-        y = np.zeros_like(x)
-        for j,_x in enumerate(x):
+            y = np.zeros_like(x)
+            for j,_x in enumerate(x):
 
-            y[j] = a._vertical_characteristic_curve(_x, s)
-        #        print(x[i],y[i])
+                y[j] = a._vertical_characteristic_curve(_x, s)
+            #        print(x[i],y[i])
 
-        plt.figure()
-        #    print(y)
-        plt.plot(x, y, '-+')
-        plt.plot(a._alp[i,:], np.zeros_like(a._alp[i,:]),'o')
-        #    plt.ylim((np.min(y[-100:]),np.max(y[-100:])))
-        #    plt.ylim((-0.1,0.1))
-        plt.plot(a._alp_min()[i], 0, 'r^')
 
+            #    print(y)
+            ax.plot(x, y, '-')
+            c = ax.get_lines()[-1].get_color()
+            ax.plot(a._alp[i,:], np.zeros_like(a._alp[i,:]),'o', color=c)
+            #    plt.ylim((np.min(y[-100:]),np.max(y[-100:])))
+            #    plt.ylim((-0.1,0.1))
+#            c = ax.get_lines()[-1].get_color()
+
+            ax.plot(a._alp_min()[i], 0, '^', color=c )
+        plt.grid()
 #    print(a._alp)
 
     plt.show()
