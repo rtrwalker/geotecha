@@ -26,6 +26,7 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
 import geotecha.math.transformations as transformations
 
+import pkg_resources  # part of setuptools
 
 
 import itertools
@@ -35,7 +36,7 @@ import geotecha.inputoutput.inputoutput as inputoutput
 import geotecha.speccon.speccon1d as speccon1d
 
 import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
-
+import time
 import sys
 import textwrap
 import numpy as np
@@ -81,10 +82,6 @@ class Speccon1dVR(speccon1d.Speccon1d):
       - excess pore pressure at depth
       - average excess pore pressure between depths
       - settlement between depths
-
-
-
-
 
     Parameters
     ----------
@@ -297,6 +294,12 @@ class Speccon1dVR(speccon1d.Speccon1d):
         file extension for figures, default = ".eps".  can be any valid
         matplotlib option for savefig.
 
+    title: str, optional
+        A title for the input file.  This will appear at the top of data files.
+        Default = None, i.e. no title
+    author: str, optional
+        author of analysis. default= unknown
+
     Notes
     -----
     #TODO: explain lists of input must have same len.
@@ -332,7 +335,10 @@ class Speccon1dVR(speccon1d.Speccon1d):
             'plot_properties '
             'save_data_to_file prefix directory overwrite '
             'create_directory data_ext input_ext figure_ext '
-            'save_figures_to_file show_figures').split()
+            'save_figures_to_file show_figures '
+            'author '
+            'version '
+            'title').split()
 
         self._attribute_defaults = {
             'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0,
@@ -350,7 +356,9 @@ class Speccon1dVR(speccon1d.Speccon1d):
             'create_directory': True,
             'data_ext': '.csv',
             'input_ext': '.py',
-            'figure_ext': '.eps'}
+            'figure_ext': '.eps',
+            'author': 'unknown',
+            'version': pkg_resources.require("geotecha")[0].version}
 
         self._attributes_that_should_be_lists= (
             'surcharge_vs_depth surcharge_vs_time surcharge_omega_phase '
@@ -520,6 +528,10 @@ class Speccon1dVR(speccon1d.Speccon1d):
     def make_output(self):
         """make all output"""
 
+        header1 = "program: speccon1d_vr; geotecha version: {}; author: {}; date: {}\n".format(self.version, self.author, time.strftime('%Y/%m/%d %H:%M:%S'))
+        if not self.title is None:
+            header1+= "{}\n".format(self.title)
+
         self._grid_data_dicts = []
         if not self.ppress_z is None:
             self._make_por()
@@ -531,7 +543,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
                  'row_labels': self.tvals[self.ppress_z_tval_indexes],
                  'row_labels_label': 'Time',
                  'column_labels': labels,
-                 'header': 'Pore pressure at depth'}
+                 'header': header1 + 'Pore pressure at depth'}
             self._grid_data_dicts.append(d)
 
         if not self.avg_ppress_z_pairs is None:
@@ -544,7 +556,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
                  'row_labels': self.tvals[self.avg_ppress_z_pairs_tval_indexes],
                  'row_labels_label': 'Time',
                  'column_labels': labels,
-                 'header': 'Average pore pressure between depths'}
+                 'header': header1 + 'Average pore pressure between depths'}
             self._grid_data_dicts.append(d)
 
         if not self.settlement_z_pairs is None:
@@ -557,7 +569,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
                  'row_labels': self.tvals[self.settlement_z_pairs_tval_indexes],
                  'row_labels_label': 'Time',
                  'column_labels': labels,
-                 'header': 'settlement between depths'}
+                 'header': header1 + 'settlement between depths'}
             self._grid_data_dicts.append(d)
         return
 
