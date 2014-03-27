@@ -259,8 +259,8 @@ class SyntaxChecker(ast.NodeVisitor):
             Or Param Pass Pow Print RShift Raise Repr Return Set
             SetComp Slice Store Str Sub Subscript Suite TryExcept
             TryFinally Tuple UAdd USub UnaryOp While With Yield #alias
-            #arguments #boolop #cmpop #comprehension #excepthandler #expr
-            #expr_context #keyword #mod #operator #slice #stmt #unaryop
+            arguments boolop #cmpop comprehension #excepthandler #expr
+            #expr_context keyword #mod #operator slice #stmt #unaryop
             """)
 
         for v in [a for a in s.split() if not a.startswith('#')]:
