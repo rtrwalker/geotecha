@@ -15,7 +15,13 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for Schiffman and Stein 1970 multi layer consolidation
+Module implementing 'Consolidation of Clay with a System of Vertical and
+Horizontal Drains' as per Nogami and Li (2003)[1]_.
+
+References
+----------
+.. [1] Nogami, Toyoaki, and Maoxin Li. (2003). 'Consolidation of Clay with a System of Vertical and Horizontal Drains'. Journal of Geotechnical and Geoenvironmental Engineering 129 (9): 838-48. doi:10.1061/(ASCE)1090-0241(2003)129:9(838).
+
 
 """
 from __future__ import print_function, division
@@ -76,7 +82,25 @@ def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
 
 class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
-    """Multi-layer consolidation
+    """Multi-layer vertical and radial consolidation using matrix transfer
+
+    Partially implements the article by Nogami and Li (2003)[1]_. While the
+    article includes special treatment for sand layers and geotextile layers,
+    this implementation only considers 'soil' layers.  (Sand layers are
+    just normal layers  with high kv and low mv).
+
+    The coding is not of high quality.  The main use is for verification of
+    speccon models noting that Nogami and Li (2003) use rigourous methods
+    where as speccon uses equal-strain assumptions for the radial flow part.
+
+    Features:
+
+     - Vertical flow and radial flow to a central drain (no smear zone).
+     - Load is uniform with depth but varies piecewise-linear with time.
+     - No assumptions on radial distribution of strain (i.e. NOT equal-strain).
+     - pore pressure vs depth at various times.  Either at a particular radial
+       coordinate or averaged in the radial direction.
+     - Average pore pressure vs time.  Average is over the entire soil layer.
 
 
     Attributes
@@ -92,7 +116,6 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
     nv, nh : tuple of 2 int, optional
         number of series terms to use in vertical and horizontal direction.
         default nv=nh=5
-
     kv, kh : list/array of float
         layer vertical and horizontal permeability divided by unit weight of
         water
@@ -106,14 +129,78 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
     r1, r0 : float optional
         drain influence zone and drain radius. if either is none then only
         vertical drainage will be considered.
+    rcalc : float, optional
+        radial coordinate at whcih to calc porer pressure.  Default = None
+        which gives r1.
+    radial_roots_x0 : float, optional
+        starting point for finding radial eigenvalues, default = 1e-3
+    radial_roots_dx : float, optional
+        starting increment for finding radial eigenvalues, default= 1e-3
+    radial_roots_p : float, optional
+        succesive increment lenght increase factor for finding radial
+        eigenvalues, default = 1.05
+    vertical_roots_x0 : float, optional
+        starting point for finding vertical eigenvalues, default = 1e-7
+    vertical_roots_dx : float, optional
+        starting increment for finding vertical eigenvalues, default= 1e-7
+    vertical_roots_p : float, optional
+        succesive increment lenght increase factor for finding vertical
+        eigenvalues, default = 1.05
+    max_iter : int, optional
+        max iterations when searching for eigenvalue intervals. default=10000
 
+    Notes
+    -----
+
+    This program relies on numerical root finding, which can be extremely
+    troublesome in for the vertical eigenvalue case here (Mainly because I
+    never figured out how to normalise in the z direction... but that is
+    another story). You will probably need to fine tune the vertical_roots
+    parameters to ensure the correct eigenvalues have been found, so:
+
+     1. Run the program with the defaults.  If it actually excecutes go to
+        step 3.
+     2. Increase a combo of `vertical_roots_dx`, `vertical_roots_p` and
+        `max_iter` untill the program excecutes.
+     3. Does your pore pressure vs depth plots look ok.  If yes, then possibly
+        accept the results.  But better to check eigen values in step 4.
+     4. run the method `_plot_vert_roots` with enough points to smoothly
+        show the characteristic curve.  zoom in on the roots and check if
+        all the roots are found (usually the problems occur with leftmost line.
+        If not alter `vertical_roots_dx`, `vertical_roots_p` and
+        `max_iter` untill all roots are captured.  Basically if you choose
+        `vertical_roots_dx` tiny, `vertical_roots_p`=1, and `max_iter` huge
+        then you will find all the roots but it may take a long time.
+
+    Root finding is very hard when there are clumps of closely spaced roots
+    but the clumps themselves are far apart.
+
+    Also note that there are errors in eq.24a and eq.24b in the published
+    article of Nogami and Li.  Also I could never get the vertical
+    normalisation to work.  Also I've done my own normalising for the radial
+    part.
 
     """
 
     def _setup(self):
-        self._attribute_defaults = {'bctop':0, 'bcbot':0}
+        """This method overwrites the _setup method in
+        inputoutput.InputFileLoaderCheckerSaver
+
+        """
+
+        self._attribute_defaults = {'bctop': 0, 'bcbot': 0,
+                                    'radial_roots_x0': 1e-3,
+                                    'radial_roots_dx': 1e-3,
+                                    'radial_roots_p': 1.05,
+                                    'vertical_roots_x0': 1e-7,
+                                    'vertical_roots_dx': 1e-7,
+                                    'vertical_roots_p': 1.05,
+                                    'max_iter': 10000}
         self._attributes = ('z t tpor nv nh h kv kh mv bctop bcbot '
-            'surcharge_vs_time r0 r1').split()
+            'surcharge_vs_time r0 r1 rcalc '
+            'radial_roots_x0 radial_roots_dx radial_roots_p '
+            'vertical_roots_x0 vertical_roots_dx vertical_roots_p '
+            'max_iter').split()
         self._attributes_that_should_have_same_len_pairs = [
             'h kv'.split(),
             'kv mv'.split(),
@@ -139,6 +226,15 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         self.bcbot = self._attribute_defaults.get('bcbot', None)
         self.r0 = None
         self.r1 = None
+        self.rcalc = None
+
+        self.radial_roots_x0 = self._attribute_defaults.get('radial_roots_x0', None)
+        self.radial_roots_dx = self._attribute_defaults.get('radial_roots_dx', None)
+        self.radial_roots_p = self._attribute_defaults.get('radial_roots_p', None)
+        self.vertical_roots_x0 = self._attribute_defaults.get('vertical_roots_x0', None)
+        self.vertical_roots_dx = self._attribute_defaults.get('vertical_roots_dx', None)
+        self.vertical_roots_p = self._attribute_defaults.get('vertical_roots_p', None)
+        self.max_iter = self._attribute_defaults.get('max_iter', None)
 
         self.surcharge_vs_time = None
 
@@ -155,58 +251,13 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                                     'kh r0 r1 nh'.split(),
                                     'nh kh r0 r1'.split()]
 
-
-#    def __init__(self, reader=None):
-#        self._debug = False
-#        self._setup()
-#
-#        inputoutput.initialize_objects_attributes(self,
-#                                                  self._attributes,
-#                                                  self._attribute_defaults,
-#                                                  not_found_value = None)
-#
-#        self._input_text = None
-#        if not reader is None:
-#            if isinstance(reader, str):
-#                self._input_text = reader
-#            else:
-#                self._input_text = reader.read()
-#
-#            inputoutput.copy_attributes_from_text_to_object(reader,self,
-#                self._attributes, self._attribute_defaults,
-#                not_found_value = None)
-#
-#    def check_all(self):
-#        """perform checks on attributes
-#
-#        Notes
-#        -----
-#
-#        See also
-#        --------
-#        geotecha.inputoutput.inputoutput.check_attribute_combinations
-#        geotecha.inputoutput.inputoutput.check_attribute_is_list
-#        geotecha.inputoutput.inputoutput.check_attribute_PolyLines_have_same_x_limits
-#        geotecha.inputoutput.inputoutput.check_attribute_pairs_have_equal_length
-#
-#        """
-#
-#
-#        inputoutput.check_attribute_combinations(self,
-#                                                 self._zero_or_all,
-#                                                 self._at_least_one,
-#                                                 self._one_implies_others)
-#        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)
-#        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)
-#        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
-#
-#        return
-
-
     def _calc_derived_properties(self):
         """Calculate properties/ratios derived from input"""
 
         self.check_input_attributes()
+
+        if self.rcalc is None:
+            self.rcalc=self.r1
 
         self.t = np.asarray(self.t)
         self.z = np.asarray(self.z)
@@ -229,6 +280,10 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         self.cv = self.kv / self.mv
 
         self.use_normalised = True
+        #use_normalised is only relevant fot the radial component.
+        #I couldn't get non-normalised to work, hence why it is hard coded in
+        #rather than a user variable.  I could never get the vertical
+        #normalisation working so I gave up trying
 
         if self.bctop == 0:
             self.phia0 = np.array([0.0, 1.0])
@@ -241,23 +296,24 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         elif self.bcbot == 1:
             self.phi_i_check = 1
 
-
-
-
-##############
     def un_normalised(self, r, s, order):
+        """u(r) part of u(r, z, t) = u(r) * phi(z) * T(t)
+
+        This version is normalised w.r.t. r0
+
+        """
+
         r0 = self.r0
         r1 = self.r1
         return besselj(order, r/r0*s)*bessely(0, s) - besselj(0, s)*bessely(order, r/r0*s)
-#
-#    def _radial_characteristic_curve(self, s):
-#        r0 = self.r0
-#        r1 = self.r1
-#        return self.un_normalised(r1, s, 1)
-
-###########
 
     def un(self, r, s):
+        """u(r) part of u(r, z, t) = u(r) * phi(z) * T(t)
+
+        Does not work
+
+        """
+
         r0 = self.r0
         if self.use_normalised:
             return besselj(order, r/r0*s)*bessely(0, s) - besselj(0, s)*bessely(order, r/r0*s)
@@ -265,6 +321,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             return besselj(0, r*s)*bessely(0, r0*s) - besselj(0, r0*s)*bessely(0, r*s)
 
     def _radial_characteristic_curve(self, s):
+        """Zeros of this function provide the radial eigenvalues"""
+
         r0 = self.r0
         r1 = self.r1
         if self.use_normalised:
@@ -274,25 +332,33 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
 
     def _find_sn(self):
-        """find the radial eigen values"""
+        """Find the radial eigenvalues"""
         if self.kh is None:
             self._sn=np.array([0])
         else:
             self._sn = find_n_roots(self._radial_characteristic_curve,
-                               n=self.nh, p = 1.01)
+                               n=self.nh,x0=self.radial_roots_x0,
+                               dx=self.radial_roots_dx,
+                               p = self.radial_roots_p, max_iter=self.max_iter)
 
     def _alp_min(self):
+        """don't need this.
+
+        It is a hang over from when I didn't consider complex eigen values
+        """
+
         if self.use_normalised:
             if self.r0 is None:
                 r0=1
             else:
                 r0 = self.r0
             return np.max(np.sqrt(self.ch[:, np.newaxis]) * self._sn[np.newaxis, :] / r0, axis = 0)
-#            return np.max(np.sqrt(self.ch[:, np.newaxis]/ self.cv[:, np.newaxis]) * self._sn[np.newaxis, :] / r0, axis = 0)
         else:
             return np.max(np.sqrt(self.ch[:, np.newaxis]) * self._sn[np.newaxis, :], axis = 0)
 
     def _beta(self, alp, s):
+        """beta from alp**2 = cv*beta**2 + cr * s**2 / r0**2"""
+
         if self.use_normalised:
             if self.r0 is None:
                 r0=1
@@ -301,21 +367,18 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             a = 1/self.cv * alp**2 -(self.ch/self.cv)*s**2/r0**2
             return np.sqrt(np.array(a, dtype=complex))
 
-#            a = np.abs(1/self.cv * alp**2 -(self.ch/self.cv)*s**2/r0**2)
-#            b = np.empty_like(a, dtype=float)
-#            b[(a>=0)] = np.sqrt(a[(a>=0)])
-#            b[(a<0)] = np.sqrt(np.abs(a[a<0]))
-#            return b
-#            return np.sqrt(np.abs(np.abs(1/self.cv * alp**2 -(self.ch/self.cv)*s**2/r0**2)))
-#            return np.sqrt(alp**2 -(self.ch/self.cv)*s**2/r0**2)
         else:
             return np.sqrt(1/self.cv * alp**2 -(self.ch/self.cv)*s**2)
 
 
     def _calc_phia_and_phidota(self):
+        """Determine the pore pressure and pore pressure gradient at top of
+        each layer
 
-#        sin = math.sin
-#        cos = math.cos
+        Can only be done after finding alp
+        """
+
+
         sin = cmath.sin
         cos = cmath.cos
 
@@ -364,9 +427,17 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 #                    raise ValueError('Bottom BC not satisfied')
 
     def _vertical_characteristic_curve(self, alp, s):
+        """the roots of this function will give the vertical eigenvalues
 
-#        sin = math.sin
-#        cos = math.cos
+        Parameters
+        ----------
+        alp : float
+            alp common for all layers
+        s : float
+            radial eigen value
+
+        """
+
         sin = cmath.sin
         cos = cmath.cos
 
@@ -395,36 +466,11 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                 phia[1] = phib[1] * self.kv[i] /  self.kv[i+1]
         ret = phib[self.phi_i_check].real
 
-
-
-
-#        if abs(phib[self.phi_i_check].real)<=1e-9:
-#            phia = np.array([self.phia0[0], self.phia0[1]], dtype=complex)
-#            print("*", 's=', s)
-#            print('alp=', alp)
-#            for i, h in enumerate(self.h):
-#                if cmath.polar(beta[i])[0]==0:
-#                    phib = np.array([phia[0], 0], dtype=complex)
-#    #                phib[0] = phia[0]
-#    #                phib[1] = 0+0j
-#                else:
-#                    square[0,0] = cos(beta[i]*h)
-#                    square[0,1] = sin(beta[i]*h) / beta[i]
-#                    square[1,0] = -beta[i]* sin(beta[i]*h)
-#                    square[1,1] = cos(beta[i]*h)
-#
-#                    phib = np.dot(square, phia)
-#                print(i,  beta[i], phia, phib)
-#                if i != self.nlayers - 1: # we are not in the last layer
-#                    #transfer phib to the next layer phia
-#                    phia[0]= phib[0]
-#                    phia[1] = phib[1] * self.kv[i] /  self.kv[i+1]
-
-
-        return ret#phib[self.phi_i_check].real
+        return ret
 
 
     def _find_alp(self):
+        """find alp by matrix transfer method"""
 
         self._alp = np.zeros((self.nh, self.nv), dtype=float)
 
@@ -432,20 +478,22 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
         for n, s in enumerate(self._sn):
             if s==0:
-                alp_start_offset = 0.0001
+                alp_start_offset = min(1e-7, self.vertical_roots_dx)
             else:
                 alp_start_offset = 0
             alp = alp_min[n]
-            alp=0.0001
+#            alp=1e-7
             if n==0:
-                alp=0.0001
+                alp=self.vertical_roots_x0
             else:
                 alp = self._alp[n-1,0]
             self._alp[n,:] = find_n_roots(self._vertical_characteristic_curve,
                 args=(s,),n= self.nv, x0 = alp+alp_start_offset,
-                dx = 0.001, p = 1.01, fsolve_kwargs={})
+                dx = self.vertical_roots_dx, p = self.vertical_roots_p,
+                max_iter=self.max_iter, fsolve_kwargs={})
 
     def _calc_Cn(self):
+        """Calc Cn part of the coefficient Cmn"""
 
         self._Cn = np.zeros(self.nh, dtype=float)
 
@@ -473,6 +521,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             self._Cn[n] = numer / denom
 
     def _calc_betamn(self):
+        """calc beta for each layer and each eigenvalue combination"""
+
         self._betamn = np.zeros((self.nh, self.nv, self.nlayers), dtype=complex)
 
         for i in range(self.nh):
@@ -484,9 +534,10 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
 
     def _calc_Amn_and_Bmn(self):
+        """calc coefficeints Amn and Bmn for each layer and eigenvalue
+        combination"""
 
-#        sin = math.sin
-#        cos = math.cos
+
         sin = cmath.sin
         cos = cmath.cos
 
@@ -522,7 +573,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
 
     def _calc_Cm(self):
-
+        """Calc Cm part of the coefficient Cmn"""
         self._calc_Amn_and_Bmn()
         self._Cm = np.zeros((self.nh, self.nv), dtype=complex)
 
@@ -548,6 +599,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
 
     def _calc_Cmn(self):
+        """calc the coefficient Cmn = Cm * Cn"""
+
         self._calc_Cn()
         self._calc_Cm()
 
@@ -573,29 +626,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         self._calc_phia_and_phidota()
         self._calc_Cmn()
 
-#        print(self._Cn)
-        self._calc_por()
 
-#        self._find_beta()
-#
-#
-#        self._calc_Bm_and_Cm()
-#
-#        self._calc_Am()
-#
-#        self.calc_por()
-#
-#        self.calc_settle_and_uavg()
-#
-#        if self._debug:
-#            print ('beta')
-#            print (self._beta)
-#            print('Bm')
-#            print(self._Bm)
-#            print('Cm')
-#            print(self._Cm)
-#            print('Am')
-#            print(self._Am)
+        self._calc_por()
 
         return
 
@@ -650,11 +682,12 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         return Tm
 
     def _calc_un(self):
+        """u(r) part of u(r, z, t) = u(r) * phi(z) * T(t)"""
 
         self._un= np.ones_like(self._sn)
 
         if not self.kh is None:
-            rx = self.r1
+            rx = self.rcalc
             for i, s in enumerate(self._sn):
                 if self.use_normalised:
                     self._un[i] = self.un_normalised(rx, s, 0)
@@ -662,9 +695,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                     self._un[i] = self.un(rx, s)
 
     def _calc_por(self):
+        """calculate the pore pressure"""
 
-#        sin = math.sin
-#        cos = math.cos
         sin = cmath.sin
         cos = cmath.cos
 
@@ -676,7 +708,6 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
         z_in_layer = np.searchsorted(self.zlayer, self.z)
 
-#        rx = self.r1
         self._calc_un()
         for p, t in enumerate(self.tpor):
             for i in range(self.nh):
@@ -685,11 +716,10 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                 for j in range(self.nv):
                     alp = self._alp[i, j]
                     Tm = self._calc_Tm(alp, t)
-    #                self._alp = np.zeros((self.nh, self.nv), dtype=float)
                     for k, z in enumerate(self.z):
                         layer = z_in_layer[k]
                         zlay = z - (self.zlayer[layer] - self.h[layer])
-#                        print(z, zlay)
+
                         bet = self._betamn[i, j, layer]
                         Cmn = self._Cmn[i, j].real
                         phi_a = self._phia[i, j, layer]
@@ -697,18 +727,49 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                         phi = (cos(bet * zlay) * phi_a +
                             sin(bet * zlay)/bet * phi_a_dot)
                         self.por[k, p] += Cmn * un * phi.real * Tm
-#                        if z==1 and t==0:
-#                            print(self.un(rx,s))
-#                            print(bet)
-#                            print(Cmn)
-#                            print(phi_a)
-#                            print(phi_a_dot)
-#                            print(phi)
 
 
 
 
+    def _plot_vert_roots(self, npt=200):
+        """Plot the vertical characteristic curve and it's roots
 
+        After a 'successful' run, use this to check the validity
+        of the calculated vertical eigenvalues and ensure none are missing
+
+        Paramters
+        ---------
+        npt : int, optional
+            number of points to plot. default=200
+        """
+
+        fig = plt.figure()
+        ax = fig.add_subplot('111')
+        for i in range(self.nh):
+            s = self._sn[i]
+            amin=self._alp_min()[i]
+            amin=0.001
+            amin = 0.3*self._alp[i,0]
+            x = np.linspace(amin, self._alp[i,-1], npt)
+
+
+            y = np.zeros_like(x)
+            for j,_x in enumerate(x):
+
+                y[j] = self._vertical_characteristic_curve(_x, s)
+            #        print(x[i],y[i])
+
+
+            #    print(y)
+            ax.plot(x, y, ls='-', marker='.', markersize=3)
+            c = ax.get_lines()[-1].get_color()
+            ax.set_ylim((-1,1))
+            ax.plot(self._alp[i,:], np.zeros_like(self._alp[i,:]), 'o', color=c)
+            ax.set_title('vertical_roots_x0={}, vertical_roots_dx={}, vertical_roots_p={}'.format(self.vertical_roots_x0, self.vertical_roots_dx, self.vertical_roots_p))
+
+        ax.grid()
+
+        return fig
 
 #
 #
@@ -719,22 +780,23 @@ if __name__ == '__main__':
 #import numpy as np
 
 #surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-#h = np.array([10, 20, 30, 20])
-#cv = np.array([0.0411, 0.1918, 0.0548, 0.0686])
+#h = np.array([10, 20, 30, 20])*1
+#cv = np.array([0.0411, 0.1918, 0.0548, 0.0686])*1e8
 #mv = np.array([3.07e-3, 1.95e-3, 9.74e-4, 1.95e-3])
 ##kv = np.array([7.89e-6, 2.34e-5, 3.33e-6, 8.35e-6])
 #kv = cv*mv
-#kh = kv * 0.0003
-#r1 = 0.6
-#r0= 0.05
+##kh = np.array([  1.26177000e-04,   3.74010000e-04,   5.33752000e-05, 1.33770000e-04])*1e-4
+###kh = kv * 0.0003
+##r1 = 0.6
+##r0= 0.05
 #
 #bctop = 0
 #
 #bcbot = 0
 #
 #
-#nv = 15
-#nh = 5
+#nv = 17
+##nh = 5
 #
 #
 #z = np.concatenate((np.linspace(0, np.sum(h[:1]), 25, endpoint=False),
@@ -758,166 +820,86 @@ if __name__ == '__main__':
 #     1.81393069e+04,   2.39502662e+04,   3.16227766e+04])
 ################################################
 
+#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
+#h = np.array([0.3, 0.05, 0.65])#*2.268
+##f = 0.001
+#cv = np.array([1,1,1])*0.1
+#mv = np.array([1,1,1])
+#
+##h = np.array([1])
+##cv = np.array([1])
+##mv = np.array([1])
+#
+#kv = cv*mv
+#kh = kv
+#kh = np.array([1,10000,1])
+#r0 = 0.1
+#r1 = 20 * r0
+#
+#
+#bctop = 0
+#
+#bcbot = 0
+#
+#
+#nv = 18
+#nh = 5
+#
+#z = np.linspace(0,np.sum(h),100)
+#tpor = np.array([0.0,0.1, 0.3, 1])
+#t = np.linspace(0,3, 50)
+
+##########################################################
 surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-h = np.array([0.5,0.5])
-#f = 0.001
-cv = np.array([1,1]) * 0.1
-mv = np.array([1,1])
 
-#h = np.array([1])
-#cv = np.array([1])
-#mv = np.array([1])
-
-kv = cv*mv
+hs=0.05
+h = np.array([1, hs, hs, 1, hs, hs, 0.5])
+lam = 100
+kv = np.array([1,lam/hs, lam/hs, 1, lam/hs, lam/hs, 1])
+mv = np.array([1,1, 1, 1, 1, 1, 1])
 kh = kv
-kh = np.array([1,2])
-r0 = 0.1
-r1 = 20 * r0
 
+r0 = 0.05
+r1 = 20 * r0
+rcalc = r1
 
 bctop = 0
 
 bcbot = 1
 
 
-nv = 4
+nv = 15
 nh = 5
 
 z = np.linspace(0,np.sum(h),100)
-tpor = np.array([0.0,0.1, 0.3, 1])
+tpor = np.array([0,0.01,0.1, 0.4])
 t = np.linspace(0,3, 50)
 
 
-#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-#
-#hs=0.05
-#h = np.array([1, hs, hs, 1, hs, hs, 0.5])
-#lam = 100
-#kv = np.array([1,lam/hs, lam/hs, 1, lam/hs, lam/hs, 1])
-#mv = np.array([1,1, 1, 1, 1, 1, 1])
-#kh = kv
-#
-#r0 = 0.05
-#r1 = 20 * r0
-#
-#
-#bctop = 0
-#
-#bcbot = 1
-#
-#
-#nv = 6
-#nh = 5
-#
-#z = np.linspace(0,np.sum(h),100)
-#tpor = np.array([0,0.01,0.1, 0.4])
-#t = np.linspace(0,3, 50)
-
-
-
-
+max_iter=20000
+#radial_roots_x0 = 1e-3
+#radial_roots_dx = 1e-3
+#radial_roots_p = 1.05
+vertical_roots_x0 = 3
+vertical_roots_dx = 1e-3
+vertical_roots_p = 1.01
 
     """)
 
     a = NogamiAndLi2003(my_code)
 
-
-#    a.calc()
-#    a._calc_derived_properties()
-#    a._find_sn()
-#    print(a._sn)
-#    print(a._alp_min())
-#    print(a._alp)
-#    steps = 200
-#    x = np.linspace(a._alp_min()[2]+0.00001,a._alp_min()[2]+0.8 , 200 )
-#    y = np.zeros_like(x)
-#    for i,_x in enumerate(x):
-#        y[i] = a._vertical_characteristic_curve(_x, a._sn[2])
-#    plt.plot(x,y)
-#    plt.show()
-
-#    a._find_beta()
-##    a.plot_characteristic_curve_and_roots()
-#    a._make_BC(a._beta0[0])
-#    a._Am_integrations()
-#    a._Tm_integrations()
-#    a._uavg_integrations()
-#    a._debug=True
-
     a.calc()
-#    print('*'*100)
-#    print(a._alp)
 
-#    print('alp', a._alp[0,:2])
-#    print('bet', a._betamn[0,:2,:])
-#    print(a._betamn)
-#    print(a._Cmn)
-#    print('hello')
-#    print(a._Bmn)
 #    plot_one_dim_consol(a.z, a.t, por=a.por, uavg=a.uavg, settle=a.settle)
     plot_one_dim_consol(a.z, a.tpor, por=a.por, uavg=None, settle=None)
 
-    if 1:
-        i = 2
-
-        fig = plt.figure()
-        ax = fig.add_subplot('111')
-        for i in range(a.nh):
-            s = a._sn[i]
-            amin=a._alp_min()[i]
-            amin=0.001
-            amin = a._alp[i,0]-0.1
-            x = np.linspace(amin, a._alp[i,-1], 200)
 
 
-            y = np.zeros_like(x)
-            for j,_x in enumerate(x):
+    a._plot_vert_roots(1000)
 
-                y[j] = a._vertical_characteristic_curve(_x, s)
-            #        print(x[i],y[i])
-
-
-            #    print(y)
-            ax.plot(x, y, '-')
-            c = ax.get_lines()[-1].get_color()
-            ax.plot(a._alp[i,:], np.zeros_like(a._alp[i,:]),'o', color=c)
-            #    plt.ylim((np.min(y[-100:]),np.max(y[-100:])))
-            #    plt.ylim((-0.1,0.1))
-#            c = ax.get_lines()[-1].get_color()
-
-            ax.plot(a._alp_min()[i], 0, '^', color=c )
-        plt.grid()
-#    print(a._alp)
 
     plt.show()
 
 
 
-#    print(repr(a.z))
-#    print('*')
-#    print(repr(a.por))
-#    print('*')
-#    print(repr(a.uavg))
-#    print('*')
-#    print(repr(a.settle))
-#    print('*')
-#    print(repr(a.t))
-#    plt.plot(a.por,a.z)
-#    plt.ylabel('Depth, z')
-#    plt.xlabel('Pore pressure')
-#    plt.gca().invert_yaxis()
-#    plt.grid()
-#    plt.show()
-#    x = np.linspace(0, 20, 400)
-##    x = np.array([0.1])
-#    y = np.zeros_like(x)
-#    for i in xrange(len(x)):
-#        y[i]=a._characteristic_eqn(x[i])
-##        print(x[i],y[i])
-#
-#    print(np.sum(y[0:-1] * y[1:] < 0))
-#    plt.plot(x ,y,'-')
-#    plt.plot(a._beta0, np.zeros_like(a._beta0),'ro')
-##    plt.gca().set_ylim(-0.1,0.1)
-#    plt.grid()
-#    plt.show()
+
