@@ -42,6 +42,7 @@ from contextlib import contextmanager
 import pkg_resources
 from geotecha.plotting.one_d import copy_dict
 
+
 class SyntaxChecker(ast.NodeVisitor):
     """
 
@@ -1152,13 +1153,13 @@ class InputFileLoaderCheckerSaver(object):
         [self._attributes.append(v) for v in common_attributes if
                 v not in self._attributes]
 
-        attribute_defaults = copy_dict(common_attribute_defaults,
+        self._attribute_defaults = copy_dict(common_attribute_defaults,
                                         attribute_defaults)
 
 
         initialize_objects_attributes(self,
                                       self._attributes,
-                                      attribute_defaults,
+                                      self._attribute_defaults,
                                       not_found_value = None)
 
     def _determine_output_stem(self):
