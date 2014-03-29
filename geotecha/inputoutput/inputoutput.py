@@ -39,6 +39,8 @@ import fnmatch
 import argparse
 import logging
 from contextlib import contextmanager
+import pkg_resources
+from geotecha.plotting.one_d import copy_dict
 
 class SyntaxChecker(ast.NodeVisitor):
     """
@@ -1122,7 +1124,37 @@ class InputFileLoaderCheckerSaver(object):
         if not hasattr(self, '_attributes'):
             raise ValueError("No 'self._attributes' defined in object.")
 
+        common_attributes = ('plot_properties '
+            'save_data_to_file prefix directory overwrite '
+            'create_directory data_ext input_ext figure_ext '
+            'save_figures_to_file show_figures '
+            'author '
+            'version '
+            'title').split()
+
+        common_attribute_defaults = {
+            'plot_properties': dict(),
+            'save_data_to_file': False,
+            'save_figures_to_file': False,
+            'show_figures': False,
+            'prefix': 'out',
+            'overwrite': False,
+            'create_directory': True,
+            'data_ext': '.csv',
+            'input_ext': '.py',
+            'figure_ext': '.eps',
+            'author': 'unknown',
+            'version': pkg_resources.require("geotecha")[0].version}
+
         attribute_defaults = getattr(self, '_attribute_defaults', dict())
+
+
+        [self._attributes.append(v) for v in common_attributes if
+                v not in self._attributes]
+
+        attribute_defaults = copy_dict(common_attribute_defaults,
+                                        attribute_defaults)
+
 
         initialize_objects_attributes(self,
                                       self._attributes,

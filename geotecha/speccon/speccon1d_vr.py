@@ -26,7 +26,7 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
 import geotecha.math.transformations as transformations
 
-import pkg_resources  # part of setuptools
+
 
 
 import itertools
@@ -332,13 +332,9 @@ class Speccon1dVR(speccon1d.Speccon1d):
             'fixed_ppress_omega_phase top_omega_phase bot_omega_phase '
             'pumping pumping_omega_phase '
             'RLzero '
-            'plot_properties '
-            'save_data_to_file prefix directory overwrite '
-            'create_directory data_ext input_ext figure_ext '
-            'save_figures_to_file show_figures '
-            'author '
-            'version '
-            'title').split()
+            'prefix'
+
+            ).split()
 
         self._attribute_defaults = {
             'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0,
@@ -347,18 +343,8 @@ class Speccon1dVR(speccon1d.Speccon1d):
             'ppress_z_tval_indexes': slice(None, None),
             'avg_ppress_z_pairs_tval_indexes': slice(None, None),
             'settlement_z_pairs_tval_indexes': slice(None, None),
-            'plot_properties': dict(),
-            'save_data_to_file': False,
-            'save_figures_to_file': False,
-            'show_figures': False,
-            'prefix': 'speccon1dvr_',
-            'overwrite': False,
-            'create_directory': True,
-            'data_ext': '.csv',
-            'input_ext': '.py',
-            'figure_ext': '.eps',
-            'author': 'unknown',
-            'version': pkg_resources.require("geotecha")[0].version}
+            'prefix': 'speccon1dvr_'
+            }
 
         self._attributes_that_should_be_lists= (
             'surcharge_vs_depth surcharge_vs_time surcharge_omega_phase '
