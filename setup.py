@@ -152,6 +152,7 @@ for v in baseline_module_names:
 ENTRY_POINTS = {
         'console_scripts': [
             'speccon1d_vr = geotecha.speccon.speccon1d_vr:main',
+            'nogamiandli2003 = geotecha.consolidation.nogamiandli2003:main'
         ]}
 
 setup(

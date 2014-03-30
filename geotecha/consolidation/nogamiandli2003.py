@@ -45,41 +45,8 @@ import scipy.special
 besselj = scipy.special.jn
 bessely = scipy.special.yn
 
+from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 
-def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
-
-    if not por is None:
-        plt.figure()
-        plt.plot(por,z)
-        plt.ylabel('Depth, z')
-        plt.xlabel('Pore pressure')
-        plt.gca().invert_yaxis()
-
-    if not doc is None:
-        plt.figure()
-        plt.plot(t, doc)
-        plt.xlabel('Time, t')
-        plt.ylabel('Degree of consolidation')
-        plt.gca().invert_yaxis()
-        plt.semilogx()
-
-    if not settle is None:
-        plt.figure()
-        plt.plot(t, settle)
-        plt.xlabel('Time, t')
-        plt.ylabel('settlement')
-        plt.gca().invert_yaxis()
-        plt.semilogx()
-
-    if not uavg is None:
-        plt.figure()
-        plt.plot(t, uavg)
-        plt.xlabel('Time, t')
-        plt.ylabel('Average pore pressure')
-#        plt.gca().invert_yaxis()
-        plt.semilogx()
-
-    return
 
 
 
@@ -203,6 +170,19 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
     show_vert_eigs : True/False, optional
         if true a vertical eigen value plot will be made.  default= False
+
+    por : array of shape (len(z), len(tpor))
+        pore pressure vs depth at various times.  Only present if tpor defined.
+        If rcalc defined then porepressure will be at r=rcalc.  If rcalc is
+        not defined then pore pressure is averaged radially
+    avp : array of shape (1, len(t))
+        averge pore pressure of profile various times.  Only present if t
+        defined. If rcalc defined then pore pressure will be at r=rcalc.
+        If rcalc is not defined then pore pressure is averaged radially
+    set : array of shape (1, len(t))
+        surface settlement at various times.  Only present if t
+        defined. If rcalc defined then settlement will be at r=rcalc.
+        If rcalc is not defined then settlement is averaged radially.
 
     Notes
     -----
@@ -725,6 +705,15 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                  'header': header1 + 'Average pore pressure between depths' + extra}
             self._grid_data_dicts.append(d)
 
+            labels = ['%.3g to %.3g' % (0, sum(self.h))]
+            d = {'name': '_data_set',
+                 'data': self.avp.T,
+                 'row_labels': self.t,
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': header1 + 'settlement between depths' + extra}
+            self._grid_data_dicts.append(d)
+
         return
 
     def produce_plots(self):
@@ -753,6 +742,13 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             f.set_label(title)
             f.canvas.manager.set_window_title(title)
             self._figures.append(f)
+
+            f=self._plot_set()
+            title = 'fig_set'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
+
 
         if self.show_vert_eigs:
             f = self._plot_vert_roots(1000)
@@ -784,9 +780,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         return fig_por
 
     def _plot_avp(self):
-        """plot average pore pressure vs time for various depth intervals
+        """plot average pore pressure of profile"""
 
-        """
         if not self.rcalc is None:
             extra = " at r={0:.3g}".format(self.rcalc)
         else:
@@ -803,6 +798,25 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                            prop_dict=avp_prop)
         return fig_avp
 
+    def _plot_set(self):
+        """plot surface settlement"""
+
+        if not self.rcalc is None:
+            extra = " at r={0:.3g}".format(self.rcalc)
+        else:
+            extra=" (radial average)"
+
+        t = self.t
+        line_labels = ['%.3g to %.3g' % (0, sum(self.h))]
+
+        set_prop = self.plot_properties.pop('set', dict())
+        if not 'ylabel' in set_prop:
+            set_prop['ylabel'] = 'surface settlement'+extra
+        fig_set = geotecha.plotting.one_d.plot_vs_time(t, self.set.T,
+                           line_labels=line_labels,
+                           prop_dict=set_prop)
+        fig_set.gca().invert_yaxis()
+        return fig_set
 
     def temp(self):
         if getattr(self, 'save_data_to_file', False):
@@ -931,6 +945,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             return
 
         self.avp = np.zeros((1, len(self.t)), dtype=float)
+        self.set = np.zeros((1, len(self.t)), dtype=float)
 
         z_in_layer = np.searchsorted(self.zlayer, self.z)
 
@@ -943,7 +958,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                     alp = self._alp[i, j]
                     Tm = self._calc_Tm(alp, t)
 
-
+                    load = pwise.pinterp_x_y(self.surcharge_vs_time, t)
                     for layer, h in enumerate(self.h):
 #                        layer = z_in_layer[k]
 #                        zlay = z - (self.zlayer[layer] - self.h[layer])
@@ -953,8 +968,10 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                         phi_a = self._phia[i, j, layer]
                         phi_a_dot = self._phidota[i, j, layer]
                         phi = (sin(bet * h) / bet * phi_a +
-                                (1-cos(bet * h))/bet**2*phi_a_dot)/h_all
-                        self.avp[0, p] += Cmn * un * phi.real * Tm
+                                (1-cos(bet * h))/bet**2*phi_a_dot)
+                        self.avp[0, p] += Cmn * un * phi.real / h_all * Tm
+                        self.set[0, p] += self.mv[layer] * (load * h /self.nh/self.nv - Cmn *
+                                            un * phi.real * Tm)
 
     def _plot_vert_roots(self, npt=200):
         """Plot the vertical characteristic curve and it's roots
@@ -968,7 +985,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             number of points to plot. default=200
         """
 
-        fig = plt.figure(figsize=(40,8))
+        fig = plt.figure(figsize=(40, 8))
         ax = fig.add_subplot('111')
         for i in range(self.nh):
             s = self._sn[i]
@@ -999,196 +1016,22 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
 #
 #
+
+
+
+
+def main():
+    a = GenericInputFileArgParser(obj=NogamiAndLi2003,
+                                  methods=[('make_all', [], {})],
+                                 pass_open_file=True)
+
+    a.main()
+
 if __name__ == '__main__':
-
-    my_code = textwrap.dedent("""\
-#from geotecha.piecewise.piecewise_linear_1d import PolyLine
-#import numpy as np
-
-#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-#h = np.array([10, 20, 30, 20])*1
-#cv = np.array([0.0411, 0.1918, 0.0548, 0.0686])*1e8
-#mv = np.array([3.07e-3, 1.95e-3, 9.74e-4, 1.95e-3])
-##kv = np.array([7.89e-6, 2.34e-5, 3.33e-6, 8.35e-6])
-#kv = cv*mv
-##kh = np.array([  1.26177000e-04,   3.74010000e-04,   5.33752000e-05, 1.33770000e-04])*1e-4
-###kh = kv * 0.0003
-##r1 = 0.6
-##r0= 0.05
-#
-#bctop = 0
-#
-#bcbot = 0
-#
-#
-#nv = 17
-##nh = 5
-#
-#
-#z = np.concatenate((np.linspace(0, np.sum(h[:1]), 25, endpoint=False),
-#                    np.linspace(np.sum(h[:1]), np.sum(h[:2]), 25, endpoint=False),
-#                    np.linspace(np.sum(h[:2]), np.sum(h[:3]), 25, endpoint=False),
-#                    np.linspace(np.sum(h[:3]), np.sum(h), 25, endpoint=True)))
-#
-#
-#
-#tpor = np.array([740, 2930, 7195], dtype=float)
-#
-#t = np.logspace(1, 4.5, 30)
-#
-#t = np.array(
-#    [1.21957046e+02,   1.61026203e+02,   2.12611233e+02,
-#     2.80721620e+02,   3.70651291e+02,   4.89390092e+02,
-#     740.0,   8.53167852e+02,   1.12648169e+03,
-#     1.48735211e+03,   1.96382800e+03,   2930.0,
-#     3.42359796e+03,   4.52035366e+03,   5.96845700e+03,
-#     7195.0,   1.04049831e+04,   1.37382380e+04,
-#     1.81393069e+04,   2.39502662e+04,   3.16227766e+04])
-################################################
-
-#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-#h = np.array([0.3, 0.05, 0.65])#*2.268
-##f = 0.001
-#cv = np.array([1,1,1])*0.1
-#mv = np.array([1,1,1])
-#
-##h = np.array([1])
-##cv = np.array([1])
-##mv = np.array([1])
-#
-#kv = cv*mv
-#kh = kv
-#kh = np.array([1,10000,1])
-#r0 = 0.1
-#r1 = 20 * r0
-#
-#
-#bctop = 0
-#
-#bcbot = 0
-#
-#
-#nv = 18
-#nh = 5
-#
-#z = np.linspace(0,np.sum(h),100)
-#tpor = np.array([0.0,0.1, 0.3, 1])
-#t = np.linspace(0,3, 50)
-
-##########################################################
-#surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-#
-#hs=0.05
-#h = np.array([1, hs, hs, 1, hs, hs, 0.5])
-#lam = 100
-#kv = np.array([1,lam/hs, lam/hs, 1, lam/hs, lam/hs, 1])
-#mv = np.array([1,1, 1, 1, 1, 1, 1])
-#kh = kv
-#
-#r0 = 0.05
-#r1 = 20 * r0
-#rcalc = r1
-#
-#bctop = 0
-#
-#bcbot = 1
-#
-#
-#nv = 15
-#nh = 5
-#
-#z = np.linspace(0,np.sum(h),100)
-#tpor = np.array([0,0.01,0.1, 0.4])
-#t = np.linspace(0,0.5, 50)
-#
-#
-#max_iter=20000
-##radial_roots_x0 = 1e-3
-##radial_roots_dx = 1e-3
-##radial_roots_p = 1.05
-#vertical_roots_x0 = 3
-#vertical_roots_dx = 1e-3
-#vertical_roots_p = 1.01
-#
-#directory= r"C:\\Users\\Rohan Walker\\Documents\\temp" #may always need the r
-#save_data_to_file= True
-#save_figures_to_file= True
-#show_figures= True
-#overwrite=True
-#
-##prefix="silly"
-#
-##create_directory=True
-##data_ext = '.csv'
-##input_ext='.py'
-#figure_ext='.png'
-#show_vert_eigs=True
-
-##########################################################
-surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-
-hs=0.05
-h = np.array([1, hs, hs, 1, hs, hs, 0.5])
-lam = 5
-kv = np.array([1,lam/hs, lam/hs, 1, lam/hs, lam/hs, 1])
-mv = np.array([1,1, 1, 1, 1, 1, 1])
-kh = kv
-
-r0 = 0.05
-r1 = 20 * r0
-rcalc = r1
-
-bctop = 0
-
-bcbot = 1
-
-
-nv = 15
-nh = 5
-
-z = np.linspace(0,np.sum(h),100)
-tpor = np.array([0,0.01,0.1, 0.4])
-#t = np.linspace(0,0.5, 50)
-
-
-max_iter=20000
-#radial_roots_x0 = 1e-3
-#radial_roots_dx = 1e-3
-#radial_roots_p = 1.05
-vertical_roots_x0 = 2.2
-vertical_roots_dx = 1e-3
-vertical_roots_p = 1.01
-
-directory= r"C:\\Users\\Rohan Walker\\Documents\\temp" #may always need the r
-save_data_to_file= False
-save_figures_to_file= False
-show_figures= True
-overwrite=True
-
-#prefix="silly"
-
-#create_directory=True
-#data_ext = '.csv'
-#input_ext='.py'
-figure_ext='.png'
-show_vert_eigs=True
-    """)
-
-    a = NogamiAndLi2003(my_code)
-
-#    a.calc()
-    a.make_all()
-#    a.make_output()
-
-#    plot_one_dim_consol(a.z, a.t, por=a.por, uavg=a.uavg, settle=a.settle)
-#    plot_one_dim_consol(a.z, a.tpor, por=a.por, uavg=None, settle=None)
-#    plt.grid()
-
-
-#    a._plot_vert_roots(1000)
-
-
-    plt.show()
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+##    nose.runmodule(argv=['nose', '--verbosity=3'])
+    main()
 
 
 
