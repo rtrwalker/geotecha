@@ -2315,7 +2315,54 @@ def subdivide_x_into_segments(x, dx=None, min_segments = 2,
 
     return xnew
 
+def layer_coords(h, segs, min_segs=1):
+    """Calculate depth coordinates from from layer heights
 
+    Subdivide each layer. Calculate offset.
+
+    Parameters
+    ----------
+    h : list/array
+        1d array of layer heights
+    segs : int
+        approximate number of segments to subdivide the whole profile into
+    min_segs : int, optional
+        Minimum number of segments to subdivide a layer into. Default nmin=2
+
+    Returns
+    -------
+    z : 1d array
+        depths
+
+
+    Examples
+    --------
+    >>> layer_coords([4], 2)
+    array([ 0.,  2.,  4.])
+    >>> layer_coords([2], 1, 4)
+    array([ 0. ,  0.5,  1. ,  1.5,  2. ])
+    >>> layer_coords([2,4,2], 5, 2)
+    array([ 0.,  1.,  2.,  4.,  6.,  7.,  8.])
+    >>> layer_coords([5,1,5], 3, 2)
+    array([  0. ,   2.5,   5. ,   5.5,   6. ,   8.5,  11. ])
+
+
+    """
+
+
+    h = np.asarray(h, dtype=float)
+
+    z2 = np.cumsum(h)
+    z1 = z2 - h
+    dx = np.sum(h) / segs
+    num = [max(height//dx, min_segs) for height in h]
+
+    zlist = [np.linspace(z1_, z2_, num_, endpoint=False) for (z1_, z2_, num_) in zip(z1, z2, num)]
+    zlist.append([z2[-1]])
+
+    z = np.array([val for subl in zlist for val in subl])
+
+    return z
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
