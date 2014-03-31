@@ -3423,6 +3423,197 @@ def test_zhuandyin2012_drn1_kv_mv_non_linear():
                             err_msg = ("Fail. test_zhuandyin2012_drn1_kv_mv_non_linear, set, "
                                 "implementation='%s', dT=%s" % (impl, dT)))
 
+def test_zhuandyin2012_drn0_kv_mv_non_linear_BC():
+    """test for zhu and yin 2012
+
+     vertical drainage, depth dependent properties, instant load
+     generally:
+     mv = mv0*(1+alpha*z/H)**q
+     kv = kv0* (1+alpha*z/H)**p
+     for this case
+
+
+     PTPB
+     replicate with negative BC
+    """
+
+    t = np.array([  0.,   1.,   2.,   3.,   4.,   5.,   6.,   7.,   8.,   9.,  10.,
+        11.,  12.,  13.,  14.,  15.])
+
+    z = np.array([ 0.        ,  0.13157895,  0.26315789,  0.39473684,  0.52631579,
+        0.65789474,  0.78947368,  0.92105263,  1.05263158,  1.18421053,
+        1.31578947,  1.44736842,  1.57894737,  1.71052632,  1.84210526,
+        1.97368421,  2.10526316,  2.23684211,  2.36842105,  2.5       ])
+
+    tpor=t[np.array([2,4,9,13])]
+
+
+
+
+    reader = textwrap.dedent("""\
+    #from geotecha.piecewise.piecewise_linear_1d import PolyLine
+    #import numpy as np
+
+
+    ####################################
+    #zhuandyin2012 properties
+    #ui = 100
+    #drn = 0
+    #nterms = 50
+    #mv0 = 1.2
+    #kv0 = 1.6
+    #H = 2.5
+    #alpha = 0.5
+    #q = 2
+    #p = -2
+    #z = np.linspace(0,H,20)
+    #t = np.linspace(0,15,16)
+    #tpor=t[np.array([2,4,9,13])]
+    #plot_eigs=False
+    #
+    #por, doc, settle = zhuandyin2012(
+    #    z=z, t=t, alpha=alpha, p=p, q=q, drn=drn, tpor=tpor, H = H, kv0 = kv0, mv0 = mv0, gamw = 10,
+    #        ui = 100, nterms = nterms, plot_eigs=plot_eigs)
+
+    ####################################
+
+    neig=40
+
+    H = 2.5
+    drn = 0
+
+    mvref = 1.2
+    kvref = 1.6 / 10
+
+    kv = PolyLine(np.array(
+        [ 0. ,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1. ]),
+                  np.array(
+        [ 1.        ,  0.90702948,  0.82644628,  0.75614367,  0.69444444,
+        0.64      ,  0.59171598,  0.54869684,  0.51020408,  0.47562426,
+        0.44444444]))
+    mv = PolyLine(np.array(
+        [ 0. ,  0.1,  0.2,  0.3,  0.4,  0.5,  0.6,  0.7,  0.8,  0.9,  1. ]),
+                  np.array(
+        [ 1.    ,  1.1025,  1.21  ,  1.3225,  1.44  ,  1.5625,  1.69  ,
+        1.8225,  1.96  ,  2.1025,  2.25  ]))
+
+
+
+    dTv = kvref/mvref/H**2
+
+    #surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
+    #surcharge_vs_depth = PolyLine([0,1], [1,1])
+    top_vs_time = PolyLine([0,0,10], [0,-100,-100])
+    bot_vs_time = PolyLine([0,0,10], [0,-100,-100])
+
+    ppress_z = np.array(
+        [ 0.        ,  0.13157895,  0.26315789,  0.39473684,  0.52631579,
+        0.65789474,  0.78947368,  0.92105263,  1.05263158,  1.18421053,
+        1.31578947,  1.44736842,  1.57894737,  1.71052632,  1.84210526,
+        1.97368421,  2.10526316,  2.23684211,  2.36842105,  2.5       ])
+
+    ppress_z/=H
+
+    settlement_z_pairs = [[0,1]]
+
+    tvals = np.array(
+      [  0.,   1.,   2.,   3.,   4.,   5.,   6.,   7.,   8.,   9.,  10.,
+        11.,  12.,  13.,  14.,  15.])
+
+    ppress_z_tval_indexes = [2,4,9,13]
+    """)
+
+    por = -100+np.array(
+     [[  0.00000000e+00,   0.00000000e+00,   0.00000000e+00,
+          0.00000000e+00],
+       [  1.46735407e+01,   1.03912749e+01,   6.41229682e+00,
+          4.57268569e+00],
+       [  2.95788346e+01,   2.11321198e+01,   1.30795985e+01,
+          9.32820812e+00],
+       [  4.40987535e+01,   3.19912441e+01,   1.99046557e+01,
+          1.41983660e+01],
+       [  5.75828248e+01,   4.26939050e+01,   2.67633017e+01,
+          1.90957668e+01],
+       [  6.94433436e+01,   5.29361414e+01,   3.35030492e+01,
+          2.39125719e+01],
+       [  7.92552649e+01,   6.24046262e+01,   3.99428658e+01,
+          2.85200193e+01],
+       [  8.68301825e+01,   7.07988643e+01,   4.58744872e+01,
+          3.27690394e+01],
+       [  9.22365664e+01,   7.78502690e+01,   5.10656237e+01,
+          3.64923102e+01],
+       [  9.57527634e+01,   8.33312726e+01,   5.52654037e+01,
+          3.95081180e+01],
+       [  9.77603095e+01,   8.70482108e+01,   5.82123900e+01,
+          4.16263817e+01],
+       [  9.86004778e+01,   8.88153120e+01,   5.96455150e+01,
+          4.26571486e+01],
+       [  9.84164540e+01,   8.84142419e+01,   5.93183109e+01,
+          4.24217705e+01],
+       [  9.69914128e+01,   8.55535605e+01,   5.70168132e+01,
+          4.07667995e+01],
+       [  9.35945553e+01,   7.98525651e+01,   5.25814092e+01,
+          3.75803906e+01],
+       [  8.68970325e+01,   7.08792914e+01,   4.59325274e+01,
+          3.28106427e+01],
+       [  7.51182570e+01,   5.82658943e+01,   3.70992525e+01,
+          2.64848548e+01],
+       [  5.66168535e+01,   4.18996669e+01,   2.62486163e+01,
+          1.87281176e+01],
+       [  3.09602450e+01,   2.21444807e+01,   1.37115752e+01,
+          9.77906130e+00],
+       [ -6.18241273e-14,  -2.23931281e-14,  -8.15431343e-15,
+         -5.67041685e-15]])
+#
+#    avp = np.array(
+#      [[  7.25979052e+01,   6.65166314e+01,   5.89096834e+01,
+#          4.94554633e+01,   3.79564622e+01,   2.66323138e+01,
+#          2.50358034e+01,   1.28862133e+01,   4.44927613e+00,
+#          1.18311566e+00,   8.09339892e-01,   5.26895921e-02]])
+    settle = np.array(
+    [[   3.8496919 ,   98.88619572,  139.84619549,  171.27505923,
+        197.75770538,  221.03013705,  241.9290118 ,  260.91094338,
+        278.25424995,  294.1490242 ,  308.73922326,  322.14274325,
+        334.46119179,  345.78480236,  356.19504202,  365.76611184]])
+
+    for impl in ["vectorized"]:
+        for dT in [10]:
+            a = Speccon1dVR(reader + "\n" +
+                            "implementation = '%s'" % impl + "\n" +
+                            "dT = %s" % dT)
+
+            a.make_all()
+
+#            plt.clf()
+#            plt.figure()
+#            plt.plot(por, z,'b-*', label='expected')
+#            plt.plot(a.por, z, 'r-+', label='calculated')
+#            plt.legend()
+##
+##
+#            plt.figure()
+#            plt.plot(t, settle[0],'b-*', label='expected')
+#            plt.plot(t, a.set[0], 'r-+', label='calculated')
+#            legend=plt.legend()
+#            legend.draggable()
+##            plt.legend.DraggableLegend()
+##            plt.figure()
+##            plt.plot(t, avp[0],'b-*',  label='expected')
+##            plt.plot(t, a.avp[0], 'r-+', label='calculated')
+##            plt.legend()
+#            plt.show()
+
+            assert_allclose(a.por, por, atol=1e-1,
+                            err_msg = ("Fail. test_zhuandyin2012_drn0_kv_mv_non_linear_BC, por, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+#            assert_allclose(a.avp, avp, atol=5,
+#                            err_msg = ("Fail. test_zhuandyin2012_drn0_kv_mv_non_linear_BC, avp, "
+#                                "implementation='%s', dT=%s" % (impl, dT)))
+            assert_allclose(a.set, settle, atol=2,
+                            err_msg = ("Fail. test_zhuandyin2012_drn0_kv_mv_non_linear_BC, set, "
+                                "implementation='%s', dT=%s" % (impl, dT)))
+
+
 if __name__ == '__main__':
 #    import nose
 #    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
@@ -3449,4 +3640,5 @@ if __name__ == '__main__':
 #    test_zhuandyin2012_drn0_kv_linear_mv_linear()
 #    test_zhuandyin2012_drn1_kv_linear_mv_linear()
 #    test_zhuandyin2012_drn0_kv_mv_non_linear()
-    test_zhuandyin2012_drn1_kv_mv_non_linear()
+#    test_zhuandyin2012_drn1_kv_mv_non_linear()
+    test_zhuandyin2012_drn0_kv_mv_non_linear_BC()
