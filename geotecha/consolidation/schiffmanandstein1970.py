@@ -22,6 +22,7 @@ from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib
 import geotecha.inputoutput.inputoutput as inputoutput
 import math
 import textwrap
@@ -29,45 +30,11 @@ import scipy.optimize
 import geotecha.piecewise.piecewise_linear_1d as pwise
 
 from geotecha.math.root_finding import find_n_roots
+import time
+import geotecha.plotting.one_d
 
 
-
-def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
-
-    if not por is None:
-        plt.figure()
-        plt.plot(por,z)
-        plt.ylabel('Depth, z')
-        plt.xlabel('Pore pressure')
-        plt.gca().invert_yaxis()
-
-    if not doc is None:
-        plt.figure()
-        plt.plot(t, doc)
-        plt.xlabel('Time, t')
-        plt.ylabel('Degree of consolidation')
-        plt.gca().invert_yaxis()
-        plt.semilogx()
-
-    if not settle is None:
-        plt.figure()
-        plt.plot(t, settle)
-        plt.xlabel('Time, t')
-        plt.ylabel('settlement')
-        plt.gca().invert_yaxis()
-        plt.semilogx()
-
-    if not uavg is None:
-        plt.figure()
-        plt.plot(t, uavg)
-        plt.xlabel('Time, t')
-        plt.ylabel('Average pore pressure')
-#        plt.gca().invert_yaxis()
-        plt.semilogx()
-
-    return
-
-
+from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 
 class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
     """Multi-layer consolidation
@@ -100,11 +67,76 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
     surcharge_vs_time : PolyLine
         piecewise linear variation of surcharge with time
 
+
+    plot_properties : dict of dict, optional
+        dictionary that overrides some of the plot properties.
+        Each member of `plot_properties` will correspond to one of the plots.
+        ==================  ============================================
+        plot_properties    description
+        ==================  ============================================
+        por                 dict of prop to pass to pore pressure plot.
+        avp                 dict of prop to pass to avergae pore
+                            pressure plot.
+        set                 dict of prop to pass to settlement plot.
+        load                dict of prop to pass to pore pressure plot.
+        material            dict of prop to pass to materials plot.
+        ==================  ============================================
+        see blah blah blah for what options can be specified in each plot dict.
+
+    save_data_to_file: True/False, optional
+        If True data will be saved to file.  Default=False
+    save_figures_to_file: True/False
+        If True then figures will be saved to file.  default=False
+    show_figures: True/False, optional
+        If True the after calculation figures will be shown on screen.
+    directory : string, optional
+        path to directory where files should be stored.  Default = None which
+        will use the current working directory.  Note if you keep getting
+        directory does not exist errors then try putting an r before the
+        string definition. i.e. directory = r'C:\\Users\\...'
+    overwrite : True/False, optional
+        If True then exisitng files will be overwritten. default=False.
+    prefix : string, optional
+         filename prefix for all output files default = 'out'
+
+    create_directory: True/Fase, optional
+        If True a new sub-folder named `file_stem` will contain the output
+        files. default=True
+    data_ext: string, optional
+        file extension for data files. default = '.csv'
+    input_ext: string, optional
+        file extension for original and parsed input files. default = ".py"
+    figure_ext: string, optional
+        file extension for figures, default = ".eps".  can be any valid
+        matplotlib option for savefig.
+
+    title: str, optional
+        A title for the input file.  This will appear at the top of data files.
+        Default = None, i.e. no title
+    author: str, optional
+        author of analysis. default= unknown
+
+    show_vert_eigs : True/False, optional
+        if true a vertical eigen value plot will be made.  default= False
+
+    por : array of shape (len(z), len(tpor))
+        pore pressure vs depth at various times.
+    avp : array of shape (1, len(t))
+        averge pore pressure of profile various times.  Only present if t
+        defined. If rcalc defined then pore pressure will be at r=rcalc.
+        If rcalc is not defined then pore pressure is averaged radially
+    set : array of shape (1, len(t))
+        surface settlement at various times.  Only present if t
+        defined. If rcalc defined then settlement will be at r=rcalc.
+        If rcalc is not defined then settlement is averaged radially.
+
     """
 
     def _setup(self):
-        self._attribute_defaults = {'n': 5}
-        self._attributes = 'z t tpor n h kv mv bctop bcbot htop ktop hbot kbot surcharge_vs_time'.split()
+        self._attribute_defaults = {'n': 5,
+                                    'prefix': 'ss1970_',
+                                    'show_vert_eigs': False}
+        self._attributes = 'z t tpor n h kv mv bctop bcbot htop ktop hbot kbot surcharge_vs_time show_vert_eigs'.split()
         self._attributes_that_should_have_same_len_pairs = [
         'h kv'.split(),
         'kv mv'.split(),
@@ -118,6 +150,8 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         self.t = None
         self.tpor = None
         self.n = self._attribute_defaults.get('n', None)
+        self.prefix = self._attribute_defaults.get('prefix', None)
+        self.show_vert_eigs = self._attribute_defaults.get('show_vert_eigs', None)
         self.h = None
         self.kv = None
         self.mv = None
@@ -136,53 +170,6 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
             'z t'.split()]
         self._at_least_one = [['surcharge_vs_time']]
         self._one_implies_others = []
-
-
-#    def __init__(self, reader=None):
-#        self._debug = False
-#        self._setup()
-#
-#        inputoutput.initialize_objects_attributes(self,
-#                                                  self._attributes,
-#                                                  self._attribute_defaults,
-#                                                  not_found_value = None)
-#
-#        self._input_text = None
-#        if not reader is None:
-#            if isinstance(reader, str):
-#                self._input_text = reader
-#            else:
-#                self._input_text = reader.read()
-#
-#            inputoutput.copy_attributes_from_text_to_object(reader,self,
-#                self._attributes, self._attribute_defaults,
-#                not_found_value = None)
-#
-#    def check_all(self):
-#        """perform checks on attributes
-#
-#        Notes
-#        -----
-#
-#        See also
-#        --------
-#        geotecha.inputoutput.inputoutput.check_attribute_combinations
-#        geotecha.inputoutput.inputoutput.check_attribute_is_list
-#        geotecha.inputoutput.inputoutput.check_attribute_PolyLines_have_same_x_limits
-#        geotecha.inputoutput.inputoutput.check_attribute_pairs_have_equal_length
-#
-#        """
-#
-#
-#        inputoutput.check_attribute_combinations(self,
-#                                                 self._zero_or_all,
-#                                                 self._at_least_one,
-#                                                 self._one_implies_others)
-#        inputoutput.check_attribute_is_list(self, self._attributes_that_should_be_lists, force_list=True)
-#        inputoutput.check_attribute_PolyLines_have_same_x_limits(self, attributes=self._attributes_that_should_have_same_x_limits)
-#        inputoutput.check_attribute_pairs_have_equal_length(self, attributes=self._attributes_that_should_have_same_len_pairs)
-#
-#        return
 
 
     def _calc_derived_properties(self):
@@ -234,7 +221,114 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
         self.BC = np.zeros((2 * self.nlayers, 2* self.nlayers), dtype=float)
 
-    def calc(self):
+
+
+    def produce_plots(self):
+        """produce plots of analysis"""
+
+#        geotecha.plotting.one_d.pleasing_defaults()
+
+        matplotlib.rcParams.update({'font.size': 11})
+        matplotlib.rcParams.update({'font.family': 'serif'})
+
+        self._figures=[]
+        #por
+        if not self.tpor is None:
+            f=self._plot_por()
+            title = 'fig_por'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
+
+        if not self.t is None:
+            f=self._plot_avp()
+            title = 'fig_avp'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
+
+            f=self._plot_set()
+            title = 'fig_set'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
+
+
+        if self.show_vert_eigs:
+
+            f = self.plot_characteristic_curve_and_roots(1000)
+            title = 'vertical characteristic curve and eigs'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
+
+    def _plot_por(self):
+        """plot depth vs pore pressure for various times
+
+        """
+
+        t = self.tpor
+        line_labels = ['%.3g' % v for v in t]
+        por_prop = self.plot_properties.pop('por', dict())
+        if not 'xlabel' in por_prop:
+            por_prop['xlabel'] = 'Pore pressure'
+
+        #to do
+        fig_por = geotecha.plotting.one_d.plot_vs_depth(self.por, self.z,
+                                      line_labels=line_labels,
+                                      prop_dict=por_prop)
+        return fig_por
+
+    def _plot_avp(self):
+        """plot average pore pressure of profile"""
+
+
+        t = self.t
+        line_labels = ['%.3g to %.3g' % (0, sum(self.h))]
+
+        avp_prop = self.plot_properties.pop('avp', dict())
+        if not 'ylabel' in avp_prop:
+            avp_prop['ylabel'] = 'Average pore pressure'
+        fig_avp = geotecha.plotting.one_d.plot_vs_time(t, self.avp.T,
+                           line_labels=line_labels,
+                           prop_dict=avp_prop)
+        return fig_avp
+
+    def _plot_set(self):
+        """plot surface settlement"""
+
+
+
+        t = self.t
+        line_labels = ['%.3g to %.3g' % (0, sum(self.h))]
+
+        set_prop = self.plot_properties.pop('set', dict())
+        if not 'ylabel' in set_prop:
+            set_prop['ylabel'] = 'surface settlement'
+        fig_set = geotecha.plotting.one_d.plot_vs_time(t, self.set.T,
+                           line_labels=line_labels,
+                           prop_dict=set_prop)
+        fig_set.gca().invert_yaxis()
+        return fig_set
+
+    def make_all(self):
+
+
+#        self.check_input_attributes()
+        self.make_output()
+
+        if getattr(self, 'save_data_to_file', False):
+            self._save_data()
+        if (getattr(self, 'save_figures_to_file', False) or
+                getattr(self, 'show_figures', False)):
+            self.produce_plots()
+            if getattr(self, 'save_figures_to_file', False):
+                self._save_figures()
+            if getattr(self, 'show_figures', False):
+                plt.show()
+
+
+    def make_output(self):
         """Perform all calculations"""
 
         self._calc_derived_properties()
@@ -246,9 +340,47 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
         self._calc_Am()
 
-        self.calc_por()
 
-        self.calc_settle_and_uavg()
+        header1 = "program: schiffmanandstein1970; geotecha version: {}; author: {}; date: {}\n".format(self.version, self.author, time.strftime('%Y/%m/%d %H:%M:%S'))
+        if not self.title is None:
+            header1 += "{}\n".format(self.title)
+
+
+
+
+        self._grid_data_dicts = []
+        if not self.tpor is None:
+
+            self.calc_por()
+            labels = ['%.3g' % v for v in self.z]
+            d = {'name': '_data_por',
+                 'data': self.por.T,
+                 'row_labels': self.tpor,
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': header1 + 'Pore pressure at depth'}
+            self._grid_data_dicts.append(d)
+
+        if not self.t is None:
+            self.calc_settle_and_avp()
+
+            labels = ['%.3g to %.3g' % (0, sum(self.h))]
+            d = {'name': '_data_avp',
+                 'data': self.avp.T,
+                 'row_labels': self.t,
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': header1 + 'Average pore pressure between depths'}
+            self._grid_data_dicts.append(d)
+
+            labels = ['%.3g to %.3g' % (0, sum(self.h))]
+            d = {'name': '_data_set',
+                 'data': self.avp.T,
+                 'row_labels': self.t,
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': header1 + 'settlement between depths'}
+            self._grid_data_dicts.append(d)
 
         if self._debug:
             print ('beta')
@@ -335,23 +467,23 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
         return beta
 
-    def plot_characteristic_curve_and_roots(self):
+    def plot_characteristic_curve_and_roots(self, npts=400):
 
-        x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, 400)
+        x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, npts)
         y = np.zeros_like(x)
         for i in xrange(len(x)):
             y[i]=self._characteristic_eqn(x[i])
-        plt.gcf().clear()
-        plt.plot(x ,y,'-')
-        plt.plot(self._beta0, np.zeros_like(self._beta0),'ro')
-        plt.ylabel('det(A)')
-        plt.xlabel('beta0')
+#        plt.gcf().clear()
+        fig = plt.figure(figsize=(30,5))
+        ax = fig.add_subplot('111')
+        ax.plot(x ,y,'-', marker='.', markersize=3)
+        ax.plot(self._beta0, np.zeros_like(self._beta0),'ro', markersize=6)
+        ax.set_ylabel('det(A)')
+        ax.set_xlabel('beta0')
 #        plt.gca().set_ylim(-0.1,0.1)
-        plt.grid()
-        plt.show()
-        plt.gcf().clear()
-
-        return
+        ax.grid()
+        fig.tight_layout()
+        return fig
 
     def _calc_Bm_and_Cm(self):
         """calculate the coefficinets Bm and Cm"""
@@ -397,8 +529,8 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         print(Tm)
         return
 
-    def _uavg_integrations(self):
-        """symbolic integration of for uavg average pore pressure
+    def _avp_integrations(self):
+        """symbolic integration of for avp average pore pressure
 
         just used as a step to derive some code"""
 
@@ -409,7 +541,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         Zm = Bm * sympy.cos(beta * z) + Cm * sympy.sin(beta * z)
 
         f = sympy.integrate(Zm, (z, z1, z2))
-        print('summation term for uavg')
+        print('summation term for avp')
         print(f)
 
         return
@@ -523,10 +655,10 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
             Tm += -(-sig1 + sig2)*exp(-beta**2*cv*(t-t1))/(beta**2*cv*(-t1 + t2)) + (-sig1 + sig2)*exp(-beta**2*cv*(t-t2))/(beta**2*cv*(-t1 + t2))
         return Tm
 
-    def calc_settle_and_uavg(self):
+    def calc_settle_and_avp(self):
 
-        self.settle = np.zeros(len(self.t), dtype=float)
-        self.uavg = np.zeros(len(self.t), dtype=float)
+        self.set = np.zeros(len(self.t), dtype=float)
+        self.avp = np.zeros(len(self.t), dtype=float)
         _z2 = self.zlayer
         _z1 = self.zlayer - self.h
 #        print(_z1,_z2)
@@ -534,7 +666,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         cos = math.cos
         for j, t in enumerate(self.t):
             settle=0
-            uavg = 0
+            avp = 0
             q = pwise.pinterp_x_y(self.surcharge_vs_time, t)[0]
             settle = np.sum(self.mv * self.h) * q
 
@@ -553,13 +685,13 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
                     Zm_integral = -Bm*sin(beta * z1)/beta + Bm * sin(beta * z2)/beta + Cm * cos(beta*z1)/beta - Cm*cos(beta*z2)/beta
                     Tm = self._calc_Tm(cv, beta, t)
 
-                    uavg += Zm_integral * Tm * Am
+                    avp += Zm_integral * Tm * Am
 
                     settle -= mv * Zm_integral * Tm * Am
 
 
-            self.settle[j] = settle
-            self.uavg[j] = uavg / self.zlayer[-1]
+            self.set[j] = settle
+            self.avp[j] = avp / self.zlayer[-1]
 
         return
 
@@ -593,108 +725,16 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
                     self.por[k, j] += Am * Zm * Tm
 
+def main():
+    a = GenericInputFileArgParser(obj=SchiffmanAndStein1970,
+                                  methods=[('make_all', [], {})],
+                                 pass_open_file=True)
+
+    a.main()
 
 if __name__ == '__main__':
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+##    nose.runmodule(argv=['nose', '--verbosity=3'])
+    main()
 
-    my_code = textwrap.dedent("""\
-    from geotecha.piecewise.piecewise_linear_1d import PolyLine
-    import numpy as np
-
-    h = np.array([10, 20, 30, 20])
-    cv = np.array([0.0411, 0.1918, 0.0548, 0.0686])
-    mv = np.array([3.07e-3, 1.95e-3, 9.74e-4, 1.95e-3])
-    #kv = np.array([7.89e-6, 2.34e-5, 3.33e-6, 8.35e-6])
-    kv = cv*mv
-
-    bctop = 0
-    #htop = None
-    #ktop = None
-    bcbot = 0
-    #hbot = None
-    #kbot = None
-
-    n = 40
-    surcharge_vs_time = PolyLine([0,0,10], [0,100,100])
-    z = np.concatenate((np.linspace(0, np.sum(h[:1]), 25, endpoint=False),
-                        np.linspace(np.sum(h[:1]), np.sum(h[:2]), 25, endpoint=False),
-                        np.linspace(np.sum(h[:2]), np.sum(h[:3]), 25, endpoint=False),
-                        np.linspace(np.sum(h[:3]), np.sum(h), 25, endpoint=True)))
-
-
-
-    tpor = np.array([740, 2930, 7195], dtype=float)
-
-    t = np.logspace(1, 4.5, 30)
-
-    t = np.array(
-        [1.21957046e+02,   1.61026203e+02,   2.12611233e+02,
-         2.80721620e+02,   3.70651291e+02,   4.89390092e+02,
-         740.0,   8.53167852e+02,   1.12648169e+03,
-         1.48735211e+03,   1.96382800e+03,   2930.0,
-         3.42359796e+03,   4.52035366e+03,   5.96845700e+03,
-         7195.0,   1.04049831e+04,   1.37382380e+04,
-         1.81393069e+04,   2.39502662e+04,   3.16227766e+04])
-
-    #z = np.linspace(0.0, np.sum(h), 100)
-
-    #
-    #z=np.array([0,10])
-    #t = np.linspace(0,10000, 100)
-    ##t=np.array([1])
-    #
-    #h=np.array([1])
-    #kv=np.array([1])
-    #mv=np.array([1])
-    #surcharge_vs_time = PolyLine([0,0,8], [0,100,100])
-    #surcharge_vs_time = PolyLine([0,0.1,8], [0,100,100])
-    #
-    #z = np.linspace(0.0, np.sum(h), 7)
-    ##t = np.linspace(0, 10, 50)
-    #t = np.logspace(-1,1.8,100)
-    """)
-
-    a = SchiffmanAndStein1970(my_code)
-
-
-#
-#    a._calc_derived_properties()
-#    a._find_beta()
-##    a.plot_characteristic_curve_and_roots()
-#    a._make_BC(a._beta0[0])
-#    a._Am_integrations()
-#    a._Tm_integrations()
-#    a._uavg_integrations()
-#    a._debug=True
-
-    a.calc()
-    plot_one_dim_consol(a.z, a.t, por=a.por, uavg=a.uavg, settle=a.settle)
-    plt.show()
-    print(repr(a.z))
-    print('*')
-    print(repr(a.por))
-    print('*')
-    print(repr(a.uavg))
-    print('*')
-    print(repr(a.settle))
-    print('*')
-    print(repr(a.t))
-#    plt.plot(a.por,a.z)
-#    plt.ylabel('Depth, z')
-#    plt.xlabel('Pore pressure')
-#    plt.gca().invert_yaxis()
-#    plt.grid()
-#    plt.show()
-#    x = np.linspace(0, 20, 400)
-##    x = np.array([0.1])
-#    y = np.zeros_like(x)
-#    for i in xrange(len(x)):
-#        y[i]=a._characteristic_eqn(x[i])
-##        print(x[i],y[i])
-#
-#    print(np.sum(y[0:-1] * y[1:] < 0))
-#    plt.plot(x ,y,'-')
-#    plt.plot(a._beta0, np.zeros_like(a._beta0),'ro')
-##    plt.gca().set_ylim(-0.1,0.1)
-#    plt.grid()
-#    plt.show()
-#    print(inputoutput.code_for_explicit_attribute_initialization('z t n h kv mv bctop bcbot htop ktop hbot kbot'.split(), {'n': 5} ))

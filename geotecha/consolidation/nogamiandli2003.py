@@ -231,7 +231,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                                     'vertical_roots_dx': 1e-7,
                                     'vertical_roots_p': 1.05,
                                     'max_iter': 10000,
-                                    'prefix': 'nl2003',
+                                    'prefix': 'nl2003_',
                                     'show_vert_eigs': False}
 
         self._attributes = ('z t tpor nv nh h kv kh mv bctop bcbot '
