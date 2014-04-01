@@ -79,10 +79,10 @@ def zhuandyin2012(z, t, alpha, p, q, drn=0, tpor=None, H = 1, kv0 = 1, mv0 = 0.1
     por: 2d array of float
         pore pressure at depth and time.  ppress is an array of size
         (len(z), len(t)).
-    avp: 1d array of float
-        average pore pressure between depth H and depth Z
+    doc: 1d array of float
+        degree of consolidation based on surface settlement.
     settlement : 1d array of float
-        surface settlement at depth z
+        surface settlement
 
     Notes
     -----
