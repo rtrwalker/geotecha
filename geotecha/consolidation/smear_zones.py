@@ -188,6 +188,8 @@ def _kapx(n, s, kap):
     sx = _sx(n, s)
     kapx =  1 + (kap - 1) / (s - 1) * (sx - 1)
     return kapx
+
+
 def mu_overlapping_linear(n, s, kap):
     """vertical drain mu, for smear zone with linear variation of permeability
     that can overlap
@@ -762,7 +764,7 @@ def mu_piecewise_constant(s, kap):
 
 
     n = s[-1]
-    s_ = np.ones_like(s)
+    s_ = np.ones_like(s , dtype=float)
     s_[1:] = s[:-1]
 
     sumi = 0
@@ -935,6 +937,66 @@ def mu_piecewise_linear(s, kap):
 
     return mu
 
+def mu_well_resistance(kh, qw, n, H, z=None):
+    """additional mu parameter for well resistance
+
+    Parameters
+    ----------
+    kh : float
+        The normalising permeability used in calculating kappa for smear zone
+        calcs.  Usually the undisturbed permeability i.e. the kh in
+        kappa = kh/ks
+    qw : float
+        drain capacity.  qw = kw * pi * rw**2.  make sure the kw used has the
+        same units as kh
+    n : float
+        ratio of drain influence radius  to drain radius (re/rw).
+    H : float
+        length of drainage path.
+    z : float, optional
+        evaluation depth. default = none, in which case the well resistance
+        factor will be averaged.
+
+
+    Returns
+    -------
+    mu : mu parameter for well resistance
+
+    Notes
+    -----
+    The smear zone parameter :math:`\\mu_w` is given by:
+
+
+    .. math:: \\mu_w = \\frac{k_h}{q_w}\\pi z
+                        \\left({2H-z}\\right)
+                        \\left({1-\\frac{1}{n^2}}\\right)
+
+    when :math:`z` is None then the average :math:`\\mu_w` is given by:
+
+    .. math:: \\mu_{waverage} = \\frac{2k_h H^2}{3q_w}\\pi
+                        \\left({1-\\frac{1}{n^2}}\\right)
+
+    where,
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    .. math:: qw = k_w \\pi r_w^2
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`k_h` is the undisturbed horizontal permeability,
+    :math:`k_w` is the drain permeability
+
+    """
+
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    if z is None:
+        mu = 2 * kh * H**2 / 3 / qw * np.pi * (1 - 1 / n**2)
+    else:
+        mu = kh / qw * np.pi * z * (2 * H - z) * (1 - 1 / n**2)
+
+    return mu
 
 def k_parabolic(n, s, kap, si):
     """Permeability distribution for smear zone with parabolic permeability
@@ -1150,6 +1212,719 @@ def k_linear(n, s, kap, si):
     return permeability
 
 
+def k_overlapping_linear(n, s, kap, si):
+    """Permeability distribution for smear zone with overlapping linear permeability
+
+    Normalised with respect to undisturbed permeability.  i.e. if you want the
+    actual permeability then multiply by whatever you used to determine kap.
+
+
+    mu parameter in equal strain radial consolidation equations e.g.
+    u = u0 * exp(-8*Th/mu)
+
+    Parameters
+    ----------
+    n : float
+        ratio of drain influence radius  to drain radius (re/rw).
+    s : float
+        ratio of smear zone radius to  drain radius (rs/rw)
+    kap : float
+        ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks)
+    si : float of ndarray of float
+        normalised radial coordinate(s) at which to calc the permeability
+        i.e. si=ri/rw
+
+    Returns
+    -------
+    permeability : float or ndarray of float
+        normalised permeability (i.e. ki/kh) at the si values.
+
+    Notes
+    -----
+
+
+    """
+
+    def mu_intersecting(n, s, kap):
+        """mu for intersecting smear zones that do not completely overlap"""
+        sx = _sx(n, s)
+        kapx =  _kapx(n, s, kap)
+        mu = mu_linear(n, sx, kapx) * kap / kapx
+        return mu
+
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    if s<1.0:
+        raise ValueError('s must be greater than 1. You have s = {}'.format(
+            s))
+
+    if kap<=0.0:
+        raise ValueError('kap must be greater than 0. You have kap = '
+                '{}'.format(kap))
+
+
+
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= n)')
+
+    if np.isclose(s,1) or np.isclose(kap, 1):
+        permeability = np.ones_like(si, dtype=float)
+    elif (2*n-s <=1):
+        permeability = np.ones_like(si, dtype=float) / kap
+    elif (n>=s):
+        permeability = k_linear(n, s, kap, si)
+    else:
+        sx = _sx(n, s)
+        kapx =  _kapx(n, s, kap)
+
+        smear = (si < sx)
+        permeability = np.ones_like(si, dtype=float)
+        A = (kap - 1) / (s - 1)
+        B = (s - kap) / (s - 1)
+        permeability[smear] = 1/kap*(A*si[smear] + B)
+        permeability[~smear] = 1/kap*kapx#1 / kapx
+
+    return permeability
+
+
+
+
+
+    permeability = np.ones_like(si, dtype=float)
+    if np.isclose(s, kap):
+        permeability[smear] = s_eq_kap_part(n, s, si[smear])
+    else:
+        permeability[smear] = s_neq_kap_part(n, s, kap, si[smear])
+
+    return permeability
+#
+#    n = np.atleast_1d(n)
+#    s = np.atleast_1d(s)
+#    kap = np.atleast_1d(kap)
+#
+#
+#    if len([v for v in [n, s] if v.shape==kap.shape])!=2:
+#        raise ValueError('n, s, and kap must have the same shape.  You have '
+#            'lengths for n, s, kap of {}, {}, {}.'.format(
+#            len(n), len(s), len(kap)))
+#
+#
+#    ideal = np.isclose(s, 1) | np.isclose(kap, 1)
+#    normal = (n >= s) & (~ideal)
+#    all_disturbed = (2*n-s <=1) & (~ideal)
+#    intersecting = ~(ideal | normal | all_disturbed)
+#
+#    mu = np.empty_like(n, dtype=float)
+#
+#    mu[ideal] = mu_ideal(n[ideal])
+#    mu[normal] = mu_linear(n[normal], s[normal], kap[normal])
+#    mu[all_disturbed] = kap[all_disturbed] * mu_ideal(n[all_disturbed])
+#    mu[intersecting] = mu_intersecting(n[intersecting], s[intersecting],
+#                                    kap[intersecting])
+#
+#    if is_array:
+#        return mu
+#    else:
+#        return mu[0]
+
+def u_ideal(n, si, uavg=1, uw=0, muw=0):
+    """Pore pressure at radius for ideal drain with no smear zone
+
+    Parameters
+    ----------
+    n : float
+        ratio of drain influence radius  to drain radius (re/rw).
+    si : float of ndarray of float
+        normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw
+    uavg : float, optional = 1
+        average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1
+    uw : float, optional
+        pore pressure in drain, default = 0.
+    muw : float, optional
+        well resistance mu parameter
+
+    Returns
+    -------
+    u : pore pressure at specified si
+
+
+
+    Notes
+    -----
+    The uavg is calculated from the eta method.  It is not the uavg used when
+    considering the vacuum as an equivalent surcharge.  You would have to do
+    other manipulations for that.
+
+    Noteing that :math:`s_i=r_i/r_w`, the radial pore pressure distribution is given by:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\ln\\left({\\frac{r}{r_w}}\\right)
+                                -\\frac{(r/r_w)^2-1}{2n^2}
+                                +\\mu_w
+                            }\\right]-u_w
+
+
+    where:
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    """
+
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= n)')
+
+
+    mu = mu_ideal(n)
+    term1 = (uavg - uw) / (mu + muw)
+    term2 = log(si) - 1 / (2 * n**2) * (si**2 - 1) + muw
+
+    u = term1 * term2 + uw
+    return u
+
+def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
+    """Pore pressure at radius for constant permeability smear zone
+
+    Parameters
+    ----------
+    n : float
+        ratio of drain influence radius  to drain radius (re/rw).
+    s : float
+        ratio of smear zone radius to  drain radius (rs/rw)
+    kap : float
+        ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks)
+    si : float of ndarray of float
+        normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw
+    uavg : float, optional = 1
+        average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1
+    uw : float, optional
+        pore pressure in drain, default = 0.
+    muw : float, optional
+        well resistance mu parameter
+
+    Returns
+    -------
+    u : pore pressure at specified si
+
+    """
+
+    def constant_part(n, s, kap, si):
+        """u in smear zone with constant permeability i.e from si=1 to si=s"""
+
+        term2 = log(si) - 1 / (2 * n ** 2) * (si ** 2 - 1)
+        u = kap * term2
+        return u
+
+    def undisturbed_part(n, s, kap, si):
+        """u outside of smear zone with constant permeability i.e from si=1 to si=s"""
+
+        term4 = (log(si / s) - 1 / (2 * n ** 2) * (si ** 2 - s ** 2)
+                    + kap * (log(s) - 1 / (2 * n ** 2) * (s ** 2 - 1)))
+
+        u = term4
+        return u
+
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    if s<1.0:
+        raise ValueError('s must be greater than 1. You have s = {}'.format(
+            s))
+
+    if kap<=0.0:
+        raise ValueError('kap must be greater than 0. You have kap = '
+                '{}'.format(kap))
+
+    if s>n:
+        raise ValueError('s must be less than n. You have s = '
+                '{} and n = {}'.format(s, n))
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= n)')
+
+
+    if np.isclose(s, 1) or np.isclose(kap, 1):
+        return u_ideal(n, si, uavg, uw, muw)
+
+
+
+
+    mu = mu_constant(n, s, kap)
+    term1 = (uavg - uw) / (mu + muw)
+    term2 = np.empty_like(si, dtype=float)
+    smear = (si < s)
+    term2[smear] = constant_part(n, s, kap, si[smear])
+    term2[~smear] = undisturbed_part(n, s, kap, si[~smear])
+
+
+    u = term1 * (term2 + muw) + uw
+    return u
+
+
+
+def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
+    """Pore pressure at radius for linear smear zone
+
+    Parameters
+    ----------
+    n : float
+        ratio of drain influence radius  to drain radius (re/rw).
+    s : float
+        ratio of smear zone radius to  drain radius (rs/rw)
+    kap : float
+        ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks)
+    si : float of ndarray of float
+        normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw
+    uavg : float, optional = 1
+        average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1
+    uw : float, optional
+        pore pressure in drain, default = 0.
+    muw : float, optional
+        well resistance mu parameter
+
+    Returns
+    -------
+    u : pore pressure at specified si
+
+    """
+
+    def linear_part(n, s, kap, si):
+        """u in smear zone with linear permeability i.e from si=1 to si=s"""
+
+
+        if np.isclose(s, kap):
+            term2 = -1 / si - 1 / n ** 2 * (si - 1) + 1
+            u = kap * term2
+            return u
+        else:
+            A = (kap - 1) / (s - 1)
+            B = (s - kap) / (s - 1)
+
+            term2 = log(si) - log(A * si + B)
+            term3 = A * si + B - 1 - B * log(A * si + B)
+
+            u = (1 / B * term2 - 1 / (n ** 2 * A ** 2) * term3)
+            return kap * u
+
+        return u
+
+    def undisturbed_part(n, s, kap, si):
+        """u outside of smear zone with linear permeability i.e from si=1 to si=s"""
+
+        if np.isclose(s, kap):
+
+            term2 = log(si / s) - 1 / (2 * n ** 2) * (si ** 2 - s ** 2)
+            term3 = -1 / s - 1 / n ** 2 * (s - 1) + 1
+
+            u = (term2 + kap * term3)
+            return u
+        else:
+            A = (kap - 1) / (s - 1)
+            B = (s - kap) / (s - 1)
+
+            term2 = log(si / s) - 1 / (2 * n ** 2) * (si ** 2 - s ** 2)
+            term3 = (1 / B * log(s / kap) - 1 / (n ** 2 * A ** 2) *
+                        (kap - 1 - B * log(kap)))
+
+            u = (term2 + kap * term3)
+            return u
+
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    if s<1.0:
+        raise ValueError('s must be greater than 1. You have s = {}'.format(
+            s))
+
+    if kap<=0.0:
+        raise ValueError('kap must be greater than 0. You have kap = '
+                '{}'.format(kap))
+
+    if s>n:
+        raise ValueError('s must be less than n. You have s = '
+                '{} and n = {}'.format(s, n))
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= n)')
+
+
+    if np.isclose(s, 1) or np.isclose(kap, 1):
+        return u_ideal(n, si, uavg, uw, muw)
+
+
+    mu = mu_linear(n, s, kap)
+    term1 = (uavg - uw) / (mu + muw)
+    term2 = np.empty_like(si, dtype=float)
+    smear = (si < s)
+    term2[smear] = linear_part(n, s, kap, si[smear])
+    term2[~smear] = undisturbed_part(n, s, kap, si[~smear])
+
+
+    u = term1 * (term2 + muw) + uw
+    return u
+
+def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
+    """Pore pressure at radius for parabolic smear zone
+
+    Parameters
+    ----------
+    n : float
+        ratio of drain influence radius  to drain radius (re/rw).
+    s : float
+        ratio of smear zone radius to  drain radius (rs/rw)
+    kap : float
+        ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks)
+    si : float of ndarray of float
+        normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw
+    uavg : float, optional = 1
+        average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1
+    uw : float, optional
+        pore pressure in drain, default = 0.
+    muw : float, optional
+        well resistance mu parameter
+
+    Returns
+    -------
+    u : pore pressure at specified si
+
+    """
+
+    def parabolic_part(n, s, kap, si):
+        """u in smear zone with parabolic permeability i.e from si=1 to si=s"""
+
+
+        A = sqrt((kap / (kap - 1)))
+        B = s / (s - 1)
+        C = 1 / (s - 1)
+        E = log((A + 1)/(A - 1))
+        F = log((A + B - C * si) / (A + 1))
+        G = log((A - B + C * si) / (A - 1))
+
+        term1 = kap / (kap - 1)
+
+        term2 = 1 / (A ** 2 - B ** 2)
+        term3 = log(si)
+        term4 = -1 / (2 * A)
+        term5 = (A - B) * F + (A + B) * G
+        term6 = term2 * (term3 + term4 * term5)
+
+        term7 = 1 / (2 * n ** 2 * A * C ** 2)
+        term8 = (A + B) * F + (A - B) * G
+        term9 = term7 * term8
+
+        u = term1 * (term6 + term9)
+        return u
+
+    def undisturbed_part(n, s, kap, si):
+        """u outside of smear zone with parabolic permeability i.e from si=1 to si=s"""
+
+        A = sqrt((kap / (kap - 1)))
+        B = s / (s - 1)
+        C = 1 / (s - 1)
+        E = log((A + 1)/(A - 1))
+
+        term1 = 1
+        term2 = log(si / s) - 1 / (2 * n ** 2) * (si ** 2 - s ** 2)
+
+        term3 = 1 / (A ** 2 - B ** 2)
+        term4 = log(s) - 1 / 2 * (log(kap) + B / A * E)
+        term5 = 1 / (2 * n ** 2 * C ** 2)
+        term6 = (log(kap) - B / A * E)
+        term7 = kap / (kap - 1) * (term3 * term4 + term5 * term6)
+
+        u = term1 * (term2 + term7)
+        return u
+
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    if s<1.0:
+        raise ValueError('s must be greater than 1. You have s = {}'.format(
+            s))
+
+    if kap<=0.0:
+        raise ValueError('kap must be greater than 0. You have kap = '
+                '{}'.format(kap))
+
+    if s>n:
+        raise ValueError('s must be less than n. You have s = '
+                '{} and n = {}'.format(s, n))
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= n)')
+
+
+    if np.isclose(s, 1) or np.isclose(kap, 1):
+        return u_ideal(n, si, uavg, uw, muw)
+
+
+
+
+    mu = mu_parabolic(n, s, kap)
+    term1 = (uavg - uw) / (mu + muw)
+    term2 = np.empty_like(si, dtype=float)
+    smear = (si < s)
+    term2[smear] = parabolic_part(n, s, kap, si[smear])
+    term2[~smear] = undisturbed_part(n, s, kap, si[~smear])
+
+
+    u = term1 * (term2 + muw) + uw
+    return u
+
+def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0):
+    """Pore pressure at radius for piecewise constant permeability distribution
+
+
+    Parameters
+    ----------
+    s : list or 1d ndarray of float
+        ratio of segment outer radii to drain radius (r_i/r_0). The first value
+        of s should be greater than 1, i.e. the first value should be s_1;
+        s_0=1 at the drain soil interface is implied
+    kap : list or ndarray of float
+        ratio of undisturbed horizontal permeability to permeability in each
+        segment kh/khi
+    si : float of ndarray of float
+        normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw
+    uavg : float, optional = 1
+        average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1
+    uw : float, optional
+        pore pressure in drain, default = 0.
+    muw : float, optional
+        well resistance mu parameter
+
+    Returns
+    -------
+    u : pore pressure at specified si
+
+
+    """
+
+
+    s = np.atleast_1d(s)
+    kap = np.atleast_1d(kap)
+
+    if len(s)!=len(kap):
+        raise ValueError('s and kap must have the same shape.  You have '
+            'lengths for s, kap of {}, {}.'.format(
+            len(s), len(kap)))
+
+    if np.any(s<=1.0):
+        raise ValueError('must have all s>=1. You have s = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(kap<=0.0):
+        raise ValueError('all kap must be greater than 0. You have kap = '
+                '{}'.format(', '.join([str(v) for v in np.atleast_1d(kap)])))
+
+    if np.any(np.diff(s) <= 0):
+        raise ValueError('s must increase left to right you have s = '
+        '{}'.format(', '.join([str(v) for v in np.atleast_1d(s)])))
+
+
+    n = s[-1]
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= s[-1])')
+
+    s_ = np.ones_like(s)
+    s_[1:] = s[:-1]
+
+    u = np.empty_like(si, dtype=float )
+
+    segment = np.searchsorted(s, si)
+
+    mu = mu_piecewise_constant(s, kap)
+
+    term1 = (uavg - uw) / (mu + muw)
+
+    for ii, i in enumerate(segment):
+
+        sumj = 0
+        for j in range(i):
+            sumj += (kap[j] * (log(s[j] / s_[j])
+                    - 0.5 * (s[j] ** 2 / n ** 2 - s_[j] ** 2 / n ** 2)))
+        sumj = sumj / kap[i]
+
+        u[ii] = kap[i] * (
+                log(si[ii] / s_[i])
+                - 0.5 * (si[ii] ** 2 / n ** 2 - s_[i] ** 2 / n ** 2)
+                + sumj
+                ) + muw
+
+    u *= term1
+    u += uw
+    return u
+
+
+def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0):
+    """Pore pressure at radius for piecewise constant permeability distribution
+
+
+    Parameters
+    ----------
+    s : list or 1d ndarray of float
+        ratio of radii to drain radius (r_i/r_0). The first value
+        of s should be 1, i.e. at the drain soil interface
+    kap : list or ndarray of float
+        ratio of undisturbed horizontal permeability to permeability at each
+        value of s.
+    si : float of ndarray of float
+        normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw
+    uavg : float, optional = 1
+        average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1
+    uw : float, optional
+        pore pressure in drain, default = 0.
+    muw : float, optional
+        well resistance mu parameter
+
+    Returns
+    -------
+    u : pore pressure at specified si
+
+
+    """
+
+
+    s = np.atleast_1d(s)
+    kap = np.atleast_1d(kap)
+
+    if len(s)!=len(kap):
+        raise ValueError('s and kap must have the same shape.  You have '
+            'lengths for s, kap of {}, {}.'.format(
+            len(s), len(kap)))
+
+    if np.any(s<1.0):
+        raise ValueError('must have all s>=1. You have s = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(kap<=0.0):
+        raise ValueError('all kap must be greater than 0. You have kap = '
+                '{}'.format(', '.join([str(v) for v in np.atleast_1d(kap)])))
+
+    if np.any(np.diff(s) < 0):
+        raise ValueError('s must increase left to right. you have s = '
+        '{}'.format(', '.join([str(v) for v in np.atleast_1d(s)])))
+
+
+    n = s[-1]
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= s[-1])')
+
+    s_ = np.ones_like(s)
+    s_[1:] = s[:-1]
+
+    u = np.empty_like(si, dtype=float)
+
+    segment = np.searchsorted(s, si)
+    segment[segment==0] = 1 # put si=1 in first segment
+
+    mu = mu_piecewise_linear(s, kap)
+
+    term1 = (uavg - uw) / (mu + muw)
+
+    for ii, i in enumerate(segment):
+
+
+
+        #phi
+        if np.isclose(kap[i-1]/kap[i], 1.0):
+            phi = log(si[ii]/s[i-1]) - (si[ii]**2 - s[i-1]**2)/(2 * n**2)
+        elif np.isclose(kap[i-1]/kap[i], s[i]/s[i-1]):
+            phi = (si[ii]-s[i-1]) * (n**2 - s[i-1]*si[ii]) / (si[ii] * n**2)
+        else:
+            A = (kap[i-1] / kap[i] - 1) / (s[i] - s[i-1])
+            B = (s[i] - s[i-1] * kap[i-1] / kap[i])/ (s[i] - s[i-1])
+            phi = (1/B * log(si[ii]/s[i-1])
+                    + (B/A**2/n**2 - 1/B) * log(A*si[ii] + B)
+                    - (si[ii]-s[i-1])/A/n**2)
+
+        psi = 0
+        for j in range(1, i):
+            if np.isclose(s[j - 1], s[j]):
+                pass
+            elif np.isclose(kap[j-1]/kap[j], 1.0):
+                psi += kap[j-1]*(log(s[j]/s[j-1]) - (s[j]**2 - s[j-1]**2)/(2 * n**2))
+            elif np.isclose(kap[j-1]/kap[j], s[j]/s[j-1]):
+                psi += kap[j-1]*((s[j]-s[j-1]) * (n**2 - s[j-1]*s[j]) / (s[j] * n**2))
+            else:
+                A = (kap[j-1] / kap[j]-1) / (s[j] - s[j-1])
+                B = (s[j] - s[j-1] * kap[j-1] / kap[j])/ (s[j] - s[j-1])
+                psi += kap[j-1]*((1/B * log(s[j]/s[j-1])
+                        + (B/A**2/n**2 - 1/B) * log(A*s[j] + B)
+                        - (s[j]-s[j-1])/A/n**2))
+
+        u[ii]=kap[i-1] * phi + psi + muw
+
+    u *= term1
+    u += uw
+    return u
+
+
+def re_from_drain_spacing(sp, pattern = 'Triangle'):
+    """Calculate drain influence radius from drain spacing
+
+
+    Parameters
+    ----------
+    sp : float
+        distance between drain centers
+
+    pattern : ['Triangle', 'Square'], optional
+        drain installation pattern. default = 'triangle'
+
+    Returns
+    -------
+    re : float
+        drain influence radius
+
+    """
+
+    if np.any(np.atleast_1d(sp) <= 0):
+        raise ValueError('sp must be greater than zero.  '
+                            'You have sp={}'.format(sp))
+
+    if pattern[0].upper()=='T':
+        re = 0.525037567904332 * sp # factor = (3**0.5/2/np.pi)**0.5
+    elif pattern[0].upper()=='S':
+        re = 0.5641895835477563 * sp #factor = 1 / np.pi**0.5
+    else:
+        raise ValueError("pattern must begin with 'T' for triangular "
+                        " or 'S' for square.  You have pattern="
+                        "{}".format(pattern))
+    return re
+
+
+
 class VerticalDrainSmearZone(object):
     """Smear zone around a vertical drain
 
@@ -1195,467 +1970,109 @@ import nose
 from nose.tools.trivial import assert_raises
 from nose.tools.trivial import ok_
 
-class test_mu_ideal(unittest.TestCase):
-    """tests for mu_ideal"""
-
-    def test_ideal(self):
-        assert_allclose(mu_ideal(np.array([5,10,20,50,100])),
-                        [0.936497825, 1.578343528,
-                         2.253865374, 3.163688441,
-                         3.855655749])
-
-    def test_n_less_than_one(self):
-        assert_raises(ValueError, mu_ideal, 0.5)
-
-class test_mu_constant(unittest.TestCase):
-    """tests for mu_constant"""
-
-    def test_ideal(self):
-        assert_allclose(mu_constant(np.array([5,10,20,50,100]),
-                                    np.array([1,1,1,1,1]),
-                                    np.array([5,10,20,50,100])),
-                        [0.936497825, 1.578343528,
-                         2.253865374, 3.163688441,
-                         3.855655749])
-
-    def test_constant(self):
-        assert_allclose(mu_constant(np.array([5,10,20,50,100]),
-                                    np.array([1.5, 2, 1, 4, 8]),
-                                    np.array([1.6, 1, 5, 0.4, 4])),
-                        [1.159679143, 1.578343528,
-                         2.253865374, 2.335174298,
-                         10.07573309])
-
-    def test_n_less_than_one(self):
-        assert_raises(ValueError, mu_constant, 0.5, 2, 5)
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, mu_constant, 50, 0.5, 5)
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, mu_constant, 50, 0.5, -5)
-
-    def test_s_greater_than_n(self):
-        assert_raises(ValueError, mu_constant, 50, 100, 5)
-
-
-class test_mu_linear(unittest.TestCase):
-    """tests for mu_linear"""
-
-    def test_ideal(self):
-        assert_allclose(mu_linear(np.array([5,10,20,50,100]),
-                                    np.array([1,1,1,1,1]),
-                                    np.array([5,10,20,50,100])),
-                        [0.936497825, 1.578343528,
-                         2.253865374, 3.163688441,
-                         3.855655749])
-
-    def test_linear(self):
-        assert_allclose(mu_linear(np.array([5,10,20,50,100]),
-                                    np.array([1.5, 2, 1, 4, 8]),
-                                    np.array([1.6, 1, 5, 4, 4])),
-                        [1.040117086, 1.578343528,
-                         2.253865374, 4.774441621,
-                         6.625207688])
-
-    def test_n_less_than_one(self):
-        assert_raises(ValueError, mu_linear, 0.5, 2, 5)
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, mu_linear, 50, 0.5, 5)
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, mu_linear, 50, 0.5, -5)
-
-    def test_s_greater_than_n(self):
-        assert_raises(ValueError, mu_linear, 50, 100, 5)
-
-    def test_s_n_unequal_len(self):
-        assert_raises(ValueError, mu_linear, [50,40], 100, 5)
-
-class test_mu_overlapping_linear(unittest.TestCase):
-    """tests for mu_overlapping_linear"""
-
-    def test_ideal(self):
-        assert_allclose(mu_overlapping_linear(np.array([5,10,20,50,100]),
-                                    np.array([1,1,1,2,1]),
-                                    np.array([5,10,20,1,100])),
-                        [0.936497825, 1.578343528,
-                         2.253865374, 3.163688441,
-                         3.855655749])
-
-    def test_linear(self):
-        assert_allclose(mu_overlapping_linear(np.array([5,10,20,50,100]),
-                                    np.array([1.5, 2, 1, 4, 8]),
-                                    np.array([1.6, 1, 5, 4, 4])),
-                        [1.040117086, 1.578343528,
-                         2.253865374, 4.774441621,
-                         6.625207688])
-
-    def test_all_disturbed(self):
-        assert_allclose(mu_overlapping_linear(np.array([5,10]),
-                                    np.array([20, 30]),
-                                    np.array([1.6, 1.5,])),
-                        [1.498396521, 2.367515292])
-
-    def test_intersecting(self):
-        assert_allclose(mu_overlapping_linear(np.array([5,10]),
-                                    np.array([7, 12]),
-                                    np.array([1.6, 1.5,])),
-                        [1.387620117, 2.200268994])
-
-    def test_all_at_once(self):
-        assert_allclose(mu_overlapping_linear(
-                                    np.array([5,  10, 10, 10, 100]),
-                                    np.array([1.5, 1, 30, 12, 8]),
-                                    np.array([1.6, 1,1.5,1.5, 1])),
-                        [1.040117086, 1.578343528,
-                         2.367515292, 2.200268994,
-                         3.855655749])
-
-    def test_n_less_than_one(self):
-        assert_raises(ValueError, mu_overlapping_linear, 0.5, 2, 5)
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, mu_overlapping_linear, 50, 0.5, 5)
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, mu_overlapping_linear, 50, 0.5, -5)
-
-
-    def test_s_n_unequal_len(self):
-        assert_raises(ValueError, mu_overlapping_linear, [50,40], 100, 5)
-
-
-class test_mu_parabolic(unittest.TestCase):
-    """tests for mu_parabolic"""
-
-    def test_ideal(self):
-        assert_allclose(mu_parabolic(np.array([5,10,20,50,100]),
-                                    np.array([1,1,1,1,1]),
-                                    np.array([5,10,20,50,100])),
-                        [0.936497825, 1.578343528,
-                         2.253865374, 3.163688441,
-                         3.855655749])
-
-    def test_parabolic(self):
-        assert_allclose(mu_parabolic(np.array([5,10,20,50,100]),
-                                    np.array([1.5, 2, 1, 4, 8]),
-                                    np.array([1.6, 1, 5, 4, 4])),
-                        [1.006231891, 1.578343528,
-                         2.253865374, 4.258523315,
-                         5.834098317])
-
-    def test_n_less_than_one(self):
-        assert_raises(ValueError, mu_parabolic, 0.5, 2, 5)
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, mu_parabolic, 50, 0.5, 5)
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, mu_parabolic, 50, 0.5, -5)
-
-    def test_s_greater_than_n(self):
-        assert_raises(ValueError, mu_parabolic, 50, 100, 5)
-
-    def test_s_n_unequal_len(self):
-        assert_raises(ValueError, mu_parabolic, [50,40], 100, 5)
-
-class test_mu_piecewise_constant(unittest.TestCase):
-    """tests for mu_piecewise_constant"""
-
-    def test_ideal(self):
-        assert_allclose(mu_piecewise_constant(5,
-                                              1),
-                        0.936497825)
-    def test_ideal_multi(self):
-        assert_allclose(mu_piecewise_constant([3,5],
-                                              [1,1]),
-                        0.936497825)
-
-    def test_const(self):
-        assert_allclose(mu_piecewise_constant([1.5, 5],
-                                              [1.6, 1]),
-                        1.159679143)
-
-    def test_const_multi(self):
-        assert_allclose(mu_piecewise_constant([1.3, 1.4, 1.5, 5],
-                                              [1.6, 1.6, 1.6, 1]),
-                        1.159679143)
-
-    def test_const_two_smear_zones(self):
-        assert_allclose(mu_piecewise_constant([1.5, 3, 5,],
-                                              [2, 3, 1.0]),
-                        2.253304564)
-
-    def test_parabolic(self):
-        """piecewise constant approximation of parabolic with n = 30, s=5, kap=2"""
-
-
-        x = np.array(
-        [   1.06779661,  1.13559322,  1.20338983,  1.27118644,
-        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,
-        1.6779661 ,  1.74576271,  1.81355932,  1.88135593,  1.94915254,
-        2.01694915,  2.08474576,  2.15254237,  2.22033898,  2.28813559,
-        2.3559322 ,  2.42372881,  2.49152542,  2.55932203,  2.62711864,
-        2.69491525,  2.76271186,  2.83050847,  2.89830508,  2.96610169,
-        3.03389831,  3.10169492,  3.16949153,  3.23728814,  3.30508475,
-        3.37288136,  3.44067797,  3.50847458,  3.57627119,  3.6440678 ,
-        3.71186441,  3.77966102,  3.84745763,  3.91525424,  3.98305085,
-        4.05084746,  4.11864407,  4.18644068,  4.25423729,  4.3220339 ,
-        4.38983051,  4.45762712,  4.52542373,  4.59322034,  4.66101695,
-        4.72881356,  4.79661017,  4.86440678,  4.93220339,  5., 30       ])
-
-        y = 1.0/np.array(
-        [ 0.5       ,  0.51680552,  0.53332376,  0.54955473,  0.56549842,
-        0.58115484,  0.59652399,  0.61160586,  0.62640046,  0.64090779,
-        0.65512784,  0.66906061,  0.68270612,  0.69606435,  0.70913531,
-        0.72191899,  0.7344154 ,  0.74662453,  0.75854639,  0.77018098,
-        0.7815283 ,  0.79258834,  0.8033611 ,  0.8138466 ,  0.82404481,
-        0.83395576,  0.84357943,  0.85291583,  0.86196495,  0.8707268 ,
-        0.87920138,  0.88738868,  0.89528871,  0.90290147,  0.91022695,
-        0.91726515,  0.92401609,  0.93047975,  0.93665613,  0.94254525,
-        0.94814708,  0.95346165,  0.95848894,  0.96322896,  0.9676817 ,
-        0.97184717,  0.97572537,  0.97931629,  0.98261994,  0.98563631,
-        0.98836541,  0.99080724,  0.99296179,  0.99482907,  0.99640908,
-        0.99770181,  0.99870727,  0.99942545,  0.99985636,  1.        ])
-
-        assert_allclose(mu_piecewise_constant(x,y),
-                        3.2542191564, atol=0.03)
-
-    def test_linear(self):
-        """piecewise constant approximation of linear with n = 30, s=5, kap=2"""
-
-
-        x = np.array(
-        [   1.06779661,  1.13559322,  1.20338983,  1.27118644,
-        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,
-        1.6779661 ,  1.74576271,  1.81355932,  1.88135593,  1.94915254,
-        2.01694915,  2.08474576,  2.15254237,  2.22033898,  2.28813559,
-        2.3559322 ,  2.42372881,  2.49152542,  2.55932203,  2.62711864,
-        2.69491525,  2.76271186,  2.83050847,  2.89830508,  2.96610169,
-        3.03389831,  3.10169492,  3.16949153,  3.23728814,  3.30508475,
-        3.37288136,  3.44067797,  3.50847458,  3.57627119,  3.6440678 ,
-        3.71186441,  3.77966102,  3.84745763,  3.91525424,  3.98305085,
-        4.05084746,  4.11864407,  4.18644068,  4.25423729,  4.3220339 ,
-        4.38983051,  4.45762712,  4.52542373,  4.59322034,  4.66101695,
-        4.72881356,  4.79661017,  4.86440678,  4.93220339,  5., 30       ])
-
-        y = 1.0/np.array(
-        [ 0.5       ,  0.50847458,  0.51694915,  0.52542373,  0.53389831,
-        0.54237288,  0.55084746,  0.55932203,  0.56779661,  0.57627119,
-        0.58474576,  0.59322034,  0.60169492,  0.61016949,  0.61864407,
-        0.62711864,  0.63559322,  0.6440678 ,  0.65254237,  0.66101695,
-        0.66949153,  0.6779661 ,  0.68644068,  0.69491525,  0.70338983,
-        0.71186441,  0.72033898,  0.72881356,  0.73728814,  0.74576271,
-        0.75423729,  0.76271186,  0.77118644,  0.77966102,  0.78813559,
-        0.79661017,  0.80508475,  0.81355932,  0.8220339 ,  0.83050847,
-        0.83898305,  0.84745763,  0.8559322 ,  0.86440678,  0.87288136,
-        0.88135593,  0.88983051,  0.89830508,  0.90677966,  0.91525424,
-        0.92372881,  0.93220339,  0.94067797,  0.94915254,  0.95762712,
-        0.96610169,  0.97457627,  0.98305085,  0.99152542,  1.        ])
-
-        assert_allclose(mu_piecewise_constant(x,y),
-                        3.482736134, atol=0.03)
-
-
-    def test_s_increasing(self):
-        assert_raises(ValueError, mu_piecewise_constant,[1.5,1,2], [1,1,1] )
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, mu_piecewise_constant,[0.5,1,2], [1,1,1] )
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, mu_piecewise_constant,[1.5,1.6,2], [-2,1,1] )
-
-    def test_s_n_unequal_len(self):
-        assert_raises(ValueError, mu_piecewise_constant, [2,4], [1])
-
-class test_mu_piecewise_linear(unittest.TestCase):
-    """tests for mu_piecewise_linear"""
-
-    def test_ideal(self):
-        assert_allclose(mu_piecewise_linear([1, 5],
-                                              [1,1]),
-                        0.936497825)
-    def test_ideal_multi(self):
-        assert_allclose(mu_piecewise_linear([1,3,5],
-                                              [1,1,1]),
-                        0.936497825)
-
-    def test_const(self):
-        assert_allclose(mu_piecewise_linear([1, 1.5, 1.5, 5],
-                                              [1.6, 1.6, 1, 1]),
-                        1.159679143)
-
-    def test_const_multi(self):
-        assert_allclose(mu_piecewise_linear([1.0, 1.3, 1.4, 1.5, 1.5, 5.0],
-                                            [1.6, 1.6, 1.6, 1.6, 1.0, 1.0]),
-                        1.159679143)
-
-    def test_const_two_smear_zones(self):
-        assert_allclose(mu_piecewise_linear([1.0, 1.5, 1.5, 3.0, 3.0, 5.0],
-                                            [2.0, 2.0, 3.0, 3.0, 1.0, 1.0]),
-                        2.253304564)
-
-    def test_parabolic(self):
-        """piecewise constant approximation of parabolic with n = 30, s=5, kap=2"""
-
-
-        x = np.array(
-        [1.,    1.06779661,  1.13559322,  1.20338983,  1.27118644,
-        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,
-        1.6779661 ,  1.74576271,  1.81355932,  1.88135593,  1.94915254,
-        2.01694915,  2.08474576,  2.15254237,  2.22033898,  2.28813559,
-        2.3559322 ,  2.42372881,  2.49152542,  2.55932203,  2.62711864,
-        2.69491525,  2.76271186,  2.83050847,  2.89830508,  2.96610169,
-        3.03389831,  3.10169492,  3.16949153,  3.23728814,  3.30508475,
-        3.37288136,  3.44067797,  3.50847458,  3.57627119,  3.6440678 ,
-        3.71186441,  3.77966102,  3.84745763,  3.91525424,  3.98305085,
-        4.05084746,  4.11864407,  4.18644068,  4.25423729,  4.3220339 ,
-        4.38983051,  4.45762712,  4.52542373,  4.59322034,  4.66101695,
-        4.72881356,  4.79661017,  4.86440678,  4.93220339,  5., 30       ])
-
-        y = 1.0/np.array(
-        [ 0.5       ,  0.51680552,  0.53332376,  0.54955473,  0.56549842,
-        0.58115484,  0.59652399,  0.61160586,  0.62640046,  0.64090779,
-        0.65512784,  0.66906061,  0.68270612,  0.69606435,  0.70913531,
-        0.72191899,  0.7344154 ,  0.74662453,  0.75854639,  0.77018098,
-        0.7815283 ,  0.79258834,  0.8033611 ,  0.8138466 ,  0.82404481,
-        0.83395576,  0.84357943,  0.85291583,  0.86196495,  0.8707268 ,
-        0.87920138,  0.88738868,  0.89528871,  0.90290147,  0.91022695,
-        0.91726515,  0.92401609,  0.93047975,  0.93665613,  0.94254525,
-        0.94814708,  0.95346165,  0.95848894,  0.96322896,  0.9676817 ,
-        0.97184717,  0.97572537,  0.97931629,  0.98261994,  0.98563631,
-        0.98836541,  0.99080724,  0.99296179,  0.99482907,  0.99640908,
-        0.99770181,  0.99870727,  0.99942545,  0.99985636,  1., 1.        ])
-
-        assert_allclose(mu_piecewise_linear(x,y),
-                        3.2542191564, atol=1e-4)
-
-    def test_linear(self):
-        """piecewise linear approximation of linear with n = 30, s=5, kap=2"""
-
-
-        x = np.array(
-        [1.,   1.06779661,  1.13559322,  1.20338983,  1.27118644,
-        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,
-        1.6779661 ,  1.74576271,  1.81355932,  1.88135593,  1.94915254,
-        2.01694915,  2.08474576,  2.15254237,  2.22033898,  2.28813559,
-        2.3559322 ,  2.42372881,  2.49152542,  2.55932203,  2.62711864,
-        2.69491525,  2.76271186,  2.83050847,  2.89830508,  2.96610169,
-        3.03389831,  3.10169492,  3.16949153,  3.23728814,  3.30508475,
-        3.37288136,  3.44067797,  3.50847458,  3.57627119,  3.6440678 ,
-        3.71186441,  3.77966102,  3.84745763,  3.91525424,  3.98305085,
-        4.05084746,  4.11864407,  4.18644068,  4.25423729,  4.3220339 ,
-        4.38983051,  4.45762712,  4.52542373,  4.59322034,  4.66101695,
-        4.72881356,  4.79661017,  4.86440678,  4.93220339,  5., 30       ])
-
-        y = 1.0/np.array(
-        [ 0.5       ,  0.50847458,  0.51694915,  0.52542373,  0.53389831,
-        0.54237288,  0.55084746,  0.55932203,  0.56779661,  0.57627119,
-        0.58474576,  0.59322034,  0.60169492,  0.61016949,  0.61864407,
-        0.62711864,  0.63559322,  0.6440678 ,  0.65254237,  0.66101695,
-        0.66949153,  0.6779661 ,  0.68644068,  0.69491525,  0.70338983,
-        0.71186441,  0.72033898,  0.72881356,  0.73728814,  0.74576271,
-        0.75423729,  0.76271186,  0.77118644,  0.77966102,  0.78813559,
-        0.79661017,  0.80508475,  0.81355932,  0.8220339 ,  0.83050847,
-        0.83898305,  0.84745763,  0.8559322 ,  0.86440678,  0.87288136,
-        0.88135593,  0.88983051,  0.89830508,  0.90677966,  0.91525424,
-        0.92372881,  0.93220339,  0.94067797,  0.94915254,  0.95762712,
-        0.96610169,  0.97457627,  0.98305085,  0.99152542,  1., 1.        ])
-
-        assert_allclose(mu_piecewise_linear(x,y),
-                        3.482736134, atol=1e-8)
-
-
-    def test_s_increasing(self):
-        assert_raises(ValueError, mu_piecewise_linear,[1.5,1,2], [1,1,1] )
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, mu_piecewise_linear,[0.5,1,2], [1,1,1] )
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, mu_piecewise_linear,[1.5,1.6,2], [-2,1,1] )
-
-    def test_s_n_unequal_len(self):
-        assert_raises(ValueError, mu_piecewise_linear, [2,4], [1])
-
-    def test_first_s_not_one(self):
-        assert_raises(ValueError, mu_piecewise_linear,[1.1,1.6,2], [1,1,1])
-
-class test_k_parabolic(unittest.TestCase):
-    """tests for k_parabolic"""
-
-    def test_ideal(self):
-        assert_allclose(k_parabolic(20,1,2,[4,6,7]),
-                        [1,1,1])
-    def test_ideal2(self):
-        assert_allclose(k_parabolic(20,2,1,[4,6,7]),
-                        [1,1,1])
-    def test_within_smear_zone(self):
-        assert_allclose(k_parabolic(30, 5, 2, [1, 1.13559322]),
-                        [0.5, 0.53332376])
-    def test_outside_smear_zone(self):
-        assert_allclose(k_parabolic(30, 5, 2, [5, 8]),
-                        [1, 1])
-    def test_n_less_than_one(self):
-        assert_raises(ValueError, k_parabolic, 0.5, 2, 5, 1)
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, k_parabolic, 50, 0.5, 5, 1)
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, k_parabolic, 50, 0.5, -5,1)
-
-    def test_s_greater_than_n(self):
-        assert_raises(ValueError, k_parabolic, 50, 100, 5, 1)
-
-    def test_si_greater_than_n(self):
-        assert_raises(ValueError, k_parabolic, 50, 5, 5, 100)
-
-    def test_si_less_than_1(self):
-        assert_raises(ValueError, k_parabolic, 50, 5, 5, 0.5)
-
-class test_k_linear(unittest.TestCase):
-    """tests for k_linear"""
-
-    def test_ideal(self):
-        assert_allclose(k_linear(20,1,2,[4,6,7]),
-                        [1,1,1])
-    def test_ideal2(self):
-        assert_allclose(k_linear(20,2,1,[4,6,7]),
-                        [1,1,1])
-    def test_within_smear_zone(self):
-        assert_allclose(k_linear(30, 5, 2, [1, 1.13559322]),
-                        [0.5, 0.51694915])
-    def test_outside_smear_zone(self):
-        assert_allclose(k_linear(30, 5, 2, [5, 8]),
-                        [1, 1])
-    def test_n_less_than_one(self):
-        assert_raises(ValueError, k_linear, 0.5, 2, 5, 1)
-
-    def test_s_less_than_one(self):
-        assert_raises(ValueError, k_linear, 50, 0.5, 5, 1)
-
-    def test_kap_less_than_zero(self):
-        assert_raises(ValueError, k_linear, 50, 0.5, -5,1)
-
-    def test_s_greater_than_n(self):
-        assert_raises(ValueError, k_linear, 50, 100, 5, 1)
-
-    def test_si_greater_than_n(self):
-        assert_raises(ValueError, k_linear, 50, 5, 5, 100)
-
-    def test_si_less_than_1(self):
-        assert_raises(ValueError, k_linear, 50, 5, 5, 0.5)
 
 
 #scratch()
 def scratch():
     """scratch
 
-    The smear zone parameter :math:`\\mu` is given by:
+    Noteing that :math:`s_i=r/r_w`, the pore pressure in the undisturbed
+    zone is given by:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\ln\\left({\\frac{r/r_w}{s}}\\right)
+                                -\\frac{1}{2n^2}
+                                    \\left({\\frac{r^2}{r_w^2}-s^2}\\right)
+                                +A^2\\left[{\\frac{1}{A^2-B^2}
+                                    \\left({\\ln\\left({s}\\right)-
+                                        \\frac{1}{2}
+                                        \\left\\{{\\ln\\left({\\kappa}\\right)
+                                        +\\frac{BE}{A}}\\right\\}}\\right)
+                                    }\\right]
+                                +\\frac{1}{2n^2C^2}
+                                    \\left\\{{\\ln\\left({\\kappa}\\right)
+                                        -\\frac{BE}{A}}\\right\\}
+                                +\\mu_w
+                            }\\right]-u_w
+
+    The pore pressure in the smear zone is given by:
+
+    .. math:: u'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            A^2\\left[{
+                                \\frac{1}{A^2-B^2}
+                                \\left[{
+                                    \\ln\\left({r/r_w}\\right)}
+                                    -\\frac{1}{2A}
+                                        \\left\\{{\\left({A-B}\\right)F
+                                        +\\left({A+B}\\right)G}
+                                        \\right\\}
+                                \\right]
+                                +\\frac{1}{2n^2AC^2}
+                                \\left\\{{\\left({A+B}\\right)F
+                                    +\\left({A-B}\\right)G}
+                                \\right\\}
+                            +\\mu_w}\\right]-u_w
+
+    where,
+
+    ..math
+
+
+
+    #################################
+
+    Noteing that :math:`s_i=r/r_w`, the radial pore pressure distribution is given by:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            A^2\\left[{
+                                \\frac{1}{A^2-B^2}
+                                \\left[{
+                                    \\ln\\left({r/r_w}\\right)}
+                                    -\\frac{1}{2A}
+                                        \\left\\{{\\left({A-B}\\right)F
+                                        +\\left({A+B}\\right)G}
+                                        \\right\\}
+                                \\right]
+                                -\\frac{1}{2n^2AC^2}
+                                \\left\\{{\\left({A+B}\\right)F
+                                +\\left({A-B}\\right)G}
+                                \\right\\}
+
+                            +\\mu_w}\\right]-u_w
+
+
+    where:
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+
+
+    ################
+
+
+
+    The smear zone parameter :math:`\\mu_w` is given by:
+
+
+    .. math:: \\mu_w = \\frac{k_h}{q_w}\\pi z
+                        \\left({2H-z}\\right)
+                        \\left({1-\\frac{1}{n^2}}\\right)
+
+    when :math:`z` is None then the average :math:`\\mu_w` is given by:
+
+    .. math:: \\mu_waverage = \\frac{3k_h H^2}{3q_w}\\pi
+                        \\left({1-\\frac{1}{n^2}}\\right)
+
+    where,
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`k_h` is the undisturbed horizontal permeability
+
+    ##########################################
 
     .. math:: \\mu_X =
                 \\left\\{\\begin{array}{lr}
@@ -1800,6 +2217,7 @@ if __name__ == '__main__':
 
 
     scratch()
+    u_piecewise_constant(10, 1,[1,5,10])
 #    x = np.array(
 #        [1.,   1.06779661,  1.13559322,  1.20338983,  1.27118644,
 #        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,
@@ -1829,24 +2247,81 @@ if __name__ == '__main__':
 #        0.96610169,  0.97457627,  0.98305085,  0.99152542,  1., 1.        ])
 #
 #    mu_piecewise_linear(x,y)
-    mu_overlapping_linear(np.array([5,10]),
-                                    np.array([7, 12]),
-                                    np.array([1.6, 1.5,]))
-    mu_piecewise_linear([1, 5],
-                        [1, 1])
-
-
-
-    n=30
-    s=5
-    kap=2
-    x = np.linspace(1, s, 60)
-    y = k_linear(n, s, kap, x)
-
-#    print(repr(x))
-#    print(repr(y))
-#    plt.plot(x,y, 'o')
+#    mu_overlapping_linear(np.array([5,10]),
+#                                    np.array([7, 12]),
+#                                    np.array([1.6, 1.5,]))
+#    mu_piecewise_linear([1, 5],
+#                        [1, 1])
 #
+#    s=80
+#    n=18
+#    kap=8
+#    x = np.linspace(1,n,50)
+#    y = k_overlapping_linear(n,s, kap, x)
+#    plt.plot(x,y)
+#    plt.gca().grid()
+#    plt.show()
+#
+#    xp = np.array(
+#        [1.,    1.06779661,  1.13559322,  1.20338983,  1.27118644,
+#        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,
+#        1.6779661 ,  1.74576271,  1.81355932,  1.88135593,  1.94915254,
+#        2.01694915,  2.08474576,  2.15254237,  2.22033898,  2.28813559,
+#        2.3559322 ,  2.42372881,  2.49152542,  2.55932203,  2.62711864,
+#        2.69491525,  2.76271186,  2.83050847,  2.89830508,  2.96610169,
+#        3.03389831,  3.10169492,  3.16949153,  3.23728814,  3.30508475,
+#        3.37288136,  3.44067797,  3.50847458,  3.57627119,  3.6440678 ,
+#        3.71186441,  3.77966102,  3.84745763,  3.91525424,  3.98305085,
+#        4.05084746,  4.11864407,  4.18644068,  4.25423729,  4.3220339 ,
+#        4.38983051,  4.45762712,  4.52542373,  4.59322034,  4.66101695,
+#        4.72881356,  4.79661017,  4.86440678,  4.93220339,  5., 30       ])
+#
+#    yp = 1.0/np.array(
+#        [ 0.5       ,  0.51680552,  0.53332376,  0.54955473,  0.56549842,
+#        0.58115484,  0.59652399,  0.61160586,  0.62640046,  0.64090779,
+#        0.65512784,  0.66906061,  0.68270612,  0.69606435,  0.70913531,
+#        0.72191899,  0.7344154 ,  0.74662453,  0.75854639,  0.77018098,
+#        0.7815283 ,  0.79258834,  0.8033611 ,  0.8138466 ,  0.82404481,
+#        0.83395576,  0.84357943,  0.85291583,  0.86196495,  0.8707268 ,
+#        0.87920138,  0.88738868,  0.89528871,  0.90290147,  0.91022695,
+#        0.91726515,  0.92401609,  0.93047975,  0.93665613,  0.94254525,
+#        0.94814708,  0.95346165,  0.95848894,  0.96322896,  0.9676817 ,
+#        0.97184717,  0.97572537,  0.97931629,  0.98261994,  0.98563631,
+#        0.98836541,  0.99080724,  0.99296179,  0.99482907,  0.99640908,
+#        0.99770181,  0.99870727,  0.99942545,  0.99985636,  1., 1.        ])
+#
+#
+#
+#    n=30
+#    s=5
+#    kap=2
+#    muw=0
+#    uw=-0.2
+#    x = np.linspace(1, s, 60)
+#    y = k_linear(n, s, kap, x)
+#
+#    x = np.linspace(1, n, 400)
+#    y = u_ideal(n,x, uw=uw,muw=muw)
+#    y2 = u_parabolic(n,s,kap,x, uw=uw,muw=muw)
+#    y3 = u_linear(n,s,kap,x, uw=uw,muw=muw)
+#    y4 = u_constant(n,s,kap,x, uw=uw,muw=muw)
+#    y5 = u_piecewise_constant([s,n], [kap,1],x, uw=uw,muw=muw)
+##    y6 = u_piecewise_linear([1,s,s,n], [kap,kap,1,1], x, uw=uw,muw=muw)
+##
+##    y7 = u_piecewise_linear([1,s,n], [kap,1,1], x, uw=uw,muw=muw)
+##    y8 = u_piecewise_linear(xp, yp, x, uw=uw,muw=muw)
+##    print(repr(x))
+##    print(repr(y))
+#    plt.plot(x,y, '-',label='ideal')
+#    plt.plot(x, y2, '--',label='para')
+#    plt.plot(x, y3, dashes=[5,2,2,2],label='lin')
+#    plt.plot(x, y4, dashes=[8,2],label='const')
+#    plt.plot(x, y5,'+',ms=2, label='pwisec')
+##    plt.plot(x, y6,'o',ms=3, label='pwisel')
+##    plt.plot(x, y7,'^',ms=3, label='pwisel_lin')
+##    plt.plot(x, y8,'^',ms=3, label='pwisel_para')
+#    leg=plt.gca().legend(loc=4)
+#    plt.gca().grid()
 #    plt.show()
 
     mu_piecewise_constant([1.5,5],
