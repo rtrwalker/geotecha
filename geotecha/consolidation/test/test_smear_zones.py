@@ -1043,6 +1043,63 @@ class test_re_from_drain_spacing(unittest.TestCase):
         assert_allclose(re_from_drain_spacing(3, 'sqr'),
                         1.692568751)
 
+class test_back_calc_drain_spacing_from_eta(unittest.TestCase):
+    """tests for back_calc_drain_spacing_from_eta"""
+
+
+    def test_ideal(self):
+        assert_allclose(back_calc_drain_spacing_from_eta(1.0680524125462512, 't', mu_ideal,
+                            0.05, 5, 2, muw=1),
+                            [  1.5       ,   0.78755635,  15.75112704],
+                            atol=1e-4)
+    def test_constant(self):
+        assert_allclose(back_calc_drain_spacing_from_eta(0.71017973670799939, 't', mu_constant,
+                            0.05, 5, 2, muw=1),
+                            [  1.5       ,   0.78755635,  15.75112704],
+                            atol=1e-4)
+    def test_piecewise_constant(self):
+        assert_allclose(back_calc_drain_spacing_from_eta(0.71017973670799939, 't',
+                            mu_piecewise_constant,
+                            0.05, [5, 6], [2, 1], muw=1),
+                            [  1.5       ,   0.78755635,  15.75112704],
+                            atol=1e-4)
+
+    def test_piecewise_linear(self):
+        assert_allclose(back_calc_drain_spacing_from_eta(0.71017973670799939, 't',
+                            mu_piecewise_linear,
+                            0.05, [1,5,5], [2,2, 1], muw=1),
+                            [  1.5       ,   0.78755635,  15.75112704],
+                            atol=1e-4)
+
+    def test_piecewise_constant_square(self):
+        assert_allclose(back_calc_drain_spacing_from_eta(0.60411247160628478, 's',
+                            mu_piecewise_constant,
+                            0.05, [5, 6], [2, 1], muw=1),
+                            [  1.5       ,   0.84628438,  16.92568751],
+                            atol=1e-4)
+
+
+    def test_overlapping_linear(self):
+        assert_allclose(back_calc_drain_spacing_from_eta(0.71017973670799939, 't',
+                            mu_overlapping_linear,
+                            0.05, 5, 2, muw=1),
+                            [  1.61711464,   0.84904594,  16.9809188 ],
+                            atol=1e-4)
+
+    def test_n_falls_below_s(self):
+        assert_raises(ValueError, back_calc_drain_spacing_from_eta, 5, 't',
+                            mu_constant,
+                            0.05, 5, 2, muw=1)
+
+    def test_multipe_s(self):
+        assert_raises(ValueError, back_calc_drain_spacing_from_eta, 1, 't',
+                            mu_constant,
+                            0.05, [5,6], 2, muw=1)
+    def test_multipe_kap(self):
+        assert_raises(ValueError, back_calc_drain_spacing_from_eta, 1, 't',
+                            mu_constant,
+                            0.05, [5,6], 2, muw=1)
+
 
 if __name__ == '__main__':
 

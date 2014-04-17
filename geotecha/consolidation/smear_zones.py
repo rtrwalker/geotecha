@@ -62,6 +62,13 @@ def mu_ideal(n, *args):
 
     :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius
 
+    References
+    ----------
+    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+          Rotterdam-Boston: A.A. Balkema.
+
+
     """
 
     if np.any(n<=1):
@@ -123,6 +130,11 @@ def mu_constant(n, s, kap):
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
 
+    References
+    ----------
+    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+          Rotterdam-Boston: A.A. Balkema.
     """
 
     if np.any(n<=1.0):
@@ -254,6 +266,12 @@ def mu_overlapping_linear(n, s, kap):
 
     mu_ideal :  :math:`\\mu` for ideal drain with no smear zone
 
+    References
+    ----------
+    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+          doi:10.1680/geot.2007.57.5.463.
+
     """
 
     def mu_intersecting(n, s, kap):
@@ -384,6 +402,11 @@ def mu_linear(n, s, kap):
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
 
+    References
+    ----------
+    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+          doi:10.1680/geot.2007.57.5.463.
     """
 
 
@@ -576,6 +599,15 @@ def mu_parabolic(n, s, kap):
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
 
+
+    References
+    ----------
+    ..[1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
+          Consolidation with Parabolic Distribution of Permeability in
+          Smear Zone'. Journal of Geotechnical and Geoenvironmental
+          Engineering 132 (7): 937-41.
+          doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
+
     """
 
 
@@ -742,6 +774,16 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
     horizontal permeability in the ith segment,
     :math:`k_{hi}` is the horizontal
     permeability in the ith segment
+
+    References
+    ----------
+    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    ..[2] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
+          One, Two and Three Dimensions'. Computers and
+          Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
+
 
 
     """
@@ -924,6 +966,18 @@ def mu_piecewise_linear(s, kap, n=None, kap_m=None):
     :math:`k_{hi}` is the horizontal
     permeability at the ith radial point
 
+    References
+    ----------
+    Derived by Rohan Walker in 2011 and 2014.
+    Derivation steps are the same as for mu_piecewise_constant in appendix of
+    [1]_ but permeability is linear in a segemetn as in [2]_.
+
+    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    ..[2] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+          doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -1070,6 +1124,12 @@ def mu_well_resistance(kh, qw, n, H, z=None):
     :math:`k_h` is the undisturbed horizontal permeability,
     :math:`k_w` is the drain permeability
 
+    References
+    ----------
+    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+          Rotterdam-Boston: A.A. Balkema.
+
     """
 
     if n<=1.0:
@@ -1140,6 +1200,15 @@ def k_parabolic(n, s, kap, si):
     :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
+
+
+    References
+    ----------
+    ..[1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
+          Consolidation with Parabolic Distribution of Permeability in
+          Smear Zone'. Journal of Geotechnical and Geoenvironmental
+          Engineering 132 (7): 937-41.
+          doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
 
     """
 
@@ -1243,6 +1312,12 @@ def k_linear(n, s, kap, si):
     :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
+
+    References
+    ----------
+    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+          doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -1373,6 +1448,12 @@ def k_overlapping_linear(n, s, kap, si):
     :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
+
+    References
+    ----------
+    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+          doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -1505,7 +1586,14 @@ def u_ideal(n, si, uavg=1, uw=0, muw=0):
 
     .. math:: n = \\frac{r_e}{r_w}
 
-    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius.
+
+    References
+    ----------
+    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+          Rotterdam-Boston: A.A. Balkema.
+
     """
 
     if n<=1.0:
@@ -1594,6 +1682,13 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
     :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
+
+    References
+    ----------
+    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+          Rotterdam-Boston: A.A. Balkema.
+
     """
 
     def constant_part(n, s, kap, si):
@@ -1748,6 +1843,11 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
 
     If :math:`s=1` or :math:`\\kappa=1` then u_ideal will be used.
 
+    References
+    ----------
+    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+          doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -1937,6 +2037,15 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
     :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
+
+    References
+    ----------
+    ..[1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
+          Consolidation with Parabolic Distribution of Permeability in
+          Smear Zone'. Journal of Geotechnical and Geoenvironmental
+          Engineering 132 (7): 937-41.
+          doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
+
     """
 
     def parabolic_part(n, s, kap, si):
@@ -2093,6 +2202,15 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     horizontal permeability in the ith segment,
     :math:`k_{hi}` is the horizontal
     permeability in the ith segment
+
+    References
+    ----------
+    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    ..[2] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
+          One, Two and Three Dimensions'. Computers and
+          Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
 
     """
 
@@ -2281,6 +2399,19 @@ def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     :math:`k_{hi}` is the horizontal
     permeability at the ith radial point
 
+    References
+    ----------
+    Derived by Rohan Walker in 2011 and 2014.
+    Derivation steps are the same as for mu_piecewise_constant in appendix of
+    [1]_ but permeability is linear in a segemetn as in [2]_.
+
+    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    ..[2] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+          doi:10.1680/geot.2007.57.5.463.
+
     """
 
 
@@ -2381,7 +2512,6 @@ def re_from_drain_spacing(sp, pattern = 'Triangle'):
     ----------
     sp : float
         distance between drain centers
-
     pattern : ['Triangle', 'Square'], optional
         drain installation pattern. default = 'triangle'
 
@@ -2402,6 +2532,13 @@ def re_from_drain_spacing(sp, pattern = 'Triangle'):
                 S_p \\sqrt{\\frac{\\sqrt{3}}{2\\pi}}=S_p\\times 0.525037567
                 & \\textrm{triangular pattern}
                 \\end{array}\\right.
+
+    References
+    ----------
+    Eta method is described in [1]_.
+    ..[1] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
+          One, Two and Three Dimensions'. Computers and
+          Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
 
     """
 
@@ -2459,6 +2596,107 @@ def drain_eta(re, mu_function, *args, **kwargs):
     return eta
 
 
+def back_calc_drain_spacing_from_eta(eta, pattern, mu_function, rw, s, kap, muw=0):
+    """Back calculate the required drain spacing to achieve a given eta
+
+    eta = 2 / re**2 / (mu + muw)
+
+    eta is used in radial consolidation equations u= u0 * exp(-eta*kh/gamw*t)
+
+    Parameters
+    ----------
+    eta : float
+        eta value
+    pattern : ['Triangle', 'Square']
+        drain installation pattern.
+    mu_function : obj
+        the mu_funtion to use. e.g. mu_ideal, mu_constant, mu_linear,
+        mu_overlapping_linear, mu_parabolic, mu_piecewise_constant,
+        mu_piecewise_linear
+    rw : float
+        drain/well radius
+    s : float or 1d array_like of float
+        ratio of smear zone radius to drain radius (rs/rw).  s ican only be
+        a 1d array is using a mu_piecewise function
+    kap : float or 1d array_like of float
+        ratio of undisturbed horizontal permeability to permeability at
+        in smear zone (kh / ks) (often at the drain-soil interface).  Be
+        careful when defining s and kap for mu_piecewise_constant, and
+        mu_piecewise_linear because the last value of kap will be used at
+        the influence drain periphery.  In general the last value of kap
+        should be one, representing the start of the undisturbed zone.
+    muw : float, optional
+        well resistance mu term, default=0
+
+
+    Returns
+    -------
+    sp : float
+        drain spacing to get the required eta value
+    re : float
+        drain influence radius
+    n : float
+        ratio of drain influence radius to drain radius, re/rw
+
+    Notes
+    -----
+    When using mu_piecewise_linear or mu_piecewise_constant only define s and
+    kap up to the start of the undisturbed zone.  re will be varied.
+
+    For anyting other than mu_overlapping_linear do not trust any returned
+    spacing that gives an n value less than the extent of the smear zone.
+    """
+
+    def calc_eta(sp, eta, rw, s, kap, mu_function, pattern, muw=0):
+        """eta from a given spacing value
+
+        used in root finding
+
+        """
+        re = re_from_drain_spacing(sp, pattern)
+        n = re/rw
+
+        if mu_function != mu_ideal:
+            if  n < np.max(s):
+                if mu_function != mu_overlapping_linear:
+                    raise ValueError('In determining required drain '
+                        'spacing, n has fallen '
+                        'below s. s={}, n={}'.format(np.max(s), n))
+
+        if mu_function in [mu_piecewise_constant, mu_piecewise_linear]:
+            eta_ = drain_eta(re, mu_function, s, kap, n = n, muw = muw)
+        else:
+            eta_ = drain_eta(re, mu_function, n, s, kap, muw=muw)
+        return eta_ - eta
+
+    from scipy.optimize import fsolve
+
+
+    if not mu_function in [mu_piecewise_constant, mu_piecewise_linear]:
+        if len(np.atleast_1d(s))>1:
+            raise ValueError('for mu_function={}, you cannot have multiple '
+                'values for s. s={}'.format(mu_function.__name__, s))
+        if len(np.atleast_1d(kap))>1:
+            raise ValueError('for mu_function={}, you cannot have multiple '
+                'values for kap. kap={}'.format(mu_function.__name__, kap))
+
+    x0 = rw * np.max(s) / 0.5 * 2 # this ensures guess is beyond smear zone
+    calc_eta(x0, eta, rw, s, kap, mu_function, pattern, muw )
+    sp = fsolve(calc_eta, x0,
+                args=(eta, rw, s, kap, mu_function, pattern, muw))
+
+    re = re_from_drain_spacing(sp[0], pattern)
+    n = re/rw
+
+    if mu_function != mu_ideal:
+        if  n < np.max(s):
+            if mu_function != mu_overlapping_linear:
+                raise ValueError('calculated spacing results in n<s. s={}, n={}'.format(np.max(s), n))
+    return sp[0], re, n
+
+
+
+
 class VerticalDrainSmearZone(object):
     """Smear zone around a vertical drain
 
@@ -2505,99 +2743,33 @@ from nose.tools.trivial import assert_raises
 from nose.tools.trivial import ok_
 
 
-#
+
 #scratch()
 def scratch():
-    """scratch
-
-    With permeability in the ith segment defined by:
-
-    .. math:: \\frac{k_i}{k_{ref}}= \\frac{1}{\\kappa_{i-1}}
-                    \\left({A_ir/r_w+B_i}\\right)
-
-    .. math:: A_i = \\frac{\\kappa_{i-1}/\\kappa_i-1}{s_i-s_{i-1}}
-
-    .. math:: B_i = \\frac{s_i-s_{i-1}\\kappa_{i-1}/\\kappa_i}{s_i-s_{i-1}}
-
-    The pore pressure in the ith segment is given by:
-
-    .. math:: u_i(s) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
-                            \\left[{
-                            \\sum\\limits_{i=1}^{m}\\kappa_{i-1}\\phi_i
-                            + \\Psi_i
-                            +\\mu_w
-                        }\\right]+u_w
-
-    where,
-
-    .. math:: \\phi_i = \\left\\{
-                            \\begin{array}{lr}
-                            \\ln\\left[{\\frac{s}{s_{i-1}}}\\right]
-                            - \\frac{s^2- s_{i-1}^2}{2n^2}
-                            & \\textrm{for } \\frac{\\kappa_{i-1}}{\\kappa_i}=1 \\\\
-                            \\frac{\\left({s - s_{i-1}}\\right)
-                                \\left({n^2-ss_{i-1}}\\right)}{sn^2}
-                            & \\textrm{for }\\frac{\\kappa_{i-1}}{\\kappa_i}=
-                             \\frac{s_i}{s_{i-1}} \\\\
-                             \\begin{multline}
-                            \\frac{1}{B_i}\\ln\\left[{\\frac{s}{s_{i-1}}}\\right]
-                                +\\ln\\left[{A_is+B_i}\\right]
-                                \\left({\\frac{B_i}{A_i^2n^2}-\\frac{1}{B_i}}\\right)
-                                \\\\-\\frac{s-s_{i-1}}{A_i^2n^2}
-                            \\end{multline}
-                            & \\textrm{otherwise}
-                            \\end{array}\\right.
-
-    .. math:: \\Psi_i = \\sum\\limits_{j=1}^{i-1}\\kappa_{j-1}\\psi_j
-
-    .. math:: \\psi_i = \\left\\{
-                            \\begin{array}{lr}
-                            \\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
-                            - \\frac{s_j^2- s_{j-1}^2}{2n^2}
-                            & \\textrm{for } \\frac{\\kappa_{j-1}}{\\kappa_j}=1 \\\\
-                            \\frac{\\left({s_j - s_{j-1}}\\right)
-                                \\left({n^2-s_js_{j-1}}\\right)}{s_jn^2}
-                            & \\textrm{for }\\frac{\\kappa_{j-1}}{\\kappa_j}=
-                             \\frac{s_j}{s_{j-1}} \\\\
-                             \\begin{multline}
-                            \\frac{1}{B_i}\\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
-                                +\\ln\\left[{\\frac{\\kappa_{j-1}}{\\kappa_j}}\\right]
-                                \\left({\\frac{B_j}{A_j^2n^2}-\\frac{1}{B_j}}\\right)
-                                \\\\-\\frac{s_j-s_{j-1}}{A_j^2n^2}
-                            \\end{multline}
-                            & \\textrm{otherwise}
-                            \\end{array}\\right.
-
-
-
-    and:
-
-    .. math:: n = \\frac{r_m}{r_0}
-
-    .. math:: s_i = \\frac{r_i}{r_0}
-
-    .. math:: \\kappa_i = \\frac{k_h}{k_{ref}}
-
-
-    :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
-    :math:`r_i` is the radius of the ith radial point,
-    :math:`k_{ref}` is a convienient refernce permeability, usually
-    the undisturbed
-    horizontal permeability,
-    :math:`k_{hi}` is the horizontal
-    permeability at the ith radial point
+    """scratch pad for testing latex markup for docstrings
 
    """
     #scratch()
     pass
+
+
 if __name__ == '__main__':
 
+    eta = 5
+    pattern = 't'
+    mu_function = mu_overlapping_linear
+    rw = 0.05
+    s = 5#[5,6]
+    kap = 2#[2,1]
+    muw = 1
+
+    print(back_calc_drain_spacing_from_eta(eta, pattern, mu_function, rw, s, kap, muw))
 #u_constant()
 #k_overlapping_linear(()
 
     scratch()
-    print('lin',u_linear(5,2,3,[1.5,4]))
-    print('pwise', u_piecewise_linear([1,2,5],[3,1,1],[1.5,4]))
+#    print('lin',u_linear(5,2,3,[1.5,4]))
+#    print('pwise', u_piecewise_linear([1,2,5],[3,1,1],[1.5,4]))
 #    x = np.array(
 #        [1.,   1.06779661,  1.13559322,  1.20338983,  1.27118644,
 #        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,
