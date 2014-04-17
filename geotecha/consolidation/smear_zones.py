@@ -60,7 +60,7 @@ def mu_ideal(n, *args):
 
     .. math:: n = \\frac{r_e}{r_w}
 
-    :math:r_w is the drain radius, :math:r_e is the drain influence radius
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius
 
     """
 
@@ -118,9 +118,9 @@ def mu_constant(n, s, kap):
 
     .. math:: \\kappa = \\frac{k_h}{k_s}
 
-    :math:r_w is the drain radius, :math:r_e is the drain influence radius,
-    :math:r_s is the smear zone radius, :math:k_h is the undisturbed
-    horizontal permeability, :math:k_s is the smear zone horizontal
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
 
     """
@@ -251,6 +251,7 @@ def mu_overlapping_linear(n, s, kap):
     See also
     --------
     mu_linear : :math:`\\mu` for non-overlapping smear zones
+
     mu_ideal :  :math:`\\mu` for ideal drain with no smear zone
 
     """
@@ -670,7 +671,7 @@ def mu_parabolic(n, s, kap):
 
 
 
-def mu_piecewise_constant(s, kap):
+def mu_piecewise_constant(s, kap, n=None, kap_m=None):
     """vertical drain mu, smear zone with piecewise constant variation of
     permeability
 
@@ -687,7 +688,12 @@ def mu_piecewise_constant(s, kap):
     kap : list or ndarray of float
         ratio of undisturbed horizontal permeability to permeability in each
         segment kh/khi
-
+    n, kap_m : float, optional
+        if `n` and `kap_m` are given then they will each be appended to `s` and
+        `kap`. This allows the specification of a smear zone separate to the
+        specification of the drain influence radius.  Default=None, i.e. soil
+        permeability is completely described by `s` and `kap`. If n is given
+        but kap_m is None then the last kappa value in kap will be used.
     Returns
     -------
     mu : float
@@ -712,7 +718,7 @@ def mu_piecewise_constant(s, kap):
 
     where,
 
-    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}
+    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}\\kappa_j
                 \\left[{
                         \\ln
                             \\left({
@@ -743,6 +749,19 @@ def mu_piecewise_constant(s, kap):
 
     s = np.atleast_1d(s)
     kap = np.atleast_1d(kap)
+
+    if not n is None:
+        s_temp = np.empty(len(s) + 1, dtype=float)
+        s_temp[:-1] = s
+        s_temp[-1] = n
+        kap_temp = np.empty(len(kap) + 1, dtype=float)
+        kap_temp[:-1] = kap
+        if kap_m is None:
+            kap_temp[-1] = kap[-1]
+        else:
+            kap_temp[-1] = kap_m
+        s = s_temp
+        kap = kap_temp
 
     if len(s)!=len(kap):
         raise ValueError('s and kap must have the same shape.  You have '
@@ -783,7 +802,7 @@ def mu_piecewise_constant(s, kap):
     mu = sumi * n ** 2 / (n ** 2 - 1)
     return mu
 
-def mu_piecewise_linear(s, kap):
+def mu_piecewise_linear(s, kap, n=None, kap_m=None):
     """vertical drain mu, smear zone with piecewise linear variation of
     permeability
 
@@ -799,7 +818,12 @@ def mu_piecewise_linear(s, kap):
     kap : list or ndarray of float
         ratio of undisturbed horizontal permeability to permeability at each
         value of s.
-
+    n, kap_m : float, optional
+        if `n` and `kap_m` are given then they will each be appended to `s` and
+        `kap`. This allows the specification of a smear zone separate to the
+        specification of the drain influence radius.  Default=None, i.e. soil
+        permeability is completely described by `s` and `kap`. If n is given
+        but kap_m is None then the last kappa value in kap will be used.
     Returns
     -------
     mu : float
@@ -807,33 +831,81 @@ def mu_piecewise_linear(s, kap):
 
     Notes
     -----
+    With permeability in the ith segment defined by:
 
-    The smear zone parameter :math:`\\mu` is given by:
+    .. math:: \\frac{k_i}{k_{ref}}= \\frac{1}{\\kappa_{i-1}}
+                    \\left({A_ir/r_w+B_i}\\right)
+
+    .. math:: A_i = \\frac{\\kappa_{i-1}/\\kappa_i-1}{s_i-s_{i-1}}
+
+    .. math:: B_i = \\frac{s_i-s_{i-1}\\kappa_{i-1}/\\kappa_i}{s_i-s_{i-1}}
+
+    the smear zone :math:`\\mu` parameter is given by:
+
+    .. math:: \\mu = \\frac{n^2}{n^2-1}
+                        \\left[{
+                            \\sum\\limits_{i=1}^{m}\\kappa_{i-1}\\theta_i
+                            + \\Psi_i
+                            \\left({
+                                \\frac{s_i^2-s_{i-1}^2}{n^2}
+                            }\\right)
+                            +\\mu_w
+                        }\\right]
+
+    where,
+
+    .. math:: \\theta_i = \\left\\{
+                            \\begin{array}{lr}
+                            \\frac{s_i^2}{n^2}\\ln
+                                \\left[{\\frac{s_i}{s_{i-1}}}\\right]
+                                -\\frac{s_i^2-s_{i-1}^2}{2n^2}
+                                -\\frac{\\left({s_i^2-s_{i-1}^2}\\right)^2}{4n^4}
+                            & \\textrm{for } \\frac{\\kappa_{i-1}}{\\kappa_i}=1 \\\\
+                            \\frac{\\left({s_i^2-s_{i-1}^2}\\right)}{3n^4}
+                                \\left({3n^2-s_{i-1}^2-2s_{i-1}s_i}\\right)
+                            & \\textrm{for }\\frac{\\kappa_{i-1}}{\\kappa_i}=
+                             \\frac{s_i}{s_{i-1}} \\\\
+                             \\begin{multline}
+                            \\frac{s_i}{B_i n^2}\\ln\\left[{
+                                \\frac{\\kappa_i s_i}{\\kappa_{i-1}s_{i-1}}}\\right]
+                            -\\frac{s_i-s_{i-1}}{A_in^2}
+                                \\left({1-\\frac{B_i^2}{A_i^2n^4}}\\right)
+                            \\\\-\\frac{\\left({s_i-s_{i-1}}\\right)^2}{3A_in^2}
+                                \\left({2s_i+s_{i-1}}\\right)
+                            \\\\+\\frac{B_i}{A_i^2 n^4}\\ln\\left[{
+                                \\frac{\\kappa_{i-1}}{\\kappa_i}}\\right]
+                                \\left({1-\\frac{B_i^2}{A_i^2n^2}}\\right)
+                            \\\\+\\frac{B_i}{2A_i^2 n^4}
+                                \\left({
+                                2s_i^2\\ln\\left[{
+                                \\frac{\\kappa_{i-1}}{\\kappa_i}}\\right]
+                                -s_i^2 + s_{i-1}^2
+                                }\\right)
+                            \\end{multline}
+                            & \\textrm{otherwise}
+                            \\end{array}\\right.
+
+    .. math:: \\Psi_i = \\sum\\limits_{j=1}^{i-1}\\kappa_{j-1}\\psi_j
+
+    .. math:: \\psi_i = \\left\\{
+                            \\begin{array}{lr}
+                            \\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
+                            - \\frac{s_j^2- s_{j-1}^2}{2n^2}
+                            & \\textrm{for } \\frac{\\kappa_{j-1}}{\\kappa_j}=1 \\\\
+                            \\frac{\\left({s_j - s_{j-1}}\\right)
+                                \\left({n^2-s_js_{j-1}}\\right)}{s_jn^2}
+                            & \\textrm{for }\\frac{\\kappa_{j-1}}{\\kappa_j}=
+                             \\frac{s_j}{s_{j-1}} \\\\
+                             \\begin{multline}
+                            \\frac{1}{B_i}\\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
+                                +\\ln\\left[{\\frac{\\kappa_{j-1}}{\\kappa_j}}\\right]
+                                \\left({\\frac{B_j}{A_j^2n^2}-\\frac{1}{B_j}}\\right)
+                                \\\\-\\frac{s_j-s_{j-1}}{A_j^2n^2}
+                            \\end{multline}
+                            & \\textrm{otherwise}
+                            \\end{array}\\right.
 
 
-
-#    .. math:: \\mu = \\frac{n^2}{\\left({n^2-1}\\right)}
-#                \\sum\\limits_{i=1}^{m} \\kappa_i
-#                    \\left[{
-#                        \\frac{s_i^2}{n^2}\\ln
-#                            \\left({
-#                                \\frac{s_i}{s_{i-1}}
-#                            }\\right)
-#                        -\\frac{s_i^2-s_{i-1}^2}{2n^2}
-#                        -\\frac{\\left({s_i^2-s_{i-1}^2}\\right)^2}{4n^4}
-#                    }\\right]
-#                    +\\psi_i\\frac{s_i^2-s_{i-1}^2}{n^2}
-#
-#    where,
-#
-#    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}
-#                \\left[{
-#                        \\ln
-#                            \\left({
-#                                \\frac{s_j}{s_{j-1}}
-#                            }\\right)
-#                        -\\frac{s_j^2-s_{j-1}^2}{2n^2}
-#                    }\\right]
 
     and:
 
@@ -841,16 +913,16 @@ def mu_piecewise_linear(s, kap):
 
     .. math:: s_i = \\frac{r_i}{r_0}
 
-    .. math:: \\kappa_i = \\frac{k_h}{k_{hi}}
+    .. math:: \\kappa_i = \\frac{k_h}{k_{ref}}
 
 
     :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
-    :math:`r_i` is the radius at the ith radial point for defining the
-    permeability,
-    :math:`k_h` is the undisturbed
+    :math:`r_i` is the radius of the ith radial point,
+    :math:`k_{ref}` is a convienient refernce permeability, usually
+    the undisturbed
     horizontal permeability,
     :math:`k_{hi}` is the horizontal
-    permeability at the ith radial point for defining permeability
+    permeability at the ith radial point
 
 
     """
@@ -858,6 +930,19 @@ def mu_piecewise_linear(s, kap):
 
     s = np.atleast_1d(s)
     kap = np.atleast_1d(kap)
+
+    if not n is None:
+        s_temp = np.empty(len(s) + 1, dtype=float)
+        s_temp[:-1] = s
+        s_temp[-1] = n
+        kap_temp = np.empty(len(kap) + 1, dtype=float)
+        kap_temp[:-1] = kap
+        if kap_m is None:
+            kap_temp[-1] = kap[-1]
+        else:
+            kap_temp[-1] = kap_m
+        s = s_temp
+        kap = kap_temp
 
     if len(s)!=len(kap):
         raise ValueError('s and kap must have the same shape.  You have '
@@ -973,14 +1058,14 @@ def mu_well_resistance(kh, qw, n, H, z=None):
 
     when :math:`z` is None then the average :math:`\\mu_w` is given by:
 
-    .. math:: \\mu_{waverage} = \\frac{2k_h H^2}{3q_w}\\pi
+    .. math:: \\mu_{w\\textrm{average}} = \\frac{2k_h H^2}{3q_w}\\pi
                         \\left({1-\\frac{1}{n^2}}\\right)
 
     where,
 
     .. math:: n = \\frac{r_e}{r_w}
 
-    .. math:: qw = k_w \\pi r_w^2
+    .. math:: q_w = k_w \\pi r_w^2
     :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
     :math:`k_h` is the undisturbed horizontal permeability,
     :math:`k_w` is the drain permeability
@@ -1035,7 +1120,7 @@ def k_parabolic(n, s, kap, si):
                 \\left({A-B+C\\frac{r}{r_w}}\\right)
                 \\left({A+B-C\\frac{r}{r_w}}\\right)
 
-    where :math:`A`, :math:`B`, :math:`C` and :math:`E` are:
+    where :math:`A`, :math:`B`, :math:`C` are:
 
     .. math:: A=\\sqrt{\\frac{\\kappa}{\\kappa-1}}
 
@@ -1243,6 +1328,51 @@ def k_overlapping_linear(n, s, kap, si):
     Notes
     -----
 
+    When :math:`n>s` the permeability is no different from the linear case.
+
+    When :math:`n\\leq (s+1)/2` then all the soil is disturbed
+    and the permeability everywhere is equal to :math:`1/\\kappa`.
+
+    When :math:`(s+1)/2<n<s` then the smear zones overlap.
+    the permeability for :math:`r/r_w<s_X` is given by:
+
+    .. math:: \\frac{k_h^'\\left({r}\\right)}{k_h}=
+                \\left\\{\\begin{array}{lr}
+                \\frac{1}{\\kappa}
+                            \\left({A\\frac{r}{r_w}+B}\\right)
+                            & s\\neq\\kappa \\\\
+                            \\frac{r}{\\kappa r_w}
+                            & s=\\kappa \\end{array}\\right.
+
+    In the overlapping part, :math:`r/r_w>s_X`, the permeability is given by:
+
+    .. math::  k_h(r)=\\kappa_X/\\kappa
+
+    where :math:`A` and :math:`B` are:
+
+    .. math:: A=\\frac{\\kappa-1}{s-1}
+
+    .. math:: B=\\frac{s-\\kappa}{s-1}
+
+    .. math:: \\kappa_X= 1+\\frac{\\kappa-1}{s-1}\\left({s_X-1}\\right)
+
+    .. math:: s_X = 2n-s
+
+
+
+
+    and:
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    .. math:: s = \\frac{r_s}{r_w}
+
+    .. math:: \\kappa = \\frac{k_h}{k_s}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
+    permeability
 
     """
 
@@ -1368,7 +1498,7 @@ def u_ideal(n, si, uavg=1, uw=0, muw=0):
                                 \\ln\\left({\\frac{r}{r_w}}\\right)
                                 -\\frac{(r/r_w)^2-1}{2n^2}
                                 +\\mu_w
-                            }\\right]-u_w
+                            }\\right]+u_w
 
 
     where:
@@ -1421,6 +1551,49 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
     -------
     u : pore pressure at specified si
 
+    Notes
+    -----
+    The uavg is calculated from the eta method.  It is not the uavg used when
+    considering the vacuum as an equivalent surcharge.  You would have to do
+    other manipulations for that.
+
+    Noteing that :math:`s_i=r_i/r_w`, the radial pore pressure distribution
+    in the smear zone is given by:
+
+    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\kappa\\left({
+                                \\ln\\left({s_i}\\right)
+                                -\\frac{1}{2n^2}\\left({s_i^2-1}\\right)
+                                }\\right)
+                                +\\mu_w
+                            }\\right]+u_w
+
+    The pore pressure in the undisturbed zone is:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\ln\\left({\\frac{s_i}{s}}\\right)
+                                -\\frac{1}{2n^2}\\left({s_i^2-s^2}\\right)
+                                +\\kappa\\left[{
+                                \\ln\\left({s}\\right)
+                                -\\frac{1}{2n^2}\\left({s^2-1}\\right)
+                            }\\right]
+                                +\\mu_w
+                            }\\right]+u_w
+
+        where:
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    .. math:: s = \\frac{r_s}{r_w}
+
+    .. math:: \\kappa = \\frac{k_h}{k_s}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
+    permeability
     """
 
     def constant_part(n, s, kap, si):
@@ -1505,6 +1678,77 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
     -------
     u : pore pressure at specified si
 
+    Notes
+    -----
+    The uavg is calculated from the eta method.  It is not the uavg used when
+    considering the vacuum as an equivalent surcharge.  You would have to do
+    other manipulations for that.
+
+    Noteing that :math:`s_i=r_i/r_w`, the radial pore pressure distribution
+    in the smear zone is given by:
+
+    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\kappa\\left({\\frac{1}{B}\\ln\\left({s_i}\\right)
+                                +\\left({\\frac{B}{A^2n^2}-\\frac{1}{B}}\\right)
+                                \\ln\\left({B+As_i}\\right)
+                                +\\frac{1-s_i}{An^2}
+                                }\\right)
+                                +\\mu_w
+                            }\\right]+u_w
+
+    The pore pressure in the undisturbed zone is:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\ln\\left({\\frac{s_i}{s}}\\right)
+                                -\\frac{s_i^2-s^2}{2n^2}
+                                +\\kappa
+                            \\left[{
+                                \\frac{1}{B}\\ln\\left({s}\\right)
+                                +\\left({\\frac{B}{A^2n^2}-\\frac{1}{B}}\\right)
+                                \\ln\\left({\\kappa}\\right)
+                                +\\frac{1-s}{An^2}
+                            }\\right]
+                                +\\mu_w
+                            }\\right]+u_w
+
+    for the special case where :math:`s=\\kappa` the pore pressure
+    in the undisturbed zone is:
+
+    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                s\\frac{\\left({n^2-s_i}\\right)
+                                    \\left({s_i-1}\\right)}{n^2s_i}
+                                +\\mu_w
+                            }\\right]+u_w
+
+    The pore pressure in the undisturbed zone is:
+
+        .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\ln\\left({\\frac{s_i}{s}}\\right)
+                                +s-1+\\frac{s}{n^2}
+                                -\\frac{s_i^2-s^2}{2n^2}
+                                +\\mu_w
+                            }\\right]+u_w
+
+    where:
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    .. math:: s = \\frac{r_s}{r_w}
+
+    .. math:: \\kappa = \\frac{k_h}{k_s}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
+    permeability
+
+    If :math:`s=1` or :math:`\\kappa=1` then u_ideal will be used.
+
+
     """
 
     def linear_part(n, s, kap, si):
@@ -1542,6 +1786,7 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
             B = (s - kap) / (s - 1)
 
             term2 = log(si / s) - 1 / (2 * n ** 2) * (si ** 2 - s ** 2)
+
             term3 = (1 / B * log(s / kap) - 1 / (n ** 2 * A ** 2) *
                         (kap - 1 - B * log(kap)))
 
@@ -1583,6 +1828,7 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
     u = term1 * (term2 + muw) + uw
     return u
 
+
 def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
     """Pore pressure at radius for parabolic smear zone
 
@@ -1610,6 +1856,87 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
     -------
     u : pore pressure at specified si
 
+    Notes
+    -----
+    The uavg is calculated from the eta method.  It is not the uavg used when
+    considering the vacuum as an equivalent surcharge.  You would have to do
+    other manipulations for that.
+
+    Noteing that :math:`s_i=r_i/r_w`, the radial pore pressure distribution
+    in the smear zone is given by:
+
+    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\frac{\\kappa}{\\kappa-1}\\left\\{{
+                                \\frac{1}{A^2-B^2}
+                                    \\left({
+                                    \\ln\\left({s_i}\\right)
+                                    -\\frac{1}{2A}
+                                        \\left[{
+                                        \\left({A-B}\\right)F
+                                        +\\left({A+B}\\right)G
+                                        }\\right]
+                                    }\\right)
+                                    +\\frac{1}{2n^2AC}
+                                        \\left[{
+                                        \\left({A+B}\\right)F
+                                        +\\left({A-B}\\right)G
+                                        }\\right]
+                                }\\right\\}
+                                +\\mu_w
+                            }\\right]+u_w
+
+    The pore pressure in the undisturbed zone is:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\ln\\left({\\frac{s_i}{s}}\\right)
+                                -\\frac{s_i^2-s^2}{2n^2}
+                                +A^2
+                            \\left[{
+                                \\frac{1}{A^2-B^2}
+                                    \\left({
+                                        \\ln\\left({s}\\right)
+                                        -\\frac{1}{2}\\left[{
+                                            \\ln\\left({\\kappa}\\right)
+                                            +\\frac{BE}{A}}\\right]
+                                    }\\right)
+                                +\\frac{1}{2n^2C^2}
+                                    \\left({\\ln\\left({\\kappa}\\right)
+                                    -\\frac{BE}{A}}\\right)
+                            }\\right]
+                                +\\mu_w
+                            }\\right]+u_w
+
+    where :math:`A`, :math:`B`, :math:`C`, :math:`E`, :math:`F`, and
+    :math:`G`  are:
+
+    .. math:: A=\\sqrt{\\frac{\\kappa}{\\kappa-1}}
+
+    .. math:: B=\\frac{s}{s-1}
+
+    .. math:: C=\\frac{1}{s-1}
+
+    .. math:: E=\\ln\\left({\\frac{A+1}{A-1}}\\right)
+
+    .. math:: F(r/r_w) = \\ln\\left({\\frac{A+B-Cs_i}{A+1}}\\right)
+
+    .. math:: G(r/r_w) = \\ln\\left({\\frac{A-B+Cs_i}{A-1}}\\right)
+
+
+    and:
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    .. math:: s = \\frac{r_s}{r_w}
+
+    .. math:: \\kappa = \\frac{k_h}{k_s}
+
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
+    permeability
     """
 
     def parabolic_part(n, s, kap, si):
@@ -1695,7 +2022,7 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
     u = term1 * (term2 + muw) + uw
     return u
 
-def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0):
+def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     """Pore pressure at radius for piecewise constant permeability distribution
 
 
@@ -1718,17 +2045,73 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0):
         pore pressure in drain, default = 0.
     muw : float, optional
         well resistance mu parameter
+    n, kap_m : float, optional
+        if `n` and `kap_m` are given then they will each be appended to `s` and
+        `kap`. This allows the specification of a smear zone separate to the
+        specification of the drain influence radius.  Default=None, i.e. soil
+        permeability is completely described by `s` and `kap`. If n is given
+        but kap_m is None then the last kappa value in kap will be used.
 
     Returns
     -------
     u : pore pressure at specified si
 
+    Notes
+    -----
+    The pore pressure in the ith segment is given by:
+
+    .. math:: u_i(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\kappa_i\\left({\\ln\\left({\\frac{r}{r_{i-1}}}\\right)
+                                -\\frac{r^2/r_0^2-s_{i-1}^2}{2n^2}}\\right)
+                                +\\psi_i+\\mu_w
+                            }\\right]+u_w
+
+    where,
+
+    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}\\kappa_j
+                \\left[{
+                        \\ln
+                            \\left({
+                                \\frac{s_j}{s_{j-1}}
+                            }\\right)
+                        -\\frac{s_j^2-s_{j-1}^2}{2n^2}
+                    }\\right]
+
+    and:
+
+    .. math:: n = \\frac{r_m}{r_0}
+
+    .. math:: s_i = \\frac{r_i}{r_0}
+
+    .. math:: \\kappa_i = \\frac{k_h}{k_{hi}}
+
+
+    :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
+    :math:`r_i` is the outer radius of the ith segment,
+    :math:`k_h` is the undisturbed
+    horizontal permeability in the ith segment,
+    :math:`k_{hi}` is the horizontal
+    permeability in the ith segment
 
     """
 
 
     s = np.atleast_1d(s)
     kap = np.atleast_1d(kap)
+
+    if not n is None:
+        s_temp = np.empty(len(s) + 1, dtype=float)
+        s_temp[:-1] = s
+        s_temp[-1] = n
+        kap_temp = np.empty(len(kap) + 1, dtype=float)
+        kap_temp[:-1] = kap
+        if kap_m is None:
+            kap_temp[-1] = kap[-1]
+        else:
+            kap_temp[-1] = kap_m
+        s = s_temp
+        kap = kap_temp
 
     if len(s)!=len(kap):
         raise ValueError('s and kap must have the same shape.  You have '
@@ -1746,6 +2129,9 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0):
     if np.any(np.diff(s) <= 0):
         raise ValueError('s must increase left to right you have s = '
         '{}'.format(', '.join([str(v) for v in np.atleast_1d(s)])))
+
+
+
 
 
     n = s[-1]
@@ -1783,7 +2169,7 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0):
     return u
 
 
-def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0):
+def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     """Pore pressure at radius for piecewise constant permeability distribution
 
 
@@ -1805,17 +2191,114 @@ def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0):
         pore pressure in drain, default = 0.
     muw : float, optional
         well resistance mu parameter
+    n, kap_m : float, optional
+        if `n` and `kap_m` are given then they will each be appended to `s` and
+        `kap`. This allows the specification of a smear zone separate to the
+        specification of the drain influence radius.  Default=None, i.e. soil
+        permeability is completely described by `s` and `kap`. If n is given
+        but kap_m is None then the last kappa value in kap will be used.
 
     Returns
     -------
     u : pore pressure at specified si
 
+    Notes
+    -----
+    With permeability in the ith segment defined by:
+
+    .. math:: \\frac{k_i}{k_{ref}}= \\frac{1}{\\kappa_{i-1}}
+                    \\left({A_ir/r_w+B_i}\\right)
+
+    .. math:: A_i = \\frac{\\kappa_{i-1}/\\kappa_i-1}{s_i-s_{i-1}}
+
+    .. math:: B_i = \\frac{s_i-s_{i-1}\\kappa_{i-1}/\\kappa_i}{s_i-s_{i-1}}
+
+    The pore pressure in the ith segment is given by:
+
+    .. math:: u_i(s) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                            \\sum\\limits_{i=1}^{m}\\kappa_{i-1}\\phi_i
+                            + \\Psi_i
+                            +\\mu_w
+                        }\\right]+u_w
+
+    where,
+
+    .. math:: \\phi_i = \\left\\{
+                            \\begin{array}{lr}
+                            \\ln\\left[{\\frac{s}{s_{i-1}}}\\right]
+                            - \\frac{s^2- s_{i-1}^2}{2n^2}
+                            & \\textrm{for } \\frac{\\kappa_{i-1}}{\\kappa_i}=1 \\\\
+                            \\frac{\\left({s - s_{i-1}}\\right)
+                                \\left({n^2-ss_{i-1}}\\right)}{sn^2}
+                            & \\textrm{for }\\frac{\\kappa_{i-1}}{\\kappa_i}=
+                             \\frac{s_i}{s_{i-1}} \\\\
+                             \\begin{multline}
+                            \\frac{1}{B_i}\\ln\\left[{\\frac{s}{s_{i-1}}}\\right]
+                                +\\ln\\left[{A_is+B_i}\\right]
+                                \\left({\\frac{B_i}{A_i^2n^2}-\\frac{1}{B_i}}\\right)
+                                \\\\-\\frac{s-s_{i-1}}{A_i^2n^2}
+                            \\end{multline}
+                            & \\textrm{otherwise}
+                            \\end{array}\\right.
+
+    .. math:: \\Psi_i = \\sum\\limits_{j=1}^{i-1}\\kappa_{j-1}\\psi_j
+
+    .. math:: \\psi_i = \\left\\{
+                            \\begin{array}{lr}
+                            \\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
+                            - \\frac{s_j^2- s_{j-1}^2}{2n^2}
+                            & \\textrm{for } \\frac{\\kappa_{j-1}}{\\kappa_j}=1 \\\\
+                            \\frac{\\left({s_j - s_{j-1}}\\right)
+                                \\left({n^2-s_js_{j-1}}\\right)}{s_jn^2}
+                            & \\textrm{for }\\frac{\\kappa_{j-1}}{\\kappa_j}=
+                             \\frac{s_j}{s_{j-1}} \\\\
+                             \\begin{multline}
+                            \\frac{1}{B_i}\\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
+                                +\\ln\\left[{\\frac{\\kappa_{j-1}}{\\kappa_j}}\\right]
+                                \\left({\\frac{B_j}{A_j^2n^2}-\\frac{1}{B_j}}\\right)
+                                \\\\-\\frac{s_j-s_{j-1}}{A_j^2n^2}
+                            \\end{multline}
+                            & \\textrm{otherwise}
+                            \\end{array}\\right.
+
+
+
+    and:
+
+    .. math:: n = \\frac{r_m}{r_0}
+
+    .. math:: s_i = \\frac{r_i}{r_0}
+
+    .. math:: \\kappa_i = \\frac{k_h}{k_{ref}}
+
+
+    :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
+    :math:`r_i` is the radius of the ith radial point,
+    :math:`k_{ref}` is a convienient refernce permeability, usually
+    the undisturbed
+    horizontal permeability,
+    :math:`k_{hi}` is the horizontal
+    permeability at the ith radial point
 
     """
 
 
     s = np.atleast_1d(s)
     kap = np.atleast_1d(kap)
+
+    if not n is None:
+        s_temp = np.empty(len(s) + 1, dtype=float)
+        s_temp[:-1] = s
+        s_temp[-1] = n
+        kap_temp = np.empty(len(kap) + 1, dtype=float)
+        kap_temp[:-1] = kap
+        if kap_m is None:
+            kap_temp[-1] = kap[-1]
+        else:
+            kap_temp[-1] = kap_m
+        s = s_temp
+        kap = kap_temp
 
     if len(s)!=len(kap):
         raise ValueError('s and kap must have the same shape.  You have '
@@ -1907,7 +2390,21 @@ def re_from_drain_spacing(sp, pattern = 'Triangle'):
     re : float
         drain influence radius
 
+    Notes
+    -----
+
+    The influence radius, :math:`r_e`, is given by:
+
+    .. math:: r_e =
+                \\left\\{\\begin{array}{lr}
+                S_p \\frac{1}{\\sqrt{\\pi}}=S_p\\times 0.564189583
+                & \\textrm{square pattern}\\\\
+                S_p \\sqrt{\\frac{\\sqrt{3}}{2\\pi}}=S_p\\times 0.525037567
+                & \\textrm{triangular pattern}
+                \\end{array}\\right.
+
     """
+
 
     if np.any(np.atleast_1d(sp) <= 0):
         raise ValueError('sp must be greater than zero.  '
@@ -1923,6 +2420,43 @@ def re_from_drain_spacing(sp, pattern = 'Triangle'):
                         "{}".format(pattern))
     return re
 
+def drain_eta(re, mu_function, *args, **kwargs):
+    """Calculate the vertical drain eta parameter for a specific smear zone
+
+    eta = 2 / re**2 / (mu+muw)
+
+    eta is used in radial consolidation equations u= u0 * exp(-eta*kh/gamw*t)
+    Parameters
+    ----------
+    re : float
+        drain influence radius
+    mu_function : obj
+        the mu_funtion to use. e.g. mu_ideal, mu_constant, mu_linear,
+        mu_overlapping_linear, mu_parabolic, mu_piecewise_constant,
+        mu_piecewise_linear
+    muw : float, optional
+        well resistance mu term, default=0
+    *args, *kwargs : various
+        the arguments to pass to the mu_function
+
+    Returns
+    -------
+    eta : float
+        value of eta parameter
+
+    Examples
+    --------
+
+    >>> drain_eta(1.5, mu_ideal, 10)
+    0.56317834043349857
+    >>> drain_eta(1.5, mu_constant, 5, 1.5, 1.6, muw=1)
+    0.41158377241444855
+
+    """
+
+    muw = kwargs.pop('muw', 0)
+    eta = 2 / re**2 / (mu_function(*args, **kwargs)+muw)
+    return eta
 
 
 class VerticalDrainSmearZone(object):
@@ -1971,253 +2505,99 @@ from nose.tools.trivial import assert_raises
 from nose.tools.trivial import ok_
 
 
-
+#
 #scratch()
 def scratch():
     """scratch
 
-    Noteing that :math:`s_i=r/r_w`, the pore pressure in the undisturbed
-    zone is given by:
+    With permeability in the ith segment defined by:
 
-    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+    .. math:: \\frac{k_i}{k_{ref}}= \\frac{1}{\\kappa_{i-1}}
+                    \\left({A_ir/r_w+B_i}\\right)
+
+    .. math:: A_i = \\frac{\\kappa_{i-1}/\\kappa_i-1}{s_i-s_{i-1}}
+
+    .. math:: B_i = \\frac{s_i-s_{i-1}\\kappa_{i-1}/\\kappa_i}{s_i-s_{i-1}}
+
+    The pore pressure in the ith segment is given by:
+
+    .. math:: u_i(s) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
                             \\left[{
-                                \\ln\\left({\\frac{r/r_w}{s}}\\right)
-                                -\\frac{1}{2n^2}
-                                    \\left({\\frac{r^2}{r_w^2}-s^2}\\right)
-                                +A^2\\left[{\\frac{1}{A^2-B^2}
-                                    \\left({\\ln\\left({s}\\right)-
-                                        \\frac{1}{2}
-                                        \\left\\{{\\ln\\left({\\kappa}\\right)
-                                        +\\frac{BE}{A}}\\right\\}}\\right)
-                                    }\\right]
-                                +\\frac{1}{2n^2C^2}
-                                    \\left\\{{\\ln\\left({\\kappa}\\right)
-                                        -\\frac{BE}{A}}\\right\\}
-                                +\\mu_w
-                            }\\right]-u_w
-
-    The pore pressure in the smear zone is given by:
-
-    .. math:: u'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
-                            A^2\\left[{
-                                \\frac{1}{A^2-B^2}
-                                \\left[{
-                                    \\ln\\left({r/r_w}\\right)}
-                                    -\\frac{1}{2A}
-                                        \\left\\{{\\left({A-B}\\right)F
-                                        +\\left({A+B}\\right)G}
-                                        \\right\\}
-                                \\right]
-                                +\\frac{1}{2n^2AC^2}
-                                \\left\\{{\\left({A+B}\\right)F
-                                    +\\left({A-B}\\right)G}
-                                \\right\\}
-                            +\\mu_w}\\right]-u_w
+                            \\sum\\limits_{i=1}^{m}\\kappa_{i-1}\\phi_i
+                            + \\Psi_i
+                            +\\mu_w
+                        }\\right]+u_w
 
     where,
 
-    ..math
+    .. math:: \\phi_i = \\left\\{
+                            \\begin{array}{lr}
+                            \\ln\\left[{\\frac{s}{s_{i-1}}}\\right]
+                            - \\frac{s^2- s_{i-1}^2}{2n^2}
+                            & \\textrm{for } \\frac{\\kappa_{i-1}}{\\kappa_i}=1 \\\\
+                            \\frac{\\left({s - s_{i-1}}\\right)
+                                \\left({n^2-ss_{i-1}}\\right)}{sn^2}
+                            & \\textrm{for }\\frac{\\kappa_{i-1}}{\\kappa_i}=
+                             \\frac{s_i}{s_{i-1}} \\\\
+                             \\begin{multline}
+                            \\frac{1}{B_i}\\ln\\left[{\\frac{s}{s_{i-1}}}\\right]
+                                +\\ln\\left[{A_is+B_i}\\right]
+                                \\left({\\frac{B_i}{A_i^2n^2}-\\frac{1}{B_i}}\\right)
+                                \\\\-\\frac{s-s_{i-1}}{A_i^2n^2}
+                            \\end{multline}
+                            & \\textrm{otherwise}
+                            \\end{array}\\right.
+
+    .. math:: \\Psi_i = \\sum\\limits_{j=1}^{i-1}\\kappa_{j-1}\\psi_j
+
+    .. math:: \\psi_i = \\left\\{
+                            \\begin{array}{lr}
+                            \\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
+                            - \\frac{s_j^2- s_{j-1}^2}{2n^2}
+                            & \\textrm{for } \\frac{\\kappa_{j-1}}{\\kappa_j}=1 \\\\
+                            \\frac{\\left({s_j - s_{j-1}}\\right)
+                                \\left({n^2-s_js_{j-1}}\\right)}{s_jn^2}
+                            & \\textrm{for }\\frac{\\kappa_{j-1}}{\\kappa_j}=
+                             \\frac{s_j}{s_{j-1}} \\\\
+                             \\begin{multline}
+                            \\frac{1}{B_i}\\ln\\left[{\\frac{s_j}{s_{j-1}}}\\right]
+                                +\\ln\\left[{\\frac{\\kappa_{j-1}}{\\kappa_j}}\\right]
+                                \\left({\\frac{B_j}{A_j^2n^2}-\\frac{1}{B_j}}\\right)
+                                \\\\-\\frac{s_j-s_{j-1}}{A_j^2n^2}
+                            \\end{multline}
+                            & \\textrm{otherwise}
+                            \\end{array}\\right.
 
 
-
-    #################################
-
-    Noteing that :math:`s_i=r/r_w`, the radial pore pressure distribution is given by:
-
-    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
-                            A^2\\left[{
-                                \\frac{1}{A^2-B^2}
-                                \\left[{
-                                    \\ln\\left({r/r_w}\\right)}
-                                    -\\frac{1}{2A}
-                                        \\left\\{{\\left({A-B}\\right)F
-                                        +\\left({A+B}\\right)G}
-                                        \\right\\}
-                                \\right]
-                                -\\frac{1}{2n^2AC^2}
-                                \\left\\{{\\left({A+B}\\right)F
-                                +\\left({A-B}\\right)G}
-                                \\right\\}
-
-                            +\\mu_w}\\right]-u_w
-
-
-    where:
-
-    .. math:: n = \\frac{r_e}{r_w}
-
-    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
-
-
-    ################
-
-
-
-    The smear zone parameter :math:`\\mu_w` is given by:
-
-
-    .. math:: \\mu_w = \\frac{k_h}{q_w}\\pi z
-                        \\left({2H-z}\\right)
-                        \\left({1-\\frac{1}{n^2}}\\right)
-
-    when :math:`z` is None then the average :math:`\\mu_w` is given by:
-
-    .. math:: \\mu_waverage = \\frac{3k_h H^2}{3q_w}\\pi
-                        \\left({1-\\frac{1}{n^2}}\\right)
-
-    where,
-
-    .. math:: n = \\frac{r_e}{r_w}
-
-    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
-    :math:`k_h` is the undisturbed horizontal permeability
-
-    ##########################################
-
-    .. math:: \\mu_X =
-                \\left\\{\\begin{array}{lr}
-                    \\mu_L\\left({n,s,\\kappa}\\right) & n\\geq s \\\\
-                    \\frac{\\kappa}{\\kappa_X}\\mu_L
-                        \\left({n, s_X,\\kappa_x}\\right)
-                        & \\frac{s+1}{2}<n<s \\\\
-                    \\frac{\\kappa}{\\kappa_X}\\mu_I
-                        \\left({n}\\right) & n\\leq \\frac{s+1}{2}
-                 \\end{array}\\right.
-
-    where :math:`\\mu_L` is the :math:`\\mu` parameter for non_overlapping
-    smear zones with linear permeability, :math:`\\mu_I` is the :math:`\\mu`
-    parameter for no smear zone, and:
-
-    .. math:: \\kappa_X= 1+\\frac{\\kappa-1}{s-1}\\left({s_X-1}\\right)
-
-    .. math:: s_X = 2n-s
 
     and:
 
-    .. math:: n = \\frac{r_e}{r_w}
+    .. math:: n = \\frac{r_m}{r_0}
 
-    .. math:: s = \\frac{r_s}{r_w}
+    .. math:: s_i = \\frac{r_i}{r_0}
 
-    .. math:: \\kappa = \\frac{k_h}{k_s}
-
-    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
-    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
-    horizontal permeability, :math:`k_s` is the smear zone horizontal
-    permeability
+    .. math:: \\kappa_i = \\frac{k_h}{k_{ref}}
 
 
-    .. math:: \\mu_X =
-                \\left\\{\\begin{array}{lr}
-                    \\mu_L\\left({n,s,\\kappa}\\right) & n\\geq s \\\\
-                    \\frac{\\kappa}{\\kappa_X}\\mu_L\\
-                        left({n, s_X,\\kappa_x}\\right) & n<s \\\\
-                    \\frac{\\kappa}{\\kappa_X}\\mu_I\\
-                        left({n}\\right) & 2n-s\\leq 1
-                 \\end{array}\\right.
-
-
-
-
-
-    .. math:: \\frac{k_h^'\\left({r}\\right)}{k_h}=
-                \\left\\{\\begin{array}{lr}
-                \\frac{1}{\\kappa}
-                            \\left({A\\frac{r}{r_w}+B}\\right)
-                            & s\\neq\\kappa \\\\
-                            \\frac{r}{\\kappa r_w}
-                            & s=\\kappa \\end{array}\\right.
-
-    where :math:`A` and :math:`B` are:
-
-    .. math:: A=\\frac{\\kappa-1}{s-1}
-
-    .. math:: B=\\frac{s-\\kappa}{s-1}
-
-    and:
-
-    .. math:: n = \\frac{r_e}{r_w}
-
-    .. math:: s = \\frac{r_s}{r_w}
-
-    .. math:: \\kappa = \\frac{k_h}{k_s}
-
-    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
-    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
-    horizontal permeability, :math:`k_s` is the smear zone horizontal
-    permeability
-
-
-
-
-    where :math:`A`, :math:`B`, :math:`C` and :math:`E` are:
-
-    .. math:: A=\\sqrt{\\frac{\\kappa}{\\kappa-1}}
-
-    .. math:: B=\\frac{s}{s-1}
-
-    .. math:: C=\\frac{1}{s-1}
-
-    and:
-
-    .. math:: n = \\frac{r_e}{r_w}
-
-    .. math:: s = \\frac{r_s}{r_w}
-
-    .. math:: \\kappa = \\frac{k_h}{k_s}
-
-    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
-    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
-    horizontal permeability, :math:`k_s` is the smear zone horizontal
-    permeability
-
-    The smear zone parameter :math:`\\mu` is given by:
-
-    .. math:: \\mu = \\frac{n^2}{\\left({n^2-1}\\right)}
-                \\sum\\limits_{i=1}^{m} \\kappa_i
-                    \\left[{
-                        \\frac{s_i^2}{n^2}\\ln
-                            \\left({
-                                \\frac{s_i}{s_{i-1}}
-                            }\\right)
-                        -\\frac{s_i^2-s_{i-1}^2}{2n^2}
-                        -\\frac{\\left({s_i^2-s_{i-1}^2}\\right)^2}{4n^4}
-                    }\\right]
-                    +\\psi_i\\frac{s_i^2-s_{i-1}^2}{n^2}
-
-    where,
-
-
-    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}
-                \\left[{
-                        \\ln
-                            \\left({
-                                \\frac{s_j}{s_{j-1}}
-                            }\\right)
-                        -\\frac{s_j^2-s_{j-1}^2}{2n^2}
-                    }\\right]
-
-    and:
-
-    .. math:: n = \\frac{r_e}{r_w}
-
-    .. math:: s_i = \\frac{r_i}{r_w}
-
-    .. math:: \\kappa_i = \\frac{k_h}{k_{hi}}
-
-
-    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
-    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
-    horizontal permeability, :math:`k_s` is the smear zone horizontal
-    permeability
+    :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
+    :math:`r_i` is the radius of the ith radial point,
+    :math:`k_{ref}` is a convienient refernce permeability, usually
+    the undisturbed
+    horizontal permeability,
+    :math:`k_{hi}` is the horizontal
+    permeability at the ith radial point
 
    """
+    #scratch()
     pass
 if __name__ == '__main__':
 
-
+#u_constant()
+#k_overlapping_linear(()
 
     scratch()
-    u_piecewise_constant(10, 1,[1,5,10])
+    print('lin',u_linear(5,2,3,[1.5,4]))
+    print('pwise', u_piecewise_linear([1,2,5],[3,1,1],[1.5,4]))
 #    x = np.array(
 #        [1.,   1.06779661,  1.13559322,  1.20338983,  1.27118644,
 #        1.33898305,  1.40677966,  1.47457627,  1.54237288,  1.61016949,

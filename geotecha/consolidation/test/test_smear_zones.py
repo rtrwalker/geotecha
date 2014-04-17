@@ -264,6 +264,15 @@ class test_mu_piecewise_constant(unittest.TestCase):
                                               [2, 3, 1.0]),
                         2.253304564)
 
+    def test_const_two_smear_zones_n_kap_m(self):
+        assert_allclose(mu_piecewise_constant([1.5, 3],
+                                              [2, 3], n=5, kap_m=1),
+                        2.253304564)
+    def test_const_two_smear_zones_n(self):
+        assert_allclose(mu_piecewise_constant([1.5, 3, 4],
+                                              [2, 3, 1], n=5),
+                        2.253304564)
+
     def test_parabolic(self):
         """piecewise constant approximation of parabolic with n = 30, s=5, kap=2"""
 
@@ -372,6 +381,15 @@ class test_mu_piecewise_linear(unittest.TestCase):
     def test_const_two_smear_zones(self):
         assert_allclose(mu_piecewise_linear([1.0, 1.5, 1.5, 3.0, 3.0, 5.0],
                                             [2.0, 2.0, 3.0, 3.0, 1.0, 1.0]),
+                        2.253304564)
+    def test_const_two_smear_zones_n_kap_m(self):
+        assert_allclose(mu_piecewise_linear([1.0, 1.5, 1.5, 3.0, 3.0],
+                                            [2.0, 2.0, 3.0, 3.0, 1.0], n=5, kap_m=1),
+                        2.253304564)
+
+    def test_const_two_smear_zones_n(self):
+        assert_allclose(mu_piecewise_linear([1.0, 1.5, 1.5, 3.0, 3.0, 4.0],
+                                            [2.0, 2.0, 3.0, 3.0, 1.0, 1.0], n=5),
                         2.253304564)
 
     def test_parabolic(self):
@@ -746,6 +764,16 @@ class test_u_piecewise_constant(unittest.TestCase):
                                               [2, 3, 1.0], 1.6),
                          0.41536586)
 
+    def test_const_two_smear_zones_n_kap_m(self):
+        assert_allclose(u_piecewise_constant([1.5, 3,],
+                                              [2, 3], 1.6, n=5, kap_m=1),
+                         0.41536586)
+
+    def test_const_two_smear_zones_n(self):
+        assert_allclose(u_piecewise_constant([1.5, 3,4],
+                                              [2, 3, 1], 1.6, n=5),
+
+                         0.41536586)
     def test_const_uavg_uw_muw(self):
         assert_allclose(u_piecewise_constant([5,30], [2,1], [2, 10], uavg=10, uw=-3, muw=3),
                         [4.869976  ,  9.28842172])
@@ -872,6 +900,14 @@ class test_u_piecewise_linear(unittest.TestCase):
     def test_const_two_smear_zones(self):
         assert_allclose(u_piecewise_linear([1,1.5,1.5, 3,3, 5],
                                               [2,2,3, 3,1, 1.0], 1.6),
+                         0.41536586)
+    def test_const_two_smear_zones_n_kap_m(self):
+        assert_allclose(u_piecewise_linear([1,1.5,1.5, 3,3,],
+                                              [2,2,3, 3,1,], 1.6,n=5, kap_m=1),
+                         0.41536586)
+    def test_const_two_smear_zones_n(self):
+        assert_allclose(u_piecewise_linear([1,1.5,1.5, 3,3, 4],
+                                              [2,2,3, 3,1, 1.0], 1.6,n=5),
                          0.41536586)
 
     def test_const_uavg_uw_muw(self):
