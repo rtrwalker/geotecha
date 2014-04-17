@@ -50,6 +50,7 @@ from geotecha.consolidation.smear_zones import k_linear
 from geotecha.consolidation.smear_zones import k_overlapping_linear
 from geotecha.consolidation.smear_zones import k_parabolic
 from geotecha.consolidation.smear_zones import re_from_drain_spacing
+from geotecha.consolidation.smear_zones import back_calc_drain_spacing_from_eta
 
 class test_mu_ideal(unittest.TestCase):
     """tests for mu_ideal"""
