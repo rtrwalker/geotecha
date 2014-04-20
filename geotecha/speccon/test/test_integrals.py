@@ -156,15 +156,16 @@ class test_m_from_sin_mx(object):
         """loop through and test m_from_sin_mx cases with numpy.allclose"""
         for fixture,result in self.cases:
             m = m_from_sin_mx(*fixture)
-            check = np.allclose(m, result)
-            msg = """\
-failed m_from_sin_mx.test_cases, case:
-%s
-m:
-%s
-expected:
-%s""" % (fixture, m, result)
-            yield ok_, check, msg
+#            check = np.allclose(m, result)
+#            msg = """\
+#failed m_from_sin_mx.test_cases, case:
+#%s
+#m:
+#%s
+#expected:
+#%s""" % (fixture, m, result)
+            yield a_close, "input=" + str(fixture), m, result
+#            yield ok_, check, msg
 
 
 ### end Method 3
@@ -172,6 +173,10 @@ expected:
 def test_m_from_sin_mx_bad_boundary():
     """m_from_sin_mx fail test, self contained, i = 2, boundary = 1.5"""
     assert_raises(ValueError, m_from_sin_mx , 2, 1.5)
+
+
+def a_close(desc, calculated, expected):
+    assert_allclose(calculated, expected, rtol=1e-7, atol=1e-5)
 
 
 class base_t_ester(object):
@@ -187,6 +192,39 @@ class base_t_ester(object):
         self.prefix = prefix
         self.implementation = None
 
+#    def test_cases(self):
+#        """loop through and test make_fn cases with np.allclose"""
+#
+#        if not self.implementation is None:
+#            for i in self.implementation:
+#                for desc, fixture, result in self.cases:
+#                    fixture['implementation'] = i
+#
+#                    res = self.fn(**fixture)
+#                    check = np.allclose(res, result)
+#                    msg = """\
+#failed test_%s, case: %s
+#%s
+#calculated:
+#%s
+#expected:
+#%s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
+#                    yield ok_, check, msg
+#
+#        else:
+#            for desc, fixture, result in self.cases:
+#                res = self.fn(**fixture)
+#                check = np.allclose(res, result)
+#                msg = """\
+#failed test_%s, case: %s
+#%s
+#calculated:
+#%s
+#expected:
+#%s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
+#                yield ok_, check, msg
+
+
     def test_cases(self):
         """loop through and test make_fn cases with np.allclose"""
 
@@ -194,30 +232,13 @@ class base_t_ester(object):
             for i in self.implementation:
                 for desc, fixture, result in self.cases:
                     fixture['implementation'] = i
-
                     res = self.fn(**fixture)
-                    check = np.allclose(res, result)
-                    msg = """\
-failed test_%s, case: %s
-%s
-calculated:
-%s
-expected:
-%s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
-                    yield ok_, check, msg
-
+                    yield a_close, desc + '-' + i, res, result
         else:
             for desc, fixture, result in self.cases:
                 res = self.fn(**fixture)
-                check = np.allclose(res, result)
-                msg = """\
-failed test_%s, case: %s
-%s
-calculated:
-%s
-expected:
-%s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
-                yield ok_, check, msg
+
+                yield a_close, desc, res, result
 
 
 class test_dim1sin_af_linear(base_t_ester):
@@ -1166,23 +1187,23 @@ class test_dim1sin_a_linear_between(base_t_ester):
 
             ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.1, 0.3], PTIB',
              {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.1, 0.3]},
-             np.array([0.0615495559529622, 0.155881032360824])],
+             np.array([[0.0615495559529622, 0.155881032360824]])],
 
             ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0, 0.4], PTIB',
              {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0, 0.4]},
-             np.array([0.121583557567097, 0.277782033661425])],
+             np.array([[0.121583557567097, 0.277782033661425]])],
 
             ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.5], PTIB',
              {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.2, 0.5]},
-             np.array([0.220181281555903, 0.359261900351956])],
+             np.array([[0.220181281555903, 0.359261900351956]])],
 
             ['3 layers, a linear = 1+x betwn[0,0.4] 0.6+x betw[0.4,0.6] 0.4+x betw[0.6,1], z = [0.2, 0.8], PTIB',
              {'m': self.PTIB, 'at':[1, 1, 1], 'ab':[1.4, 1.2, 1.4],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.2, 0.8]},
-             np.array([0.469837253756176, 0.359386748693161])],
+             np.array([[0.469837253756176, 0.359386748693161]])],
 
             ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.8], PTIB',
              {'m': self.PTIB, 'at':[1, 2, 3], 'ab':[1, 2, 3],'zt':[0,0.4,0.6], 'zb':[0.4,0.6,1], 'z': [0.2, 0.8]},
-             np.array([0.904514325378385, 0.372372215462563])],
+             np.array([[0.904514325378385, 0.372372215462563]])],
             ]
 
 class test_pdim1sin_a_linear_between(base_t_ester):
@@ -1196,7 +1217,7 @@ class test_pdim1sin_a_linear_between(base_t_ester):
 
             ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.8], PTIB',
              {'m': self.PTIB,'a': PolyLine([0,0.4,0.6],[0.4,0.6,1],[1, 2, 3], [1, 2, 3]), 'z': [0.2, 0.8]},
-             np.array([0.904514325378385, 0.372372215462563])],
+             np.array([[0.904514325378385, 0.372372215462563]])],
             ]
 
 
