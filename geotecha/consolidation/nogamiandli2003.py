@@ -684,7 +684,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         if not self.tpor is None:
             self._calc_por()
 
-            labels = ['%.3g' % v for v in self.z]
+            labels = ['{:.3g}'.format(v) for v in self.z]
             d = {'name': '_data_por',
                  'data': self.por.T,
                  'row_labels': self.tpor,
@@ -696,7 +696,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         if not self.t is None:
             self._calc_avp()
 
-            labels = ['%.3g to %.3g' % (0, sum(self.h))]
+            labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
             d = {'name': '_data_avp',
                  'data': self.avp.T,
                  'row_labels': self.t,
@@ -705,7 +705,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                  'header': header1 + 'Average pore pressure between depths' + extra}
             self._grid_data_dicts.append(d)
 
-            labels = ['%.3g to %.3g' % (0, sum(self.h))]
+            labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
             d = {'name': '_data_set',
                  'data': self.avp.T,
                  'row_labels': self.t,
@@ -768,7 +768,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             extra=" (radial average)"
 
         t = self.tpor
-        line_labels = ['%.3g' % v for v in t]
+        line_labels = ['{:.3g}'.format(v) for v in t]
         por_prop = self.plot_properties.pop('por', dict())
         if not 'xlabel' in por_prop:
             por_prop['xlabel'] = 'Pore pressure'+extra
@@ -788,7 +788,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             extra=" (radial average)"
 
         t = self.t
-        line_labels = ['%.3g to %.3g' % (0, sum(self.h))]
+        line_labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
 
         avp_prop = self.plot_properties.pop('avp', dict())
         if not 'ylabel' in avp_prop:
@@ -807,7 +807,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
             extra=" (radial average)"
 
         t = self.t
-        line_labels = ['%.3g to %.3g' % (0, sum(self.h))]
+        line_labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
 
         set_prop = self.plot_properties.pop('set', dict())
         if not 'ylabel' in set_prop:

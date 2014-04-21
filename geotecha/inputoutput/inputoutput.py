@@ -170,7 +170,7 @@ class SyntaxChecker(ast.NodeVisitor):
 
         if hasattr(node.func,'id'):
             if node.func.id not in self.allowed_functions:
-                raise SyntaxError("%s is not an allowed function!" % node.func.id)
+                raise SyntaxError("{} is not an allowed function!".format(node.func.id))
             else:
                 ast.NodeVisitor.generic_visit(self, node)
         else:
@@ -187,7 +187,7 @@ class SyntaxChecker(ast.NodeVisitor):
             self.allowed_attributes.add(node.id)
         elif type(node.ctx).__name__=='Load':
             if node.id not in self.safe_names and node.id not in self.allowed_functions and node.id not in self.allowed_attributes:
-                raise SyntaxError("cannot use %s as name, function, or attribute!" % node.id)
+                raise SyntaxError("cannot use {} as name, function, or attribute!".format(node.id))
                 sys.exit(0)
         ast.NodeVisitor.generic_visit(self, node)#
 
@@ -198,7 +198,7 @@ class SyntaxChecker(ast.NodeVisitor):
             print('ATTRIBUTE:', ast.dump(node))
 
         if node.attr not in self.allowed_functions and node.attr not in self.allowed_attributes:
-            raise SyntaxError("%s is not an allowed attribute!" % node.attr)
+            raise SyntaxError("{} is not an allowed attribute!".format(node.attr))
             sys.exit(0)
         ast.NodeVisitor.generic_visit(self, node)
 
@@ -208,7 +208,7 @@ class SyntaxChecker(ast.NodeVisitor):
             print('GENERIC: ', ast.dump(node))
 
         if type(node).__name__ not in self.allowed_node_types:
-            raise SyntaxError("%s is not allowed!"%type(node).__name__)
+            raise SyntaxError("{} is not allowed!".format(type(node).__name__))
             sys.exit(0)
         else:
             ast.NodeVisitor.generic_visit(self, node)
@@ -234,8 +234,9 @@ class SyntaxChecker(ast.NodeVisitor):
 
         in_list = ['attributes','functions']
         if add_to not in in_list:
-            raise ValueError('add_to cannot be %s.  It must be one of [%s]' %
-                ("'%s'"% add_to, ", ".join(["'%s'" % v for v in in_list])))
+            raise ValueError('add_to cannot be {}.  It must be one of '
+                '[{}]'.format("'{}'".format(add_to),
+                ", ".join(["'{}'".format(v) for v in in_list])))
         if add_to=='functions':
             for v in [a for a in s.split() if not a.startswith('#')]:
                 self.allowed_functions[v] = getattr(fn_module, v)
@@ -492,7 +493,7 @@ def object_members(obj, info='function', join=True):
     #http://www.andreas-dewes.de/en/2012/static-code-analysis-with-python/
 
     members = [i for i,j in
-                inspect.getmembers(obj, getattr(inspect,'is%s' % info))]
+                inspect.getmembers(obj, getattr(inspect,'is{}'.format(info)))]
     if join:
         members='\n'.join(textwrap.wrap(" ".join(members),
                                         break_long_words=False, width=65))
@@ -804,13 +805,15 @@ def check_attribute_pairs_have_equal_length(obj, attributes=[]):
 
     for pair in attributes:
         if len(pair)>2:
-            raise ValueError('Can only compare two items. you have %s' % str(pair))
+            raise ValueError('Can only compare two items. you have {}'.format(str(pair)))
         v1, v2 = pair
         if sum([v is None for v in [g(v1), g(v2)]])==0:
             if sum([hasattr(v,'__len__') for v in [g(v1), g(v2)]])!=2:
                 raise TypeError("either {0} and {1} have no len attribute and so cannot be compared".format(v1,v2))
             if len(g(v1)) != len(g(v2)):
-                raise ValueError("%s has %d elements, %s has %d elements.  They should have the same number of elements." % (v1,len(g(v1)), v2, len(g(v2))))
+                raise ValueError("{} has {:d} elements, {} has {:d} "
+                    "elements.  They should have the same number of "
+                    "elements.".format(v1, len(g(v1)), v2, len(g(v2))))
 
 #        elif sum([v is None for v in [g(v1), g(v2)]])==1:
 #            raise ValueError("Cannot compare length of {0} and {1} when one of them is None".format(v1,v2))
@@ -1221,7 +1224,7 @@ class InputFileLoaderCheckerSaver(object):
             if len(fig.get_label()) > 0:
                 figname = fig.get_label()
             else:
-                figname = "Figure_%s" % str(i).zfill(2)
+                figname = "Figure_{}".format(str(i).zfill(2))
             filename = self._file_stem +'_' + figname + getattr(self, 'figure_ext',
                                                                '.eps')
             fig.savefig(filename, dpi=fig.dpi, bbox_inches='tight')
@@ -1445,7 +1448,7 @@ class PrefixNumpyArrayString(object):
 
     def _pprint(self, arr):
         """function to pass to np.set_string_function"""
-        return '%s%s' % (self.prefix, repr(arr))
+        return '{}{}'.format(self.prefix, repr(arr))
 
     def turn_on(self):
         """turn_on printing numpy array with prefix"""

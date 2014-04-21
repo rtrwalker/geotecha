@@ -1047,7 +1047,7 @@ def remove_superfluous_from_x_y(x,y, atol=1e-08):
     """
     n = len(x)
     if n!=len(y):
-        raise ValueError("x and y must be of sam length, %s vs %s" % (n, len(y)))
+        raise ValueError("x and y must be of sam length, {} vs {}".format(n, len(y)))
 
     x = np.asarray(x)
     y = np.asarray(y)
@@ -1745,9 +1745,9 @@ class PolyLine(object):
 
         if not len(args) in [1,2,4]:
             #For the following error consider subclassing exception as per http://stackoverflow.com/a/1964247/2530083
-            raise TypeError('%d args given; Line can only be initialized with '
+            raise TypeError('{:d} args given; Line can only be initialized with '
                 '1, 2, or 4 args: 1 (x-y coords), 2 (x-coords, y-coords), or '
-                '4 (x1-coords, x2-coords, y1-coords, y2-coords)' % len(args))
+                '4 (x1-coords, x2-coords, y1-coords, y2-coords)'.format(len(args)))
         self._xy = None
         self._x = None
         self._y = None
@@ -1769,7 +1769,7 @@ class PolyLine(object):
                 (self._xy.shape[1] != 2)):
                 raise TypeError('x_y data must be 2d array_like with shape '
                     '(n, 2) with n >= 2.  Yours has shape '
-                    '(%d, %d).' % self._xy.shape)
+                    '({:d}, {:d}).'.format(*self._xy.shape))
             return
 
         if len(args)==2:
@@ -1777,7 +1777,9 @@ class PolyLine(object):
             if ((len(args[0]) != len(args[1])) or
                 (len(args[0]) < 2) or
                 (len(args[1]) < 2)):
-                raise TypeError('x and y must be of same length with at least two values. len(x)=%d, len(y)=%d' % (len(args[0]), len(args[1])))
+                raise TypeError('x and y must be of same length with at '
+                    'least two values. len(x)={:d}, '
+                    'len(y)={:d}'.format(len(args[0]), len(args[1])))
 
             self._xy = np.empty([len(args[0]), 2], dtype=float)
             self._xy[:, 0]=args[0][:]
@@ -1792,7 +1794,8 @@ class PolyLine(object):
             #args[2] and args[3] are 1d arrays of n y values at start and end of the n segments
             if len(set(map(len, args))) != 1:
                 raise TypeError('x1, x2, y1, y2 must have same length. '
-                    'You have lengths [%d, %d, %d, %d]' % tuple(map(len, args)))
+                    'You have lengths '
+                    '[{:d}, {:d}, {:d}, {:d}]'.format(*tuple(map(len, args))))
 
             self._x1 = np.asarray(args[0], dtype=float)
             self._x2 = np.asarray(args[1], dtype=float)
@@ -1854,14 +1857,15 @@ class PolyLine(object):
 
     def __str__(self):
         """Return a string representation of the xy data"""
-        return "PolyLine(%s)" % (str(self.xy))
+        return "PolyLine({})".format(str(self.xy))
+
 #    def __repr__(self):
 #        """A string repr of the PolyLine that will recreate the Ployline"""
-#        return "PolyLine(%s%s)" % (self._prefix_for_numpy_array_repr,
+#        return "PolyLine({}{})".format(self._prefix_for_numpy_array_repr,
 #                                    repr(self.xy))
     def __repr__(self):
         """A string repr of the PolyLine that will recreate the Ployline"""
-        return "PolyLine(%s)" % (repr(self.xy))
+        return "PolyLine({})".foramt(repr(self.xy))
 
     def __add__(self, other):
         return self._add_substract(other, op = operator.add)
@@ -1875,7 +1879,8 @@ class PolyLine(object):
 
     def __mul__(self, other):
         if isinstance(other, PolyLine):
-            raise TypeError('cannot multiply two PolyLines together.  You will get a quadratic that I cannot handle')
+            raise TypeError('cannot multiply two PolyLines together.  '
+                'You will get a quadratic that I cannot handle')
             sys.exit(0)
         try:
             return PolyLine(self.x, self.y * other)
@@ -1883,7 +1888,8 @@ class PolyLine(object):
 #            a.xy #ensure xy has been initialized
 #            a._xy[:,1] *= other
         except TypeError:
-            print("unsupported operand type(s) for *: 'PolyLine' and '%s'" % other.__class__.__name__)
+            print("unsupported operand type(s) for *: 'PolyLine' and "
+                "'{}'".format(other.__class__.__name__))
             sys.exit(0)
 #        return a
     def __rmul__(self,other):
@@ -1899,7 +1905,8 @@ class PolyLine(object):
 #            a.xy #ensure xy has been initialized
 #            a._xy[:,1] /= other
         except TypeError:
-            print("unsupported operand type(s) for /: 'PolyLine' and '%s'" % other.__class__.__name__)
+            print("unsupported operand type(s) for /: 'PolyLine' and "
+                "'{}'".foramt(other.__class__.__name__))
             sys.exit(0)
 #        return a
     def __rtruediv__(self, other):
@@ -1912,7 +1919,8 @@ class PolyLine(object):
 #            a.xy #ensure xy has been initialized
 #            a._xy[:,1] = other/a._xy[:,1]
         except TypeError:
-            print("unsupported operand type(s) for /: 'PolyLine' and '%s'" % other.__class__.__name__)
+            print("unsupported operand type(s) for /: 'PolyLine' and "
+                "'{}'".format(other.__class__.__name__))
             sys.exit(0)
 #        return a
         return self.__mul__(other)
@@ -2018,7 +2026,8 @@ class PolyLine(object):
 #            a.xy #ensure xy has been initialized
 #            iop(a._xy[:,1], other)
         except TypeError:
-            print("unsupported operand type(s) for +: 'PolyLine' and '%s'" % other.__class__.__name__)
+            print("unsupported operand type(s) for +: 'PolyLine' and "
+                "'{}'".format(other.__class__.__name__))
 #            sys.exit(0)
         return a
 
@@ -2045,10 +2054,10 @@ def polyline_make_x_common(*p_lines):
 
     for i, line in enumerate(p_lines):
         if not isinstance(line, PolyLine):
-            raise TypeError("p_lines[%d] is not a PolyLine" % i)
+            raise TypeError("p_lines[{:d}] is not a PolyLine".format(i))
             sys.exit(0)
         if not (non_increasing(line.x) or non_decreasing(line.x)):
-                raise TypeError('PolyLine #%d has switchbacks.' % i)
+                raise TypeError('PolyLine #{:d} has switchbacks.'.format(i))
                 sys.exit(0)
 
         if not is_initially_increasing(line.x):
@@ -2168,7 +2177,7 @@ def subdivide_x_y_into_segments(x, y, dx=None, min_segments = 2,
 
     if len(x)!=len(y):
         raise (ValueError('x and y must have same length '
-                     'len(x)=%d, len(y)=%d' % (len(x), len(y))))
+                     'len(x)={:d}, len(y)={:d}'.format(len(x), len(y))))
     if logx:
         x[np.abs(x) <= (atol + rtol * np.abs(x))] = logxzero
         if np.any(x<0):

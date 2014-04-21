@@ -523,7 +523,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
             self._make_por()
             z = transformations.depth_to_reduced_level(
                 np.asarray(self.ppress_z), self.H, self.RLzero)
-            labels = ['%.3g' % v for v in z]
+            labels = ['{:.3g}'.format(v) for v in z]
             d = {'name': '_data_por',
                  'data': self.por.T,
                  'row_labels': self.tvals[self.ppress_z_tval_indexes],
@@ -536,7 +536,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
             self._make_avp()
             z_pairs = transformations.depth_to_reduced_level(
                 np.asarray(self.avg_ppress_z_pairs), self.H, self.RLzero)
-            labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
+            labels = ['{:.3g} to {:.3g}'.format(z1, z2) for z1, z2 in z_pairs]
             d = {'name': '_data_avp',
                  'data': self.avp.T,
                  'row_labels': self.tvals[self.avg_ppress_z_pairs_tval_indexes],
@@ -549,7 +549,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
             self._make_set()
             z_pairs = transformations.depth_to_reduced_level(
                 np.asarray(self.settlement_z_pairs), self.H, self.RLzero)
-            labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
+            labels = ['{:.3g} to {:.3g}'.format(z1, z2) for z1, z2 in z_pairs]
             d = {'name': '_data_set',
                  'data': self.set.T,
                  'row_labels': self.tvals[self.settlement_z_pairs_tval_indexes],
@@ -943,7 +943,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
 
         """
         t = self.tvals[self.ppress_z_tval_indexes]
-        line_labels = ['%.3g' % v for v in t]
+        line_labels = ['{:.3g}'.format(v) for v in t]
         por_prop = self.plot_properties.pop('por', dict())
         if not 'xlabel' in por_prop:
             por_prop['xlabel'] = 'Pore pressure'
@@ -963,7 +963,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
         t = self.tvals[self.avg_ppress_z_pairs_tval_indexes]
         z_pairs = transformations.depth_to_reduced_level(
             np.asarray(self.avg_ppress_z_pairs), self.H, self.RLzero)
-        line_labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
+        line_labels = ['{:.3g} to {:.3g}'.format(z1, z2) for z1, z2 in z_pairs]
 
         avp_prop = self.plot_properties.pop('avp', dict())
         if not 'ylabel' in avp_prop:
@@ -981,7 +981,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
         t = self.tvals[self.settlement_z_pairs_tval_indexes]
         z_pairs = transformations.depth_to_reduced_level(
             np.asarray(self.settlement_z_pairs), self.H, self.RLzero)
-        line_labels = ['%.3g to %.3g' % (z1, z2) for z1, z2 in z_pairs]
+        line_labels = ['{:.3g} to {:.3g}'.format(z1, z2) for z1, z2 in z_pairs]
 
         set_prop = self.plot_properties.pop('set', dict())
         if not 'ylabel' in set_prop:
@@ -1049,16 +1049,17 @@ class Speccon1dVR(speccon1d.Speccon1d):
         xlabels=[]
         if not self.mv is None:
             z_x.append(self.kv)
-            xlabels.append('$m_v/\\overline{m}_v$, $\\left(\\overline{m}_v=%g\\right)$' % self.mvref)
+            xlabels.append('$m_v/\\overline{{m}}_v$, $\\left'
+                '(\\overline{{m}}_v={:g}\\right)$'.format(self.mvref))
         if not self.kv is None:
             z_x.append(self.kv)
-            xlabels.append('$k_v/\\overline{k}_v$, $\\left(\\overline{k}_v=%g\\right)$' % self.kvref)
+            xlabels.append('$k_v/\\overline{{k}}_v$, $\\left(\\overline{{k}}_v={:g}\\right)$'.format(self.kvref))
         if not self.kh is None:
             z_x.append(self.kh)
-            xlabels.append('$k_h/\\overline{k}_h$, $\\left(\\overline{k}_h=%g\\right)$' % self.khref)
+            xlabels.append('$k_h/\\overline{k}_h$, $\\left(\\overline{{k}}_h={:g}\\right)$'.format(self.khref))
         if not self.et is None:
             z_x.append(self.et)
-            xlabels.append('$\\eta/\\overline{\\eta}$, $\\left(\\overline{\\eta}=%g\\right)$' % self.etref)
+            xlabels.append('$\\eta/\\overline{\\eta}$, $\\left(\\overline{\\eta}={:g}\\right)$'.format(self.etref))
 
 
         return (geotecha.plotting.one_d.plot_single_material_vs_depth(z_x, xlabels, H = self.H,

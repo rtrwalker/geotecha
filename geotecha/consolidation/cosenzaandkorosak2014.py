@@ -117,7 +117,7 @@ def cosenzaandkorosak2014(z, t, theta, v, tpor=None, L = 1, kv = 1, mv = 0.1, ga
     ----------
     Code developed based on [1]_
 
-    ..[1] Cosenza, Philippe, and Dean Korošak. 2014. 'Secondary Consolidation
+    ..[1] Cosenza, Philippe, and Dean Korosak. 2014. 'Secondary Consolidation
           of Clay as an Anomalous Diffusion Process'. International Journal
           for Numerical and Analytical Methods in Geomechanics:
           doi:10.1002/nag.2256.

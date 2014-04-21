@@ -113,7 +113,7 @@ def replace_x0_and_x1_to_vect(s,xyz = ['x','y','z']):
     s = str(s)
     for x in xyz:
         for i, ending in enumerate(endings):
-            s = s.replace('%s%d' % (x,i), '%s%s' % (x,ending))
+            s = s.replace('{}{:d}'.format(x,i), '{}{}'.format(x,ending))
     return s
 
 def integrate_f_over_polygon_code(f):
@@ -143,13 +143,13 @@ def integrate_f_over_polygon_code(f):
     ff = replace_x0_and_x1_to_vect(ff)
 
     template ="""def ifxy(pts):
-    "Integrate f = %s over polygon"
+    "Integrate f = {} over polygon"
 
     x, y, z = xyz_from_pts(pts,True)
 
-    return np.sum(%s)"""
+    return np.sum({})"""
 
-    return template % (str(f), ff)
+    return template.format(str(f), ff)
 
 def integrate_f_over_polyhedra_code(f):
     """generate code that will integrate a function over a polyhedra
@@ -185,7 +185,7 @@ def integrate_f_over_polyhedra_code(f):
     ff = replace_x0_and_x1_to_vect(ff)
 
     template ="""def ifxyz(faces):
-    "Integrate f = %s over polyhedron"
+    "Integrate f = {} over polyhedron"
 
     x, y, z = xyz_from_pts(pts,True)
     igral = 0
@@ -193,11 +193,11 @@ def integrate_f_over_polyhedra_code(f):
         (n1,n2,n3),d = eqn_of_plane(pts)
         if n1==0:
             continue
-        igral += np.sum(%s)
+        igral += np.sum({})
 
     return igral"""
 
-    return template % (str(f), ff)
+    return template.format(str(f), ff)
 
 def polygon_area(pts)    :
     """ area of polygon defined by points

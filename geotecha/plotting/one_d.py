@@ -57,7 +57,7 @@ def rgb_shade(rgb, factor=1, scaled=True):
     Examples
     --------
     >>> x=rgb_shade((0.4, 0.8, 0.2), factor=0.5)
-    >>> '%.2f, %.2f, %.2f' % x
+    >>> '{:.2f}, {:.2f}, {:.2f}'.format(*x)
     '0.20, 0.40, 0.10'
 
     """
@@ -66,7 +66,7 @@ def rgb_shade(rgb, factor=1, scaled=True):
 
     #calc from http://stackoverflow.com/a/6615053/2530083
     if factor<0 or factor>1:
-        raise ValueError('factor must be between 0 and 1.  You have %g' % factor)
+        raise ValueError('factor must be between 0 and 1.  You have {:g}'.format(factor))
 
     rgb_new = [v * factor for v in rgb[:3]]
     if len(rgb)==4:
@@ -98,18 +98,18 @@ def rgb_tint(rgb, factor=0, scaled=True):
     Examples
     --------
     >>> x=rgb_tint((0.4, 0.8, 0.2), factor=0.5)
-    >>> '%.2f, %.2f, %.2f' % x
+    >>> '{:.2f}, {:.2f}, {:.2f}'.format(*x)
     '0.70, 0.90, 0.60'
 
     >>> x=rgb_tint((155, 205, 55), factor=0.5, scaled=False)
-    >>> '%.2f, %.2f, %.2f' % x
+    >>> '{:.2f}, {:.2f}, {:.2f}'.format(*x)
     '205.00, 230.00, 155.00'
 
     """
 
     #calc from http://stackoverflow.com/a/6615053/2530083
     if factor<0 or factor>1:
-        raise ValueError('factor must be between 0 and 1.  You have %g' % factor)
+        raise ValueError('factor must be between 0 and 1.  You have {:g}'.format(factor))
 
     if scaled:
         black=1.0
@@ -1344,7 +1344,8 @@ def apply_dict_to_object(obj, dic):
 
 
     if len(obj)!=len(dic):
-        raise ValueError('obj and d must be the same lenght. %s vs %s' % len(obj), len(dic))
+        raise ValueError('obj and d must be the same lenght. {} vs '
+        '{}'.format(len(obj), len(dic)))
 
     for o, d in zip(obj, dic):
         if d is None:
@@ -1467,7 +1468,7 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
     #plt.subplot(gs[0])
 
     if ylabels is None:
-        ylabels = ['y%d' % v for v in range(n)]
+        ylabels = ['y{:d}'.format(v) for v in range(n)]
 
     #determine tmax, tmin
     if trange is None:
@@ -2084,7 +2085,7 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
 #        pass
 
     #apply label to each line
-    #line_labels = [{'label': '%.3g' % v} for v in t]
+    #line_labels = [{'label': '{:.3g}'.format(v)} for v in t]
 
     if (not line_labels is None):
         labels = [{'label': v} for v in line_labels]

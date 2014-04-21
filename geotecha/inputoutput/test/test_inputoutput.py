@@ -759,7 +759,7 @@ class test_fcode_one_large_expr(unittest.TestCase):
     from sympy import symbols, sin
 
     n= 8
-    sss = symbols(','.join(['a%d' % v for v in range(n)]))
+    sss = symbols(','.join(['a{:d}'.format(v) for v in range(n)]))
 
     e1 = 0
     for i in sss:

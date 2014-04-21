@@ -65,7 +65,7 @@ def m_from_sin_mx(i, boundary=0):
     from math import pi
 
     if boundary not in {0, 1}:
-        raise ValueError('boundary = %s; must be 0 or 1.' % (boundary))
+        raise ValueError('boundary = {}; must be 0 or 1.'.format(boundary))
 
     return pi * (i + 1 - boundary / 2.0)
 

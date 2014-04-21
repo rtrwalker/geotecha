@@ -150,10 +150,10 @@ def dim1sin_af_linear():
     A = np.zeros([neig, neig], float)
     for layer in range(nlayers):
         for i in range(neig):
-            A[i, i] += %s
+            A[i, i] += {}
         for i in range(neig-1):
             for j in range(i + 1, neig):
-                A[i, j] += %s
+                A[i, j] += {}
 
     #A is symmetric
     for i in range(neig - 1):
@@ -163,7 +163,7 @@ def dim1sin_af_linear():
     return A"""
 
 
-    fn = text % (fdiag, foff)
+    fn = text.format(fdiag, foff)
 
     return fn
 
@@ -221,10 +221,10 @@ def dim1sin_abf_linear():
     A = np.zeros([neig, neig], float)
     for layer in range(nlayers):
         for i in range(neig):
-            A[i, i] += %s
+            A[i, i] += {}
         for i in range(neig-1):
             for j in range(i + 1, neig):
-                A[i, j] += %s
+                A[i, j] += {}
 
     #A is symmetric
     for i in range(neig - 1):
@@ -234,7 +234,7 @@ def dim1sin_abf_linear():
     return A"""
 
 
-    fn = text % (fdiag, foff)
+    fn = text.format(fdiag, foff)
 
     return fn
 
@@ -374,10 +374,10 @@ def dim1sin_D_aDf_linear():
     A = np.zeros([neig, neig], float)
     for layer in range(nlayers):
         for i in range(neig):
-            A[i, i] += %s
+            A[i, i] += {}
         for i in range(neig-1):
             for j in range(i + 1, neig):
-                A[i, j] += %s
+                A[i, j] += {}
 
     #A is symmetric
     for i in range(neig - 1):
@@ -387,7 +387,7 @@ def dim1sin_D_aDf_linear():
     return A"""
 
 
-    fn = text % (fdiag, foff)
+    fn = text.format(fdiag, foff)
 
     return fn
 
@@ -441,12 +441,12 @@ def dim1sin_ab_linear():
     A = np.zeros(neig, float)
     for layer in range(nlayers):
         for i in range(neig):
-            A[i] += %s
+            A[i] += {}
 
     return A"""
 
 
-    fn = text % fcol
+    fn = text.format(fcol)
     return fn
 
 def dim1sin_abc_linear():
@@ -499,12 +499,12 @@ def dim1sin_abc_linear():
     A = np.zeros(neig, float)
     for layer in range(nlayers):
         for i in range(neig):
-            A[i] += %s
+            A[i] += {}
 
     return A"""
 
 
-    fn = text % fcol
+    fn = text.format(fcol)
     return fn
 
 def dim1sin_D_aDb_linear():
@@ -572,15 +572,15 @@ def dim1sin_D_aDb_linear():
     A = np.zeros(neig, float)
     for layer in range(nlayers):
         for i in range(neig):
-            A[i] += %s
+            A[i] += {}
 
     for i in range(neig):
-        A[i] += %s
+        A[i] += {}
 
     return A"""
 
 
-    fn = text % (fcol, fends)
+    fn = text.format(fcol, fends)
     return fn
 
 
@@ -602,9 +602,9 @@ def EDload_linear():
 
     """
 
-    from sympy import exp
-
-    sympy.var('t, tau, dT, eig')
+    from sympy import exp, symbols
+    t, tau, dT, eig= symbols('t, tau, dT, eig')
+#    sympy.var('t, tau, dT, eig')
     loadmag = sympy.tensor.IndexedBase('loadmag')
     loadtim = sympy.tensor.IndexedBase('loadtim')
     tvals = sympy.tensor.IndexedBase('tvals')
@@ -654,16 +654,16 @@ def EDload_linear():
     for i, t in enumerate(tvals):
         for k in steps_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += %s
+                A[i,j] += {}
         for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += %s
+                A[i,j] += {}
         for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += %s
+                A[i,j] += {}
     return A"""
 
-    fn = text % (after_instant, within_ramp, after_ramp)
+    fn = text.format(after_instant, within_ramp, after_ramp)
     return fn
 
 def Eload_linear():
@@ -733,19 +733,19 @@ def Eload_linear():
     for i, t in enumerate(tvals):
         for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += %s
+                A[i,j] += {}
         for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += %s
+                A[i,j] += {}
         for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += %s
+                A[i,j] += {}
         for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += %s
+                A[i,j] += {}
     return A"""
 
-    fn = text % (within_constant, after_constant, within_ramp, after_ramp)
+    fn = text.format(within_constant, after_constant, within_ramp, after_ramp)
     return fn
 
 
@@ -842,19 +842,19 @@ def Eload_coslinear():
     for i, t in enumerate(tvals):
         for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
         for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
         for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
         for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
     return A"""
 
-    fn = text % (tw(within_constant, 5), tw(after_constant, 5), tw(within_ramp, 5), tw(after_ramp, 5))
+    fn = text.format(tw(within_constant, 5), tw(after_constant, 5), tw(within_ramp, 5), tw(after_ramp, 5))
     return fn
 
 def EDload_coslinear():
@@ -950,22 +950,22 @@ def EDload_coslinear():
     for i, t in enumerate(tvals):
         for k in steps_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
         for k in constants_containing_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
         for k in constants_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
         for k in ramps_containing_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
         for k in ramps_less_than_t[i]:
             for j, eig in enumerate(eigs):
-                A[i,j] += (%s)
+                A[i,j] += ({})
     return A"""
 
-    fn = text % (tw(after_instant, 5), tw(within_constant,5), tw(after_constant,5), tw(within_ramp,5), tw(after_ramp,5))
+    fn = text.format(tw(after_instant, 5), tw(within_constant,5), tw(after_constant,5), tw(within_ramp,5), tw(after_ramp,5))
     return fn
 
 
@@ -1044,20 +1044,20 @@ def dim1sin_a_linear_between():
     for i in range(nz):
         for layer in segment_both:
             for j in range(neig):
-                A[i,j] += %s
+                A[i,j] += {}
         for layer in segment_z1_only:
             for j in range(neig):
-                A[i,j] += %s
+                A[i,j] += {}
         for layer in segments_between:
             for j in range(neig):
-                A[i,j] += %s
+                A[i,j] += {}
         for layer in segment_z2_only:
             for j in range(neig):
-                A[i,j] += %s
+                A[i,j] += {}
     return A"""
 
 
-    fn = text % (both, z1_only, between, z2_only)
+    fn = text.format(both, z1_only, between, z2_only)
 
     return fn
 
@@ -1136,23 +1136,23 @@ def dim1_ab_linear_between():
     text = """A = np.zeros(len(xi))
     for i in range(len(xi)):
         for seg in segment_both[i]:
-            A[i] += %s
+            A[i] += {}
         for seg in segment_xi_only[i]:
-            A[i] += %s
+            A[i] += {}
         for seg in segments_between[i]:
-            A[i] += %s
+            A[i] += {}
         for seg in segment_xj_only[i]:
-            A[i] += %s
+            A[i] += {}
 
     return A"""
 
 
-    fn = text % (both, z1_only, between, z2_only)
+    fn = text.format(both, z1_only, between, z2_only)
 
     return fn
 
 
-    fn = text % (both, xi_only, between, xj_only)
+    fn = text.format(both, xi_only, between, xj_only)
 
     return fn
 
@@ -1293,10 +1293,10 @@ def dim1sin_D_aDf_linear_v2():
     A = np.zeros([neig, neig], float)
     for layer in range(nlayers):
         for i in range(neig):
-            A[i, i] += %s
+            A[i, i] += {}
         for i in range(neig-1):
             for j in range(i + 1, neig):
-                A[i, j] += %s
+                A[i, j] += {}
 
     #A is symmetric
     for i in range(neig - 1):
@@ -1306,7 +1306,7 @@ def dim1sin_D_aDf_linear_v2():
     return A"""
 
 
-    fn = text % (fdiag, foff)
+    fn = text.format(fdiag, foff)
 
     return fn
 
@@ -2399,10 +2399,10 @@ def dim1sin_D_aDb_linear_implementations():
 #    A = np.zeros(neig, float)
 #    for layer in range(nlayers):
 #        for i in range(neig):
-#            A[i] += %s
+#            A[i] += {}
 #
 #    for i in range(neig):
-#        A[i] += %s
+#        A[i] += {}
 #
 #    return A"""
 
@@ -2525,7 +2525,30 @@ def tw(text, indents=3, width=100, break_long_words=False):
 
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
+#    print(EDload_coslinear_test())
 
+
+#    #print(EDload_coslinear())
+#    print(EDload_linear())
+#    #print(Eload_coslinear())
+#    print(Eload_linear())
+#    #print(dim1_ab_linear_between())
+#    #print(dim1sin_D_aDb_linear())
+#    #print(dim1sin_D_aDb_linear_implementations())
+#    print(dim1sin_D_aDf_linear())
+#    #print(dim1sin_D_aDf_linear_implementations())
+#    #print(dim1sin_D_aDf_linear_v2())
+#    #print(dim1sin_a_linear_between())
+#    #print(dim1sin_ab_linear())
+#    #print(dim1sin_ab_linear_implementations())
+#    #print(dim1sin_abc_linear())
+#    #print(dim1sin_abc_linear_implementations())
+#    print(dim1sin_abf_linear())
+#    print(dim1sin_abf_linear_implementations())
+#    print(dim1sin_af_linear())
+#    print(dim1sin_af_linear_fortran())
+#    print(dim1sin_af_linear_implementations())
+#    #print(dim1sin_af_linear_vectorize())

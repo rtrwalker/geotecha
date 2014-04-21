@@ -205,7 +205,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
             self.atop = h[0]
             self.btop = ktop * h[0] / (kv[0] * htop)
         else:
-            raise ValueError('bctop must be 0, 1, or 2. you have bctop = %s' % self.bctop)
+            raise ValueError('bctop must be 0, 1, or 2. you have bctop = {}'.foramt(self.bctop))
 
         if self.bcbot == 0:
             self.abot = 0
@@ -217,7 +217,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
             self.abot = h[-1]
             self.bbot = kbot * h[-1] / (kv[-1] * hbot)
         else:
-            raise ValueError('bctop must be 0, 1, or 2. you have bctop = %s' % self.bctop)
+            raise ValueError('bctop must be 0, 1, or 2. you have bctop = {}'.format(self.bctop))
 
         self.BC = np.zeros((2 * self.nlayers, 2* self.nlayers), dtype=float)
 
@@ -268,7 +268,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         """
 
         t = self.tpor
-        line_labels = ['%.3g' % v for v in t]
+        line_labels = ['{:.3g}'.format(v) for v in t]
         por_prop = self.plot_properties.pop('por', dict())
         if not 'xlabel' in por_prop:
             por_prop['xlabel'] = 'Pore pressure'
@@ -284,7 +284,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
 
         t = self.t
-        line_labels = ['%.3g to %.3g' % (0, sum(self.h))]
+        line_labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
 
         avp_prop = self.plot_properties.pop('avp', dict())
         if not 'ylabel' in avp_prop:
@@ -300,7 +300,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
 
         t = self.t
-        line_labels = ['%.3g to %.3g' % (0, sum(self.h))]
+        line_labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
 
         set_prop = self.plot_properties.pop('set', dict())
         if not 'ylabel' in set_prop:
@@ -352,7 +352,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         if not self.tpor is None:
 
             self.calc_por()
-            labels = ['%.3g' % v for v in self.z]
+            labels = ['{:.3g}'.format(v) for v in self.z]
             d = {'name': '_data_por',
                  'data': self.por.T,
                  'row_labels': self.tpor,
@@ -364,7 +364,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         if not self.t is None:
             self.calc_settle_and_avp()
 
-            labels = ['%.3g to %.3g' % (0, sum(self.h))]
+            labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
             d = {'name': '_data_avp',
                  'data': self.avp.T,
                  'row_labels': self.t,
@@ -373,7 +373,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
                  'header': header1 + 'Average pore pressure between depths'}
             self._grid_data_dicts.append(d)
 
-            labels = ['%.3g to %.3g' % (0, sum(self.h))]
+            labels = ['{:.3g} to {:.3g}'.format(0, sum(self.h))]
             d = {'name': '_data_set',
                  'data': self.avp.T,
                  'row_labels': self.t,

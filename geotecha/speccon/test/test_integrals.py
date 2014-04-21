@@ -156,16 +156,9 @@ class test_m_from_sin_mx(object):
         """loop through and test m_from_sin_mx cases with numpy.allclose"""
         for fixture,result in self.cases:
             m = m_from_sin_mx(*fixture)
-#            check = np.allclose(m, result)
-#            msg = """\
-#failed m_from_sin_mx.test_cases, case:
-#%s
-#m:
-#%s
-#expected:
-#%s""" % (fixture, m, result)
+
             yield a_close, "input=" + str(fixture), m, result
-#            yield ok_, check, msg
+
 
 
 ### end Method 3
@@ -192,37 +185,7 @@ class base_t_ester(object):
         self.prefix = prefix
         self.implementation = None
 
-#    def test_cases(self):
-#        """loop through and test make_fn cases with np.allclose"""
-#
-#        if not self.implementation is None:
-#            for i in self.implementation:
-#                for desc, fixture, result in self.cases:
-#                    fixture['implementation'] = i
-#
-#                    res = self.fn(**fixture)
-#                    check = np.allclose(res, result)
-#                    msg = """\
-#failed test_%s, case: %s
-#%s
-#calculated:
-#%s
-#expected:
-#%s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
-#                    yield ok_, check, msg
-#
-#        else:
-#            for desc, fixture, result in self.cases:
-#                res = self.fn(**fixture)
-#                check = np.allclose(res, result)
-#                msg = """\
-#failed test_%s, case: %s
-#%s
-#calculated:
-#%s
-#expected:
-#%s""" % (self.prefix + " " + self.fn.__name__, desc, fixture, res, result)
-#                yield ok_, check, msg
+
 
 
     def test_cases(self):
