@@ -2525,6 +2525,7 @@ def tw(text, indents=3, width=100, break_long_words=False):
 
 
 if __name__ == '__main__':
+    pass
 #    import nose
 #    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])

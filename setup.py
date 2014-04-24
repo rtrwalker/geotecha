@@ -118,7 +118,11 @@ MICRO = 0
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
-INSTALL_REQUIRES=[]
+INSTALL_REQUIRES=[
+    "numpy>=1.8",
+    "matplotlib>=1.3",
+    "scipy>=0.13.3",
+    "sympy>=0.2.7"]#note my speccon integrals only work on sympy<=0.2.7.
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
