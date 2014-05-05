@@ -159,7 +159,7 @@ def test_hankel_transform_order_v():
             for s in s_:
                 for a in a_:
                     args=(a, order)
-                    yield (check_HankelTransfrom,
+                    yield (check_HankelTransform,
                            s, (func, func.__doc__), (func_, func_.__doc__),
                             args, order, m, ng, ng0, shanks_ind)
 
@@ -181,20 +181,20 @@ def test_hankel_transform_order_0():
         for s in s_:
             for a in a_:
                 args=(a,)
-                yield (check_HankelTransfrom,
+                yield (check_HankelTransform,
                        s, (func, func.__doc__), (func_, func_.__doc__),
                         args, order, m, ng, ng0, shanks_ind)
 
 
 
-def check_HankelTransfrom(s, (func, funcdoc), (func_, func_doc), args, order, m,
+def check_HankelTransform(s, (func, funcdoc), (func_, func_doc), args, order, m,
                           ng, ng0, shanks_ind):
-    """check if a HankelTransfrom gives it's analytical solution
+    """check if a HankelTransform gives it's analytical solution
 
     Parameters
     ----------
     s : float
-        transfrom variable
+        transform variable
     func, funcdoc: function and functions doc
         function to transform
     func_, func_doc : function and functin doc
