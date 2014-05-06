@@ -1638,49 +1638,105 @@ def vhankel_transform(f, r, args=(), order=0, m=20, ng=20, shanks_ind=None):
         return shanks(igral, shanks_ind)
 
 
-
+#Hankel transform pairs
 #zero order
-def f1(s, a):
+def hankel1(s, a):
     """a/(s**2 + a**2)**1.5"""
-    #H(f1)=exp(-a* r)
+    #H(hankel1)=exp(-a* r)
     return a/(s**2 + a**2)**1.5
-def f1_(r, a):
+def hankel1_(r, a):
     """exp(-a*r)"""
     return np.exp(-a*r)
 
-def f2(s, *args):
+def hankel2(s, *args):
     "1/s"
-    #H(f2)=1/r
+    #H(hankel2)=1/r
     return 1/s
-def f2_(r, *args):
+def hankel2_(r, *args):
     "1/r"
     return 1/r
 
-def f3(s,a):
+def hankel3(s,a):
     "1/s*jn(0,a/s)"
-    #H(f3)=1/rJ0(2*(a*r)**0.5)
+    #H(hankel3)=1/rJ0(2*(a*r)**0.5)
     return 1/s*jn(0,a/s)
-def f3_(r, a):
+def hankel3_(r, a):
     "1/rJ0(2*(a*r)**0.5)"
     return 1/r*jn(0,(2*(a*r)**0.5))
 
 #integer order
-def f4(s, a, v=0):
+def hankel4(s, a, v=0):
     """(sqrt(s**2+a**2)-a)**v/(s**v*sqrt(s**2+a**2))"""
-    #H(f4)=exp(-a*r)/r
+    #H(hankel4)=exp(-a*r)/r
     return (np.sqrt(s**2 + a**2) - a)**v/(s**v*np.sqrt(s**2+a**2))
 
-def f4_(r, a, *args):
+def hankel4_(r, a, *args):
     """exp(-a*r)/r"""
     return np.exp(-a*r)/r
 
-def f5(s, a, v=0):
+def hankel5(s, a, v=0):
     """s**v/(2*a**2)**(v+1)*exp(-s**2/(4*a**2))"""
-    #H(f5)=exp(-a**2*r**2)*r**v
+    #H(hankel5)=exp(-a**2*r**2)*r**v
     return s**v/(2*a**2)**(v+1)*np.exp(-s**2/(4*a**2))
-def f5_(r, a, v=0):
+def hankel5_(r, a, v=0):
     """exp(-a**2*r**2)*r**v"""
     return np.exp(-a**2*r**2)*r**v
+
+
+#fro fourier transform pairs see
+# http://en.wikibooks.org/wiki/Signals_and_Systems/Table_of_Fourier_Transforms
+def rect(x, *args):
+    """rectangle function
+    -0.5<=x<=0.5 = 1, otherwise=0"""
+    if -0.5<=x<=0.5:
+        return 1
+    else:
+        return 0
+
+
+def unit_step(x, *args):
+    if x >= 0:
+        return 1
+    else:
+        return 0
+
+#real and symmetric
+def fourier1(x, a):
+    """exp(- a * abs(x))"""
+    return np.exp(-a * abs(x))
+def fourier1_(x, a):
+    """2 * a / (a**2 + x**2)"""
+    return  2 * a / (a**2 + x**2)
+#real and unsymmetric
+def fourier2(t, tau):
+    """rect(t/tau)"""
+    return rect(t/tau)
+def fourier2_(w, tau):
+    """tau * sinc(tau*W/(2*pi))"""
+    return tau * np.sinc(tau * w/(2*np.pi))
+
+#unsymmetric which give complex
+def fourier3(x, *args):
+    """-0.5+unit_step(x)"""
+    #note you cannot fourier transform this by quadrature because the
+    #integral does not converge
+    return -0.5 + unit_step(x)
+def fourier3_(w, *args):
+    """1/(1.j*w)"""
+    return 1 / (1.j * w)
+def fourier4(t, b):
+    """exp(-b*t)*unit_step(t)"""
+    return np.exp(-b*t)*unit_step(t)
+def fourier4_(w, b):
+    """1/(1.j*w + b)"""
+    return 1/(1.j*w + b)
+#sine transformation pairs
+def sine1(x, b):
+    """exp(-x*b)"""
+    return np.exp(-x*b)
+def sine1_(w, b):
+    """w/(w**2+b**2)"""
+    return w/(w**2+b**2)
 
 def real_func(x, *myargs):
     """Real part of a function
@@ -1723,6 +1779,7 @@ def real_func(x, *myargs):
     func = myargs[0]
     myargs = (x,) + myargs[1:]
     return +np.real(func(*myargs))
+
 
 def imag_func(x, *myargs):
     """Imaginary part of a function
@@ -1854,10 +1911,82 @@ def func_mirror_for_odd_weight(x, *myargs):
     return -func(*myargs)
 
 
+def cosine_transform(func, w, args=()):
+    """Fourier cosine transform
+
+    note that any function that can divide by zero may cause problems because
+    QUADPACK includes the end points in integration
+
+    Parameters
+    ----------
+    func : function/callable
+        function to transform.  `func` will be called func(x, *args). `func`
+        must return a real.
+    w : float
+        transform
+    args : tuple, optional
+        arguments to pass to `func`
+
+    Returns
+    -------
+    value : float
+        value of transform
+    err : float
+        error estimate from quadpack
+
+    Notes
+    -----
+
+    The fourier cosine trasnform is given by:
+
+    .. math:: F_c=\mathcal{F}_c\\{f(x)\\}(w) =
+                \\int_0^{\\infty}f(x)\\cos(wx)\\,\\mathrm{d}x
+    """
+
+    return integrate.quad(func, 0, np.inf, args=args, weight='cos', wvar=w)
+
+def sine_transform(func, w, args=()):
+    """Fourier sine transform
+
+    note that any function that can divide by zero may cause problems because
+    QUADPACK includes the end points in integration
+
+    Parameters
+    ----------
+    func : function/callable
+        function to transform.  `func` will be called func(x, *args). `func`
+        must return a real.
+    w : float
+        transform
+    args : tuple, optional
+        arguments to pass to `func`
+
+    Returns
+    -------
+    value : float
+        value of transform
+    err : float
+        error estimate from quadpack
+
+    Notes
+    -----
+
+    The fourier sine transform is given by:
+
+    .. math:: F_s=\mathcal{F}_s\\{f(x)\\}(w) =
+                \\int_0^{\\infty}f(x)\\sin(wx)\\,\\mathrm{d}x
+    """
+
+    return integrate.quad(func, 0, np.inf, args=args, weight='sin', wvar=w)
+
+
 
 
 class FourierTransform(object):
     """One dimensional Fourier transform using scipy.quad
+
+    note that any function that can divide by zero may cause problems because
+    QUADPACK includes the end points in integration
 
     Parameters
     ----------
@@ -1883,6 +2012,15 @@ class FourierTransform(object):
     imag_part_odd : True/False, optional
         If True then the imaginary part of func is odd. Default=False
 
+    Attributes
+    ----------
+    inv_sign : float
+        the sign of sum expressions changes for the inverse fourier transform
+        `inv_sign` accounts for that sign change.  If inv=True, inv_sign=-1;
+        If inv=False, inv_sign=+1.
+    inv_const : float
+        for inverse fourier transform all expressions are multiplied by
+        1/(2*pi).
 
 
     """
@@ -1908,12 +2046,35 @@ class FourierTransform(object):
         self.imag_part_even = imag_part_even
         self.imag_part_odd = imag_part_odd
 
-    def real_func(self, x, *args):
+        self.fargs=(self.func,) + self.args
+
+    def real_func(self, x):
         """real part of func"""
-        return scipy.real(self.func(x, *args))
-    def imag_func(self, x, *args):
+        return +np.real(self.func(x, *self.args))
+    def imag_func(self, x):
         """imaginary part of func"""
-        return scipy.real(self.imag(x, *args))
+        return +np.imag(self.func(x, *self.args))
+
+
+    def mfe(self, x):
+        """mirror func for even weight function"""
+        return func_mirror_for_even_weight(x, *self.fargs)
+    def mfo(self, x):
+        """mirror func for odd weight function"""
+        return func_mirror_for_odd_weight(x, *self.fargs)
+    def mfre(self, x):
+        """mirror real(func) for even weight function"""
+        return +np.real(func_mirror_for_even_weight(x, *self.fargs))
+    def mfro(self, x):
+        """mirror real(func) for odd weight function"""
+        return +np.real(func_mirror_for_odd_weight(x, *self.fargs))
+    def mfie(self, x):
+        """mirror imag(func) for even weight function"""
+        return +np.imag(func_mirror_for_even_weight(x, *self.fargs))
+    def mfio(self, x):
+        """mirror imag(func) for odd weight function"""
+        return +np.imag(func_mirror_for_odd_weight(x, *self.fargs))
+
 
 
     def __call__(self, s):
@@ -1921,537 +2082,132 @@ class FourierTransform(object):
 
         if self.func_is_real:
             if self.real_part_even:
-                # 2 * I(func * cos(s*x), 0, +inf)
-                #return a real
-                itup = integrate.quad(self.func, 0, np.inf,
-                                      args=self.args,
-                                      weight='cos', wvar=s)
-                return (2 * self.inv_const * itup[0],
-                        2 * self.inv_const * itup[1])
-
-#                igral = 2 * (self.inv_const
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='cos', wvar=s))
-#                return igral
+                igral, err = [2 * self.inv_const * v for v in
+                        cosine_transform(self.func, s, self.args)]
+                return igral, err
             elif self.real_part_odd:
-                # 2 * I(func * sin(s*x), 0, +inf)
-                #return an imaginary number
-                itup = integrate.quad(self.func, 0, np.inf, args=self.args,
-                                      weight='sin', wvar=s)
-                return (-2.j * self.inv_const * self.inv_sign * itup[0],
-                        -2.j * self.inv_const * self.inv_sign * itup[1])
-#                igral = -2.j * (self.inv_const * self.inv_sign
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='sin', wvar=s))
-#                return igral
+                igral, err = [2.j * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.func, s, self.args)]
+                return -igral, err
 
             else:
                 #func is real and exhibits no symmetry.
-                # [I(func*cos(s*x), -inf, 0) + I(func*cos(s*x), 0, inf)]
-                # i*[I(func*sin(s*x), -inf, 0) + I(func*sin(s*x), 0, inf)]
-                #+- I(func*sin(s*x), -inf, +inf)
-                #spli into -inf,0 adn 0, +inf
-                # return a complex number (+- depends on inverse or normal fourier)
-
                 igral = 0
                 err = 0
-                # real part [-inf, 0]
-                itup = integrate.quad(self.func, -np.inf, 0, args=self.args,
-                                      weight='cos', wvar=s)
-                igral += self.inv_const * itup[0]
-                err += self.inv_const * itup[1]
-                # real part [0, inf]
-                itup = integrate.quad(self.func, 0, np.inf, args=self.args,
-                                      weight='cos', wvar=s)
-                igral += self.inv_const * itup[0]
-                err += self.inv_const * itup[1]
 
-                # imag part [-inf, 0]
-                itup = integrate.quad(self.func, -np.inf, 0, args=self.args,
-                                      weight='sin', wvar=s)
-                igral -= 1.j * self.inv_const * self.inv_sign *itup[0]
-                err += 1.j * self.inv_const * self.inv_sign *itup[1]
-                # imag part [0, inf]
-                itup = integrate.quad(self.func, 0, np.inf, args=self.args,
-                                      weight='sin', wvar=s)
-                igral -= 1.j * self.inv_const * self.inv_sign *itup[0]
-                err += 1.j * self.inv_const * self.inv_sign *itup[1]
-
+                # real transform result [-inf, 0]
+                ig, er = [self.inv_const * v for v in
+                        cosine_transform(self.mfe, s)]
+                igral += ig; err += er
+                # real transform result [-, inf]
+                ig, er = [self.inv_const * v for v in
+                        cosine_transform(self.func, s, self.args)]
+                igral += ig; err += er
+                # imag transform result [0, inf]
+                ig, er = [1.j * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.mfo, s)]
+                igral -= ig; err += er
+                # imag transform result [-inf, 0]
+                ig, er = [1.j * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.func, s, self.args)]
+                igral -= ig; err += er
                 return igral, err
-
-#                igral = 0
-#                igral += (self.inv_const
-#                        * integrate.quad(self.func, -np.inf, 0, args=self.args,
-#                                      weight='cos', wvar=s))
-#                igral += (self.inv_const
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='cos', wvar=s))
-#                igral -= 1.j * (self.inv_const * self.inv_sign
-#                        * integrate.quad(self.func, -np.inf, 0, args=self.args,
-#                                      weight='sin', wvar=s))
-#                igral -= 1.j * (self.inv_const * self.inv_sign
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='sin', wvar=s))
-                return igral
 
         if self.func_is_imag:
             if self.imag_part_even:
-                #2 * I(func*cos(s*x), 0, inf)
-                #return an imaginary number
-                itup = integrate.quad(self.func, 0, np.inf, args=self.args,
-                                      weight='cos', wvar=s)
-                return (2.j * self.inv_const * itup[0],
-                        2.j * self.inv_const * itup[1])
-
-#                igral = 2.j * (self.inv_const
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='cos', wvar=s))
-#                return igral
+                igral, err = [2.j * self.inv_const * v for v in
+                        cosine_transform(self.func, s, self.args)]
+                return igral, err
             elif self.imag_part_odd:
-                #2 * I(func*sin(s*x), 0, inf)
-                #return a real
-                itup = integrate.quad(self.func, 0, np.inf, args=self.args,
-                                      weight='sin', wvar=s)
-                return (2 * self.inv_const * self.inv_sign * itup[0],
-                        2 * self.inv_const * self.inv_sign * itup[1])
-#                igral = 2 * (self.inv_const * self.inv_sign
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='sin', wvar=s))
-#                return igral
+                igral, err =  [2 * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.func, s, self.args)]
+                return igral, err
             else:
                 #func is imaginary and ehibits non symmetry
-                # i*[I(func*cos(s*x), -inf, 0)+I(func*cos(s*x), 0, inf)]
-                # +[I(func*sin(s*x), -inf, 0)+I(func*sin(s*x), 0, inf)]
-                #return a complex number
                 igral = 0
                 err = 0
-                # imag part [-inf, 0]
-                itup = integrate.quad(self.func, -np.inf, 0, args=self.args,
-                                      weight='cos', wvar=s)
-                igral += 1.j * self.inv_const * itup[0]
-                err += 1.j * self.inv_const * itup[1]
-                # imag part [0, inf]
-                itup = integrate.quad(self.func, 0, np.inf, args=self.args,
-                                      weight='cos', wvar=s)
-                igral += 1.j * self.inv_const * itup[0]
-                err += 1.j * self.inv_const * itup[1]
 
-                # real part [-inf, 0]
-                itup = integrate.quad(self.func, -np.inf, 0, args=self.args,
-                                      weight='sin', wvar=s)
-                igral += self.inv_const * self.inv_sign *itup[0]
-                err += self.inv_const * self.inv_sign *itup[1]
-                # real part [0, inf]
-                itup = integrate.quad(self.func, 0, np.inf, args=self.args,
-                                      weight='sin', wvar=s)
-                igral += self.inv_const * self.inv_sign *itup[0]
-                err += self.inv_const * self.inv_sign *itup[1]
+                # imag transform result [-inf, 0]
+                ig, er = [1.j * self.inv_const * v for v in
+                        cosine_transform(self.mfe, s)]
+                igral += ig; err += er
+                # imag transform result [0, inf]
+                ig,er = [1.j * self.inv_const * v for v in
+                        cosine_transform(self.func, s, self.args)]
+                igral += ig; err += er
+                # real transform result [-inf, 0]
+                ig, er = [self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.mfo, s)]
+                igral -= ig; err += er
+                # real transform result [0, inf]
+                ig, er = [self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.func, s, self.args)]
+                igral -= ig; err += er
 
                 return igral, err
-
-#                igral = 0
-#                igral += 1.j * (self.inv_const
-#                        * integrate.quad(self.func, -np.inf, 0, args=self.args,
-#                                      weight='cos', wvar=s))
-#                igral += 1.j * (self.inv_const
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='cos', wvar=s))
-#                igral += (self.inv_const * self.inv_sign
-#                        * integrate.quad(self.func, -np.inf, 0, args=self.args,
-#                                      weight='sin', wvar=s))
-#                igral += (self.inv_const * self.inv_sign
-#                        * integrate.quad(self.func, 0, np.inf, args=self.args,
-#                                      weight='sin', wvar=s))
-#                return igral
 
         #if we have reached here then func is complex
         #use real and imag parts of func
         igral = 0
         err = 0
         if self.real_part_even:
-            # 2 * I(real_func * cos(s*x), 0, +inf)
-            args = (self.func,) + self.args
-            itup = integrate.quad(real_func, 0, np.inf, args=args,
-                                      weight='cos', wvar=s)
-            igral += 2 * self.inv_const * itup[0]
-            err += 2 * self.inv_const * itup[1]
-
-#            args = (self.func,) + self.args
-#
-#            igral += 2 * (self.inv_const
-#                        * integrate.quad(real_func, 0, np.inf, args=args,
-#                                      weight='cos', wvar=s))
-
+            ig, er = [2 * self.inv_const * v for v in
+                        cosine_transform(self.real_func, s)]
+            igral += ig; err += er
         elif self.real_part_odd:
             # 2 * I(real_func * sin(s*x), 0, +inf)
-            args = (self.func,) + self.args
-            itup = integrate.quad(imag_func, 0, np.inf, args=args,
-                                      weight='sin', wvar=s)
-            igral -= 2.j * self.inv_const * self.inv_sign * itup[0]
-            err += 2.j * self.inv_const * self.inv_sign * itup[1]
-
-#            args = (self.func,) + self.args
-#            igral -= 2.j * (self.inv_const * self.inv_sign
-#                        * integrate.quad(imag_func, 0, np.inf, args=args,
-#                                      weight='sin', wvar=s))
+            ig, er = [2.j * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.real_func, s)]
+            igral -= ig; err += er
         else:
-            # [I(real_func*cos(s*x), -inf, 0) + I(real_func*cos(s*x), 0, inf)]
-            # +-i*[I(real_func*sin(s*x), -inf, 0) + I(real_func*sin(s*x), 0, inf)]
-            args = (self.func,) + self.args
-            # real part [-inf, 0]
-            itup = integrate.quad(real_func, -np.inf, 0, args=args,
-                                  weight='cos', wvar=s)
-            igral += self.inv_const * itup[0]
-            err += self.inv_const * itup[1]
-            # real part [0, inf]
-            itup = integrate.quad(real_func, 0, np.inf, args=args,
-                                  weight='cos', wvar=s)
-            igral += self.inv_const * itup[0]
-            err += self.inv_const * itup[1]
+            #real part of function exhibits no symmetry
+            # real transform result [-inf, 0]
+            ig, er = [self.inv_const * v for v in
+                        cosine_transform(self.mfre, s)]
+            igral += ig; err += er
+            # real transform result [0, inf]
+            ig, er = [self.inv_const * v for v in
+                        cosine_transform(self.real_func, s)]
+            igral += ig; err += er
+            # imag transform result [-inf, 0]
+            ig, er = [1.j * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.mfro, s)]
+            igral -= ig; err += er
+            # imag transform result [0, inf]
+            ig, er = [1.j * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.real_func, s)]
+            igral -= ig; err += er
 
-            # imag part [-inf, 0]
-            itup = integrate.quad(real_func, -np.inf, 0, args=args,
-                                  weight='sin', wvar=s)
-            igral -= 1.j * self.inv_const * self.inv_sign *itup[0]
-            err += 1.j * self.inv_const * self.inv_sign *itup[1]
-            # imag part [0, inf]
-            itup = integrate.quad(real_func, 0, np.inf, args=args,
-                                  weight='sin', wvar=s)
-            igral -= 1.j * self.inv_const * self.inv_sign *itup[0]
-            err += 1.j * self.inv_const * self.inv_sign *itup[1]
-
-
-
-
-#            args = (self.func,) + self.args
-#            igral += (self.inv_const
-#                    * integrate.quad(real_func, -np.inf, 0, args=args,
-#                                  weight='cos', wvar=s))
-#            igral += (self.inv_const
-#                    * integrate.quad(real_func, 0, np.inf, args=args,
-#                                  weight='cos', wvar=s))
-#            igral -= 1.j * (self.inv_const * self.inv_sign
-#                    * integrate.quad(real_func, -np.inf, 0, args=args,
-#                                  weight='sin', wvar=s))
-#            igral -= 1.j * (self.inv_const * self.inv_sign
-#                    * integrate.quad(real_func, 0, np.inf, args=args,
-#                                  weight='sin', wvar=s))
 
         if self.imag_part_even:
-            # i * [2 * I(imag_func * cos(s*x), 0, +inf)]
-            args = (self.func,) + self.args
-            itup = integrate.quad(imag_func, 0, np.inf, args=args,
-                                      weight='cos', wvar=s)
-            igral += 2.j * self.inv_const * itup[0]
-            err += 2.j * self.inv_const * itup[1]
-
-#            args = (self.func,) + self.args
-#            igral += 2.j * (self.inv_const
-#                        * integrate.quad(imag_func, 0, np.inf, args=args,
-#                                      weight='cos', wvar=s))
+            igral, err = [2.j * self.inv_const * v for v in
+                        cosine_transform(self.func, s, self.args)]
+            igral += ig; err += er
         elif self.real_part_odd:
-            # 2 * I(imag_func * sin(s*x), 0, +inf)
-            args = (self.func,) + self.args
-            itup = integrate.quad(imag_func, 0, np.inf, args=args,
-                                      weight='sin', wvar=s)
-            igral += 2 * self.inv_const * self.inv_sign * itup[0]
-            err += 2 * self.inv_const * self.inv_sign * itup[1]
-
-#            args = (self.func,) + self.args
-#            igral = 2 * (self.inv_const * self.inv_sign
-#                        * integrate.quad(imag_func, 0, np.inf, args=args,
-#                                      weight='sin', wvar=s))
+            igral, err = [2 * self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.func, s, self.args)]
+            igral += ig; err += er
         else:
-            # i*[I(imag_func*cos(s*x), -inf, 0) + I(imag_func*cos(s*x), 0, inf)]
-            # [I(imag_func*sin(s*x), -inf, 0) + I(imag_func*sin(s*x), 0, inf)]
-            args = (self.func,) + self.args
-            # imag part [-inf, 0]
-            itup = integrate.quad(imag_func, -np.inf, 0, args=args,
-                                  weight='cos', wvar=s)
-            igral += 1.j * self.inv_const * itup[0]
-            err += 1.j * self.inv_const * itup[1]
-            # imag part [0, inf]
-            itup = integrate.quad(imag_func, 0, np.inf, args=args,
-                                  weight='cos', wvar=s)
-            igral += 1.j * self.inv_const * itup[0]
-            err += 1.j * self.inv_const * itup[1]
-
-            # real part [-inf, 0]
-            itup = integrate.quad(imag_func, -np.inf, 0, args=args,
-                                  weight='sin', wvar=s)
-            igral += self.inv_const * self.inv_sign *itup[0]
-            err += self.inv_const * self.inv_sign *itup[1]
-            # real part [0, inf]
-            itup = integrate.quad(imag_func, 0, np.inf, args=args,
-                                  weight='sin', wvar=s)
-            igral += self.inv_const * self.inv_sign *itup[0]
-            err += self.inv_const * self.inv_sign *itup[1]
-
-
-#            args = (self.func,) + self.args
-#            igral += 1.j * (self.inv_const
-#                    * integrate.quad(imag_func, -np.inf, 0, args=args,
-#                                  weight='cos', wvar=s))
-#            igral += 1.j * (self.inv_const
-#                    * integrate.quad(imag_func, 0, np.inf, args=args,
-#                                  weight='cos', wvar=s))
-#            igral += (self.inv_const * self.inv_sign
-#                    * integrate.quad(imag_func, -np.inf, 0, args=args,
-#                                  weight='sin', wvar=s))
-#            igral += (self.inv_const * self.inv_sign
-#                    * integrate.quad(imag_func, 0, np.inf, args=args,
-#                                  weight='sin', wvar=s))
-#        return igral
+            #imag part of function exhibits no symmetry
+            # imag transform result [-inf, 0]
+            ig, er = [1.j * self.inv_const * v for v in
+                        cosine_transform(self.mfie, s)]
+            igral += ig; err += er
+            # imag transform result [0, inf]
+            ig, er = [1.j * self.inv_const * v for v in
+                        cosine_transform(self.imag_func, s)]
+            igral += ig; err += er
+            # real transform result [-inf, 0]
+            ig, er = [self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.mfio, s)]
+            igral += ig; err += er
+            # real transform result [0, inf]
+            ig, er = [self.inv_const * self.inv_sign * v for v in
+                        sine_transform(self.imag_func, s)]
+            igral += ig; err += er
         return igral, err
 
-#fro fourier transform pairs see
-# http://en.wikibooks.org/wiki/Signals_and_Systems/Table_of_Fourier_Transforms
 
-
-
-def rect(x, *args):
-    """rectangle function
-    -0.5<=x<=0.5 = 1, otherwise=0"""
-    if -0.5<=x<=0.5:
-        return 1
-    else:
-        return 0
-
-
-def unit_step(x, *args):
-    if x >= 0:
-        return 1
-    else:
-        return 0
-
-#real and symmetric
-def fourier1(x, a):
-    """exp(- a * abs(x))"""
-    return np.exp(-a * abs(x))
-def fourier1_(x, a):
-    """2 * a / (a**2 + x**2)"""
-    return  2 * a / (a**2 + x**2)
-#real and unsymmetric
-def fourier2(t, tau):
-    """rect(t/tau)"""
-    return rect(t/tau)
-def fourier2_(w, tau):
-    """tau * sinc(tau*W/(2*pi))"""
-    return tau * np.sinc(tau * w/(2*np.pi))
-
-#unsymmetric which give complex
-def fourier3(x, *args):
-    """-0.5+unit_step(x)"""
-    #note you cannot fourier transform this by quadrature because the
-    #integral does not converge
-    return -0.5 + unit_step(x)
-def fourier3_(w, *args):
-    """1/(1.j*w)"""
-    return 1 / (1.j * w)
-def fourier4(t, b):
-    """exp(-b*t)*unit_step(t)"""
-    return np.exp(-b*t)*unit_step(t)
-def fourier4_(w, b):
-    """1/(1.j*w + b)"""
-    return 1/(1.j*w + b)
-
-#ft = FourierTransform(fourier4, args=(1.5,))
-#print(ft(2.2)[0], fourier4_(2.2, 1.5) )
-ft = FourierTransform(fourier4_, args=(1.5,),inv=True)
-print(ft(2.2)[0], fourier4(2.2, 1.5) )
-#ft = FourierTransform(fourier3)
-#print(ft(2.2)[0], fourier3_(2.2) )
-
-
-
-
-
-class test_fourier_transform_object(unittest.TestCase):
-
-    def test_fourier1_normal_at_zero(self):
-        """normal ft of exp(- a * abs(x)) == 2 * a / (a**2 + x**2)"""
-        func = fourier1
-        func_ = fourier1_
-        a = 2.3
-        args=(a,)
-        s=0
-        ft = FourierTransform(func, args=args,
-                           inv=False, func_is_real=True,
-                           real_part_even=True)
-        assert_allclose(ft(s)[0], func_(s, *args), atol=0)
-
-    def test_fourier1_normal(self):
-        """normal ft of exp(- a * abs(x)) == 2 * a / (a**2 + x**2)"""
-        func = fourier1
-        func_ = fourier1_
-        a = 2.3
-        args=(a,)
-        s=1.5
-        ft = FourierTransform(func, args=args,
-                           inv=False, func_is_real=True,
-                           real_part_even=True)
-        assert_allclose(ft(s)[0], func_(s, *args), atol=0)
-
-    def test_fourier1_inverse(self):
-        """inverse ft of 2 * a / (a**2 + x**2)==exp(- a * abs(x))"""
-        func_ = fourier1
-        func = fourier1_
-        a = 2.3
-        args=(a,)
-        s = 1.5
-        ft = FourierTransform(func, args=args,
-                           inv=True, func_is_real=True,
-                           real_part_even=True)
-        assert_allclose(ft(s)[0], func_(s, *args), atol=0)
-
-    def test_fourier2_normal(self):
-        """normal ft of rect(t/tau)==tau * sinc(tau*W/(2*pi))"""
-        #note that inverse of fourier2 will fail due to oscillations
-        func = fourier2
-        func_ = fourier2_
-        a = 2.3
-        args=(a,)
-        s=1.5
-        ft = FourierTransform(func, args=args,
-                           inv=False, func_is_real=True)
-        assert_allclose(ft(s)[0], func_(s, *args), atol=0)
-
-
-    def test_fourier4_normal(self):
-        """normal ft of exp(-b*t)*unit_step(t)==1/(1.j*w + b)"""
-        func = fourier4
-        func_ = fourier4_
-        a = 2.3
-        args=(a,)
-        s=1.5
-        ft = FourierTransform(func, args=args,
-                           inv=False, func_is_real=True)
-        assert_allclose(ft(s)[0], func_(s, *args), atol=0)
-
-    def test_fourier4_inverse(self):
-        """inverse ft of 1/(1.j*w + b)==exp(-b*t)*unit_step(t)"""
-        func_ = fourier4
-        func = fourier4_
-        a = 2.3
-        args=(a,)
-        s = 1.5
-        ft = FourierTransform(func, args=args,
-                           inv=True, )
-        assert_allclose(ft(s)[0], func_(s, *args), atol=0)
-
-#def check_FourierTransform(s, (func, funcdoc), (func_, func_doc),
-#                           args=(), inv=False,
-#                           func_is_real=False, func_is_imag=False,
-#                           real_part_even=False, real_part_odd=False,
-#                           imag_part_even=False, imag_part_odd=False,
-#                           atol=0):
-#    """check if a FourierTransform gives it's analytical solution
-#
-#    Parameters
-#    ----------
-#    s : float
-#        transfrom variable
-#    func, funcdoc: function and functions doc
-#        function to transform
-#    func_, func_doc : function and functin doc
-#        analytical transform of `func`
-#    atol : float
-#        tolerance to check
-#    other: see FourierTransform initialisation
-#    """
-#
-#    ft = FourierTransform(func, args,
-#                          inv,func_is_real, func_is_imag,
-#                           real_part_even, real_part_odd,
-#                           imag_part_even, imag_part_odd)
-#    assert_allclose(ft(s)[0], func_(s, *args), atol=atol)
-#def test_fourier_transform_real_fns():
-#    """tests for FourierTransforms
-#
-#    for a variety of functions and known analytical transforms
-#
-#    for Fourier transform pairs see:
-#    http://en.wikibooks.org/wiki/Signals_and_Systems/Table_of_Fourier_Transforms"""
-#
-#    a=1.5
-#    s_ = [0.1, 0.5, 8]
-#    a_ = [0.9, 1.1]
-#    for func, func_ in [(fourier1, fourier1_),
-#                        (fourier2, fourier2_)]:
-#        for s in s_:
-#            for a in a_:
-#                args=(a,)
-#                yield (check_FourierTransform,
-#                       s, (func, func.__doc__), (func_, func_.__doc__),
-#                        args,
-#                        False, #inv
-#                        True, #func_is_real
-#                        False, #func is imag
-#                        True, #real_part_even
-#                        False, #real_part_odd
-#                        False, #imag_part_even
-#                        False, #imag_part_odd
-#                        1e-4,) #atol)
-#
-#def test_fourier_transform_real_fns_inverse():
-#    """tests for FourierTransforms inverse
-#
-#    for a variety of functions and known analytical transforms
-#
-#    for Fourier transform pairs see:
-#    http://en.wikibooks.org/wiki/Signals_and_Systems/Table_of_Fourier_Transforms
-#    """
-#
-#    a=1.5
-#    s_ = [0.1, 0.5, 8]
-#    a_ = [0.9, 1.1]
-#    for func_, func in [(fourier1, fourier1_),
-#
-#                        ]: #note func_ is first
-#        for s in s_:
-#            for a in a_:
-#                args=(a,)
-#                yield (check_FourierTransform,
-#                       s, (func, func.__doc__), (func_, func_.__doc__),
-#                        args,
-#                        True, #inv
-#                        True, #func_is_real
-#                        False, #func is imag
-#                        True, #real_part_even
-#                        False, #real_part_odd
-#                        False, #imag_part_even
-#                        False, #imag_part_odd
-#                        1e-5,) #atol)
-#
-#def test_fourier_transform_complex_fns_inverse():
-#    """tests for FourierTransforms inverse
-#
-#    for a variety of functions and known analytical transforms
-#
-#    for Fourier transform pairs see:
-#    http://en.wikibooks.org/wiki/Signals_and_Systems/Table_of_Fourier_Transforms
-#    """
-#
-#    a=1.5
-#    s_ = [0.1, 0.5, 8]
-#    a_ = [0.9, 1.1]
-#    for func_, func in [(fourier3, fourier3_),
-#                        (fourier4, fourier4_),
-#                        ]: #note func_ is first
-#        for s in s_:
-#            for a in a_:
-#                args=(a,)
-#                yield (check_FourierTransform,
-#                       s, (func, func.__doc__), (func_, func_.__doc__),
-#                        args,
-#                        True, #inv
-#                        False, #func_is_real
-#                        False, #func is imag
-#                        False, #real_part_even
-#                        False, #real_part_odd
-#                        False, #imag_part_even
-#                        False, #imag_part_odd
-#                        0,) #atol)
 def scratch():
     """
     """
@@ -2460,27 +2216,3 @@ if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
-
-    if 0:
-
-        m=20
-        ng=10
-        ng0=20
-        shanks_ind=-5
-
-        s_ = [0.5]#[0.1, 0.5, 1.5]
-        a_ = [1.1]#[0.9, 1.1]
-        order_ = [0,20]#[0, 1, 4, 20]
-        for func, func_ in [(f5, f5_)]:
-            for order in order_:
-                for s in s_:
-                    for a in a_:
-                        args=(a, order)
-                        #                yield (check_HankelTransfrom,
-        #                       s, (func, func.__doc__), (func_, func_.__doc__),
-        #                        args, order, m, ng, ng0, shanks_ind)
-                        h = HankelTransform(func, args, order, m, None, ng, ng0, shanks_ind)
-                        h.plot_integrand(s)
-                        print(h(s)[0], func_(s, *args))
-
-        plt.show()
