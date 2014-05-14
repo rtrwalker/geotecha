@@ -49,25 +49,75 @@ def f4(s, a):
     "L-1{2*a*s/(s**2+a**2)**2} = t*sin(a*t)"
     return 2*a*s/(s**2+a**2)**2
 
-def test_talbot():
-    """test for Talbot numerical inverse Laplace"""
+class test_Talbot(unittest.TestCase):
 
-    a = Talbot(f=f1, n=24, shift=0.0)
-    #t=0 raise error:
-    assert_raises(ValueError, a, 0)
-    #single value of t:
-    assert_allclose(a(1), np.exp(-1))
-    #two values of t:
-    assert_allclose(a([1,2]), np.exp(np.array([-1,-2])))
-    #args
-    b = Talbot(f=f2, n=24, shift=0.0)
-    assert_allclose(b(1, args=(1,)), np.exp(-2))
-    #shift
-    c = Talbot(f=f3, n=24, shift=1.0)
-    assert_allclose(c(1), np.exp(1))
+    def test_t_is_zero_error(self):
+        a = Talbot(f=f1, n=24, shift=0.0)
+        #t=0 raise error:
+        assert_raises(ValueError, a, 0)
+    def test_single_t(self):
+        a = Talbot(f=f1, n=24, shift=0.0)
+        #single value of t:
+        assert_allclose(a(1), np.exp(-1))
+    def test_two_t(self):
+        a = Talbot(f=f1, n=24, shift=0.0)
+        #single value of t:
+        assert_allclose(a([1,2]), np.exp(np.array([-1,-2])))
+    def test_args(self):
+        #args
+        b = Talbot(f=f2, n=24, shift=0.0)
+        assert_allclose(b(1, args=(1,)), np.exp(-2))
+    def test_shift(self):
+        #shift
+        c = Talbot(f=f3, n=24, shift=1.0)
+        assert_allclose(c(1), np.exp(1))
+    def test_shift2(self):
+        #shift
+        d = Talbot(f=f4, n=24, shift=1.2)
+        assert_allclose(d(1.2,args=(2,)), 1.2*np.sin(2*1.2), atol=1e-6)
 
-    d = Talbot(f=f4, n=24, shift=0.0)
-    assert_allclose(c(1), np.exp(1))
+    #scalar non-vectorized tests
+    def test_single_t_scalar(self):
+        a = Talbot(f=f1, n=24, shift=0.0, vectorized=False)
+        #single value of t:
+        assert_allclose(a(1), np.exp(-1))
+    def test_two_t_scalar(self):
+        a = Talbot(f=f1, n=24, shift=0.0, vectorized=False)
+        #single value of t:
+        assert_allclose(a([1,2]), np.exp(np.array([-1,-2])))
+    def test_args_scalar(self):
+        #args
+        b = Talbot(f=f2, n=24, shift=0.0, vectorized=False)
+        assert_allclose(b(1, args=(1,)), np.exp(-2))
+    def test_shift_scalar(self):
+        #shift
+        c = Talbot(f=f3, n=24, shift=1.0, vectorized=False)
+        assert_allclose(c(1), np.exp(1))
+    def test_shift2_scalar(self):
+        #shift
+        d = Talbot(f=f4, n=24, shift=1.2, vectorized=False)
+        assert_allclose(d(1.2,args=(2,)), 1.2*np.sin(2*1.2), atol=1e-6)
+
+
+#def test_talbot():
+#    """test for Talbot numerical inverse Laplace"""
+#
+#    a = Talbot(f=f1, n=24, shift=0.0)
+#    #t=0 raise error:
+#    assert_raises(ValueError, a, 0)
+#    #single value of t:
+#    assert_allclose(a(1), np.exp(-1))
+#    #two values of t:
+#    assert_allclose(a([1,2]), np.exp(np.array([-1,-2])))
+#    #args
+#    b = Talbot(f=f2, n=24, shift=0.0)
+#    assert_allclose(b(1, args=(1,)), np.exp(-2))
+#    #shift
+#    c = Talbot(f=f3, n=24, shift=1.0)
+#    assert_allclose(c(1), np.exp(1))
+#
+#    d = Talbot(f=f4, n=24, shift=0.0)
+#    assert_allclose(c(1), np.exp(1))
 
 
 class test_cot(unittest.TestCase):

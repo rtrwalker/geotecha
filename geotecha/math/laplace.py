@@ -33,13 +33,17 @@ class Talbot(object):
     ----------
     f : function or method
         function to perform inverse Laplace transform on. Function should be
-        vectorised.
+        vectorised (but doesn't have to be).
     n : even int, optional
         number of integration points. if n is even it will be rounded up to
         nearest even number default n = 24
-    shift : float
+    shift : float, optional
         Shift contour to the right in case there is a pole on the positive
         real axis. default shift=0.0
+    vectorized : True/False, optional
+        If True then `f` accepts vector inputs and numpy broadcasting will be
+        used.  Otherwise function evaluation will occur in loops.
+        default = True
 
     Notes
     -----
@@ -74,11 +78,12 @@ class Talbot(object):
 
     """
 
-    def __init__(self, f, n=24, shift=0.0):
+    def __init__(self, f, n=24, shift=0.0, vectorized=True):
 
         self.f = f
         self.n = n + n % 2
         self.shift = shift
+        self.vectorized = vectorized
 
     def __call__(self, t, args=()):
         """Numerical inverse laplace transform of F at various time t.
@@ -108,7 +113,17 @@ class Talbot(object):
         theta = (-np.pi + (np.arange(self.n)+1./2)*h)[:, np.newaxis]
         z = self.shift + self.n/t*(0.5017*theta*cot(0.6407*theta) - 0.6122 + 0.2645j*theta)
         dz = self.n/t*(-0.5017*0.6407*theta*(csc(0.6407*theta)**2)+0.5017*cot(0.6407*theta)+0.2645j)
-        inv_laplace = (np.exp(z * t) * self.f(z, *args) * dz).sum(axis=0)
+        if self.vectorized:
+            inv_laplace = (np.exp(z * t) * self.f(z, *args) * dz).sum(axis=0)
+        else:
+            inv_laplace = np.exp(z * t)
+            inv_laplace *= dz
+
+            for i in xrange(inv_laplace.shape[0]):
+                for j in xrange(inv_laplace.shape[1]):
+                    inv_laplace[i,j] *= self.f(z[i,j], *args)
+            inv_laplace = np.sum(inv_laplace, axis=0)
+
         inv_laplace *= h / (2j * np.pi)
 
         if len(inv_laplace)==1:

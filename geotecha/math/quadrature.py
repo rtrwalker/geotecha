@@ -1193,7 +1193,7 @@ def shanks(seq, ind=0):
     seq = np.atleast_1d(seq)
 
     if ind is None:
-        return seq[..., -1]
+        return +seq[..., -1]
     if ind < 0:
         ind = seq.shape[-1] + ind
     ind = max(ind, 0)
@@ -1202,11 +1202,11 @@ def shanks(seq, ind=0):
 
         denom = (seq[..., i + 2:] - 2 * seq[..., i + 1: -1] + seq[..., i:-2])
         if np.any(denom==0):
-            return seq[..., -1]
+            return +seq[..., -1]
         seq[..., i + 2:] = (
             (seq[..., i + 2:] * seq[..., i:-2] - seq[..., i + 1:-1]**2) /
             denom)
-    return seq[...,-1]
+    return +seq[...,-1]
 
 
 def gk_quad(f, a, b, args=(), n=10):
