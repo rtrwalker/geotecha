@@ -1056,10 +1056,10 @@ class Speccon1dVR(speccon1d.Speccon1d):
             xlabels.append('$k_v/\\overline{{k}}_v$, $\\left(\\overline{{k}}_v={:g}\\right)$'.format(self.kvref))
         if not self.kh is None:
             z_x.append(self.kh)
-            xlabels.append('$k_h/\\overline{k}_h$, $\\left(\\overline{{k}}_h={:g}\\right)$'.format(self.khref))
+            xlabels.append('$k_h/\\overline{{k}}_h$, $\\left(\\overline{{k}}_h={:g}\\right)$'.format(self.khref))
         if not self.et is None:
             z_x.append(self.et)
-            xlabels.append('$\\eta/\\overline{\\eta}$, $\\left(\\overline{\\eta}={:g}\\right)$'.format(self.etref))
+            xlabels.append('$\\eta/\\overline{{\\eta}}$, $\\left(\\overline{{\\eta}}={:g}\\right)$'.format(self.etref))
 
 
         return (geotecha.plotting.one_d.plot_single_material_vs_depth(z_x, xlabels, H = self.H,
