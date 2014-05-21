@@ -260,7 +260,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         self.kv = None
         self.kh = None
         self.mv = None
-        self.bctop = self._attribute_defaults.get('top', None)
+        self.bctop = self._attribute_defaults.get('bctop', None)
         self.bcbot = self._attribute_defaults.get('bcbot', None)
         self.r0 = None
         self.r1 = None
@@ -983,6 +983,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         ---------
         npt : int, optional
             number of points to plot. default=200
+
         """
 
         fig = plt.figure(figsize=(40, 8))
