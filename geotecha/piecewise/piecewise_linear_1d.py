@@ -1865,7 +1865,7 @@ class PolyLine(object):
 #                                    repr(self.xy))
     def __repr__(self):
         """A string repr of the PolyLine that will recreate the Ployline"""
-        return "PolyLine({})".foramt(repr(self.xy))
+        return "PolyLine({})".format(repr(self.xy))
 
     def __add__(self, other):
         return self._add_substract(other, op = operator.add)
@@ -1906,7 +1906,7 @@ class PolyLine(object):
 #            a._xy[:,1] /= other
         except TypeError:
             print("unsupported operand type(s) for /: 'PolyLine' and "
-                "'{}'".foramt(other.__class__.__name__))
+                "'{}'".format(other.__class__.__name__))
             sys.exit(0)
 #        return a
     def __rtruediv__(self, other):

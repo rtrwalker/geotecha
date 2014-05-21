@@ -1303,6 +1303,93 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
 #    else:
 #        return z * H
 
+def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None):
+    """
+    used for extra term in well pore pressure i.e. Ipsiw *thetaBC *UBC(t)
+    still needs to be multiplied by phi and 1/(n**2-1)
+    based on dim1sin_E_Igamv_the_BC_D_aDf_linear
+
+
+    Uses sin(m*z) in the calculation of theta.
+
+    Parameters
+    ----------
+    drn : [0,1]
+        drainage condition,
+        0 = Pervious top pervious bottom (PTPB)
+        1 = Pervious top impoervious bottom (PTIB)
+    m : ``list`` of ``float``
+        eigenvlaues of BVP. generate with geotecca.speccon.m_from_sin_mx
+    eigs : 1d numpy.ndarray
+        list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Ipsiw : ndarray
+        speccon matrix
+    a : PolyLine
+        Piewcewise linear function.  e.g. for 1d consolidation surcharge
+        radial draiange term is D[kv(z)*D[u(Z,t), Z],Z] so `a` would be kv.
+    top_vs_time : list of PolyLine
+        Piecewise linear magnitude  vs time for the top boundary.
+    bot_vs_time : list of PolyLine
+        Piecewise linear magnitude vs time for the bottom boundary.
+    top_omega_phase, bot_omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
+    dT : ``float``, optional
+        time factor multiple (default = 1.0)
+
+    Returns
+    -------
+    foft_Ipsiw_the: ndarray
+        well resistance loading term
+
+
+    """
+
+    foft_Ipsiw_the = np.zeros((len(m), len(tvals)))
+
+
+    if not a is None:
+        if drn==1:
+            zdist = PolyLine(a.x1,a.x2, np.ones_like(a.x1), np.ones_like(a.x2))
+            #bot_vs_time=None
+        else:
+            zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
+
+        if not top_vs_time is None:
+            if top_omega_phase is None:
+                top_omega_phase = [None] * len(top_vs_time)
+
+            theta = integ.pdim1sin_D_aDb_linear(m, a, zdist)
+            for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
+                E = pwise.pinterp_x_y(top_vs_t, tvals)
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E*= np.cos(omega * tvals + phase)
+                foft_Ipsiw_the += (E[None, :]*np.dot(Ipsiw, theta)[:, None]).T
+
+        if not bot_vs_time is None:
+            if bot_omega_phase is None:
+                bot_omega_phase = [None] * len(bot_vs_time)
+
+            theta = integ.pdim1sin_D_aDb_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))
+            for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
+                E = pwise.pinterp_x_y(bot_vs_t, tvals)
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E*= np.cos(omega * tvals + phase)
+                foft_Ipsiw_the += (E[None, :]*np.dot(Ipsiw, theta)[:, None]).T
+
+    #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
+    #and np.dot(theta, Igamv) will give differetn 1d arrays.
+    #Basically np.dot(Igamv, theta) gives us what we want i.e.
+    #theta was treated as a column array.  The alternative
+    #np.dot(theta, Igamv) would have treated theta as a row vector.
+    return foft_Ipsiw_the
+
 
 if __name__ == '__main__':
     import nose

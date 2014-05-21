@@ -260,6 +260,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         set                 dict of prop to pass to settlement plot.
         load                dict of prop to pass to pore pressure plot.
         material            dict of prop to pass to materials plot.
+        porwell             dict of prop to pass to well p.press plot.
         ==================  ============================================
         see blah blah blah for what options can be specified in each plot dict.
 
@@ -334,12 +335,12 @@ class Speccon1dVRW(speccon1d.Speccon1d):
 
         self._attribute_defaults = {
             'H': 1.0, 'drn': 0, 'dT': 1.0, 'neig': 2, 'mvref':1.0,
-            'kvref': 1.0, 'khref': 1.0, 'etref': 1.0,
+            'kvref': 1.0, 'khref': 1.0, 'etref': 1.0, 'kwref': 1.0,
             'implementation': 'vectorized',
             'ppress_z_tval_indexes': slice(None, None),
             'avg_ppress_z_pairs_tval_indexes': slice(None, None),
             'settlement_z_pairs_tval_indexes': slice(None, None),
-            'prefix': 'speccon1dvr_'
+            'prefix': 'speccon1dvrw_'
             }
 
         self._attributes_that_should_be_lists= (
@@ -525,6 +526,15 @@ class Speccon1dVRW(speccon1d.Speccon1d):
                  'header': header1 + 'Pore pressure at depth'}
             self._grid_data_dicts.append(d)
 
+            self._make_porwell()
+            d = {'name': '_data_porwell',
+                 'data': self.porwell.T,
+                 'row_labels': self.tvals[self.ppress_z_tval_indexes],
+                 'row_labels_label': 'Time',
+                 'column_labels': labels,
+                 'header': header1 + 'Drain pore pressure at depth'}
+            self._grid_data_dicts.append(d)
+
         if not self.avg_ppress_z_pairs is None:
             self._make_avp()
             z_pairs = transformations.depth_to_reduced_level(
@@ -688,8 +698,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         .. math:: \\left(\\mathbf{\\Gamma}^{-1}\\mathbf{\\Psi}\\right)
 
         """
-
-        self.psi_s_Ipsi_w = np.dot(self.psi_s, np.linalg.inv(self.psi_w))
+        self.Ipsi_w = np.linalg.inv(self.psi_w)
+        self.psi_s_Ipsi_w = np.dot(self.psi_s, self.Ipsi_w)
         self.psi -= np.dot(self.psi_s_Ipsi_w, self.psi_s)
 
         Igam_psi = np.dot(np.linalg.inv(self.gam), self.psi)
@@ -915,6 +925,31 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals[self.ppress_z_tval_indexes], self.v_E_Igamv_the[:, self.ppress_z_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
         return
 
+    def _make_porwell(self):
+        """make the well/drain pore pressure output
+
+        """
+        bot_vs_time = self._normalised_bot_vs_time()
+
+        tvals = self.tvals[self.ppress_z_tval_indexes]
+        #phi * Ipsi_w * psi_s * v_E_Igamv_the part, including BC adjustment
+        a = np.dot(self.Ipsi_w, self.psi_s)
+        v_E_Igamv_the = np.dot(a, self.v_E_Igamv_the[:, self.ppress_z_tval_indexes])
+        self.porwell = speccon1d.dim1sin_f(self.m, self.ppress_z, tvals, v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
+
+
+        #1/(n**2-1) * (phi * Ipsi_w * psi_s * thetaT(t) + phi * Ipsi_w * psi_s * thetaT(t))
+        v_E_Igamv_the = speccon1d.dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(
+                self.drn, self.m, self.eigs, tvals, self.Ipsi_w,
+                self.kw, self.top_vs_time, bot_vs_time,
+                top_omega_phase=None, bot_omega_phase=None)
+        v_E_Igamv_the /= (self.N**2 - 1.0)
+
+        self.porwell += speccon1d.dim1sin_f(self.m, self.ppress_z,
+                                            tvals, v_E_Igamv_the, self.drn)
+        return
+
+
     def _make_avp(self):
         """calculate average pore pressure
 
@@ -974,7 +1009,22 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         return
 
 
+    def _plot_porwell(self):
+        """plot depth vs well/drain pore pressure for various times
 
+        """
+        t = self.tvals[self.ppress_z_tval_indexes]
+        line_labels = ['{:.3g}'.format(v) for v in t]
+        por_prop = self.plot_properties.pop('porwell', dict())
+        if not 'xlabel' in por_prop:
+            por_prop['xlabel'] = 'Drain Pore pressure'
+
+        #to do
+        fig_porwell = geotecha.plotting.one_d.plot_vs_depth(self.porwell, self.ppress_z,
+                                      line_labels=line_labels, H = self.H,
+                                      RLzero=self.RLzero,
+                                      prop_dict=por_prop)
+        return fig_porwell
 
 
     def _plot_por(self):
@@ -1044,10 +1094,16 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         matplotlib.rcParams.update({'font.family': 'serif'})
 
         self._figures=[]
-        #por
+        #por and porwell
         if not self.ppress_z is None:
             f=self._plot_por()
             title = 'fig_por'
+            f.set_label(title)
+            f.canvas.manager.set_window_title(title)
+            self._figures.append(f)
+
+            f=self._plot_porwell()
+            title = 'fig_porwell'
             f.set_label(title)
             f.canvas.manager.set_window_title(title)
             self._figures.append(f)
@@ -1096,6 +1152,9 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         if not self.kh is None:
             z_x.append(self.kh)
             xlabels.append('$k_h/\\overline{{k}}_h$, $\\left(\\overline{{k}}_h={:g}\\right)$'.format(self.khref))
+        if not self.kw is None:
+            z_x.append(self.kw)
+            xlabels.append('$k_w/\\overline{{k}}_w$, $\\left(\\overline{{k}}_w={:g}\\right)$'.format(self.kwref))
         if not self.et is None:
             z_x.append(self.et)
             xlabels.append('$\\eta/\\overline{{\\eta}}$, $\\left(\\overline{{\\eta}}={:g}\\right)$'.format(self.etref))
@@ -1207,7 +1266,7 @@ dTv = 0.1 * 0.25
 dTw = 10000
 neig = 10
 
-N = 10
+N = 60
 
 mvref = 2.0
 kvref = 1.0
@@ -1263,8 +1322,8 @@ implementation='vectorized'
 plot_properties={}
 
 directory= r"C:\\Users\\Rohan Walker\\Documents\\temp" #may always need the r
-save_data_to_file= False
-save_figures_to_file= False
+save_data_to_file= True
+save_figures_to_file= True
 show_figures= True
 overwrite=True
 
