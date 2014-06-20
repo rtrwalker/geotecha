@@ -162,7 +162,7 @@ if __name__ == "__main__":
     print(repr(dengetal2013(z=np.array([0.05, 0.1, 0.2, 0.5, 0.8, 1.0])*20,
                              t=[11025.,  110250.],
                              rw=0.035, re=0.525,
-                             A1=1, A2=0.99, A3=9.07029478e-06,
+                             A1=1, A2=0, A3=0,
                              H=20,
                              rs=0.175,
                              ks=2e-8/1.8,
@@ -243,7 +243,8 @@ if __name__ == "__main__":
 
 
         mu0 = smear_zones.mu_constant(re/rw, rs/rw, kh/ks)
-
+        print('mu0', mu0)
+        print('et', 2/mu0/re**2)
         for A2 in [0.1,1.0]:
             por = dengetal2013(z, t, rw=rw, re=re, A1=1, A2=A2, A3=0, H=20,
                           rs=rs, ks=ks, kw0=kw0, kh=kh, mv=mv, gamw=10, ui=1)
