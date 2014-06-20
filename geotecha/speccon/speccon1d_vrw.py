@@ -132,7 +132,9 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         the reference values of kh, et, and mv: dTh = kh / (mv * gamw) * et
     dTw: float, optional
         well reference time factor multiplier.  dTw is calculated with
-        the chosen reference values of kw and mv: dTw = kw /(mv*gamw) / H ^ 2
+        the chosen reference values of kw and mv:
+        dTw = kw /(mv*gamw) / H ^ 2 / (n**2 - 1) where n is the ratio of
+        drain influence radius to drain radius, re/rw.
     mv : PolyLine, optional
         normalised volume compressibility PolyLine(depth, mv)
     kh : PolyLine, optional
@@ -143,8 +145,6 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         normalised vertical drain parameter PolyLine(depth, et).
         et = 2 / (mu * re^2) where mu is smear-zone/geometry parameter and re
         is radius of influence of vertical drain
-    N : float
-        ratio of drain influence radius to drain radius, re/rw
     surcharge_vs_depth : list of Polyline, optional
         surcharge variation with depth. PolyLine(depth, multiplier)
     surcharge_vs_time : list of Polyline, optional
@@ -319,7 +319,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
 
         self._attributes = (
             'H drn dT neig mvref kvref khref etref dTh dTv dTw '
-            'mv kh kv kw et N '
+            'mv kh kv kw et '
             'surcharge_vs_depth surcharge_vs_time '
             'top_vs_time bot_vs_time '
             'ppress_z avg_ppress_z_pairs settlement_z_pairs tvals '
@@ -373,7 +373,6 @@ class Speccon1dVRW(speccon1d.Speccon1d):
             'surcharge_vs_depth surcharge_vs_time'.split(),
             ]
         self._at_least_one = [
-            ['N'],
             ['dTh'],
             ['dTw'],
             ['mv'],
@@ -410,7 +409,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         self.kh = None
         self.kv = None
         self.et = None
-        self.N = None
+
         self.surcharge_vs_depth = None
         self.surcharge_vs_time = None
         self.surcharge_omega_phase = None
@@ -481,9 +480,10 @@ class Speccon1dVRW(speccon1d.Speccon1d):
 
         self._make_m()
         self._make_gam()
-        self._make_psi_s()
-        self._make_psi_w()
+#        self._make_psi_s()
+
         self._make_psi()
+        self._make_psi_w()
         self._make_eigs_and_v()
 
         return
@@ -611,22 +611,22 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         self.gam[np.abs(self.gam)<1e-8]=0.0
         return
 
-    def _make_psi_s(self):
-        """make dTh, kh, and et dependant psi_w matrix
-
-        """
-
-        self.psi_s = np.zeros((self.neig, self.neig))
-
-        #kh & et part
-        if sum([v is None for v in [self.kh, self.et, self.dTh]])==0:
-            kh, et = pwise.polyline_make_x_common(self.kh, self.et)
-            self.psi_s += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m, self.kh, self.et, implementation=self.implementation)
-
-        self.psi_s[np.abs(self.psi_s) < 1e-8] = 0.0
-
-
-        return
+#    def _make_psi_s(self):
+#        """make dTh, kh, and et dependant psi_w matrix
+#
+#        """
+#
+#        self.psi_s = np.zeros((self.neig, self.neig))
+#
+#        #kh & et part
+#        if sum([v is None for v in [self.kh, self.et, self.dTh]])==0:
+#            kh, et = pwise.polyline_make_x_common(self.kh, self.et)
+#            self.psi_s += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m, self.kh, self.et, implementation=self.implementation)
+#
+#        self.psi_s[np.abs(self.psi_s) < 1e-8] = 0.0
+#
+#
+#        return
     def _make_psi_w(self):
         """make dTh, dTv kw, and kh, et dependant psi_w matrix
 
@@ -636,12 +636,12 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         #kw part
         if sum([v is None for v in [self.kw, self.dTw]])==0:
             self.psi_w -= self.dTw / self.dT * integ.pdim1sin_D_aDf_linear(self.m, self.kw, implementation=self.implementation)
-            self.psi_w /= (self.N**2 - 1)
+
 
         #kh & et part
         self.psi_w += self.psi_s
 
-        self.psi_w[np.abs(self.psi_w) < 1e-8] = 0.0
+#        self.psi_w[np.abs(self.psi_w) < 1e-8] = 0.0
 
 
         return
@@ -670,14 +670,16 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         if sum([v is None for v in [self.kh, self.et, self.dTh]])==0:
             kh, et = pwise.polyline_make_x_common(self.kh, self.et)
 #            self.psi += self.dTh / self.dT * integ.dim1sin_abf_linear(self.m,kh.y1, kh.y2, et.y1, et.y2, kh.x1, kh.x2)
-            self.psi += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m, self.kh, self.et, implementation=self.implementation)
+#            self.psi += self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m, self.kh, self.et, implementation=self.implementation)
+            self.psi_s = self.dTh / self.dT * integ.pdim1sin_abf_linear(self.m, self.kh, self.et, implementation=self.implementation)
+            self.psi += self.psi_s
         #fixed pore pressure part
         if not self.fixed_ppress is None:
             for (zfixed, pseudo_k, mag_vs_time) in self.fixed_ppress:
                 self.psi += pseudo_k / self.dT * np.sin(self.m[:, np.newaxis] * zfixed) * np.sin(self.m[np.newaxis, :] * zfixed)
 
 #                self.psi += k * np.sin(self.m[:, np.newaxis] * z) * np.sin(self.m[np.newaxis, :] * z)
-        self.psi[np.abs(self.psi) < 1e-8]=0.0
+#        self.psi[np.abs(self.psi) < 1e-8]=0.0
         return
 
     def _make_eigs_and_v(self):
@@ -701,6 +703,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         self.Ipsi_w = np.linalg.inv(self.psi_w)
         self.psi_s_Ipsi_w = np.dot(self.psi_s, self.Ipsi_w)
         self.psi -= np.dot(self.psi_s_Ipsi_w, self.psi_s)
+        self.psi[np.abs(self.psi) < 1e-8]=0.0
 
         Igam_psi = np.dot(np.linalg.inv(self.gam), self.psi)
 
@@ -878,10 +881,10 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         self.E_Igamv_the_BC -= speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.mv, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
         #dTh * kh * et * u component
-        if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
-            if self.dTh!=0:
-#                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, bot_vs_time, self.tvals, self.Igamv, self.dT)
-                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kh, self.et, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
+#        if sum([v is None for v in [self.et, self.kh, self.dTh]])==0:
+#            if self.dTh!=0:
+##                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.kh, self.et, self.top_vs_time, bot_vs_time, self.tvals, self.Igamv, self.dT)
+#                self.E_Igamv_the_BC -= self.dTh  * speccon1d.dim1sin_E_Igamv_the_BC_abf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kh, self.et, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
         #dTv * d/dZ(kv * du/dZ) component
         if sum([v is None for v in [self.kv, self.dTv]])==0:
@@ -899,10 +902,13 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         #dTw * d/dZ(kw * du/dZ) component
         if sum([v is None for v in [self.kw, self.dTw]])==0:
             if self.dTw!=0:
-                A = self.dTw * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kw, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
-                A = np.dot(self.psi_s_Ipsi_w, A)
-                A *= (self.N**2 - 1)
-                self.E_Igamv_the_BC += A
+                Igamv_psi_s_Ipsi_w = np.dot(self.Igamv, self.psi_s_Ipsi_w)
+
+#                A = self.dTw * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.tvals, self.Igamv, self.kw, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
+#                A = np.dot(self.psi_s_Ipsi_w, A)
+
+#                self.E_Igamv_the_BC += A
+                self.E_Igamv_the_BC += self.dTw * speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn, self.m, self.eigs, self.tvals, Igamv_psi_s_Ipsi_w, self.kw, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase, self.dT)
 
     def _make_por(self):
         """make the pore pressure output
@@ -943,7 +949,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
                 self.drn, self.m, self.eigs, tvals, self.Ipsi_w,
                 self.kw, self.top_vs_time, bot_vs_time,
                 top_omega_phase=None, bot_omega_phase=None)
-        v_E_Igamv_the /= (self.N**2 - 1.0)
+
 
         self.porwell += speccon1d.dim1sin_f(self.m, self.ppress_z,
                                             tvals, v_E_Igamv_the, self.drn)
@@ -1261,12 +1267,12 @@ if __name__ == '__main__':
 H = 1
 drn = 1
 dT = 1
-dTh = 5
+dTh = 0.5
 dTv = 0.1 * 0.25
 dTw = 10000
-neig = 10
+neig = 40
 
-N = 60
+
 
 mvref = 2.0
 kvref = 1.0
@@ -1276,6 +1282,11 @@ kwref = 1.0
 
 kw = PolyLine([0,1], [1,1])
 kw = PolyLine([0, 0.2, 0.2, 1.0], [1,1, 0,0])
+
+a = 0.05
+kw = PolyLine([0, 0.5 - a, 0.5 + a], [0.5-a, 0.5+a, 1], [1,0,1], [1,0,1])
+
+
 mv = PolyLine([0,1], [0.5,0.5])
 kh = PolyLine([0,1], [1,1])
 kv = PolyLine([0,1], [5,5])

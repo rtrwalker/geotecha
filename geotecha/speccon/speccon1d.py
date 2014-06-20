@@ -1369,7 +1369,7 @@ def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs
                 if not om_ph is None:
                     omega, phase = om_ph
                     E*= np.cos(omega * tvals + phase)
-                foft_Ipsiw_the += (E[None, :]*np.dot(Ipsiw, theta)[:, None]).T
+                foft_Ipsiw_the += E[None, :]*np.dot(Ipsiw, theta)[:, None]
 
         if not bot_vs_time is None:
             if bot_omega_phase is None:
@@ -1381,7 +1381,7 @@ def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs
                 if not om_ph is None:
                     omega, phase = om_ph
                     E*= np.cos(omega * tvals + phase)
-                foft_Ipsiw_the += (E[None, :]*np.dot(Ipsiw, theta)[:, None]).T
+                foft_Ipsiw_the += E[None, :]*np.dot(Ipsiw, theta)[:, None]
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
     #and np.dot(theta, Igamv) will give differetn 1d arrays.

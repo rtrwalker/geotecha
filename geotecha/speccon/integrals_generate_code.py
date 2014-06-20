@@ -604,6 +604,8 @@ def EDload_linear():
 
     from sympy import exp, symbols
     t, tau, dT, eig= symbols('t, tau, dT, eig')
+#    sympy.assume(dT>0)
+#    sympy.assume(eig>0)
 #    sympy.var('t, tau, dT, eig')
     loadmag = sympy.tensor.IndexedBase('loadmag')
     loadtim = sympy.tensor.IndexedBase('loadtim')
@@ -628,11 +630,11 @@ def EDload_linear():
     after_instant = (loadmag[k+1] - loadmag[k]) * exp(-dT * eig * (t - loadtim[k]))
 
     within_ramp = Dload * exp(-dT * eig * (t - tau))
-    within_ramp = sympy.integrate(within_ramp, (tau, loadtim[k], t))
+    within_ramp = sympy.integrate(within_ramp, (tau, loadtim[k], t), risch=False, conds='none')
     within_ramp = within_ramp.subs(mp)
 
     after_ramp = Dload * exp(-dT * eig * (t - tau))
-    after_ramp = sympy.integrate(after_ramp, (tau, loadtim[k], loadtim[k+1]))
+    after_ramp = sympy.integrate(after_ramp, (tau, loadtim[k], loadtim[k+1]), risch=False, conds='none')
     after_ramp = after_ramp.subs(mp)
 
 
@@ -2535,7 +2537,7 @@ if __name__ == '__main__':
 #    #print(EDload_coslinear())
 #    print(EDload_linear())
 #    #print(Eload_coslinear())
-#    print(Eload_linear())
+    print(Eload_linear())
 #    #print(dim1_ab_linear_between())
 #    #print(dim1sin_D_aDb_linear())
 #    #print(dim1sin_D_aDb_linear_implementations())

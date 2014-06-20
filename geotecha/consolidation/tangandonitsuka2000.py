@@ -221,13 +221,84 @@ if __name__ == '__main__':
     from geotecha.plotting.one_d import plot_vs_depth
     from geotecha.plotting.one_d import plot_vs_time
 
+#    H = 1
+#    z  = np.linspace(0, H, 10)
+#    t = np.linspace(0,1,100)
+#    kv, kh, ks, kw = (10, 10, 3, 1)
+#    mv=1
+#    gamw = 10
+#    rw, rs, re = (0.03, 0.06, 0.5)
+#    drn = 1
+#    surcharge_vs_time = ((0,0.15, 0.3, 0.45,100.0), (0,50,50.0,100.0,100.0))
+#    tpor = t[np.array([20,60,90])]
+#    nterms = 20
+#
+#    por, avp, settle = tangandonitsuka2000(z=z, t=t, kv=kv, kh=kh, ks=ks, kw=kw, mv=mv, gamw=gamw, rw=rw, rs=rs, re=re, H=H,
+#                       drn=drn, surcharge_vs_time=surcharge_vs_time,
+#                       tpor=tpor, nterms=nterms)
+#
+#
+#
+#
+#    fig_por=plot_vs_depth(por, z, line_labels=['{0:.3g}'.format(v) for v in tpor],
+#                                           prop_dict={'xlabel': 'Pore Pressure'})
+#    fig_por.get_axes()[0].grid()
+##    fig_por.get_axes()[0].set_xlim(0,1.3)
+#
+#    fig_avp=plot_vs_time(t,avp, prop_dict={'ylabel': "average pore pressure"})
+#
+#    fig_set=plot_vs_time(t, settle, prop_dict={'ylabel': "Settlement"})
+#    fig_set.gca().invert_yaxis()
+#
+#    plt.show()
+
+
+########################################
+
+    t = np.array([  1.00000000e-03,   2.00000000e-03,   3.00000000e-03,
+         4.00000000e-03,   5.00000000e-03,   6.00000000e-03,
+         7.00000000e-03,   8.00000000e-03,   9.00000000e-03,
+         1.00000000e-02,   2.00000000e-02,   3.00000000e-02,
+         4.00000000e-02,   5.00000000e-02,   6.00000000e-02,
+         7.00000000e-02,   8.00000000e-02,   9.00000000e-02,
+         1.00000000e-01,   1.10000000e-01,   1.20000000e-01,
+         1.30000000e-01,   1.40000000e-01,   1.50000000e-01,
+         1.60000000e-01,   1.70000000e-01,   1.80000000e-01,
+         1.90000000e-01,   2.00000000e-01,   2.10000000e-01,
+         2.20000000e-01,   2.30000000e-01,   2.40000000e-01,
+         2.50000000e-01,   2.60000000e-01,   2.70000000e-01,
+         2.80000000e-01,   2.90000000e-01,   3.00000000e-01,
+         3.10000000e-01,   3.20000000e-01,   3.30000000e-01,
+         3.40000000e-01,   3.50000000e-01,   3.60000000e-01,
+         3.70000000e-01,   3.80000000e-01,   3.90000000e-01,
+         4.00000000e-01,   4.10000000e-01,   4.20000000e-01,
+         4.30000000e-01,   4.40000000e-01,   4.50000000e-01,
+         4.60000000e-01,   4.70000000e-01,   4.80000000e-01,
+         4.90000000e-01,   5.00000000e-01,   5.10000000e-01,
+         5.20000000e-01,   5.30000000e-01,   5.40000000e-01,
+         5.50000000e-01,   5.60000000e-01,   5.70000000e-01,
+         5.80000000e-01,   5.90000000e-01,   6.00000000e-01,
+         6.10000000e-01,   6.20000000e-01,   6.30000000e-01,
+         6.40000000e-01,   6.50000000e-01,   6.60000000e-01,
+         6.70000000e-01,   6.80000000e-01,   6.90000000e-01,
+         7.00000000e-01,   7.10000000e-01,   7.20000000e-01,
+         7.30000000e-01,   7.40000000e-01,   7.50000000e-01,
+         7.60000000e-01,   7.70000000e-01,   7.80000000e-01,
+         7.90000000e-01,   8.00000000e-01,   8.10000000e-01,
+         8.20000000e-01,   8.30000000e-01,   8.40000000e-01,
+         8.50000000e-01,   8.60000000e-01,   8.70000000e-01,
+         8.80000000e-01,   8.90000000e-01,   9.00000000e-01,
+         9.10000000e-01,   9.20000000e-01,   9.30000000e-01,
+         9.40000000e-01,   9.50000000e-01,   9.60000000e-01,
+         9.70000000e-01,   9.80000000e-01,   9.90000000e-01,
+         1.00000000e+00,   1.01000000e+00])
+
     H = 1
     z  = np.linspace(0, H,10)
-    t = np.linspace(0,1,100)
-    kv, kh, ks, kw = (10, 10, 3, 1)
+    kv, kh, ks, kw = (10, 10, 10, 1)
     mv=1
     gamw = 10
-    rw, rs, re = (0.03, 0.06, 0.5)
+    rw, rs, re = (0.03, 0.03, 0.5)
     drn = 1
     surcharge_vs_time = ((0,0.15, 0.3, 0.45,100.0), (0,50,50.0,100.0,100.0))
     tpor = t[np.array([20,60,90])]
@@ -236,18 +307,7 @@ if __name__ == '__main__':
     por, avp, settle = tangandonitsuka2000(z=z, t=t, kv=kv, kh=kh, ks=ks, kw=kw, mv=mv, gamw=gamw, rw=rw, rs=rs, re=re, H=H,
                        drn=drn, surcharge_vs_time=surcharge_vs_time,
                        tpor=tpor, nterms=nterms)
-
-
-
-
-    fig_por=plot_vs_depth(por, z, line_labels=['{0:.3g}'.format(v) for v in tpor],
-                                           prop_dict={'xlabel': 'Pore Pressure'})
-    fig_por.get_axes()[0].grid()
-#    fig_por.get_axes()[0].set_xlim(0,1.3)
-
-    fig_avp=plot_vs_time(t,avp, prop_dict={'ylabel': "average pore pressure"})
-
-    fig_set=plot_vs_time(t, settle, prop_dict={'ylabel': "Settlement"})
-    fig_set.gca().invert_yaxis()
-
-    plt.show()
+##############################################
+    print('por', repr(por))
+    print('avp', repr(avp))
+    print('settle', repr(settle))
