@@ -495,7 +495,7 @@ def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None,
 
 
 
-def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*D[u(z, t), t] for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -540,6 +540,13 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -599,6 +606,8 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
                 top_omega_phase = [None] * len(top_vs_time)
 
             theta = integ.pdim1sin_ab_linear(m, a, zdist)
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
@@ -613,6 +622,8 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
                 bot_omega_phase = [None] * len(bot_vs_time)
 
             theta = integ.pdim1sin_ab_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
@@ -628,7 +639,7 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time=None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time=None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -676,6 +687,13 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -732,6 +750,8 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
                 top_omega_phase = [None] * len(top_vs_time)
 
             theta = integ.pdim1sin_abc_linear(m, a,b, zdist)
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
@@ -744,6 +764,8 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
             if bot_omega_phase is None:
                 bot_omega_phase = [None] * len(bot_vs_time)
             theta = integ.pdim1sin_abc_linear(m, a, b, PolyLine(a.x1,a.x2,a.x1,a.x2))
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
@@ -759,7 +781,7 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix that arise from homogenising D[a(z)*D[u(z, t),z],z] for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -804,6 +826,13 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional=None
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -859,6 +888,8 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
                 top_omega_phase = [None] * len(top_vs_time)
 
             theta = integ.pdim1sin_D_aDb_linear(m, a, zdist)
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
@@ -872,6 +903,8 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
                 bot_omega_phase = [None] * len(bot_vs_time)
 
             theta = integ.pdim1sin_D_aDb_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
@@ -887,7 +920,7 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseudo_k, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseudo_k, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -933,6 +966,13 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional=None
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -966,6 +1006,8 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
                 E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
             for z, zd, k in zip(zvals, zdist, pseudo_k):
                 theta = k * np.sin(z * m) * zd
+                if not theta_zero_indexes is None:
+                    theta[theta_zero_indexes] = 0.0
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     if not bot_vs_time is None:
@@ -980,6 +1022,8 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
                 E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
             for z, k in zip(zvals, pseudo_k):
                 theta = k * np.sin(z * m) * z
+                if not theta_zero_indexes is None:
+                    theta[theta_zero_indexes] = 0.0
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -989,7 +1033,7 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, mag_vs_time, omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, mag_vs_time, omega_phase=None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix for a * delta(z-zd)*mag(t) where mag is piecewise linear in time multiple by cos(omega * t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
@@ -1024,6 +1068,13 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, 
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional=None
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -1045,6 +1096,8 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, 
         if mag_vs_t is None:
             continue
         theta = k * np.sin(z * m)
+        if not theta_zero_indexes is None:
+            theta[theta_zero_indexes] = 0.0
         if not om_ph is None:
             omega, phase = om_ph
             E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
@@ -1080,7 +1133,7 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, 
 #
 #    return E_Igamv_the
 
-def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth, mag_vs_time, omega_phase = None, dT=1.0):
+def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth, mag_vs_time, omega_phase = None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix for a(z)*D[mag(z, t), t] where mag is bilinear in depth and time multiplied by cos(omega*t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
@@ -1116,6 +1169,13 @@ def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth,
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional=None
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -1160,6 +1220,8 @@ def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth,
         for mag_vs_t, mag_vs_z, om_ph in zip(mag_vs_time, mag_vs_depth, omega_phase):
             a, mag_vs_z = pwise.polyline_make_x_common(a, mag_vs_z)
             theta = integ.pdim1sin_ab_linear(m, a, mag_vs_z)
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
 
             if not om_ph is None:
                 omega, phase = om_ph
@@ -1177,7 +1239,7 @@ def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth,
 
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth, mag_vs_time, omega_phase=None, dT=1.0):
+def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth, mag_vs_time, omega_phase=None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix for a(z)*b(z)*D[mag(z, t), t] where mag is bilinear in depth and time multiplied by cos(omega*t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
@@ -1216,6 +1278,13 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional=None
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -1261,6 +1330,8 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
         for mag_vs_t, mag_vs_z, om_ph in zip(mag_vs_time, mag_vs_depth, omega_phase):
             a, b , mag_vs_z = pwise.polyline_make_x_common(a, b, mag_vs_z)
             theta = integ.pdim1sin_abc_linear(m, a, b, mag_vs_z)
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             if not om_ph is None:
                 omega, phase = om_ph
                 E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
@@ -1303,7 +1374,7 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
 #    else:
 #        return z * H
 
-def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None):
+def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, theta_zero_indexes=None):
     """
     used for extra term in well pore pressure i.e. Ipsiw *thetaBC *UBC(t)
     still needs to be multiplied by phi and 1/(n**2-1)
@@ -1340,6 +1411,13 @@ def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs
         loading combo, mag_vs_time will not be multiplied by a cosine.
     dT : ``float``, optional
         time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional=None
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
 
     Returns
     -------
@@ -1364,6 +1442,8 @@ def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs
                 top_omega_phase = [None] * len(top_vs_time)
 
             theta = integ.pdim1sin_D_aDb_linear(m, a, zdist)
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 E = pwise.pinterp_x_y(top_vs_t, tvals)
                 if not om_ph is None:
@@ -1376,6 +1456,8 @@ def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs
                 bot_omega_phase = [None] * len(bot_vs_time)
 
             theta = integ.pdim1sin_D_aDb_linear(m, a, PolyLine(a.x1,a.x2,a.x1,a.x2))
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 E = pwise.pinterp_x_y(bot_vs_t, tvals)
                 if not om_ph is None:
