@@ -155,6 +155,104 @@ def dengetal2013(z,t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
         return por
 
 
+def dengetal2014(z,t, rw, re, A3=0, H=1, rs=None, ks=None,
+                 kw0=1e10, kh=1, mv=0.1, gamw=10, ui=1, nterms=100):
+    """radial consolidation with  time dependent well resistance
+
+    radially Average excess pore pressure at specified depth and time
+    This is the rigorous formulation, i.e. infinite sum.
+
+
+    kw = kw0 * exp(-A3 * t)
+
+    Parameters
+    ----------
+    z : float or 1d array/list of float
+        depth
+    t : float or 1d array/list of float
+        time
+    rw : float
+        drain radius
+    re : float
+        drain influence radius
+    A3 : float, optional
+        parameter controlling time dependance of well resistance. default = 0
+    H : float, optional
+        drainage path length.  default H = 1
+    rs : float, optional
+        drain influence radius, default=None i.e. no smear zone
+    ks : float, optional
+        smear zone permeability, default = None, i.e. no smear zone
+    kw0 : float, optional
+        initial well permeability, default = 1e10 i.e. infinite
+    kh : float, optional
+        horizontal coefficient of permeability.  default kh = 1
+    mv : float, optional
+        volume compressibility. default mv = 0.1
+    gamw : float, optional
+        unit weight of water.  defaule gamw = 10
+    ui : float, optional
+        initial uniform pore water pressure.  default ui = 1
+    nterms : int, optional
+        number of summation terms, default = 100.
+
+    Returns
+    -------
+    por : 2d array of float
+        pore pressure at depth and time.  por is an array of size
+        (len(z), len(t)).
+
+    References
+    ----------
+    .. [1] Evaluation the consolidation behavior of soft deposit via
+           considering the variation of discharge capacity of prefabricated vertical
+           drains.
+
+    """
+
+
+    if A3 < 0:
+        raise ValueError("A3 must be greater than or equal to 0.  "
+                            "You have A3={}".format(A3))
+    t = np.atleast_1d(t)
+    z = np.atleast_1d(z)
+
+    ch = kh / mv / gamw
+    n = re / rw
+
+    qw0 = kw0 * np.pi * rw**2
+
+    Th = ch * t / 4 / re**2
+
+
+
+    if ks is None or rs is None:
+        mu0 = smear_zones.mu_ideal(n)
+    else:
+        s = rs / rw
+        kap = kh / ks
+        mu0 = smear_zones.mu_constant(n, s, kap)
+
+
+    a3 = A3 * 4 * re**2 / ch
+
+    G0 = np.pi * kh * H**2 / 4 / qw0
+    M = ((2 * np.arange(nterms) + 1) / 2 * np.pi)
+    C0 = M**2*mu0/8/G0 * n**2/ (n**2-1)
+    alp0 = qw0 * mu0 / ( np.pi * kh * (2*H*z - z**2))
+
+    Th = Th[np.newaxis, :, np.newaxis]
+
+    M = M[np.newaxis, np.newaxis, :]
+    C0 = C0[np.newaxis, np.newaxis, :]
+    Z = (z / H)[:, np.newaxis, np.newaxis]
+
+    por =  2 / M * np.sin(M * Z) * ((1+C0 * np.exp(-a3 * Th))/ (1 + C0))**(8 / (a3 * mu0))
+    por = ui * np.sum(por, axis=2)
+
+    return por
+
+
 
 
 if __name__ == "__main__":
@@ -173,7 +271,7 @@ if __name__ == "__main__":
                              ui=1)))
 
     # Reproduce figure 3, from Deng et al 2013
-    if 1:
+    if 0:
         #reproduce deng et al 2013 fig 3a.
         # Note deng has kh/ks=5, but I can only get a match with kh/ks=1.8
 
@@ -269,7 +367,7 @@ if __name__ == "__main__":
 
         plt.show()
 
-    if 1:
+    if 0:
         #reproduce deng et al 2013 fig 3b.
         # Note deng has kh/ks=5, but I can only get a match with kh/ks=1.8
 
@@ -355,7 +453,7 @@ if __name__ == "__main__":
         plt.show()
 
 
-    if 1:
+    if 0:
         #reproduce deng et al 2013 fig 3c.
         # Note deng has kh/ks=5, but I can only get a match with kh/ks=1.8
 
@@ -417,3 +515,154 @@ if __name__ == "__main__":
 
         plt.show()
 
+
+
+    if 1:
+        #reproduce deng et al 2014 fig 3a.
+        # this is to show that the eq5 should initially have higher pore pressure
+        # but as depth increases it shuld have lower excess pore pressure than
+        # equation 8 method.
+
+        res = {}
+        res['digitized Eq5 Th=2.5'] = np.array([[0.0834123, 0.00510204],
+            [0.108057, 0.0229592],
+            [0.127014, 0.0433673],
+            [0.145972, 0.067602],
+            [0.165877, 0.0854592],
+            [0.175355, 0.0994898],
+            [0.224645, 0.16199],
+            [0.254028, 0.19898],
+            [0.29763, 0.265306],
+            [0.323223, 0.298469],
+            [0.377251, 0.397959],
+            [0.390521, 0.429847],
+            [0.408531, 0.469388],
+            [0.423697, 0.501276],
+            [0.43981, 0.544643],
+            [0.454028, 0.580357],
+            [0.474882, 0.646684],
+            [0.488152, 0.700255],
+            [0.500474, 0.756378],
+            [0.508057, 0.799745],
+            [0.520379, 0.90051],
+            [0.525118, 0.996173]])
+        res['digitized Eq5, Th=1.0'] = np.array([[0.363033, 0.00127551],
+            [0.375355, 0.00892857],
+            [0.384834, 0.0242347],
+            [0.393365, 0.0369898],
+            [0.406635, 0.057398],
+            [0.419905, 0.0739796],
+            [0.430332, 0.0918367],
+            [0.441706, 0.112245],
+            [0.487204, 0.19898],
+            [0.50237, 0.232143],
+            [0.534597, 0.298469],
+            [0.561137, 0.371173],
+            [0.570616, 0.399235],
+            [0.588626, 0.456633],
+            [0.603791, 0.501276],
+            [0.62654, 0.596939],
+            [0.646445, 0.683673],
+            [0.655924, 0.753827],
+            [0.664455, 0.830357],
+            [0.668246, 0.90051],
+            [0.672038, 0.993622]])
+        res['digitized Eq5 Th=0.25'] = np.array([[0.776303, 0.00127551],
+            [0.788626, 0.0446429],
+            [0.796209, 0.0688776],
+            [0.800948, 0.0956633],
+            [0.806635, 0.128827],
+            [0.817062, 0.179847],
+            [0.823697, 0.220663],
+            [0.834123, 0.299745],
+            [0.843602, 0.354592],
+            [0.847393, 0.399235],
+            [0.858768, 0.489796],
+            [0.865403, 0.543367],
+            [0.872038, 0.630102],
+            [0.878673, 0.728316],
+            [0.883412, 0.809949],
+            [0.88436, 0.908163],
+            [0.885308, 0.97449],
+            [0.886256, 0.998724]])
+        res['digitized Eq8, Th=0.25'] = np.array([[0.785782, 0.00382653],
+            [0.806635, 0.0561224],
+            [0.834123, 0.19898],
+            [0.849289, 0.302296],
+            [0.85782, 0.401786],
+            [0.865403, 0.502551],
+            [0.87109, 0.600765],
+            [0.876777, 0.69898],
+            [0.878673, 0.80102],
+            [0.880569, 0.90051],])
+
+        res['digitized Eq8, Th=1.0'] = np.array([[0.383886, 0.00127551],
+            [0.429384, 0.0471939],
+            [0.466351, 0.100765],
+            [0.522275, 0.19898],
+            [0.563981, 0.298469],
+            [0.592417, 0.40051],
+            [0.616114, 0.5],
+            [0.633175, 0.600765],
+            [0.642654, 0.69898],
+            [0.652133, 0.799745],
+            [0.65782, 0.90051],
+            [0.658768, 0.998724]])
+        res['digitized Eq8, Th=2.5'] = np.array([[0.092891, 0.00127551],
+                [0.136493, 0.0280612],
+                [0.216114, 0.0982143],
+                [0.299526, 0.19898],
+                [0.361137, 0.299745],
+                [0.404739, 0.40051],
+                [0.43981, 0.501276],
+                [0.461611, 0.598214],
+                [0.478673, 0.701531],
+                [0.491943, 0.799745],
+                [0.498578, 0.903061],
+                [0.500474, 0.992347]])
+        z = np.linspace(0, 20, 100)
+        Th = np.array([0.25, 1.0, 2.5])
+        rw=0.035
+        rs = 0.175
+
+        re=0.525
+        gamw = 10
+        mv=0.2e-3
+        kh=2e-8
+        ks = kh/5#1.8
+        kw0 = 1e-3
+        ch = kh / mv / gamw
+        t = Th * 4 * re**2 / ch
+
+
+        mu0 = smear_zones.mu_constant(re/rw, rs/rw, kh/ks)
+        a3 = np.array([1.0])
+        A3 = a3 * ch / re**2 /4
+
+        for a3_, A3_ in zip(a3, A3):
+            por5 = dengetal2013(z, t, rw=rw, re=re, A1=1, A2=0.0, A3=A3_, H=20,
+                          rs=rs, ks=ks, kw0=kw0, kh=kh, mv=mv, gamw=10, ui=1)
+            por8 = dengetal2014(z, t, rw=rw, re=re, A3=A3_, H=20,
+                          rs=rs, ks=ks, kw0=kw0, kh=kh, mv=mv, gamw=10, ui=1, nterms=1000)
+
+            for j, t_ in enumerate(t):
+                uz0 = np.exp(-8*Th[j]/mu0)
+                plt.plot(por5[:,j], z, marker='o', label="eq5 Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                plt.plot(por8[:,j], z, marker='o', label="eq8 Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                plt.plot(uz0,0, marker='o', ms=14)
+
+        for key, val in res.iteritems():
+            x = val[:,0]
+            y = val[:,1]*20
+            plt.plot(x,y, label=key, marker='s', linestyle='None', markersize=7)
+
+        leg = plt.legend(loc=3 )
+        leg.draggable()
+        plt.gca().set_xlabel('Pore pressure')
+        plt.gca().set_ylabel('Depth')
+        plt.gca().invert_yaxis()
+        plt.gca().set_xlim(0,1)
+        plt.gca().grid()
+        plt.title('Deng et al. 2014, figure 3a, time variation 2 methods')
+
+        plt.show()
