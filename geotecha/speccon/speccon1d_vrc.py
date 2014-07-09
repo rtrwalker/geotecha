@@ -17,14 +17,14 @@
 
 """
 Speccon 1d with stone column
+ Note there is no pumping or fixed pore pressure functionality.
+
 """
 from __future__ import division, print_function
 import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
 import geotecha.math.transformations as transformations
-
-
 
 
 import itertools
@@ -55,7 +55,6 @@ except ImportError:
 class Speccon1dVRC(speccon1d.Speccon1d):
     """
 
-
     1d consolidation with:
 
     - vertical and radial drainage (radial drainage uses the eta method)
@@ -77,8 +76,9 @@ class Speccon1dVRC(speccon1d.Speccon1d):
       linear with time
     - calculates
 
-      - excess pore pressure at depth (in soil and drain)
-      - average excess pore pressure between depths
+      - excess pore pressure at depth (in soil and drain and overall)
+      - average excess pore pressure between depths (in soil, column and
+        overall)
       - settlement between depths
 
     Parameters
@@ -142,7 +142,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
     dThc : float, optional
         horizontal reference time factor multiplier.  dTh is calculated with
         the reference values of khc, and mv: dThc = 8*khc / (mv * gamw) /rc**2
-
     mv : PolyLine
         normalised volume compressibility PolyLine(depth, mv).  The mv here
         is the value of ms / (1 + alp * (Y - 1)) normalised by mvref.  Y is
@@ -187,33 +186,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         mag_vs_time * cos(omega*t + phase). if bot_omega_phase is None
         then cyclic componenet will be ignored.  if bot_omega_phase is a
         list then if any member is None then cyclic component will not be
-        applied for that load combo.
-    fixed_ppress: list of 3 element tuple, optional
-        (zfixed, pseudo_k, PolyLine(time, magnitude)).  zfixed is the
-        normalised z at which pore pressure is fixed. pseudo_k is a
-        permeability-like coefficient that controls how quickly the pore
-        pressure reduces to the fixed value (pseudo_k should be as high as
-        possible without causing numerical difficulties). If the third
-        element of the tuple is None then the pore pressure will be fixed at
-        zero rather than a prescribed mag_vs_time PolyLine.
-    fixed_ppress_omega_phase : list of 2 element tuples, optional
-        (omega, phase) to define cyclic variation of fixed ppress. i.e.
-        mag_vs_time * cos(omega*t + phase). if fixed_ppress _omega_phase is
-        None then cyclic componenet will be ignored.  if
-        fixed_ppress_omega_phase is a list then if any member is None then
-        cyclic component will not be applied for that load combo.
-    pumping: list of 2 element tuple
-        (zpump, mag_vs_time).  `zpump` is the normalised
-        z at which pumping takes place. The mag_vs_time polyline should be
-        the actual pumping velocity.  Within the program the actual pumping
-        velocity will be normalised by dividing by (mvref * H).
-        Negative values of vp will pump fluid out of the model, positive
-        values of vp will pump fluid into the model.
-    pumping_omega_phase : list of 2 element tuples, optional
-        (omega, phase) to define cyclic variation of pumping velocity. i.e.
-        mag_vs_time * cos(omega*t + phase). if pumping_omega_phase is
-        None then cyclic componenet will be ignored.  if pumping_omega_phase is
-        a list then if any member is None then cyclic component will not be
         applied for that load combo.
     ppress_z : list_like of float, optional
         normalised z to calc pore pressure at
@@ -272,8 +244,14 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         plot_properties    description
         ==================  ============================================
         por                 dict of prop to pass to pore pressure plot.
-        avp                 dict of prop to pass to avergae pore
+        pors                dict of prop to pass to soil pore pressure plot.
+        porc                dict of prop to pass to column pore pressure plot.
+        avp                 dict of prop to pass to average overall pore
                             pressure plot.
+        avps                dict of prop to pass to average
+                            soil pore pressure plot.
+        avpc                dict of prop to pass to average
+                            column pore pressure plot.
         set                 dict of prop to pass to settlement plot.
         load                dict of prop to pass to pore pressure plot.
         material            dict of prop to pass to materials plot.
@@ -323,7 +301,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
 
     References
     ----------
-    All based on work by Dr Rohan Walker [1]_, [2]_, [3]_, [4]_
+    Work is extensions of Dr Rohan Walker [1]_, [2]_, [3]_, [4]_
 
     .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW, Australia: University of Wollongong.
     .. [2] Walker, R., and B. Indraratna. 2009. 'Consolidation Analysis of a Stratified Soil with Vertical and Horizontal Drainage Using the Spectral Method'. Geotechnique 59 (5) (January): 439-449. doi:10.1680/geot.2007.00019.
@@ -379,7 +357,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             'top_vs_time top_omega_phase'.split(),
             'bot_vs_time bot_omega_phase'.split(),
             'fixed_ppress_omega_phase fixed_ppress'.split(),
-            'pumping pumping_omega_phase'.split()] #pairs that should have the same length
+            'pumping pumping_omega_phase'.split()]
 
         self._attributes_to_force_same_len = [
             "surcharge_vs_time surcharge_omega_phase".split(),
@@ -458,37 +436,18 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         self.tvals = None
         self.RLzero = None
 
-        self.plot_properties = self._attribute_defaults.get('plot_properties', None)
+        self.plot_properties = self._attribute_defaults.get('plot_properties',
+                                                            None)
 
-        self.ppress_z_tval_indexes = self._attribute_defaults.get('ppress_z_tval_indexes', None)
-        self.avg_ppress_z_pairs_tval_indexes = self._attribute_defaults.get('avg_ppress_z_pairs_tval_indexes', None)
-        self.settlement_z_pairs_tval_indexes = self._attribute_defaults.get('settlement_z_pairs_tval_indexes', None)
+        self.ppress_z_tval_indexes = self._attribute_defaults.get(
+                'ppress_z_tval_indexes', None)
+        self.avg_ppress_z_pairs_tval_indexes = self._attribute_defaults.get(
+                'avg_ppress_z_pairs_tval_indexes', None)
+        self.settlement_z_pairs_tval_indexes = self._attribute_defaults.get(
+                'settlement_z_pairs_tval_indexes', None)
 
 
         return
-
-
-#    def make_all(self):
-#        """run checks, make all arrays, make output
-#
-#        Generally run this after input is in place (either through
-#        initializing the class with a reader/text/fileobject or
-#        through some other means)
-#
-#        See also
-#        --------
-#        check_input_attributes
-#        make_time_independent_arrays
-#        make_time_dependent_arrays
-#        make_output
-#
-#        """
-#
-#        self.check_input_attributes()
-#        self.make_time_independent_arrays()
-#        self.make_time_dependent_arrays()
-#        self.make_output()
-#        return
 
     def make_time_independent_arrays(self):
         """make all time independent arrays
@@ -534,7 +493,9 @@ class Speccon1dVRC(speccon1d.Speccon1d):
     def make_output(self):
         """make all output"""
 
-        header1 = "program: speccon1d_vrc; geotecha version: {}; author: {}; date: {}\n".format(self.version, self.author, time.strftime('%Y/%m/%d %H:%M:%S'))
+        header1 = ("program: speccon1d_vrc; geotecha version: "
+            "{}; author: {}; date: {}\n").format(self.version,
+                self.author, time.strftime('%Y/%m/%d %H:%M:%S'))
         if not self.title is None:
             header1+= "{}\n".format(self.title)
 
@@ -631,7 +592,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         self.m = integ.m_from_sin_mx(np.arange(self.neig), self.drn)
         return
 
-#        self._make_gams()
 
     def _make_gam(self):
         """make the mv dependant gam matrix
@@ -651,7 +611,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
 
 
         """
-
 
         #psi_sv, kv part
         if sum([v is None for v in [self.kv, self.dTv]])==0:
@@ -717,11 +676,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         self.psi *=-1.0
 
 
-#        #fixed pore pressure part
-#        if not self.fixed_ppress is None:
-#            for (zfixed, pseudo_k, mag_vs_time) in self.fixed_ppress:
-#                self.psi += pseudo_k / self.dT * np.sin(self.m[:, np.newaxis] * zfixed) * np.sin(self.m[np.newaxis, :] * zfixed)
-
         return
 
     def _make_eigs_and_v(self):
@@ -781,12 +735,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         if not self.top_vs_time is None or not self.bot_vs_time is None:
             self._make_E_Igamv_the_BC()
             self.E_Igamv_the += self.E_Igamv_the_BC
-#        if not self.fixed_ppress is None:
-#            self._make_E_Igamv_the_fixed_ppress()
-#            self.E_Igamv_the +=self.E_Igamv_the_fixed_ppress
-#        if not self.pumping is None:
-#            self._make_E_Igamv_the_pumping()
-#            self.E_Igamv_the += self.E_Igamv_the_pumping
 
         return
 
@@ -817,51 +765,15 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         part of the solution for all surcharge loads
 
         """
-        self.E_Igamv_the_surcharge = speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m, self.eigs, self.tvals, self.Igamv, self.mv, self.surcharge_vs_depth, self.surcharge_vs_time, self.surcharge_omega_phase, self.dT)
-#        self.E_Igamv_the_surcharge = (
-#            speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(
-#                self.m, self.eigs, self.tvals, self.Igamv, self.mv,
-#                self.surcharge_vs_depth, self.surcharge_vs_time,
-#                self.surcharge_omega_phase, self.dT))
+        self.E_Igamv_the_surcharge = (
+            speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m,
+                   self.eigs, self.tvals, self.Igamv, self.mv,
+                   self.surcharge_vs_depth, self.surcharge_vs_time,
+                   self.surcharge_omega_phase, self.dT))
+
         return
 
 
-#    def _make_E_Igamv_the_fixed_ppress(self):
-#        """make the fixed pore pressure loading matrices
-#
-#        """
-#
-#        self.E_Igamv_the_fixed_ppress = np.zeros((self.neig, len(self.tvals)))
-#
-#        if not self.fixed_ppress is None:
-#            zvals = [v[0] for v in self.fixed_ppress]
-#            pseudo_k = [v[1] for v in self.fixed_ppress]
-#            mag_vs_time = [v[2] for v in self.fixed_ppress]
-#            self.E_Igamv_the_fixed_ppress += (
-#                speccon1d.dim1sin_E_Igamv_the_deltamag_linear(
-#                    self.m, self.eigs, self.tvals, self.Igamv,
-#                    zvals, pseudo_k, mag_vs_time,
-#                    self.fixed_ppress_omega_phase, self.dT))
-#
-#
-#    def _make_E_Igamv_the_pumping(self):
-#        """make the pumping loading matrices
-#
-#        """
-#
-#        self.E_Igamv_the_pumping = np.zeros((self.neig, len(self.tvals)))
-#
-#        if not self.pumping is None:
-#            zvals = [v[0] for v in self.pumping]
-#            pseudo_k = [1 for v in self.pumping]
-#            #dividing by mvref*H is because input pumping velocities need to
-#            # normalised
-#            mag_vs_time = [v[1] / (self.mvref * self.H) for v in self.pumping]
-#            self.E_Igamv_the_pumping += (
-#                speccon1d.dim1sin_E_Igamv_the_deltamag_linear(
-#                    self.m, self.eigs, self.tvals, self.Igamv,
-#                    zvals, pseudo_k, mag_vs_time,
-#                    self.pumping_omega_phase, self.dT))
 
 
     def _normalised_bot_vs_time(self):
@@ -929,17 +841,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                         self.bot_omega_phase, self.dT))
 
 
-#        #the pseudo_k * delta(z-zfixed)*u component, i.e. the fixed_ppress part
-#        if not self.fixed_ppress is None:
-#            zvals = [v[0] for v in self.fixed_ppress]
-#            pseudo_k = [v[1] for v in self.fixed_ppress]
-#            self.E_Igamv_the_BC -= (
-#                speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(
-#                    self.drn, self.m, self.eigs, self.tvals,
-#                    self.Igamv, zvals, pseudo_k, self.top_vs_time,
-#                    bot_vs_time, self.top_omega_phase,
-#                    self.bot_omega_phase, self.dT))
-
 
     def _make_por(self):
         """make the pore pressure output, us, uc, and u
@@ -967,7 +868,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             self.v_E_Igamv_the[:, self.ppress_z_tval_indexes],
             self.drn, self.top_vs_time, bot_vs_time,
             self.top_omega_phase, self.bot_omega_phase)
-#        self.por=np.asarray(self.por)
 
         #soil pore poressure at depth
         self.pors = speccon1d.dim1sin_f(self.m, self.ppress_z,
@@ -990,7 +890,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                     self.top_omega_phase, self.bot_omega_phase)
             self.pors += speccon1d.dim1sin_f(self.m, self.ppress_z,
                                              tvals, a+b, self.drn)
-#        self.pors = np.asarray(self.pors)
 
         #column pore pressure at depth
         self.porc = speccon1d.dim1sin_f(self.m, self.ppress_z,
@@ -1013,32 +912,9 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                     self.top_omega_phase, self.bot_omega_phase)
             self.porc += speccon1d.dim1sin_f(self.m, self.ppress_z,
                                              tvals, a+b, self.drn)
-#        self.porc = np.asarray(self.porc)
         return
 
-#    def _make_porwell(self):
-#        """make the well/drain pore pressure output
-#
-#        """
-#        bot_vs_time = self._normalised_bot_vs_time()
-#
-#        tvals = self.tvals[self.ppress_z_tval_indexes]
-#        #phi * Ipsi_w * psi_s * v_E_Igamv_the part, including BC adjustment
-#        a = np.dot(self.Ipsi_w, self.psi_s)
-#        v_E_Igamv_the = np.dot(a, self.v_E_Igamv_the[:, self.ppress_z_tval_indexes])
-#        self.porwell = speccon1d.dim1sin_f(self.m, self.ppress_z, tvals, v_E_Igamv_the, self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
-#
-#
-#        #1/(n**2-1) * (phi * Ipsi_w * psi_s * thetaT(t) + phi * Ipsi_w * psi_s * thetaT(t))
-#        v_E_Igamv_the = speccon1d.dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(
-#                self.drn, self.m, self.eigs, tvals, self.Ipsi_w,
-#                self.kw, self.top_vs_time, bot_vs_time,
-#                top_omega_phase=None, bot_omega_phase=None)
-#
-#
-#        self.porwell += speccon1d.dim1sin_f(self.m, self.ppress_z,
-#                                            tvals, v_E_Igamv_the, self.drn)
-#        return
+
 
 
     def _make_avp(self):
@@ -1065,7 +941,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             v_E_Igamv_the,
             self.drn, self.top_vs_time, bot_vs_time,
             self.top_omega_phase, self.bot_omega_phase)
-#        self.avp = np.asarray(self.avp)
+
         #soil pore poressure at depth
         self.avps = speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs,
             tvals,
@@ -1087,7 +963,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                     self.top_omega_phase, self.bot_omega_phase)
             self.avps += speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs,
                                              tvals, a+b, self.drn)
-#        self.avps = np.asarray(self.avps)
 
         #column pore pressure at depth
         self.avpc = speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs,
@@ -1110,7 +985,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                     self.top_omega_phase, self.bot_omega_phase)
             self.avpc += speccon1d.dim1sin_avgf(self.m, self.avg_ppress_z_pairs,
                                              tvals, a+b, self.drn)
-#        self.avpc = np.asarray(self.avpc)
 
 
         return
@@ -1138,33 +1012,25 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         z1 = np.asarray(self.settlement_z_pairs)[:,0]
         z2 = np.asarray(self.settlement_z_pairs)[:,1]
 
-        self.set=-speccon1d.dim1sin_integrate_af(self.m, self.settlement_z_pairs, self.tvals[self.settlement_z_pairs_tval_indexes],
-                                       self.v_E_Igamv_the[:,self.settlement_z_pairs_tval_indexes],
-                                        self.drn, self.mv, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
+        self.set = -speccon1d.dim1sin_integrate_af(self.m,
+                     self.settlement_z_pairs,
+                     self.tvals[self.settlement_z_pairs_tval_indexes],
+                     self.v_E_Igamv_the[:,self.settlement_z_pairs_tval_indexes],
+                     self.drn, self.mv, self.top_vs_time, bot_vs_time,
+                     self.top_omega_phase, self.bot_omega_phase)
 
         if not self.surcharge_vs_time is None:
-            self.set += pwise.pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(self.surcharge_vs_time, self.surcharge_vs_depth, self.mv, self.tvals[self.settlement_z_pairs_tval_indexes], z1, z2, omega_phase = self.surcharge_omega_phase, achoose_max=True)
+            self.set += (
+                pwise.pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(
+                    self.surcharge_vs_time, self.surcharge_vs_depth,
+                    self.mv,
+                    self.tvals[self.settlement_z_pairs_tval_indexes], z1, z2,
+                    omega_phase = self.surcharge_omega_phase,
+                    achoose_max=True))
 
         self.set *= self.H * self.mvref
         return
 
-
-#    def _plot_porwell(self):
-#        """plot depth vs well/drain pore pressure for various times
-#
-#        """
-#        t = self.tvals[self.ppress_z_tval_indexes]
-#        line_labels = ['{:.3g}'.format(v) for v in t]
-#        por_prop = self.plot_properties.pop('porwell', dict())
-#        if not 'xlabel' in por_prop:
-#            por_prop['xlabel'] = 'Drain Pore pressure'
-#
-#        #to do
-#        fig_porwell = geotecha.plotting.one_d.plot_vs_depth(self.porwell, self.ppress_z,
-#                                      line_labels=line_labels, H = self.H,
-#                                      RLzero=self.RLzero,
-#                                      prop_dict=por_prop)
-#        return fig_porwell
 
     def _plot_pors(self):
         """plot soil depth vs pore pressure for various times
@@ -1177,7 +1043,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             por_prop['xlabel'] = 'Soil pore pressure'
 
         #to do
-        fig_por = geotecha.plotting.one_d.plot_vs_depth(self.pors, self.ppress_z,
+        fig_por = geotecha.plotting.one_d.plot_vs_depth(self.pors,
+                                                        self.ppress_z,
                                       line_labels=line_labels, H = self.H,
                                       RLzero=self.RLzero,
                                       prop_dict=por_prop)
@@ -1193,7 +1060,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             porc_prop['xlabel'] = 'Column pore pressure'
 
         #to do
-        fig_porc = geotecha.plotting.one_d.plot_vs_depth(self.porc, self.ppress_z,
+        fig_porc = geotecha.plotting.one_d.plot_vs_depth(self.porc,
+                                                         self.ppress_z,
                                       line_labels=line_labels, H = self.H,
                                       RLzero=self.RLzero,
                                       prop_dict=porc_prop)
@@ -1210,7 +1078,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             por_prop['xlabel'] = 'Pore pressure'
 
         #to do
-        fig_por = geotecha.plotting.one_d.plot_vs_depth(self.por, self.ppress_z,
+        fig_por = geotecha.plotting.one_d.plot_vs_depth(self.por,
+                                                        self.ppress_z,
                                       line_labels=line_labels, H = self.H,
                                       RLzero=self.RLzero,
                                       prop_dict=por_prop)
@@ -1389,7 +1258,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             xlabels.append('$\\eta/\\overline{{\\eta}}$, $\\left(\\overline{{\\eta}}={:g}\\right)$'.format(self.etref))
 
 
-        return (geotecha.plotting.one_d.plot_single_material_vs_depth(z_x, xlabels, H = self.H,
+        return (geotecha.plotting.one_d.plot_single_material_vs_depth(z_x,
+                            xlabels, H = self.H,
                             RLzero = self.RLzero,prop_dict = material_prop))
     def _plot_loads(self):
         """plot loads
@@ -1410,14 +1280,6 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                     zip(self.surcharge_vs_time, self.surcharge_vs_depth,
                     self.surcharge_omega_phase)])
 
-#        if not self.vacuum_vs_time is None:
-#            load_names.append('vac')
-#            ylabels.append('Vacuum')
-#            load_triples.append(
-#                [(vs_time, vs_depth, omega_phase) for
-#                    vs_time, vs_depth, omega_phase  in
-#                    zip(self.vacuum_vs_time, self.vacuum_vs_depth,
-#                    self.vacuum_omega_phase)])
 
         if not self.top_vs_time is None:
             load_names.append('top')
@@ -1437,43 +1299,13 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                     vs_time, omega_phase  in
                     zip(self.bot_vs_time, self.bot_omega_phase)])
 
-#        if not self.fixed_ppress is None:
-#            load_names.append('fixed p')
-#            ylabels.append('Fixed ppress')
-#            fixed_ppress_triples=[]
-#            for (zfixed, pseudo_k,
-#                     vs_time), omega_phase in zip(self.fixed_ppress,
-#                                                self.fixed_ppress_omega_phase):
-#
-#                if vs_time is None:
-#                    vs_time = PolyLine([self.tvals[0], self.tvals[-1]], [0,0])
-#
-#                vs_depth = ([zfixed], [1])
-#                fixed_ppress_triples.append((vs_time,vs_depth, omega_phase))
-#
-#            load_triples.append(fixed_ppress_triples)
-#
-#        if not self.pumping is None:
-#            #TODO: maybe multiply mag_vs_time by H and mvref to atual pumping
-#            #velocity rather than normalised.
-#            # gradient rather than normalised.
-#            load_names.append('pump')
-#            ylabels.append('Pumping velocity')
-#            pumping_triples=[]
-#            for (zpump, vs_time), omega_phase in zip(self.pumping,
-#                                                    self.pumping_omega_phase):
-#                vs_depth = ([zpump], [1])
-#                pumping_triples.append((vs_time, vs_depth, omega_phase))
-#
-#            load_triples.append(pumping_triples)
-
         return (geotecha.plotting.one_d.plot_generic_loads(load_triples, load_names,
                     ylabels=ylabels, H = self.H, RLzero=self.RLzero,
                     prop_dict=load_prop))
 
 
 def main():
-    a = GenericInputFileArgParser(obj=Speccon1dVR,
+    a = GenericInputFileArgParser(obj=Speccon1dVRC,
                                   methods=[('make_all', [], {})],
                                  pass_open_file=True)
 
@@ -1483,112 +1315,5 @@ if __name__ == '__main__':
 #    import nose
 #    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 ##    nose.runmodule(argv=['nose', '--verbosity=3'])
-#    main()
-    my_code = textwrap.dedent("""\
-#from geotecha.piecewise.piecewise_linear_1d import PolyLine
-#import numpy as np
-H = 1
-drn = 1
-dT = 1
-dTh = 0.5
-dTv = 0.1 * 0.25
-dThc = 1000
-dTvc = 1000
-neig = 20
+    main()
 
-
-mvref = 2.0
-kvref = 1.0
-khref = 1.0
-kvcref = 1.0
-khcref = 1.0
-etref = 1.0
-
-
-re=1.5
-rc=0.1
-n = re/rc
-
-# work out lumped mv parameter
-mv_x = np.array([0.0,1.0])
-ms_y = np.array([0.5,0.5])
-mc_y = np.array([0.5,0.5])/200
-mv_y = ms_y/(1+(ms_y/mc_y-1)/n**2)
-mv = PolyLine(mv_x, mv_y)
-
-kh = PolyLine([0,1], [1,1])
-kv = PolyLine([0,1], [5,5])
-khc = PolyLine([0,1], [1,1])
-kvc = PolyLine([0,1], [5,5])
-
-#et = PolyLine([0,0.48,0.48, 0.52, 0.52,1], [0, 0,1,1,0,0])
-et = PolyLine([0,1], [1,1])
-
-#surcharge_vs_depth = PolyLine([0,1], [1,1]),
-#surcharge_vs_time = PolyLine([0,0,10], [0,10,10])
-#surcharge_omega_phase = (2*np.pi*0.5, -np.pi/2)
-surcharge_vs_depth = PolyLine([0,1], [1,1])
-surcharge_vs_time = PolyLine([0,0,10], [0,10,10])
-#surcharge_omega_phase = [(2*np.pi*0.5, -np.pi/2), None]
-
-
-#dT = 1
-#dTh = 0.5
-#dTv = 0.1 * 0.25
-#mv = PolyLine([0,1], [0.5, 0.5])
-#surcharge_vs_depth = [PolyLine([0,1], [1,1]), PolyLine([0,1], [1,1])]
-#surcharge_vs_time = [PolyLine([0,0,10], [0,10,10]), PolyLine([0,0,10], [0,10,10])]
-
-
-
-#top_vs_time = PolyLine([0,0.0,10], [0,-100,-100])
-#top_omega_phase = (2*np.pi*1, -np.pi/2)
-#bot_vs_time = PolyLine([0,0.0,3], [0,-10,-10])
-#bot_vs_time = PolyLine([0,0.0,10], [0, -10, -10])
-
-#bot_vs_time = PolyLine([0,0.0,0.4,10], [0, -2500, -250, -210])
-#bot_omega_phase = (2*np.pi*2, -np.pi/2)
-
-
-#fixed_ppress = (0.2, 1000, PolyLine([0, 0.0, 8], [0,-30,-30]))
-#fixed_ppress_omega_phase = (2*np.pi*2, -np.pi/2)
-
-#pumping = (0.5, PolyLine([0,0,10], [0,5,5]))
-
-
-ppress_z = np.linspace(0,1,50)
-avg_ppress_z_pairs = [[0,1],[0.4, 0.5]]
-settlement_z_pairs = [[0,1],[0.4, 0.5]]
-#tvals = np.linspace(0,3,10)
-tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
-tvals = np.linspace(0, 5, 100)
-tvals = np.logspace(-2, 0.3,50)
-ppress_z_tval_indexes = np.arange(len(tvals))[::len(tvals)//7]
-#avg_ppress_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
-#settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
-
-implementation='scalar'
-implementation='vectorized'
-#implementation='fortran'
-#RLzero = -12.0
-plot_properties={}
-
-directory= r"C:\\Users\\Rohan Walker\\Documents\\temp" #may always need the r
-save_data_to_file= True
-save_figures_to_file= True
-show_figures= True
-overwrite=True
-
-#prefix="silly"
-
-#create_directory=True
-#data_ext = '.csv'
-#input_ext='.py'
-figure_ext='.png'
-
-    """)
-
-
-    a = Speccon1dVRC(my_code)
-
-    a.make_all()
