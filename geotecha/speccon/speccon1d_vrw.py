@@ -709,6 +709,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
 
         self.eigs, self.v = np.linalg.eig(Igam_psi)
 
+        self.v = np.asarray(self.v)
         self.Igamv = np.linalg.inv(np.dot(self.gam, self.v))
         return
 
@@ -928,7 +929,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
 
         """
         bot_vs_time = self._normalised_bot_vs_time()
-        self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals[self.ppress_z_tval_indexes], self.v_E_Igamv_the[:, self.ppress_z_tval_indexes], self.drn, self.top_vs_time, self.bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
+        self.por= speccon1d.dim1sin_f(self.m, self.ppress_z, self.tvals[self.ppress_z_tval_indexes], self.v_E_Igamv_the[:, self.ppress_z_tval_indexes], self.drn, self.top_vs_time, bot_vs_time, self.top_omega_phase, self.bot_omega_phase)
         return
 
     def _make_porwell(self):
@@ -948,10 +949,11 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         v_E_Igamv_the = speccon1d.dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(
                 self.drn, self.m, self.eigs, tvals, self.Ipsi_w,
                 self.kw, self.top_vs_time, bot_vs_time,
-                top_omega_phase=None, bot_omega_phase=None)
+                self.top_omega_phase, self.bot_omega_phase)
 
-
-        self.porwell += speccon1d.dim1sin_f(self.m, self.ppress_z,
+        #TODO: not entirely sure about dTw.  I think it is needed for the
+        # theta cv part.
+        self.porwell += self.dTw * speccon1d.dim1sin_f(self.m, self.ppress_z,
                                             tvals, v_E_Igamv_the, self.drn)
         return
 
@@ -1270,7 +1272,7 @@ dT = 1
 dTh = 0.5
 dTv = 0.1 * 0.25
 dTw = 10000
-neig = 40
+neig = 2
 
 
 

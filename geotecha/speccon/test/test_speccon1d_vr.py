@@ -3623,8 +3623,8 @@ def test_zhuandyin2012_drn0_kv_mv_non_linear_BC():
 
 
 if __name__ == '__main__':
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
 
 #    test_terzaghi_1d_PTPB()
@@ -3650,4 +3650,4 @@ if __name__ == '__main__':
 #    test_zhuandyin2012_drn0_kv_mv_non_linear()
 #    test_zhuandyin2012_drn1_kv_mv_non_linear()
 #    test_zhuandyin2012_drn0_kv_mv_non_linear_BC()
-    test_schiffman_and_stein_1970()
+#    test_schiffman_and_stein_1970()

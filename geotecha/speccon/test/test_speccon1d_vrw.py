@@ -4034,21 +4034,21 @@ def test_tang_and_onitsuka_vert_and_radial_well_resistance():
 
 
 
-            plt.figure()
-            plt.plot(por, z,'b-*', label='expected')
-            plt.plot(a.por, z, 'r-+', label='calculated')
-            plt.legend()
-
-
-            plt.figure()
-            plt.plot(t,settle[0],'b-*', label='expected')
-            plt.plot(t, a.set[0], 'r-+', label='calculated')
-            plt.legend()
-            plt.figure()
-            plt.plot(t, avp[0],'b-*',  label='expected')
-            plt.plot(t, a.avp[0], 'r-+', label='calculated')
-            plt.legend()
-            plt.show()
+#            plt.figure()
+#            plt.plot(por, z,'b-*', label='expected')
+#            plt.plot(a.por, z, 'r-+', label='calculated')
+#            plt.legend()
+#
+#
+#            plt.figure()
+#            plt.plot(t,settle[0],'b-*', label='expected')
+#            plt.plot(t, a.set[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.figure()
+#            plt.plot(t, avp[0],'b-*',  label='expected')
+#            plt.plot(t, a.avp[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.show()
             assert_allclose(a.avp, avp, atol=1e-2,
                             err_msg = ("Fail. test_tang_and_onitsuka_vert_and_radial, avp, "
                                 "implementation='%s', dT=%s" % (impl, dT)))
@@ -4517,21 +4517,21 @@ ppress_z_tval_indexes = np.arange(len(tvals))[::len(tvals)//7]
 
 
 
-            plt.figure()
-            plt.plot(por, z,'b-*', label='expected')
-            plt.plot(a.por, z, 'r-+', label='calculated')
-            plt.legend()
-
-
-            plt.figure()
-            plt.plot(t,settle[0],'b-*', label='expected')
-            plt.plot(t, a.set[0], 'r-+', label='calculated')
-            plt.legend()
-            plt.figure()
-            plt.plot(t, avp[0],'b-*',  label='expected')
-            plt.plot(t, a.avp[0], 'r-+', label='calculated')
-            plt.legend()
-            plt.show()
+#            plt.figure()
+#            plt.plot(por, z,'b-*', label='expected')
+#            plt.plot(a.por, z, 'r-+', label='calculated')
+#            plt.legend()
+#
+#
+#            plt.figure()
+#            plt.plot(t,settle[0],'b-*', label='expected')
+#            plt.plot(t, a.set[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.figure()
+#            plt.plot(t, avp[0],'b-*',  label='expected')
+#            plt.plot(t, a.avp[0], 'r-+', label='calculated')
+#            plt.legend()
+#            plt.show()
             assert_allclose(a.avp, avp, atol=1,
                             err_msg = ("Fail. two_layers_no_drain_in_bottom_layer, avp, "
                                 "implementation='%s', dT=%s" % (impl, dT)))
@@ -4637,10 +4637,10 @@ tvals = np.%s
 
 
 
-            plt.figure()
-            plt.plot(por, z,'b-*', label='expected')
-            plt.plot(a.por, z, 'r-+', label='calculated')
-            plt.legend()
+#            plt.figure()
+#            plt.plot(por, z,'b-*', label='expected')
+#            plt.plot(a.por, z, 'r-+', label='calculated')
+#            plt.legend()
 
 
 #            plt.figure()
@@ -4664,8 +4664,8 @@ tvals = np.%s
 
 
 if __name__ == '__main__':
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
 
 #    test_BC_terzaghi_1d_PTIB()
@@ -4695,4 +4695,4 @@ if __name__ == '__main__':
 #    test_schiffman_and_stein_1970()
 #    test_tang_and_onitsuka_vert_and_radial_well_resistance()
 #    test_two_layers_no_drain_in_bottom_layer()
-    test_dengetal2013()
+#    test_dengetal2013()
