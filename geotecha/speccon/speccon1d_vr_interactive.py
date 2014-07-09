@@ -52,6 +52,47 @@ from geotecha.speccon.speccon1d_vr import Speccon1dVR
 
 if __name__ == '__main__':
 
+    my_code = textwrap.dedent("""\
+H = 1
+drn = 1
+dT = 1
+dTh = 5
+dTv = 0.1 * 0.25
+neig = 40
+
+mvref = 2.0
+kvref = 1.0
+khref = 1.0
+etref = 1.0
+
+
+mv = PolyLine([0,1], [0.5,0.5])
+kh = PolyLine([0,1], [1,1])
+kv = PolyLine([0,1], [5,5])
+et = PolyLine([0,0.5, 0.5, 1], [1,1, 0,0])
+surcharge_vs_depth = [PolyLine([0,1], [1,1]), PolyLine([0,1], [1,1])]
+surcharge_vs_time = [PolyLine([0,0,10], [0,10,10]), PolyLine([0,0,10], [0,10,10])]
+
+ppress_z = np.linspace(0,1,100)
+avg_ppress_z_pairs = [[0,1]]
+settlement_z_pairs = [[0,1]]
+
+tvals = np.logspace(-2, 0.3,50)
+ppress_z_tval_indexes = np.arange(len(tvals))[::len(tvals)//7]
+
+
+    """)
+
+
+    a = Speccon1dVR(my_code)
+
+    a.make_all()
+
+    print('\nt', repr(a.tvals))
+    print('\nz', repr(a.ppress_z))
+    print('\npor', repr(a.por))
+    print('\navp', repr(a.avp))
+    print('\nset', repr(a.set))
 
 
     my_code = textwrap.dedent("""\
@@ -134,9 +175,11 @@ figure_ext='.png'
     """)
 
 
-    a = Speccon1dVR(my_code)
 
-    a.make_all()
+
+#    a = Speccon1dVR(my_code)
+
+#    a.make_all()
 
 
 
