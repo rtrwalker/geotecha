@@ -1107,7 +1107,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
         z_x=[]
         xlabels=[]
         if not self.mv is None:
-            z_x.append(self.kv)
+            z_x.append(self.mv)
             xlabels.append('$m_v/\\overline{{m}}_v$, $\\left'
                 '(\\overline{{m}}_v={:g}\\right)$'.format(self.mvref))
         if not self.kv is None:
