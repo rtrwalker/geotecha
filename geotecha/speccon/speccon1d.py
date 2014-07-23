@@ -781,6 +781,150 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
+
+def dim1sin_E_Igamv_the_BC_abDfDt_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time=None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
+    """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
+
+    When accounting for non-zero boundary conditions we homogenise the
+    governing equation by letting u(Z,t) = v(Z,t) + utop(t)*(1-Z) + ubot(t)*Z
+    and solving for v(Z, t).  This function calculates the
+    E*inverse(gam*v)*theta part of solution v(Z,t)=phi*v*E*inverse(gam*v)*theta.
+    For the terms that arise by subbing the BC's into terms like a(z)*b(z)*u(Z,t)
+
+    The contribution of each `mag_vs_time`-`omega_phase` pair are superposed.
+    The result is an array
+    of size (neig, len(tvals)). So the columns are the column array
+    E*inverse(gam*v)*theta calculated at each output time.  This will allow
+    us later to do v(Z,t) = phi*v*E_Igamv_the
+
+    Uses sin(m*z) in the calculation of theta.
+
+    Parameters
+    ----------
+    drn : [0,1]
+        drainage condition,
+        0 = Pervious top pervious bottom (PTPB)
+        1 = Pervious top impoervious bottom (PTIB)
+    m : ``list`` of ``float``
+        eigenvlaues of BVP. generate with geoteca.speccon.m_from_sin_mx
+    eigs : 1d numpy.ndarray
+        list of eigenvalues
+    tvals : 1d numpy.ndarray`
+        list of time values to calculate integral at
+    Igamv : ndarray
+        speccon matrix
+    a : PolyLine
+        Piewcewise linear function.  e.g. for 1d consolidation surcharge
+        radial draiange term is dTh*kh*et*U(Z,t) `a` would be kh.
+    b : PolyLine
+        Piewcewise linear function.  e.g. for 1d consolidation surcharge
+        radial draiange term is dTh* kh*et*U(Z,t) so `b` would be et
+    top_vs_time : list of PolyLine
+        Piecewise linear magnitude  vs time for the top boundary.
+    bot_vs_time : list of PolyLine
+        Piecewise linear magnitude vs time for the bottom boundary.
+    top_omega_phase, bot_omega_phase : list of 2 element tuples, optional
+        (omega, phase) for use in cos(omega * t + phase) * mag_vs_time
+        if omega_phase is None then mag_vs_time will not be multiplied by a
+        cosine.  If any element of omega_phase is None then in that particular
+        loading combo, mag_vs_time will not be multiplied by a cosine.
+    dT : ``float``, optional
+        time factor multiple (default = 1.0)
+    theta_zero_indexes : slice/list etc., optional
+        a slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        default=None i.e. no elements of theta will be set to zero.
+
+    Returns
+    -------
+    E_Igamv_the: ndarray
+        loading matrix
+
+    Notes
+    -----
+    Assuming the loads are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)\\cos\\left(\\omega t + \\phi\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+
+    when we consider non-zero boundary conditions, additional loading terms are
+    created when we sub in the following into the original governing equation.
+
+    .. math:: u\\left({Z,t}\\right)=v\\left({Z,t}\\right) + u_{top}\\left({t}\\right)\\left({1-Z}\\right)
+
+    Two additional loading terms are created with each substitution, one
+    for the top boundary condition and one for the bottom boundary condition.
+
+    This function calculates :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
+    when substitutions are made in
+    terms of the following form:
+
+    .. math:: a\\left({z}\\right)b\\left({z}\\right)u\\left({Z,t}\\right)
+
+    It is assumed that :math:`u_{top}\\left({t}\\right)` and
+    :math:`u_{bot}\\left({t}\\right)` are piecewise linear
+    in time including a cyclic component, and that multiple functions are superposed.  Also :math:`a\\left(z\\right)`
+    and :math:`b\\left(z\\right)` are piecewise linear functions w.r.t. :math:`z`.
+
+
+    """
+
+    E_Igamv_the = np.zeros((len(m), len(tvals)))
+
+    if sum([v is None for v in [a, b]]) == 0:
+        a, b = pwise.polyline_make_x_common(a, b)
+        if drn==1:
+            zdist = PolyLine(a.x1,a.x2, np.ones_like(a.x1), np.ones_like(a.x2))
+            #bot_vs_time=None
+        else:
+            zdist = PolyLine(a.x1,a.x2, 1-a.x1, 1-a.x2)
+
+        if not top_vs_time is None:
+            if top_omega_phase is None:
+                top_omega_phase = [None] * len(top_vs_time)
+
+            theta = integ.pdim1sin_abc_linear(m, a, b, zdist)
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
+            for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEDload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT)
+                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+
+        if not bot_vs_time is None:
+            if bot_omega_phase is None:
+                bot_omega_phase = [None] * len(bot_vs_time)
+            theta = integ.pdim1sin_abc_linear(m, a, b, PolyLine(a.x1,a.x2,a.x1,a.x2))
+            if not theta_zero_indexes is None:
+                theta[theta_zero_indexes] = 0.0
+            for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
+                if not om_ph is None:
+                    omega, phase = om_ph
+                    E = integ.pEDload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                else:
+                    E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT)
+                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+
+    #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
+    #and np.dot(theta, Igamv) will give differetn 1d arrays.
+    #Basically np.dot(Igamv, theta) gives us what we want i.e.
+    #theta was treated as a column array.  The alternative
+    #np.dot(theta, Igamv) would have treated theta as a row vector.
+    return E_Igamv_the
+
+
 def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
     """Loading dependant E_Igamv_the matrix that arise from homogenising D[a(z)*D[u(z, t),z],z] for non_zero top and bottom boundary conditions
 
