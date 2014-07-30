@@ -839,23 +839,38 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
         topzero=slice(None, self.neig)
 
         # top row of block
-        #m1kw * duw/dt component
-        self.E_Igamv_the_BC -= (
-            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
-                self.drn, self.m_block, self.eigs, self.tvals,
-                self.Igamv, self.m1kw, self.wtop_vs_time, wbot_vs_time,
-                self.wtop_omega_phase, self.wbot_omega_phase, self.dT,
-                theta_zero_indexes=botzero))
         #m2w * duw/dt component
-        self.E_Igamv_the_BC += (
+        self.E_Igamv_the_BC -= (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.m2w, self.wtop_vs_time, wbot_vs_time,
                 self.wtop_omega_phase, self.wbot_omega_phase, self.dT,
                 theta_zero_indexes=botzero))
+        #m1kw * dua/dt component
+        self.E_Igamv_the_BC -= (
+            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
+                self.drn, self.m_block, self.eigs, self.tvals,
+                self.Igamv, self.m1kw, self.atop_vs_time, abot_vs_time,
+                self.atop_omega_phase, self.abot_omega_phase, self.dT,
+                theta_zero_indexes=botzero))
+        #m2w * dua/dt component
+        self.E_Igamv_the_BC += (
+            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
+                self.drn, self.m_block, self.eigs, self.tvals,
+                self.Igamv, self.m2w, self.atop_vs_time, abot_vs_time,
+                self.atop_omega_phase, self.abot_omega_phase, self.dT,
+                theta_zero_indexes=botzero))
+#        #(m1kw * dua/dt - m2w * dua/dt) component
+#        self.E_Igamv_the_BC -= (
+#            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
+#                self.drn, self.m_block, self.eigs, self.tvals,
+#                self.Igamv, self.m1kw-self.m2w,
+#                self.atop_vs_time, abot_vs_time,
+#                self.atop_omega_phase, self.abot_omega_phase,
+#                self.dT,theta_zero_indexes=botzero))
         #dTw * d/dZ(kw * duw/dZ) component
         if self.dTw!=0:
-            self.E_Igamv_the_BC += (self.dTw *
+            self.E_Igamv_the_BC -= (self.dTw *
                 speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn,
                     self.m_block, self.eigs, self.tvals, self.Igamv, self.kw,
                     self.wtop_vs_time, wbot_vs_time,
@@ -863,6 +878,13 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                     theta_zero_indexes=botzero))
 
         # bottom row of block
+        #m2a * duw/dt component
+        self.E_Igamv_the_BC -= (
+            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
+                self.drn, self.m_block, self.eigs, self.tvals,
+                self.Igamv, self.m2a, self.wtop_vs_time, wbot_vs_time,
+                self.wtop_omega_phase, self.wbot_omega_phase, self.dT,
+                theta_zero_indexes=topzero))
         #m1ka * dua/dt component
         self.E_Igamv_the_BC -= (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
@@ -877,15 +899,23 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                 self.Igamv, self.m2a, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
                 theta_zero_indexes=topzero))
-        #n * dua/dt component
-        self.E_Igamv_the_BC -= (
+        #n * dua/dt / mvref/ ua_ component
+        self.E_Igamv_the_BC += (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.n, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
                 theta_zero_indexes=topzero))/ (self.mvref * self.ua_)
+#       #(m1ka * dua/dt - m2a * dua/dt - n * dua/dt / mvref/ ua_) component
+#        self.E_Igamv_the_BC -= (
+#            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
+#                self.drn, self.m_block, self.eigs, self.tvals,
+#                self.Igamv, self.m1ka - self.m2a - self.n/self.mvref/self.ua_,
+#                self.atop_vs_time, abot_vs_time,
+#                self.atop_omega_phase, self.abot_omega_phase,
+#                self.dT, theta_zero_indexes=topzero))
         #S*n * dua/dt component
-        self.E_Igamv_the_BC += (
+        self.E_Igamv_the_BC -= (
             speccon1d.dim1sin_E_Igamv_the_BC_abDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.S, self.n, self.atop_vs_time, abot_vs_time,
@@ -893,7 +923,7 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                 theta_zero_indexes=topzero))/ (self.mvref * self.ua_)
         #dTa * d/dZ(Da * du/dZ) component
         if self.dTw!=0:
-            self.E_Igamv_the_BC += (self.dTa *
+            self.E_Igamv_the_BC -= (self.dTa *
                 speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn,
                     self.m_block, self.eigs, self.tvals, self.Igamv, self.Da,
                     self.atop_vs_time, abot_vs_time,
@@ -1467,7 +1497,7 @@ if __name__ == '__main__':
 # shan et al,
 H = 10 #m
 drn = 1
-neig = 30
+neig = 400
 
 mvref = 1e-4 #1/kPa
 kwref = 1.0e-10 #m/s
@@ -1495,11 +1525,11 @@ m2a =  PolyLine([0,1], [1.0]*2)
 
 
 surcharge_vs_depth = PolyLine([0,1], [1,1])
-surcharge_vs_time = PolyLine([0,0,10000], [0,100,100])
+surcharge_vs_time = PolyLine([0,0,1e12], [0,100,100])
 #surcharge_omega_phase = (2*np.pi*0.5, -np.pi/2)
 
-#wtop_vs_time = PolyLine([0, 0.0, 1e10], [0,40,40])
-#wtop_omega_phase = (2*np.pi*1, -np.pi/2)
+wtop_vs_time = PolyLine([0, 0.0, 1e12], [0,100,100])
+wtop_omega_phase = (2*np.pi/1e5, -np.pi/2)
 #wbot_vs_time = PolyLine([0,0.0,1e10, 1e10, 1e11], [0,40,40,0,0])
 #wbot_omega_phase = (2*np.pi*1, -np.pi/2)
 
@@ -1510,13 +1540,13 @@ surcharge_vs_time = PolyLine([0,0,10000], [0,100,100])
 
 
 ppress_z = np.linspace(0,1,50)
-ppress_z = [0.5]
+ppress_z = [0.02]
 avg_ppress_z_pairs = [[0,1]]
 settlement_z_pairs = [[0,1]]
-#tvals = np.linspace(0,1000,10)
+#tvals = np.linspace(0, 1000,10)
 tvals = [0,0.05,0.1]+list(np.linspace(0.2,5,100))
 tvals = np.linspace(0, 5, 100)
-tvals = np.logspace(1, 10, 50)
+tvals = np.logspace(0, 6, 100)
 #ppress_z_tval_indexes = np.arange(len(tvals))[::len(tvals)//7]
 #avg_ppress_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
 #settlement_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
@@ -1551,7 +1581,7 @@ figure_ext='.png'
 
 
 
-    if 0:
+    if 1:
         #only use this if there is one z interval
         fig = plt.figure()
         ax=fig.add_subplot('111')
