@@ -789,7 +789,7 @@ class test_dim1sin_D_aDb_linear(base_t_ester):
     def __init__(self):
         base_t_ester.__init__(self, dim1sin_D_aDb_linear, prefix = self.__class__.__name__)
         self.zero = np.zeros(2)
-        #self.implementation = ['scalar','vectorized','fortran']
+        self.implementation = ['scalar','vectorized','fortran']
 
 
         self.cases = [
@@ -861,6 +861,7 @@ class test_EDload_linear(base_t_ester):
         base_t_ester.__init__(self, EDload_linear, prefix = self.__class__.__name__)
         self.eigs = np.array([2.46740110027, 22.2066099025])
         self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        self.implementation = ['scalar','vectorized','fortran']
         #EDload_linear(loadtim, loadmag, eigs, tvals)
 
 
@@ -921,6 +922,7 @@ class test_EDload_coslinear(base_t_ester):
         base_t_ester.__init__(self, EDload_coslinear, prefix = self.__class__.__name__)
         self.eigs = np.array([2.46740110027, 22.2066099025])
         self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        self.implementation = ['scalar','vectorized','fortran']
         #EDload_coslinear(loadtim, loadmag, omega_phase, eigs, tvals)
 
 #        EDload_coslinear(loadtim, loadmag, omega_phase, eigs, tvals)
@@ -987,6 +989,7 @@ class test_Eload_linear(base_t_ester):
         base_t_ester.__init__(self, Eload_linear, prefix = self.__class__.__name__)
         self.eigs = np.array([2.46740110027, 22.2066099025])
         self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        self.implementation = ['scalar','vectorized','fortran']
         #Eload_linear(loadtim, loadmag, eigs, tvals)
 
 
@@ -1047,6 +1050,7 @@ class test_Eload_coslinear(base_t_ester):
         base_t_ester.__init__(self, Eload_coslinear, prefix = self.__class__.__name__)
         self.eigs = np.array([2.46740110027, 22.2066099025])
         self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        self.implementation = ['scalar','vectorized','fortran']
         #Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals)
 
 

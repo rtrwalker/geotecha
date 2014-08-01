@@ -19,3 +19,4 @@ LICENSE_header.txt
 #IPython Notebook files, save them as .py files and they will then be version controlled.
 *.ipynb
 .spyderproject
+*.f95~

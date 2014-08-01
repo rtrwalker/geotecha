@@ -3897,7 +3897,7 @@ def pEDload_linear(a, eigs, tvals, dT=1.0, **kwargs):
     return EDload_linear(a.x, a.y, eigs, tvals, dT, **kwargs)
 
 
-def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
+def EDload_linear_old(loadtim, loadmag, eigs, tvals, dT=1.0):
     """Generate code to perform time integration for spectral methods
 
     Integrates D[load(tau), tau] * exp(dT * eig * (t-tau)) between [0, t].
@@ -4026,7 +4026,7 @@ def pEload_linear(a, eigs, tvals, dT=1.0, **kwargs):
 
     return Eload_linear(a.x, a.y, eigs, tvals, dT, **kwargs)
 
-def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0):
+def Eload_linear_old(loadtim, loadmag, eigs, tvals, dT=1.0):
     """Generate code to perform time integration for spectral methods
 
     Integrates load(tau) * exp(dT * eig * (t-tau)) between [0, t].
@@ -4178,7 +4178,7 @@ def pEDload_coslinear(a, omega, phase, eigs, tvals, dT=1.0, **kwargs):
     return EDload_coslinear(a.x, a.y, omega, phase, eigs, tvals, dT, **kwargs)
 
 
-def EDload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
+def EDload_coslinear_old(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
     """Time integration for spectral methods
 
     Integrates D[load(tau), tau] * exp(dT * eig * (t-tau)) between [0, t].
@@ -4477,7 +4477,7 @@ def pEload_coslinear(a, omega, phase, eigs, tvals, dT=1.0, **kwargs):
     return Eload_coslinear(a.x, a.y, omega, phase, eigs, tvals, dT, **kwargs)
 
 
-def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
+def Eload_coslinear_old(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0):
     """Time integration for spectral methods
 
     Integrates load(tau) * exp(dT * eig * (t-tau)) between [0, t].
@@ -9815,6 +9815,2513 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
         A[:]+= ((zb[-1] - zt[-1])**(-1)*(bb[-1] - bt[-1])*((zb[-1] - zt[-1])**(-1)*(ab[-1] - at[-1])*(zb[-1] -
             zt[-1]) + at[-1])*sin(mi*zb[-1]) - (zb[0] - zt[0])**(-1)*(bb[0] -
             bt[0])*at[0]*sin(mi*zt[0]))
+    return A
+
+def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectorized'):
+
+    loadtim = np.asarray(loadtim)
+    loadmag = np.asarray(loadmag)
+    eigs = np.asarray(eigs)
+    tvals = np.asarray(tvals)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        exp = math.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        for i, t in enumerate(tvals):
+            for k in constants_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (-exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) + loadmag[k]/(dT*eig))
+            for k in constants_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (exp(-dT*eig*(t - loadtim[k + 1]))*loadmag[k]/(dT*eig) - exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig))
+            for k in ramps_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ((-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k + 1] +
+                        dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k] -
+                        dT*eig*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k] + dT*eig*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k])**(-1)*loadmag[k + 1] + (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] - (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k])/(dT*eig) -
+                        (-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*loadmag[k + 1] + dT*eig*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] - dT*eig*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k] + dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k])/(dT*eig))
+            for k in ramps_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (-(-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] + dT*eig*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] - dT*eig*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k] + dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k])/(dT*eig)
+                        + (-dT*eig*t*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] + dT*eig*t*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k] + dT*eig*(t - loadtim[k +
+                        1])*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] - dT*eig*(t - loadtim[k +
+                        1])*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k] + dT*eig*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k
+                        + 1] - dT*eig*loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k] +
+                        exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] - exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k])/(dT*eig))
+    elif implementation == 'fortran':
+        #note than all fortran subroutines are lowercase.
+
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.eload_linear(loadtim, loadmag, eigs, tvals, dT)
+        #previous two lines are just for development to make sure that
+        #the fortran code is actually working.  They force
+#        try:
+#            from geotecha.speccon.ext_integrals import eload_linear as fn
+#        except ImportError:
+#            fn = Eload_linear
+#         A = fn(loadtim, loadmag, eigs, tvals, dT)
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        eig = eigs[:, None]
+        for i, t in enumerate(tvals):
+            k = constants_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum(-exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) + loadmag[k]/(dT*eig), axis=1)
+
+            k = constants_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum(exp(-dT*eig*(t - loadtim[k + 1]))*loadmag[k]/(dT*eig) - exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig), axis=1)
+
+            k = ramps_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum((-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k + 1] +
+                        dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k] -
+                        dT*eig*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k] + dT*eig*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k])**(-1)*loadmag[k + 1] + (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] - (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k])/(dT*eig) -
+                        (-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*loadmag[k + 1] + dT*eig*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] - dT*eig*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k] + dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k])/(dT*eig), axis=1)
+
+            k = ramps_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum(-(-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] + dT*eig*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] - dT*eig*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k] + dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - (-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k])/(dT*eig)
+                        + (-dT*eig*t*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] + dT*eig*t*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k] + dT*eig*(t - loadtim[k +
+                        1])*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] - dT*eig*(t - loadtim[k +
+                        1])*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k] + dT*eig*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k
+                        + 1] - dT*eig*loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k] +
+                        exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k])**(-1)*loadmag[k + 1] - exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k])/(dT*eig), axis=1)
+    return A
+
+def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectorized'):
+
+    loadtim = np.asarray(loadtim)
+    loadmag = np.asarray(loadmag)
+    eigs = np.asarray(eigs)
+    tvals = np.asarray(tvals)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        exp = math.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        for i, t in enumerate(tvals):
+            for k in steps_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k]))
+            for k in ramps_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ((loadtim[k + 1] - loadtim[k])**(-1)*(loadmag[k + 1] - loadmag[k])/(dT*eig) - (loadtim[k + 1] -
+                        loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] -
+                        loadmag[k])/(dT*eig))
+            for k in ramps_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (-(loadtim[k + 1] - loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] -
+                        loadmag[k])/(dT*eig) + exp(-dT*eig*(t - loadtim[k + 1]))*(loadtim[k + 1] -
+                        loadtim[k])**(-1)*(loadmag[k + 1] - loadmag[k])/(dT*eig))
+
+    elif implementation == 'fortran':
+        #note than all fortran subroutines are lowercase.
+
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.edload_linear(loadtim, loadmag, eigs, tvals, dT)
+        #previous two lines are just for development to make sure that
+        #the fortran code is actually working.  They force
+#        try:
+#            from geotecha.speccon.ext_integrals import edload_linear as fn
+#        except ImportError:
+#            fn = EDload_linear
+#         A = fn(loadtim, loadmag, eigs, tvals, dT)
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        eig = eigs[:, None]
+
+
+        for i, t in enumerate(tvals):
+            k = steps_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum(exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k]), axis=1)
+            k = ramps_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum((loadtim[k + 1] - loadtim[k])**(-1)*(loadmag[k + 1] - loadmag[k])/(dT*eig) - (loadtim[k + 1] -
+                        loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] -
+                        loadmag[k])/(dT*eig), axis=1)
+            k = ramps_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum(-(loadtim[k + 1] - loadtim[k])**(-1)*exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] -
+                        loadmag[k])/(dT*eig) + exp(-dT*eig*(t - loadtim[k + 1]))*(loadtim[k + 1] -
+                        loadtim[k])**(-1)*(loadmag[k + 1] - loadmag[k])/(dT*eig), axis=1)
+    return A
+
+
+
+def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, implementation='vectorized'):
+
+    loadtim = np.asarray(loadtim)
+    loadmag = np.asarray(loadmag)
+    eigs = np.asarray(eigs)
+    tvals = np.asarray(tvals)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        exp = math.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        for i, t in enumerate(tvals):
+            for k in constants_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ((cos(omega*t + phase)/(1 + omega**2/(dT**2*eig**2)) + omega*sin(omega*t + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) - (cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))/(1 +
+                        omega**2/(dT**2*eig**2)) + omega*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t -
+                        omega*(t - loadtim[k]) + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig))
+            for k in constants_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ((cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k + 1]))/(1 +
+                        omega**2/(dT**2*eig**2)) + omega*exp(-dT*eig*(t - loadtim[k +
+                        1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) - (cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))/(1 +
+                        omega**2/(dT**2*eig**2)) + omega*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t -
+                        omega*(t - loadtim[k]) + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig))
+            for k in ramps_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ((-dT*eig*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        + dT*eig*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - dT*eig*cos(omega*t +
+                        phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + dT*eig*cos(omega*t +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] -
+                        omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] +
+                        omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - omega*sin(omega*t +
+                        phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + omega*sin(omega*t +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] + cos(omega*t +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        - cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**2*cos(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*cos(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**3*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*sin(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*sin(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2))/(dT*eig)
+                        - (-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - dT*eig*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        dT*eig*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1]
+                        + omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) +
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) - omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) - omega**2*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) - omega**3*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) - omega**3*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**2*eig**2))/(dT*eig))
+            for k in ramps_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (-(-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - dT*eig*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        dT*eig*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1]
+                        + omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) +
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) - omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) - omega**2*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) - omega**3*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) - omega**3*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**2*eig**2))/(dT*eig) + (-dT*eig*t*cos(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        + dT*eig*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + dT*eig*(t - loadtim[k
+                        + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - dT*eig*(t -
+                        loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + dT*eig*cos(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - dT*eig*loadtim[k
+                        + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] +
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + omega*(t - loadtim[k
+                        + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - omega*(t -
+                        loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + omega*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - omega*loadtim[k +
+                        1]*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + cos(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        - cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) + omega**2*(t
+                        - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*loadtim[k + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        2*omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        2*omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**3*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2))/(dT*eig))
+    elif implementation == 'fortran':
+        #note than all fortran subroutines are lowercase.
+
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+        #previous two lines are just for development to make sure that
+        #the fortran code is actually working.  They force
+#        try:
+#            from geotecha.speccon.ext_integrals import eload_linear as fn
+#        except ImportError:
+#            fn = Eload_coslinear
+#         A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        eig = eigs[:, None]
+        for i, t in enumerate(tvals):
+            k = constants_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum((cos(omega*t + phase)/(1 + omega**2/(dT**2*eig**2)) + omega*sin(omega*t + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) - (cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))/(1 +
+                        omega**2/(dT**2*eig**2)) + omega*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t -
+                        omega*(t - loadtim[k]) + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig), axis=1)
+
+            k = constants_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum((cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k + 1]))/(1 +
+                        omega**2/(dT**2*eig**2)) + omega*exp(-dT*eig*(t - loadtim[k +
+                        1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) - (cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))/(1 +
+                        omega**2/(dT**2*eig**2)) + omega*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t -
+                        omega*(t - loadtim[k]) + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig), axis=1)
+
+            k = ramps_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum((-dT*eig*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        + dT*eig*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - dT*eig*cos(omega*t +
+                        phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + dT*eig*cos(omega*t +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] -
+                        omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] +
+                        omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - omega*sin(omega*t +
+                        phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + omega*sin(omega*t +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] + cos(omega*t +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        - cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**2*cos(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*cos(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**3*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*sin(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*sin(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2))/(dT*eig)
+                        - (-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - dT*eig*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        dT*eig*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1]
+                        + omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) +
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) - omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) - omega**2*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) - omega**3*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) - omega**3*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**2*eig**2))/(dT*eig), axis=1)
+
+            k = ramps_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum(-(-dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] +
+                        dT*eig*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1] - dT*eig*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        dT*eig*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] +
+                        dT*eig*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1] -
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1]
+                        + omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) +
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) - omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) - omega**2*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) - omega**3*t*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) - omega**3*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**2*eig**2))/(dT*eig) + (-dT*eig*t*cos(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        + dT*eig*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + dT*eig*(t - loadtim[k
+                        + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - dT*eig*(t -
+                        loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + dT*eig*cos(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - dT*eig*loadtim[k
+                        + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] +
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + omega*(t - loadtim[k
+                        + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - omega*(t -
+                        loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + omega*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - omega*loadtim[k +
+                        1]*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] + cos(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        - cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) + omega**2*(t
+                        - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*loadtim[k + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        2*omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        2*omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**3*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2))/(dT*eig), axis=1)
+    return A
+
+
+def EDload_coslinear(loadtim, loadmag, omega, phase,eigs, tvals, dT=1.0, implementation='vectorized'):
+
+    loadtim = np.asarray(loadtim)
+    loadmag = np.asarray(loadmag)
+    eigs = np.asarray(eigs)
+    tvals = np.asarray(tvals)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        exp = math.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        for i, t in enumerate(tvals):
+            for k in steps_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (cos(omega*loadtim[k] + phase)*exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k]))
+            for k in ramps_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        - omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1]
+                        + omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*sin(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - omega*sin(omega*t +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] -
+                        cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] + cos(omega*t +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) -
+                        omega**2*cos(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*cos(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) + omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) - omega**2*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) -
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) + omega**3*t*sin(omega*t +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**3*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1]
+                        + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*sin(omega*t + phase)*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*sin(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k]/(dT**2*eig**2) - omega**3*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**2*eig**2)
+                        - omega**4*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) +
+                        omega**4*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) +
+                        omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3) - omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**3*eig**3)
+                        - omega**4*cos(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) +
+                        omega**4*cos(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) -
+                        omega**4*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT**3*eig**3) + omega**4*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**3*eig**3) + omega**4*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**3*eig**3) -
+                        omega**4*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3))
+            for k in ramps_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (-omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] -
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - omega*(t - loadtim[k
+                        + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] + omega*(t -
+                        loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - omega*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k
+                        + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        + cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) -
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) + omega**2*(t
+                        - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) + omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*cos(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) -
+                        omega**2*loadtim[k + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**2*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) - 2*omega*exp(-dT*eig*(t - loadtim[k +
+                        1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        2*omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*t*exp(-dT*eig*(t - loadtim[k +
+                        1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k]/(dT**2*eig**2) - omega**3*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k + 1]*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**2*eig**2)
+                        + omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3) - omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**3*eig**3)
+                        - omega**4*t*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) +
+                        omega**4*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) +
+                        omega**4*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) -
+                        omega**4*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) -
+                        omega**4*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT**3*eig**3) + omega**4*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**3*eig**3) + omega**4*cos(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**3*eig**3)
+                        - omega**4*loadtim[k + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) -
+                        omega**4*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3))
+            for k in constants_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (-omega*(sin(omega*t + phase)/(1 + omega**2/(dT**2*eig**2)) - omega*cos(omega*t + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) + omega*(exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)/(1 +
+                        omega**2/(dT**2*eig**2)) - omega*cos(omega*t - omega*(t - loadtim[k]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k]))/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig))
+            for k in constants_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += (-omega*(exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)/(1 +
+                        omega**2/(dT**2*eig**2)) - omega*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) + omega*(exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)/(1 +
+                        omega**2/(dT**2*eig**2)) - omega*cos(omega*t - omega*(t - loadtim[k]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k]))/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig))
+
+    elif implementation == 'fortran':
+        #note than all fortran subroutines are lowercase.
+
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.edload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+        #previous two lines are just for development to make sure that
+        #the fortran code is actually working.  They force
+#        try:
+#            from geotecha.speccon.ext_integrals import edload_linear as fn
+#        except ImportError:
+#            fn = EDload_coslinear
+#         A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        eig = eigs[:, None]
+
+
+        for i, t in enumerate(tvals):
+            k = steps_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum(cos(omega*loadtim[k] + phase)*exp(-dT*eig*(t - loadtim[k]))*(loadmag[k + 1] - loadmag[k]), axis=1)
+            k = ramps_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum(omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        - omega*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] -
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1]
+                        + omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*sin(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - omega*sin(omega*t +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] -
+                        cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] + cos(omega*t +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) -
+                        omega**2*cos(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        omega**2*cos(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) + omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) - omega**2*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) -
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        2*omega*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) + omega**3*t*sin(omega*t +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**3*t*sin(omega*t + phase)*(-dT*eig*loadtim[k + 1]
+                        + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*sin(omega*t + phase)*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*sin(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k]/(dT**2*eig**2) - omega**3*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k]*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**2*eig**2)
+                        - omega**4*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) +
+                        omega**4*t*cos(omega*t + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k]
+                        - 2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) +
+                        omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3) - omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**3*eig**3)
+                        - omega**4*cos(omega*t + phase)*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) +
+                        omega**4*cos(omega*t + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) -
+                        omega**4*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT**3*eig**3) + omega**4*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**3*eig**3) + omega**4*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**3*eig**3) -
+                        omega**4*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3), axis=1)
+            k = ramps_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum(-omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        omega*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] -
+                        omega*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] - omega*(t - loadtim[k
+                        + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] + omega*(t -
+                        loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1] - omega*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] -
+                        omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k +
+                        1]) + phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1] - omega*loadtim[k +
+                        1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k] +
+                        omega*loadtim[k + 1]*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t -
+                        omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        omega*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k + 1] +
+                        (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]
+                        - (-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k] -
+                        cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k
+                        + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]
+                        + cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k] +
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) -
+                        omega**2*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) -
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) + omega**2*(t
+                        - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) -
+                        omega**2*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT*eig) + omega**2*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT*eig) + omega**2*cos(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        omega**2*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT*eig) -
+                        omega**2*loadtim[k + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**2*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k + 1]/(dT*eig) +
+                        2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t
+                        - loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT*eig) - 2*omega*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT*eig) - 2*omega*exp(-dT*eig*(t - loadtim[k +
+                        1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT*eig) +
+                        2*omega*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k
+                        + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT*eig) -
+                        omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**3*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*t*exp(-dT*eig*(t - loadtim[k +
+                        1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*t*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) -
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) +
+                        omega**3*(t - loadtim[k + 1])*exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t
+                        - omega*(t - loadtim[k + 1]) + phase)*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*exp(-dT*eig*(t - loadtim[k]))*sin(omega*t - omega*(t -
+                        loadtim[k]) + phase)*loadmag[k]/(dT**2*eig**2) - omega**3*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**3*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) +
+                        phase)*loadmag[k]/(dT**2*eig**2) + omega**3*loadtim[k + 1]*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k +
+                        1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**3*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)*loadmag[k +
+                        1]/(dT**2*eig**2) - omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**2*eig**2) + omega**2*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**2*eig**2)
+                        + omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**2*eig**2) -
+                        omega**2*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2) +
+                        omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3) - omega**4*t*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**3*eig**3)
+                        - omega**4*t*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) +
+                        omega**4*t*cos(omega*t - omega*(t - loadtim[k + 1]) + phase)*exp(-dT*eig*(t
+                        - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) +
+                        omega**4*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) -
+                        omega**4*(t - loadtim[k + 1])*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) -
+                        omega**4*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k
+                        + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k +
+                        1]/(dT**3*eig**3) + omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t -
+                        loadtim[k])*cos(omega*t - omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k + 1]/(dT**3*eig**3) + omega**4*(-dT*eig*loadtim[k +
+                        1] + dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*(t - loadtim[k])*cos(omega*t -
+                        omega*(t - loadtim[k]) + phase)*exp(-dT*eig*(t -
+                        loadtim[k]))*loadmag[k]/(dT**3*eig**3) + omega**4*cos(omega*t - omega*(t -
+                        loadtim[k + 1]) + phase)*exp(-dT*eig*(t - loadtim[k +
+                        1]))*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k + 1]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k]/(dT**3*eig**3)
+                        - omega**4*loadtim[k + 1]*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))*(-dT*eig*loadtim[k + 1] +
+                        dT*eig*loadtim[k] - 2*omega**2*loadtim[k + 1]/(dT*eig) +
+                        2*omega**2*loadtim[k]/(dT*eig) - omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**3*eig**3) -
+                        omega**4*loadtim[k]*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k] -
+                        2*omega**2*loadtim[k + 1]/(dT*eig) + 2*omega**2*loadtim[k]/(dT*eig) -
+                        omega**4*loadtim[k + 1]/(dT**3*eig**3) +
+                        omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*cos(omega*t - omega*(t -
+                        loadtim[k]) + phase)*exp(-dT*eig*(t - loadtim[k]))*loadmag[k +
+                        1]/(dT**3*eig**3), axis=1)
+            k = constants_containing_t[i]
+            if len(k):
+                A[i,:] += np.sum(-omega*(sin(omega*t + phase)/(1 + omega**2/(dT**2*eig**2)) - omega*cos(omega*t + phase)/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) + omega*(exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)/(1 +
+                        omega**2/(dT**2*eig**2)) - omega*cos(omega*t - omega*(t - loadtim[k]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k]))/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig), axis=1)
+            k = constants_less_than_t[i]
+            if len(k):
+                A[i,:] += np.sum(-omega*(exp(-dT*eig*(t - loadtim[k + 1]))*sin(omega*t - omega*(t - loadtim[k + 1]) + phase)/(1 +
+                        omega**2/(dT**2*eig**2)) - omega*cos(omega*t - omega*(t - loadtim[k + 1]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k + 1]))/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig) + omega*(exp(-dT*eig*(t -
+                        loadtim[k]))*sin(omega*t - omega*(t - loadtim[k]) + phase)/(1 +
+                        omega**2/(dT**2*eig**2)) - omega*cos(omega*t - omega*(t - loadtim[k]) +
+                        phase)*exp(-dT*eig*(t - loadtim[k]))/(dT*eig*(1 +
+                        omega**2/(dT**2*eig**2))))*loadmag[k]/(dT*eig), axis=1)
     return A
 
 if __name__ == '__main__':
