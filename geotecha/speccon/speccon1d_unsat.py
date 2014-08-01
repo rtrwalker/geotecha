@@ -783,14 +783,16 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                    self.eigs, self.tvals, self.Igamv, self.m1kw,
                    self.surcharge_vs_depth, self.surcharge_vs_time,
                    self.surcharge_omega_phase, self.dT,
-                   theta_zero_indexes=slice(self.neig, None)))
+                   theta_zero_indexes=slice(self.neig, None),
+                   implementation=self.implementation))
 
         self.E_Igamv_the_surcharge += (
             speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m_block,
                    self.eigs, self.tvals, self.Igamv, self.m1ka,
                    self.surcharge_vs_depth, self.surcharge_vs_time,
                    self.surcharge_omega_phase, self.dT,
-                   theta_zero_indexes=slice(None, self.neig)))
+                   theta_zero_indexes=slice(None, self.neig),
+                   implementation=self.implementation))
         return
 
 
@@ -845,21 +847,24 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.m2w, self.wtop_vs_time, wbot_vs_time,
                 self.wtop_omega_phase, self.wbot_omega_phase, self.dT,
-                theta_zero_indexes=botzero))
+                theta_zero_indexes=botzero,
+                implementation=self.implementation))
         #m1kw * dua/dt component
         self.E_Igamv_the_BC -= (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.m1kw, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
-                theta_zero_indexes=botzero))
+                theta_zero_indexes=botzero,
+                implementation=self.implementation))
         #m2w * dua/dt component
         self.E_Igamv_the_BC += (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.m2w, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
-                theta_zero_indexes=botzero))
+                theta_zero_indexes=botzero,
+                implementation=self.implementation))
 #        #(m1kw * dua/dt - m2w * dua/dt) component
 #        self.E_Igamv_the_BC -= (
 #            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
@@ -867,7 +872,8 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
 #                self.Igamv, self.m1kw-self.m2w,
 #                self.atop_vs_time, abot_vs_time,
 #                self.atop_omega_phase, self.abot_omega_phase,
-#                self.dT,theta_zero_indexes=botzero))
+#                self.dT,theta_zero_indexes=botzero,
+#                implementation=self.implementation))
         #dTw * d/dZ(kw * duw/dZ) component
         if self.dTw!=0:
             self.E_Igamv_the_BC -= (self.dTw *
@@ -875,7 +881,8 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                     self.m_block, self.eigs, self.tvals, self.Igamv, self.kw,
                     self.wtop_vs_time, wbot_vs_time,
                     self.wtop_omega_phase, self.wbot_omega_phase, self.dT,
-                    theta_zero_indexes=botzero))
+                    theta_zero_indexes=botzero,
+                    implementation=self.implementation))
 
         # bottom row of block
         #m2a * duw/dt component
@@ -884,28 +891,32 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.m2a, self.wtop_vs_time, wbot_vs_time,
                 self.wtop_omega_phase, self.wbot_omega_phase, self.dT,
-                theta_zero_indexes=topzero))
+                theta_zero_indexes=topzero,
+                implementation=self.implementation))
         #m1ka * dua/dt component
         self.E_Igamv_the_BC -= (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.m1ka, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
-                theta_zero_indexes=topzero))
+                theta_zero_indexes=topzero,
+                implementation=self.implementation))
         #m2a * dua/dt component
         self.E_Igamv_the_BC += (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.m2a, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
-                theta_zero_indexes=topzero))
+                theta_zero_indexes=topzero,
+                implementation=self.implementation))
         #n * dua/dt / mvref/ ua_ component
         self.E_Igamv_the_BC += (
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.n, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
-                theta_zero_indexes=topzero))/ (self.mvref * self.ua_)
+                theta_zero_indexes=topzero,
+                implementation=self.implementation))/ (self.mvref * self.ua_)
 #       #(m1ka * dua/dt - m2a * dua/dt - n * dua/dt / mvref/ ua_) component
 #        self.E_Igamv_the_BC -= (
 #            speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
@@ -913,14 +924,16 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
 #                self.Igamv, self.m1ka - self.m2a - self.n/self.mvref/self.ua_,
 #                self.atop_vs_time, abot_vs_time,
 #                self.atop_omega_phase, self.abot_omega_phase,
-#                self.dT, theta_zero_indexes=topzero))
+#                self.dT, theta_zero_indexes=topzero,
+#                implementation=self.implementation))
         #S*n * dua/dt component
         self.E_Igamv_the_BC -= (
             speccon1d.dim1sin_E_Igamv_the_BC_abDfDt_linear(
                 self.drn, self.m_block, self.eigs, self.tvals,
                 self.Igamv, self.S, self.n, self.atop_vs_time, abot_vs_time,
                 self.atop_omega_phase, self.abot_omega_phase, self.dT,
-                theta_zero_indexes=topzero))/ (self.mvref * self.ua_)
+                theta_zero_indexes=topzero,
+                implementation=self.implementation))/ (self.mvref * self.ua_)
         #dTa * d/dZ(Da * du/dZ) component
         if self.dTw!=0:
             self.E_Igamv_the_BC -= (self.dTa *
@@ -928,7 +941,8 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
                     self.m_block, self.eigs, self.tvals, self.Igamv, self.Da,
                     self.atop_vs_time, abot_vs_time,
                     self.atop_omega_phase, self.abot_omega_phase, self.dT,
-                    theta_zero_indexes=topzero))
+                    theta_zero_indexes=topzero,
+                implementation=self.implementation))
 
         return
 
@@ -1553,7 +1567,7 @@ tvals = np.logspace(0, 6, 100)
 
 implementation='scalar'
 implementation='vectorized'
-#implementation='fortran'
+implementation='fortran'
 #RLzero = -12.0
 plot_properties={}
 
