@@ -735,7 +735,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
             speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m,
                 self.eigs, self.tvals, self.Igamv, self.mv,
                 self.surcharge_vs_depth, self.surcharge_vs_time,
-                self.surcharge_omega_phase, self.dT))
+                self.surcharge_omega_phase, self.dT,
+                implementation=self.implementation))
         return
 
 
@@ -755,7 +756,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
             self.E_Igamv_the_fixed_ppress += (
                 speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
                     self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
-                    mag_vs_time, self.fixed_ppress_omega_phase, self.dT))
+                    mag_vs_time, self.fixed_ppress_omega_phase, self.dT,
+                    implementation=self.implementation))
 
     def _make_E_Igamv_the_pumping(self):
         """make the pumping loading matrices
@@ -774,7 +776,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
             self.E_Igamv_the_pumping += (
                 speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
                     self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
-                    mag_vs_time, self.pumping_omega_phase, self.dT))
+                    mag_vs_time, self.pumping_omega_phase, self.dT,
+                    implementation=self.implementation))
 
     def _normalised_bot_vs_time(self):
         """Normalise bot_vs_time when drn=1, i.e. bot_vs_time is a gradient
@@ -812,7 +815,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(self.drn,
                 self.m, self.eigs, self.tvals, self.Igamv, self.mv,
                 self.top_vs_time, bot_vs_time, self.top_omega_phase,
-                self.bot_omega_phase, self.dT))
+                self.bot_omega_phase, self.dT,
+                implementation=self.implementation))
 
         #note: dTh * kh * et * u component cancels with the
         # dTh * kh * et * w component
@@ -824,7 +828,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
                     speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn,
                         self.m, self.eigs, self.tvals, self.Igamv, self.kv,
                         self.top_vs_time, bot_vs_time,
-                        self.top_omega_phase, self.bot_omega_phase, self.dT))
+                        self.top_omega_phase, self.bot_omega_phase, self.dT,
+                        implementation=self.implementation))
 
         #the pseudo_k * delta(z-zfixed)*u component, i.e. the fixed_ppress part
         if not self.fixed_ppress is None:
@@ -834,7 +839,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
                 speccon1d.dim1sin_E_Igamv_the_BC_deltaf_linear(self.drn,
                     self.m, self.eigs, self.tvals, self.Igamv, zvals,
                     pseudo_k, self.top_vs_time, bot_vs_time,
-                    self.top_omega_phase, self.bot_omega_phase, self.dT))
+                    self.top_omega_phase, self.bot_omega_phase, self.dT,
+                    implementation=self.implementation))
 
         #well resistance component
         #dTw * d/dZ(kw * du/dZ) component
@@ -845,7 +851,8 @@ class Speccon1dVRW(speccon1d.Speccon1d):
                     speccon1d.dim1sin_E_Igamv_the_BC_D_aDf_linear(self.drn,
                         self.m, self.eigs, self.tvals, Igamv_psi_s_Ipsi_w,
                         self.kw, self.top_vs_time, bot_vs_time,
-                        self.top_omega_phase, self.bot_omega_phase, self.dT))
+                        self.top_omega_phase, self.bot_omega_phase, self.dT,
+                        implementation=self.implementation))
 
     def _make_por(self):
         """make the pore pressure output

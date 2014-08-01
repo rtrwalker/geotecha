@@ -769,7 +769,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             speccon1d.dim1sin_E_Igamv_the_aDmagDt_bilinear(self.m,
                    self.eigs, self.tvals, self.Igamv, self.mv,
                    self.surcharge_vs_depth, self.surcharge_vs_time,
-                   self.surcharge_omega_phase, self.dT))
+                   self.surcharge_omega_phase, self.dT,
+                   implementation=self.implementation))
 
         return
 
@@ -811,7 +812,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             speccon1d.dim1sin_E_Igamv_the_BC_aDfDt_linear(
                 self.drn, self.m, self.eigs, self.tvals,
                 self.Igamv, self.mv, self.top_vs_time, bot_vs_time,
-                self.top_omega_phase, self.bot_omega_phase, self.dT))
+                self.top_omega_phase, self.bot_omega_phase, self.dT,
+                implementation=self.implementation))
 
 
         G = np.diag([self.alp]*self.neig)
@@ -827,7 +829,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                         self.Igamv.dot(np.identity(self.neig, dtype=float)-G),
                         self.kv, self.top_vs_time,
                         bot_vs_time, self.top_omega_phase,
-                        self.bot_omega_phase, self.dT))
+                        self.bot_omega_phase, self.dT,
+                implementation=self.implementation))
 
         #dTvc * d/dZ(kvc * du/dZ) component
         if sum([v is None for v in [self.kvc, self.dTvc]])==0:
@@ -838,7 +841,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
                         self.Igamv.dot(np.identity(self.neig, dtype=float)-G),
                         self.kvc, self.top_vs_time,
                         bot_vs_time, self.top_omega_phase,
-                        self.bot_omega_phase, self.dT))
+                        self.bot_omega_phase, self.dT,
+                implementation=self.implementation))
 
 
 
