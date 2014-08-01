@@ -495,7 +495,12 @@ def dim1sin_integrate_af(m, z, tvals, v_E_Igamv_the, drn, a, top_vs_time = None,
 
 
 
-def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv,
+                                        a, top_vs_time, bot_vs_time,
+                                        top_omega_phase=None,
+                                        bot_omega_phase=None, dT=1.0,
+                                        theta_zero_indexes=None,
+                                        implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*D[u(z, t), t] for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -611,9 +616,9 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEDload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEDload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT)
+                    E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
 
@@ -627,9 +632,9 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEDload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEDload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT)
+                    E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -639,7 +644,13 @@ def dim1sin_E_Igamv_the_BC_aDfDt_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time=None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv,
+                                      a, b,
+                                      top_vs_time=None, bot_vs_time=None,
+                                      top_omega_phase=None,
+                                      bot_omega_phase=None, dT=1.0,
+                                      theta_zero_indexes=None,
+                                      implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -755,9 +766,9 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
+                    E = integ.pEload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
         if not bot_vs_time is None:
@@ -769,9 +780,9 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
+                    E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -782,7 +793,13 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_t
     return E_Igamv_the
 
 
-def dim1sin_E_Igamv_the_BC_abDfDt_linear(drn, m, eigs, tvals, Igamv, a, b, top_vs_time=None, bot_vs_time=None, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_BC_abDfDt_linear(drn, m, eigs, tvals, Igamv,
+                                         a, b, top_vs_time=None,
+                                         bot_vs_time=None,
+                                         top_omega_phase=None,
+                                         bot_omega_phase=None,
+                                         dT=1.0, theta_zero_indexes=None,
+                                         implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -898,9 +915,9 @@ def dim1sin_E_Igamv_the_BC_abDfDt_linear(drn, m, eigs, tvals, Igamv, a, b, top_v
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEDload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEDload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT)
+                    E = integ.pEDload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
         if not bot_vs_time is None:
@@ -912,9 +929,9 @@ def dim1sin_E_Igamv_the_BC_abDfDt_linear(drn, m, eigs, tvals, Igamv, a, b, top_v
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEDload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEDload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT)
+                    E = integ.pEDload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -925,7 +942,12 @@ def dim1sin_E_Igamv_the_BC_abDfDt_linear(drn, m, eigs, tvals, Igamv, a, b, top_v
     return E_Igamv_the
 
 
-def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv,
+                                        a, top_vs_time, bot_vs_time,
+                                        top_omega_phase=None,
+                                        bot_omega_phase=None, dT=1.0,
+                                        theta_zero_indexes=None,
+                                        implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix that arise from homogenising D[a(z)*D[u(z, t),z],z] for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -1037,9 +1059,9 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
             for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
+                    E = integ.pEload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
         if not bot_vs_time is None:
@@ -1052,9 +1074,9 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
             for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
                 if not om_ph is None:
                     omega, phase = om_ph
-                    E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                    E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
-                    E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
+                    E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
                 E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -1064,7 +1086,12 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn, m, eigs, tvals, Igamv, a, top_vs_ti
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseudo_k, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv,
+                                         zvals, pseudo_k, top_vs_time,
+                                         bot_vs_time, top_omega_phase=None,
+                                         bot_omega_phase=None, dT=1.0,
+                                         theta_zero_indexes=None,
+                                        implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix that arise from homogenising a(z)*b(z)u(z, t) for non_zero top and bottom boundary conditions
 
     When accounting for non-zero boundary conditions we homogenise the
@@ -1145,9 +1172,9 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
         for top_vs_t, om_ph in zip(top_vs_time, top_omega_phase):
             if not om_ph is None:
                 omega, phase = om_ph
-                E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT)
+                E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
             else:
-                E = integ.pEload_linear(top_vs_t, eigs, tvals, dT)
+                E = integ.pEload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
             for z, zd, k in zip(zvals, zdist, pseudo_k):
                 theta = k * np.sin(z * m) * zd
                 if not theta_zero_indexes is None:
@@ -1161,9 +1188,9 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
         for bot_vs_t, om_ph in zip(bot_vs_time, bot_omega_phase):
             if not om_ph is None:
                 omega, phase = om_ph
-                E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT)
+                E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
             else:
-                E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT)
+                E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
             for z, k in zip(zvals, pseudo_k):
                 theta = k * np.sin(z * m) * z
                 if not theta_zero_indexes is None:
@@ -1177,7 +1204,11 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn, m, eigs, tvals, Igamv, zvals, pseu
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, mag_vs_time, omega_phase=None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals,
+                                        pseudo_k, mag_vs_time,
+                                        omega_phase=None, dT=1.0,
+                                        theta_zero_indexes=None,
+                                        implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix for a * delta(z-zd)*mag(t) where mag is piecewise linear in time multiple by cos(omega * t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
@@ -1244,9 +1275,9 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, 
             theta[theta_zero_indexes] = 0.0
         if not om_ph is None:
             omega, phase = om_ph
-            E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
+            E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
         else:
-            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)
+            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT, implementation=implementation)
         E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
 
@@ -1277,7 +1308,11 @@ def dim1sin_E_Igamv_the_deltamag_linear(m, eigs, tvals, Igamv, zvals, pseudo_k, 
 #
 #    return E_Igamv_the
 
-def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth, mag_vs_time, omega_phase = None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv,
+                                         a, mag_vs_depth, mag_vs_time,
+                                         omega_phase = None, dT=1.0,
+                                         theta_zero_indexes=None,
+                                         implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix for a(z)*D[mag(z, t), t] where mag is bilinear in depth and time multiplied by cos(omega*t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
@@ -1369,9 +1404,9 @@ def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth,
 
             if not om_ph is None:
                 omega, phase = om_ph
-                E = integ.pEDload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
+                E = integ.pEDload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
             else:
-                E = integ.pEDload_linear(mag_vs_t, eigs, tvals, dT)
+                E = integ.pEDload_linear(mag_vs_t, eigs, tvals, dT, implementation=implementation)
 
 
             #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
@@ -1383,7 +1418,11 @@ def dim1sin_E_Igamv_the_aDmagDt_bilinear(m, eigs, tvals, Igamv, a, mag_vs_depth,
 
     return E_Igamv_the
 
-def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth, mag_vs_time, omega_phase=None, dT=1.0, theta_zero_indexes=None):
+def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv,
+                                       a, b, mag_vs_depth, mag_vs_time,
+                                       omega_phase=None, dT=1.0,
+                                       theta_zero_indexes=None,
+                                       implementation='vectorized'):
     """Loading dependant E_Igamv_the matrix for a(z)*b(z)*D[mag(z, t), t] where mag is bilinear in depth and time multiplied by cos(omega*t + phase)
 
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
@@ -1478,9 +1517,9 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
                 theta[theta_zero_indexes] = 0.0
             if not om_ph is None:
                 omega, phase = om_ph
-                E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT)
+                E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
             else:
-                E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT)
+                E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT, implementation=implementation)
 
             #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
             #and np.dot(theta, Igamv) will give differetn 1d arrays.
@@ -1518,7 +1557,12 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m, eigs, tvals, Igamv, a, b, mag_vs_depth
 #    else:
 #        return z * H
 
-def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals, Ipsiw, a, top_vs_time, bot_vs_time, top_omega_phase=None, bot_omega_phase=None, theta_zero_indexes=None):
+def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn, m, eigs, tvals,
+                                           Ipsiw, a, top_vs_time,
+                                           bot_vs_time,
+                                           top_omega_phase=None,
+                                           bot_omega_phase=None,
+                                           theta_zero_indexes=None):
     """
     used for extra term in well pore pressure i.e. Ipsiw *thetaBC *UBC(t)
     still needs to be multiplied by phi and 1/(n**2-1)
