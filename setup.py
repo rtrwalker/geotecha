@@ -122,7 +122,9 @@ INSTALL_REQUIRES=[
     "numpy>=1.8",
     "matplotlib>=1.3",
     "scipy>=0.13.3",
-    "sympy>=0.2.7"]#note my speccon integrals only work on sympy<=0.2.7.
+    "sympy>=0.2.7",#note my speccon integrals only work on sympy<=0.2.7.
+    "brewer2mpl",
+    "testfixtures"]
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
