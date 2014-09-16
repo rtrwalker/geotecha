@@ -2372,6 +2372,97 @@ def layer_coords(h, segs, min_segs=1):
     z = np.array([val for subl in zlist for val in subl])
 
     return z
+
+
+def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
+    """subdivide a length into elments are a multiple times the last element
+
+
+    element_0 = x * p**0
+    element_1 = x * p**1
+    element_2 = x * p**2
+    etc.
+
+    x is such that sum of elements equals `h`.
+
+    Paramters
+    ---------
+    n : int, optional
+        number of elements to subdivide into. default n=2
+    h : float, optional
+        length to subdivide.  Default h=1
+    p : float, optional
+        ratio of subsequent elements.  If p<1 then succesive elements
+        will reduce in length.  If p>1 then successive elements
+        will increase in lenght. default p=1
+    symmetry : True/False, optional
+        if True then elements will be symmetrical abount middle
+
+    Returns
+    -------
+    out : array of float
+        length of each element. should sum to h
+
+    See also
+    --------
+    np.logspace
+    np.linspace
+    subdivide_x_into_segments
+    subdivide_x_y_into_segments
+
+
+    Examples
+    --------
+    >>> subdivide_into_elements(n=3, h=6.0, p=1, symmetry=True)
+    array([ 2.,  2.,  2.])
+    >>> subdivide_into_elements(n=4, h=6.0, p=1, symmetry=True)
+    array([ 1.5,  1.5,  1.5,  1.5])
+    >>> subdivide_into_elements(n=4, h=6.0, p=1, symmetry=False)
+    array([ 1.5,  1.5,  1.5,  1.5])
+    >>> subdivide_into_elements(n=3, h=6.0, p=2, symmetry=True)
+    array([ 1.5,  3. ,  1.5])
+    >>> subdivide_into_elements(n=3, h=6.0, p=0.5, symmetry=True)
+    array([ 2.4,  1.2,  2.4])
+    >>> subdivide_into_elements(n=4, h=6.0, p=2, symmetry=True)
+    array([ 1.,  2.,  2.,  1.])
+    >>> subdivide_into_elements(n=4, h=6.0, p=0.5, symmetry=True)
+    array([ 2.,  1.,  1.,  2.])
+    >>> subdivide_into_elements(n=4, h=6.0, p=0.5, symmetry=False)
+    array([ 3.2,  1.6,  0.8,  0.4])
+    >>> subdivide_into_elements(n=3, h=3.5, p=2, symmetry=False)
+    array([ 0.5,  1. ,  2. ])
+    >>> sum(subdivide_into_elements(n=20, h=3.5, p=1.05, symmetry=False))
+    3.5
+    """
+
+    if p<=0:
+        raise ValueError("p must be greater than 0")
+    if n<=1:
+        raise ValueError("p must be an integer greater than 0")
+
+
+
+    if p==1:
+        return np.diff(np.linspace(0,h, n+1))
+
+    ppower = np.arange(n)
+    if symmetry:
+        if n%2==0: #even
+            x = h
+            x /= 2 * (p**(n / 2) - 1) / (p - 1)
+            ppower[n / 2:] = np.arange(n / 2)[::-1]
+        else: #odd
+            x = h
+            x /=  2 * (p**((n + 1) / 2) - 1) / (p - 1) - p**((n - 1) / 2)
+            ppower[(n + 1) / 2:] = np.arange((n - 1) / 2)[::-1]
+    else:
+        x = h / (p**n - 1) * (p - 1)
+        ppower = np.arange(n)
+
+    return x*p**ppower
+
+
+
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
