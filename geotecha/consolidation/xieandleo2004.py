@@ -889,7 +889,7 @@ class XieAndLeo2004(object):
             xi_ = self.xi_PTPB
 
 
-        t_interp = np.logspace(np.log10(0.001/self.dTv),np.log10(6/self.dTv),100)
+        t_interp = np.logspace(np.log10(0.0001/self.dTv),np.log10(3/self.dTv),100)
         Us_interp = Us_(t_interp)
 
         Tv_interp = self.Tv(t_interp)
@@ -929,7 +929,7 @@ class XieAndLeo2004(object):
         ax = fig.add_subplot(2,4,1)
         ax.plot(Tv_interp, Us_interp, label="$U_s$")
         ax.plot(Tv_interp, Up_interp, label="$U_p$")
-        ax.set_xlabel('$T_v, dT_v=${:6g}'.format(self.dTv))
+        ax.set_xlabel('$T_v,\, dT_v=${:6.2g}'.format(self.dTv))
         ax.set_ylabel('U')
         ax.set_ylim(0,1)
         ax.invert_yaxis()
@@ -938,104 +938,108 @@ class XieAndLeo2004(object):
         leg = plt.legend(loc=3 )
         leg.draggable()
 
-
-
-
         #u vs depth
         ax = fig.add_subplot(2,4,2)
         ax.plot(u, xi)
-#        ax.plot(Tv_interp, Up_interp, label="$U_p$")
         ax.set_xlabel("$u$")
         ax.set_ylabel(r'$\xi$')
         ax.set_ylim(0,self.H)
         ax.invert_yaxis()
-#        ax.set_xscale('log')
+
         ax.grid()
-#        leg = plt.legend(loc=3 )
-#        leg.draggable()
 
         for line, t_  in zip(ax.get_lines(), t):
             Us = Us_(np.array([t_]))[0]
             plt.setp(line,
-            label='$U_s={Us:6.3g}, T_v={Tv:6.3g}, '
-             't={t:6.3g}$'.format(Tv=self.dTv*t_, t=t_, Us=Us))
-
-        loc = 'lower left'
+            label='$U_s={Us:6.3g}$\n$T_v={Tv:6.3g}$\n'
+             '$t={t:6.3g}$'.format(Tv=self.dTv*t_, t=t_, Us=Us))
+        loc = 'lower center'
         bbox_transform = fig.transFigure
-        bbox_to_anchor = (0.05, 0.15)
-        leg = plt.legend(loc=loc, bbox_transform=bbox_transform, bbox_to_anchor=bbox_to_anchor)
+        bbox_to_anchor = (0.5, 0)
+
+        leg = fig.legend(ax.get_lines(),
+                        [v.get_label() for v in ax.get_lines()], loc=loc, bbox_transform=bbox_transform,
+                         bbox_to_anchor=bbox_to_anchor,
+                         ncol=len(t))
+
 
         leg.draggable()
 
-        #p vs depth
+        #total pore pressure vs depth
         ax = fig.add_subplot(2,4,6)
         ax.plot(total_pore_pressure, xi)
-#        ax.plot(Tv_interp, Up_interp, label="$U_p$")
         ax.set_xlabel("$p$")
         ax.set_ylabel(r'$\xi$')
         ax.set_ylim(0,self.H)
         ax.invert_yaxis()
-#        ax.set_xscale('log')
         ax.grid()
-#        leg = plt.legend(loc=3 )
-#        leg.draggable()
 
 
-
-        #sig_ vs depth
+        #effective stress vs depth
         ax = fig.add_subplot(2,4,3)
         ax.plot(effective_stress, xi)
-#        ax.plot(Tv_interp, Up_interp, label="$U_p$")
         ax.set_xlabel("$\sigma'$")
         ax.set_ylabel(r'$\xi$')
         ax.set_ylim(0,self.H)
         ax.invert_yaxis()
-#        ax.set_xscale('log')
         ax.grid()
-#        leg = plt.legend(loc=3 )
-#        leg.draggable()
 
-        #sig vs depth
+        #total stress vs depth
         ax = fig.add_subplot(2,4,7)
         ax.plot(total_stress, xi)
-#        ax.plot(Tv_interp, Up_interp, label="$U_p$")
         ax.set_xlabel("$\sigma$")
         ax.set_ylabel(r'$\xi$')
         ax.set_ylim(0,self.H)
         ax.invert_yaxis()
-#        ax.set_xscale('log')
         ax.grid()
-#        leg = plt.legend(loc=3 )
-#        leg.draggable()
 
-
-        #vs vs depth
+        #velocity of solids vs depth
         ax = fig.add_subplot(2,4,4)
         ax.plot(vs, xi)
-#        ax.plot(Tv_interp, Up_interp, label="$U_p$")
         ax.set_xlabel("$v_s$")
         ax.set_ylabel(r'$\xi$')
         ax.set_ylim(0, self.H)
         ax.invert_yaxis()
-#        ax.set_xscale('log')
         ax.grid()
-#        leg = plt.legend(loc=3 )
-#        leg.draggable()
 
-        #vw vs depth
+        #velocity of water vs depth
         ax = fig.add_subplot(2,4,8)
         ax.plot(vw, xi)
-#        ax.plot(Tv_interp, Up_interp, label="$U_p$")
         ax.set_xlabel("$v_w$")
         ax.set_ylabel(r'$\xi$')
         ax.set_ylim(0, self.H)
         ax.invert_yaxis()
-#        ax.set_xscale('log')
         ax.grid()
-#        leg = plt.legend(loc=3 )
-#        leg.draggable()
 
-        fig.tight_layout()
+        #void ratio vs depth
+        ax = fig.add_subplot(2,4,5)
+        ax.plot(e, xi)
+        ax.set_xlabel("$e$")
+        ax.set_ylabel(r'$\xi$')
+        ax.set_ylim(0, self.H)
+        ax.invert_yaxis()
+        ax.grid()
+
+#        fig.tight_layout()
+
+#        fig.tight_layout()
+
+#        bbox = leg.get_frame().get_bbox()
+#        print(bbox)
+
+#        plt.Figure.legend()
+#        a=plt.getp(fig.legend, 'bbox')
+#        print(a)
+#        bbox = fig.legend.get_window_extent()
+#        print(bbox)
+#        bbox2 = bbox.transformed(fig.transFigure.inverted())
+#        bbox2.width,bbox2.height
+#        print(bbox2)
+#
+
+        fig.subplots_adjust(top=0.97, bottom=0.15, left=0.05, right=0.97)
+
+
         return fig
 
 
