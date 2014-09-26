@@ -22,3 +22,128 @@ from __future__ import print_function, division
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
+
+
+
+def CcCr_e_from_stresses(estress, pstress, Cc, Cr, siga, ea):
+    """void ratio from from stress for CcCr soil model
+
+    Parameters
+    ----------
+    estress : float
+        current effective stress
+    pstress : float
+        current preconsolidation stress
+    Cc : float
+        compressibility index
+    Cr : float
+        recompression index
+    siga, ea : float
+        point on compression line fixing it in effective stress-void ratio
+        space
+
+    Returns
+    -------
+    e : float
+        void ratio corresponding to current stress state
+
+    Examples
+    --------
+    On recompression line:
+    >>> CcCr_e_from_stresses(40, 50, 3, 0.5, 10, 5)
+    2.95154...
+
+    On compression line:
+    >>> CcCr_e_from_stresses(60, 50, 3, 0.5, 10, 5)
+    2.66554...
+
+    Array inputs:
+    >>> CcCr_e_from_stresses(np.array([40, 60]), np.array([50, 55]),
+    ... 3, 0.5, 10, 5)
+    array([ 2.95154499,  2.66554625])
+
+    """
+
+
+    max_past = np.maximum(pstress, estress)
+
+    # void ratio at preconsolidation pressure
+    e = ea - Cc * np.log10(max_past / siga)
+    # void ratio at current effetive stress
+    e += Cr * np.log10(max_past / estress)
+
+    return e
+
+
+def av_e_from_stresses(estress, av, siga, ea):
+    """void ratio from from stress for av soil model
+
+    Parameters
+    ----------
+    estress : float
+        current effective stress
+    av : float
+        slope of compression line
+    siga, ea : float
+        effective stress and void ratio specifying point on compression
+        line fixing
+
+    Returns
+    -------
+    e : float
+        void ratio corresponding to current stress state
+
+    Examples
+    --------
+    >>> av_e_from_stresses(20, 1.5, 19, 4)
+    2.5
+
+    Array inputs:
+    >>> av_e_from_stresses(np.array([20, 21]), 1.5, 19, 4)
+    array([ 2.5,  1. ])
+    """
+
+    e = ea - av * (estress - siga)
+
+    return e
+
+def ck_k_from_e(e, ck, ka, ea):
+    """permeability from void ratio for ck peremability model
+
+    Parameters
+    ----------
+    e : float
+        current void ratio
+    ck : float
+        slope of semi-log void-ratio vs permeability line
+    ka, ea : float
+        peremability and void ratio of point specifying point on permeability
+        line.
+
+    Returns
+    -------
+    k : float
+        permeability corresponding to current void ratio
+
+    Examples
+    --------
+    >>> ck_k_from_e(1, 3, 10,3)
+    5.1341...
+
+    Array inputs
+    >>> ck_k_from_e(np.array([1, 1.5]), 3, 10,3)
+    array([ 5.13417119,  6.0653066 ])
+
+    """
+
+
+    k = ka * np.exp((e - ea) / ck)
+    return k
+
+if __name__ == '__main__':
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+#    nose.runmodule(argv=['nose', '--verbosity=3'])
+
+
+#    print(repr(CcCr_e_from_stresses(np.array([40, 60]), np.array([50, 60]), 3, 0.5, 10, 5)))
