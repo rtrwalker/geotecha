@@ -9,5 +9,5 @@ python setup.py install
 python setup.py clean --all
 @REM cd out of spec1d folder or nosetests will run on source code rather than installed pakcage (not exactly sure where nosetests searches first.  Drill down on currnet directory or what?)
 cd c:\
-nosetests geotecha -v --with-doctest
+nosetests geotecha -v --with-doctest --doctest-options=+ELLIPSIS
 @pause
