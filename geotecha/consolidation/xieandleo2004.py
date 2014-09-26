@@ -70,6 +70,14 @@ class XieAndLeo2004(object):
     nterms : int, optional
         number of summation terms. default nterms=100
 
+
+    Notes
+    -----
+    Basically initialize the XieAndLeo2004 object, then use individual methods
+    of the data to extract data at particualr dpths and times.
+
+    The most common error is if input data is not numpy arrays.
+
     """
     def __init__(self, qu, qp, H, Hw, kv0, mvl, e00, Gs, gamw=10, drn=0, nterms=100):
 
@@ -896,7 +904,7 @@ class XieAndLeo2004(object):
 
         # determine times to plot
         if t is None:
-            Us_plot = np.linspace(0,1,6)
+            Us_plot = np.linspace(0,1,11)
             Us_plot[-1] = 0.99
             t = np.interp(Us_plot, Us_interp, t_interp)
 
@@ -904,7 +912,6 @@ class XieAndLeo2004(object):
         if a is None:
             a = np.linspace(0, self.H, 100)
         a = np.asarray(a)
-
 
 
 
@@ -1037,16 +1044,131 @@ class XieAndLeo2004(object):
 #        print(bbox2)
 #
 
+
+
         fig.subplots_adjust(top=0.97, bottom=0.15, left=0.05, right=0.97)
 
 
         return fig
 
 
-if __name__ == '__main__':
 
 
-#    (qu, qp, H, Hw, kv0, mvl, e00, Gs, gamw=10, drn=0, nterms=100):
+    def t_from_Us_PTIB(self, Us):
+        """ back calculate t from Us
+
+        Parameters
+        ----------
+        Us : 1d array
+            values of degree of consolidation by settlement to calc the t at
+
+
+        Returns
+        -------
+        t : 1d array
+            times coresponding to Us
+
+        """
+
+        t_interp = np.logspace(np.log10(0.0001/self.dTv),np.log10(10/self.dTv), 500)
+        Us_interp = self.Us_PTIB(t_interp)
+
+        t = np.interp(Us, Us_interp, t_interp)
+
+
+
+        return t
+    def t_from_Us_PTPB(self, Us):
+        """ back calculate t from Us
+
+        Parameters
+        ----------
+        Us : 1d array
+            values of degree of consolidation by settlement to calc the t at
+
+
+        Returns
+        -------
+        t : 1d array
+            times coresponding to Us
+
+        """
+
+        t_interp = np.logspace(np.log10(0.0001/self.dTv),np.log10(10/self.dTv), 500)
+        Us_interp = self.Us_PTPB(t_interp)
+
+        t = np.interp(Us, Us_interp, t_interp)
+
+        return t
+
+
+
+def xie_and_leo_2004_figure_4(ax=None):
+    """reproduce fig 4 from article by Xie and Leo 2004
+    pore pressure vs xi plot for various degrees of consolidation PTIB
+
+    Parameters
+    ----------
+    ax : matplotlib.Axes
+        Axes object to plot on. If ax=None. plt.gca() will be used
+
+    """
+
+    qu=100
+    qp=10
+    H=10
+    Hw=1.0
+    kv0=1e-9
+    mvl=4e-3
+    e00=3
+    Gs=2.75
+    gamw=10 #N
+    drn=1
+    nterms=100
+
+    obj = XieAndLeo2004(qu=qu, qp=qp, H=H, Hw=Hw,
+                        kv0=kv0, mvl=mvl,e00=e00, Gs=Gs, gamw=gamw,
+                        drn=drn, nterms=nterms)
+
+    a = np.linspace(0,H, 100)
+
+    Us = np.array([0.3, 0.5, 0.7, 0.9])
+
+    t = obj.t_from_Us_PTIB(Us)
+    u = obj.u_PTIB(a, t)
+    xi = obj.xi_PTIB(a, t)
+
+    if ax is None:
+        ax = plt.gca()
+
+    ax.plot(u, xi)
+    ax.set_xlabel("$u$ Pore water pressure, PTPB")
+    ax.set_ylabel(r'$\xi$, depth from initial top surface')
+    ax.set_title("Figure 4 from Xie and Leo 2004")
+    ax.set_ylim(0, H)
+    ax.invert_yaxis()
+    ax.grid()
+
+    for line, t_, Us_  in zip(ax.get_lines(), t, Us):
+        plt.setp(line,
+        label='$U_s={Us:6.3g},\hspace{{0.5}}T_v={Tv:6.3g},\hspace{{0.5}}'
+         't={t:6.3g}$'.format(Tv=obj.dTv*t_, t=t_, Us=Us_))
+    leg = ax.legend(loc=1, labelspacing=0.0, fontsize=11)
+    leg.draggable()
+    return
+
+
+def xie_and_leo_2004_figure_5(ax=None):
+    """reproduce fig 5 from article by Xie and Leo 2004
+    pore pressure vs xi plot for various degrees of consolidation PTPB
+
+    Parameters
+    ----------
+    ax : matplotlib.Axes
+        Axes object to plot on. If ax=None. plt.gca() will be used
+
+    """
+
     qu=100
     qp=10
     H=10
@@ -1062,42 +1184,167 @@ if __name__ == '__main__':
     obj = XieAndLeo2004(qu=qu, qp=qp, H=H, Hw=Hw,
                         kv0=kv0, mvl=mvl,e00=e00, Gs=Gs, gamw=gamw,
                         drn=drn, nterms=nterms)
-    fig = obj.plot_all()
 
-    plt.show()
+    a = np.linspace(0,H, 100)
 
-#    a = np.linspace(0,H,50)
-#    t = np.logspace(0,2,6)
-#    t = np.array([0,1.0, 2.0, 3.0, 5.0])*1e9
-#
-#    dTv = obj.dTv
-#
-#    t_interp = np.logspace(np.log10(0.01/dTv),np.log10(6/dTv),50)
-#    Us_interp = obj.Us_PTIB(t_interp)
-#    t = np.interp([0.3, 0.5, 0.7, 0.9], Us_interp, t_interp)
-##    plt.plot(t_interp, Us_interp)
-##    plt.show()
-#    settle  = obj.settlement_PTIB(a, t)
-#    xi = a[:,None] + settle
-#    u = obj.u_PTIB(a, t)
-#    Us = obj.Us_PTIB(t)
-#
-#    print(obj.settlement_final())
-#
-#    if 1:
-#        print(t)
-#        print(Us)
-#        fig=plt.figure()
-#        ax = fig.add_subplot(1,1,1)
-#        ax.plot(u,xi)
-#
-#        ax.set_xlabel('u')
-#        ax.set_ylabel('xi')
-#        ax.invert_yaxis()
-##        ax.set_xlim(0,1)
-#        ax.grid()
-##        leg = plt.legend(loc=3 )
-#        leg.draggable()
+    Us = np.array([0.3, 0.5, 0.7, 0.9])
 
-#    plt.show()
+    t = obj.t_from_Us_PTPB(Us)
+    u = obj.u_PTPB(a, t)
+    xi = obj.xi_PTPB(a, t)
+
+    if ax is None:
+        ax = plt.gca()
+
+    ax.plot(u, xi)
+    ax.set_xlabel("$u$ Pore water pressure, PTPB")
+    ax.set_ylabel(r'$\xi$, depth from initial top surface')
+    ax.set_title("Figure 5 from Xie and Leo 2004")
+    ax.set_ylim(0, H)
+    ax.invert_yaxis()
+    ax.grid()
+
+    for line, t_, Us_  in zip(ax.get_lines(), t, Us):
+        plt.setp(line,
+        label='$U_s={Us:6.3g},\hspace{{0.5}}T_v={Tv:6.3g},\hspace{{0.5}}'
+         't={t:6.3g}$'.format(Tv=obj.dTv*t_, t=t_, Us=Us_))
+    leg = ax.legend(loc=1, labelspacing=0.0, fontsize=11)
+    leg.draggable()
+    return
+
+
+
+def xie_and_leo_2004_figure_6(ax=None):
+    """reproduce fig 6 from article by Xie and Leo 2004
+    settlement vs time and degree of consolidation vs time
+
+    Parameters
+    ----------
+    ax : matplotlib.Axes
+        Axes object to plot on. If ax=None. plt.gca() will be used
+
+    """
+
+
+    qu=100
+    qp=10
+    H=10
+    Hw=1.0
+    kv0=1e-9
+    mvl=4e-3
+    e00=3
+    Gs=2.75
+    gamw=10 #N
+    drn=0
+    nterms=100
+
+    obj = XieAndLeo2004(qu=qu, qp=qp, H=H, Hw=Hw,
+                        kv0=kv0, mvl=mvl,e00=e00, Gs=Gs, gamw=gamw,
+                        drn=drn, nterms=nterms)
+
+    Tv = np.logspace(-3,np.log10(6), 200)
+    t = Tv / obj.dTv
+
+    Up_PTPB = obj.Up_PTPB(t)
+    Us_PTPB = obj.Us_PTPB(t)
+    S_PTPB = obj.settlement_PTPB(np.array([0.0]), t)
+
+    Up_PTIB = obj.Up_PTIB(t)
+    Us_PTIB = obj.Us_PTIB(t)
+    S_PTIB = obj.settlement_PTIB(np.array([0.0]), t)
+
+    if ax is None:
+        ax = plt.gca()
+
+    ax.plot(Tv, Us_PTPB, label="$U_s,\hspace{0.5}PTPB$", color='b', ls="-")
+    ax.plot(Tv, Up_PTPB, label="$U_p,\hspace{0.5}PTPB$", color='b', ls="--")
+
+    ax.plot(Tv, Us_PTIB, label="$U_s,\hspace{0.5}PTIB$", color='g', ls="-")
+    ax.plot(Tv, Up_PTIB, label="$U_p,\hspace{0.5}PTIB$", color='g', ls="--")
+
+
+    ax.set_xlabel("$T_v$")
+    ax.set_ylabel(r'degree of consolidation')
+    ax.set_title("Figure 6 from Xie and Leo 2004")
+    ax.set_ylim(0, 1)
+    ax.invert_yaxis()
+    ax.set_xscale('log')
+
+    ticks11a = matplotlib.ticker.LinearLocator(11)
+    ax.yaxis.set_major_locator(ticks11a)
+#    ax.locator_params(axis='y', nbins=16)
+
+    ax.grid(ls="-", which="major")
+    ax.grid(which="minor")
+
+
+
+
+    ax2 = ax.twinx()
+
+    ax2.plot(Tv, S_PTPB[0], label="$settlement,\hspace{0.5}PTPB$",color='b', dashes = [3,2,6,2])
+    ax2.plot(Tv, S_PTIB[0], label=r"$settlement,\hspace{0.5}PTIB$",color='g', dashes = [3,2,6,2])
+    ax2.set_ylabel(r'Settlement (m)')
+    ax2.set_ylim(0, 4)
+    ax2.invert_yaxis()
+
+    ticks11b = matplotlib.ticker.LinearLocator(11)
+    ax2.yaxis.set_major_locator(ticks11b)
+
+    lines=[]
+    labels=[]
+    for i in ax.get_lines():
+        lines.append(i)
+        labels.append(i.get_label())
+
+    for i in ax2.get_lines():
+        lines.append(i)
+        labels.append(i.get_label())
+
+
+    leg = ax.legend(lines, labels,loc=1, labelspacing=0.0, fontsize=12)
+    leg.draggable()
+
+
+
+    return
+if __name__ == '__main__':
+
+
+
+
+    if 0:
+        xie_and_leo_2004_figure_4()
+        plt.show()
+    if 0:
+        xie_and_leo_2004_figure_5()
+        plt.show()
+    if 0:
+        xie_and_leo_2004_figure_6()
+        plt.show()
+
+
+    if 1:
+        # plot all
+        qu=100
+        qp=10
+        H=10
+        Hw=1.0
+        kv0=1e-9
+        mvl=4e-3
+        e00=3
+        Gs=2.75
+        gamw=10 #N
+        drn=1
+        nterms=100
+
+        obj = XieAndLeo2004(qu=qu, qp=qp, H=H, Hw=Hw,
+                            kv0=kv0, mvl=mvl,e00=e00, Gs=Gs, gamw=gamw,
+                            drn=drn, nterms=nterms)
+
+        fig = obj.plot_all()
+        plt.show()
+
+
+
 
