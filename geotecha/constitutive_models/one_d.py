@@ -272,24 +272,24 @@ def ck_k_from_e(e, ck, ka, ea):
 
 
 class OneDimensionalVoidRatioEffectiveStress(object):
-    """class for defining 1D void ratio-effective stress relationships"""
+    """Base class for defining 1D void ratio-effective stress relationships"""
 
     def e_from_stress(self, estress, **kwargs):
         """void ratio from effective stress"""
-        raise NotImplementedError("error message")
+        raise NotImplementedError("e_from_stress must be implemented")
 
     def stress_from_e(self, e, **kwargs):
         """effective stress from void ratio"""
-        raise NotImplementedError("error message")
+        raise NotImplementedError("stress_from_e must be implemented")
 
     def e_and_stress_for_plotting(self, **kwargs):
         """void ratio and stress values that plot the method"""
         # should return a tuple of x and y values
-        raise NotImplementedError("error message")
+        raise NotImplementedError("e_and_stress_for_plotting must be implemented")
 
     def av_from_stress(self, estress, **kwargs):
         """slope of void ratio from effective stress"""
-        raise NotImplementedError("error message")
+        raise NotImplementedError("av_from_stress must be implemented")
 
     def plot_constitutive_model(self, **kwargs):
         """plot the void ratio-stress points"""
@@ -300,7 +300,7 @@ class OneDimensionalVoidRatioEffectiveStress(object):
         return
 
 class AVSoilModel(OneDimensionalVoidRatioEffectiveStress):
-    """linear void ratio-stress realationship
+    """linear void ratio-effective stress realationship
 
     Parameters
     ----------
@@ -405,7 +405,7 @@ class AVSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
 
 class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
-    """semi-log void ratio-stress realationship
+    """semi-log void ratio-effective stress realationship
 
     Parameters
     ----------
@@ -637,7 +637,10 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
 
 class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
-    """Pwise linear semi-log void ratio-stress realationship
+    """Pwise linear void ratio-effective stress realationship
+
+    x and y data can be interpolated natural-natural, natural-log10,
+    log10-natural, or log10, log10
 
     Parameters
     ----------
@@ -662,8 +665,6 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         self.xlog = xlog
         self.ylog = ylog
         self.Cr = Cr
-
-
 
         if np.any(np.diff(self.siga) <= 0):
             raise ValueError("'siga' must be in monotonically increasing order.")
@@ -694,7 +695,6 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         -------
         e : float
             void ratio corresponding to current stress state
-
 
         Examples
         --------
@@ -775,18 +775,16 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> a.e_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
         array([ 2.76255...,  2.604857...])
 
-
         """
 
         pstress = kwargs.get('pstress', estress)
-
         Cr = self.Cr
         max_past = np.maximum(pstress, estress)
 
         #transform x data if needed
         if self.xlog:
             siga = self.log_siga
-#            np.log10(max_past, out=max_past) # doesn't work for single values
+            # np.log10(max_past, out=max_past) # doesn't work for single values
             max_past = np.log10(max_past)
             estress = np.log10(estress)
         else:
@@ -804,8 +802,9 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         # transform y back if needed
         if self.ylog:
-#            np.power(10, e, out=e) # doesn't work for single values
+            # np.power(10, e, out=e) # doesn't work for single values
             e = np.power(10, e)
+
         return e
 
     def stress_from_e(self, e, **kwargs):
@@ -921,14 +920,10 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         else:
             ea = self.ea
 
-
-
-
-
         pstress = kwargs.get('pstress', None)
 
 
-        fact = 2.3025850929940459 # 10**(x)==exp(fact*x)
+        #fact = 2.3025850929940459 # 10**(x)==exp(fact*x)
 
 
         if pstress is None:
@@ -948,7 +943,6 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         # void ratio at preconsolidation pressure
         ep = np.interp(pstress, siga, ea)
 
-
         # stress change from (pstress, ep) if on pwise line
         dp_interp = np.interp(e, ea[::-1], siga[::-1]) - pstress
         # stress change from (pstress, ep) if on extended Cr line
@@ -960,6 +954,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         # transform x back if needed
         if self.xlog:
             estress = np.power(10.0, estress)
+
         return  estress
 
     def e_and_stress_for_plotting(self, **kwargs):
@@ -989,11 +984,150 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         x = np.linspace(xmin, xmax, npts)
         pstress = kwargs.get('pstress', x)
-#        i = np.searchsorted(x, pstress)
-#        x[i] = pstress
         y = self.e_from_stress(x, pstress=pstress)
 
         return x, y
+
+
+    def av_from_stress(self, estress, **kwargs):
+        """slope of void ratio from effective stress
+
+        Parameters
+        ----------
+        estress : float
+            current effective stress
+        pstress : float, optional
+            reconsolidation stress.  Default pstress=estress i.e. normally
+            consolidated.
+
+        Returns
+        -------
+        av : float
+            slope of void-ratio vs effective stress plot at current stress
+            state
+
+        Examples
+        --------
+        On recompression line:
+        >>> x, y = np.array([1,2,2.5]), np.array([4, 3.5, 2])
+        >>> a = PwiseLinearSoilModel(siga=x, ea=y, Cr=0.1)
+        >>> a.av_from_stress(estress=1.25, pstress=2.25)
+        0.10...
+
+        On compression line:
+        >>> a.av_from_stress(estress=2.25, pstress=2)
+        3.0...
+
+        Normally consolidated (pstress not specified):
+        >>> a.av_from_stress(estress=2.25)
+        3.0...
+
+        Array inputs:
+        >>> a.av_from_stress(estress=np.array([1.25, 2.25]),
+        ... pstress=np.array([2.25, 2.]))
+        array([ 0.1,  3. ])
+
+
+        Logarithmic effective stress scale:
+        On recompression line:
+        >>> x, y = np.array([1,2,2.5]), np.array([4, 3.5, 2])
+        >>> a = PwiseLinearSoilModel(siga=x, ea=y, Cr=0.1, xlog=True)
+        >>> a.av_from_stress(estress=1.25, pstress=2.25)
+        0.034743...
+
+        On compression line:
+        >>> a.av_from_stress(estress=2.25, pstress=2)
+        2.987...
+
+        Normally consolidated (pstress not specified):
+        >>> a.av_from_stress(estress=2.25)
+        2.987...
+
+        Array inputs:
+        >>> a.av_from_stress(estress=np.array([1.25, 2.25]),
+        ... pstress=np.array([2.25, 2.]))
+        array([ 0.034743...,  2.987...])
+
+
+        Logarithmic void ratio scale:
+        On recompression line:
+        >>> x, y = np.array([1,2,2.5]), np.array([4, 3.5, 2])
+        >>> a = PwiseLinearSoilModel(siga=x, ea=y, Cr=0.1, ylog=True)
+        >>> a.av_from_stress(estress=1.25, pstress=2.25)
+        0.76694...
+
+        On compression line:
+        >>> a.av_from_stress(estress=2.25, pstress=2)
+        2.9612...
+
+        Normally consolidated (pstress not specified):
+        >>> a.av_from_stress(estress=2.25)
+        2.9612...
+
+        Array inputs:
+        >>> a.av_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
+        array([ 0.76694...,  2.9612...])
+
+        Logarithmic effective stress and void ratio scales:
+        On recompression line:
+        >>> x, y = np.array([1,2,2.5]), np.array([4, 3.5, 2])
+        >>> a = PwiseLinearSoilModel(siga=x, ea=y, Cr=0.1, xlog=True, ylog=True)
+        >>> a.av_from_stress(estress=1.25, pstress=2.25)
+        0.2210045...
+
+        On compression line:
+        >>> a.av_from_stress(estress=2.25, pstress=2)
+        2.9034...
+
+        Normally consolidated (pstress not specified):
+        >>> a.av_from_stress(estress=2.25)
+        2.9034...
+
+        Array inputs:
+        >>> a.av_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
+        array([ 0.2210045...,  2.9034...])
+
+        """
+
+        pstress = kwargs.get('pstress', estress)
+        Cr = self.Cr
+        max_past = np.maximum(pstress, estress)
+
+        #transform x data if needed
+        if self.xlog:
+            siga = self.log_siga
+            # np.log10(max_past, out=max_past) # doesn't work for single values
+            max_past = np.log10(max_past)
+            estress = np.log10(estress)
+        else:
+            siga=self.siga
+        #transform y data if needed
+        if self.ylog:
+            ea = self.log_ea
+        else:
+            ea = self.ea
+
+        # interval at preconsolidatio stress
+        i = np.searchsorted(siga, max_past)
+        Cc = (ea[i - 1] - ea[i]) / (siga[i] - siga[i - 1])
+        # void ratio at preconsolidation pressure
+        e = ea[i-1] - Cc * (max_past - siga[i - 1])
+        # void ratio at current effetive stress
+        e += Cr * (max_past - estress)
+
+        Cx = np.where(max_past > estress, Cr, Cc) # may need float comparison
+
+        # modify Cx slope for log axes
+        fact = 2.3025850929940459 #fact = log(10)
+        dx, dy = 1.0, 1.0
+        # transform y back if needed
+        if self.ylog:
+            dy = fact * np.power(10.0, e)
+        if self.xlog:
+            dx = fact * np.power(10.0, estress)
+
+        av = Cx * dy / dx
+        return av
 
 
 if __name__ == '__main__':
@@ -1017,9 +1151,9 @@ if __name__ == '__main__':
     siga = np.array([1,5,10,15,50,80, 100], dtype=float)
     ea = np.array([5,4.9,4.7,4.0,3,2, 1.8], dtype=float)
 #    xlog, ylog=(1, 1)
-    xlog, ylog=(0, 0)
-#    xlog, ylog=(0, 1)
-#    xlog, ylog=(1, 0)
+#    xlog, ylog=(0, 0)
+    xlog, ylog=(0, 1)
+    xlog, ylog=(1, 0)
 
     x, y = np.array([1,2,2.5]), np.array([4, 3.5, 2])
     siga, ea = x, y
@@ -1035,15 +1169,32 @@ if __name__ == '__main__':
         x, y = a.e_and_stress_for_plotting(pstress=i)
         plt.plot(x, y)
 
-#        x = 1.25
-#        y = a.e_from_stress(x, pstress=i)
-#        plt.plot(x, y, marker='o')
-#        print(x, y)
-#
-        y = 2.8
-        x = a.stress_from_e(y, pstress=i)
-        plt.plot(x, y, marker='s')
+        x = 1.25
+        y = a.e_from_stress(x, pstress=i)
+        plt.plot(x, y, marker='o')
+        av = a.av_from_stress(x, pstress=i)
         print(x, y)
+        print(repr(av))
+
+        xmin = max(x-3, np.min(siga))
+        xmax = min(np.max(siga), x+3)
+
+        xx = np.linspace(x, xmax, 100)
+        x0 = xx[0]
+        y0 = a.e_from_stress(xx[0], pstress=i)
+        dx = np.diff(xx)
+        av = a.av_from_stress(xx[1:], pstress=i)
+        yy=np.zeros_like(xx)
+        yy[0]=y0
+        yy[1:] = y0+np.cumsum(dx*(-av))
+        plt.plot(xx,yy, ls='.', marker='o')
+
+
+#
+#        y = 2.8
+#        x = a.stress_from_e(y, pstress=i)
+#        plt.plot(x, y, marker='s')
+#        print(x, y)
 
     a.plot_constitutive_model()
     if xlog:
