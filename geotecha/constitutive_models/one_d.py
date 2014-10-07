@@ -291,7 +291,7 @@ class OneDimensionalVoidRatioEffectiveStress(object):
         """slope of void ratio from effective stress"""
         raise NotImplementedError("av_from_stress must be implemented")
 
-    def plot_constitutive_model(self, **kwargs):
+    def plot_model(self, **kwargs):
         """plot the void ratio-stress points"""
         ax = kwargs.pop('ax', plt.gca())
         x, y = self.e_and_stress_for_plotting(**kwargs)
@@ -1140,7 +1140,7 @@ if __name__ == '__main__':
 #    print(repr(CcCr_e_from_stresses(np.array([40, 60]), np.array([50, 60]), 3, 0.5, 10, 5)))
 
 #    a = AVSoilModel(av=1.5, siga=19, ea=4)
-#    a.plot_constitutive_model()
+#    a.plot_model()
 #    plt.show()
     a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
     siga = np.linspace(1,80, 10)
@@ -1196,7 +1196,7 @@ if __name__ == '__main__':
 #        plt.plot(x, y, marker='s')
 #        print(x, y)
 
-    a.plot_constitutive_model()
+    a.plot_model()
     if xlog:
         plt.gca().set_xscale('log')
     if ylog:
