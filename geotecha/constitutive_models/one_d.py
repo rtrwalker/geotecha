@@ -299,7 +299,7 @@ class OneDimensionalVoidRatioEffectiveStress(object):
         ax.plot(x, y)
         return
 
-class AVSoilModel(OneDimensionalVoidRatioEffectiveStress):
+class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
     """linear void ratio-effective stress realationship
 
     Parameters
@@ -331,12 +331,12 @@ class AVSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         Examples
         --------
-        >>> a = AVSoilModel(av=1.5, siga=19, ea=4)
+        >>> a = AvSoilModel(av=1.5, siga=19, ea=4)
         >>> a.e_from_stress(20)
         2.5
 
         Array inputs:
-        >>> a = AVSoilModel(av=1.5, siga=19, ea=4)
+        >>> a = AvSoilModel(av=1.5, siga=19, ea=4)
         >>> a.e_from_stress(np.array([20, 21]))
         array([ 2.5,  1. ])
 
@@ -359,12 +359,12 @@ class AVSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         Examples
         --------
-        >>> a = AVSoilModel(av=1.5, siga=19, ea=4)
+        >>> a = AvSoilModel(av=1.5, siga=19, ea=4)
         >>> a.stress_from_e(1)
         21.0
 
         Array inputs:
-        >>> a = AVSoilModel(av=1.5, siga=19, ea=4)
+        >>> a = AvSoilModel(av=1.5, siga=19, ea=4)
         >>> a.stress_from_e(np.array([1, 2.5]))
         array([ 21.,  20.])
 
@@ -1139,7 +1139,7 @@ if __name__ == '__main__':
 
 #    print(repr(CcCr_e_from_stresses(np.array([40, 60]), np.array([50, 60]), 3, 0.5, 10, 5)))
 
-#    a = AVSoilModel(av=1.5, siga=19, ea=4)
+#    a = AvSoilModel(av=1.5, siga=19, ea=4)
 #    a.plot_model()
 #    plt.show()
     a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
