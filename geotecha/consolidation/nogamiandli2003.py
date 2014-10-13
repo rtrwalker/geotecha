@@ -979,8 +979,8 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         After a 'successful' run, use this to check the validity
         of the calculated vertical eigenvalues and ensure none are missing
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         npt : int, optional
             number of points to plot. default=200
 

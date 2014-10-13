@@ -132,8 +132,8 @@ class XieAndLeo2004(object):
     def e0(self, a):
         """Initial void ratio at depth
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
 
@@ -151,8 +151,8 @@ class XieAndLeo2004(object):
     def efinal(self, a):
         """final void ration ratio at depth
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
 
@@ -179,8 +179,8 @@ class XieAndLeo2004(object):
     def initial_effective_stress(self, a):
         """initial effective stress
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
 
@@ -205,8 +205,8 @@ class XieAndLeo2004(object):
     def u_PTIB(self, a, t):
         """pore pressure for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -238,8 +238,8 @@ class XieAndLeo2004(object):
     def u_PTPB(self, a, t):
         """pore pressure for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -271,8 +271,8 @@ class XieAndLeo2004(object):
     def settlement_PTIB(self, a, t):
         """settlement for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -304,8 +304,8 @@ class XieAndLeo2004(object):
     def settlement_PTPB(self, a, t):
         """settlement for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -337,8 +337,8 @@ class XieAndLeo2004(object):
     def Us_PTIB(self, t):
         """Average degree of consolidation from settlement for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         t : array like of float
             time coord
 
@@ -365,8 +365,8 @@ class XieAndLeo2004(object):
     def Us_PTPB(self, t):
         """Average degree of consolidation from settlement for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         t : array like of float
             time coord
 
@@ -395,8 +395,8 @@ class XieAndLeo2004(object):
     def Up_PTIB(self, t):
         """Average degree of consolidation from p.press for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         t : array like of float
             time coord
 
@@ -427,8 +427,8 @@ class XieAndLeo2004(object):
     def Up_PTPB(self, t):
         """Average degree of consolidation from p.press for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         t : array like of float
             time coord
 
@@ -460,8 +460,8 @@ class XieAndLeo2004(object):
     def effective_stress_PTIB(self, a, t):
         """Effective stress for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -484,8 +484,8 @@ class XieAndLeo2004(object):
     def effective_stress_PTPB(self, a, t):
         """Effective stress for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -508,8 +508,8 @@ class XieAndLeo2004(object):
     def total_stress_PTIB(self, a, t):
         """total stress for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -535,8 +535,8 @@ class XieAndLeo2004(object):
     def total_stress_PTPB(self, a, t):
         """total stress for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -562,8 +562,8 @@ class XieAndLeo2004(object):
     def total_pore_pressure_PTIB(self, a, t):
         """total pore pressure for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -589,8 +589,8 @@ class XieAndLeo2004(object):
     def total_pore_pressure_PTPB(self, a, t):
         """total pore pressure for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -616,8 +616,8 @@ class XieAndLeo2004(object):
     def e_PTIB(self, a, t):
         """void ration for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -648,8 +648,8 @@ class XieAndLeo2004(object):
     def e_PTPB(self, a, t):
         """void ration for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -680,8 +680,8 @@ class XieAndLeo2004(object):
     def vs_PTIB(self, a, t):
         """velocity of soil particles for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -713,8 +713,8 @@ class XieAndLeo2004(object):
     def vs_PTPB(self, a, t):
         """velocity of soil particles for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -746,8 +746,8 @@ class XieAndLeo2004(object):
     def vw_PTIB(self, a, t):
         """velocity of fluid for PTIB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -782,8 +782,8 @@ class XieAndLeo2004(object):
     def vw_PTPB(self, a, t):
         """velocity of fluid for PTPB drainage
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -827,8 +827,8 @@ class XieAndLeo2004(object):
     def xi_PTIB(self, a,t):
         """convectove cordinate from lagrange coordinate
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float
@@ -849,8 +849,8 @@ class XieAndLeo2004(object):
     def xi_PTPB(self, a,t):
         """convectove cordinate from lagrange coordinate
 
-        Paramters
-        ---------
+        Parameters
+        ----------
         a : array like of float
             depth coord
         t : array like of float

@@ -697,7 +697,7 @@ def convert_x1_x2_y1_y2_to_x_y(x1, x2, y1, y2):
 
     See also
     --------
-    `convert_x_y_to_x1_x2_y1_y2` : reverse of this function
+    convert_x_y_to_x1_x2_y1_y2 : reverse of this function
 
     Notes
     -----
@@ -800,7 +800,7 @@ def convert_x_y_to_x1_x2_y1_y2(x, y):
 
     See also
     --------
-    `convert_x1_x2_y1_y2_to_x_y` : reverse of this function
+    convert_x1_x2_y1_y2_to_x_y : reverse of this function
 
     Notes
     -----
@@ -2385,8 +2385,8 @@ def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
 
     x is such that sum of elements equals `h`.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     n : int, optional
         number of elements to subdivide into. default n=2
     h : float, optional

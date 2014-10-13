@@ -72,9 +72,10 @@ class Talbot(object):
            and rational approximations. BIT. Numerical Mathematics,
            46(3):653 670, 2006.
 
-    See Also
+    See also
     --------
-    `geotecha.math.mp_laplace.Talbot` : higher precision numerical inverse laplace
+    geotecha.math.mp_laplace.Talbot : higher precision numerical inverse
+        laplace
 
     """
 

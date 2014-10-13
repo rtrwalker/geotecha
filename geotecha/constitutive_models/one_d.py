@@ -665,6 +665,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         self.xlog = xlog
         self.ylog = ylog
         self.Cr = Cr
+        #TODO: adjust for different logarithm bases.
 
         if np.any(np.diff(self.siga) <= 0):
             raise ValueError("'siga' must be in monotonically increasing order.")

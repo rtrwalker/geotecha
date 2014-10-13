@@ -38,8 +38,8 @@ def rgb_shade(rgb, factor=1, scaled=True):
 
     If rgba tuple is given the 'a' value is not altered.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     rgb: tuple
         triplet of rgb values.  Note can be an rgba value
     factor: float
@@ -79,8 +79,8 @@ def rgb_tint(rgb, factor=0, scaled=True):
 
     If rgba tuple is given the 'a' value is not altered.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     rgb: tuple
         triplet of rgb values.  Note can be an rgba value
     factor: float
