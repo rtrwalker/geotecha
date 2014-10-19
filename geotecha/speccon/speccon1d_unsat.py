@@ -1333,7 +1333,7 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
         xlabels.append('$m_{{1k}}^a/\\overline{{m}}_v$, $\\left'
             '(\\overline{{m}}_v={:g}\\right)$'.format(self.mvref))
         z_x.append(self.m2a)
-        xlabels.append('$m_{{2}}^w/\\overline{{m}}_v$, $\\left'
+        xlabels.append('$m_{{2}}^a/\\overline{{m}}_v$, $\\left'
             '(\\overline{{m}}_v={:g}\\right)$'.format(self.mvref))
         z_x.append(self.kw)
         xlabels.append('$k_w/\\overline{{k}}_w$, $\\left'

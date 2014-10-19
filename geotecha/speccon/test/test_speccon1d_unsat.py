@@ -425,7 +425,7 @@ show_figures= False
 ##            plt.plot(t, avp[0],'b-*',  label='expected')
 ##            plt.plot(t, a.avp[0], 'r-+', label='calculated')
 ##            plt.legend()
-            plt.show()
+#            plt.show()
 
 
             assert_allclose(a.pora[:,:len(tua)], pora, atol=1.0,
@@ -630,7 +630,7 @@ show_figures= False
 ##            plt.plot(t, avp[0],'b-*',  label='expected')
 ##            plt.plot(t, a.avp[0], 'r-+', label='calculated')
 ##            plt.legend()
-            plt.show()
+#            plt.show()
 
 
             assert_allclose(a.pora[:,:len(tua)], pora, atol=2.0,
@@ -836,7 +836,7 @@ show_figures= False
 ##            plt.plot(t, avp[0],'b-*',  label='expected')
 ##            plt.plot(t, a.avp[0], 'r-+', label='calculated')
 ##            plt.legend()
-            plt.show()
+#            plt.show()
 
 
             assert_allclose(a.pora[:,:len(tua)], pora, atol=2.0,
@@ -1432,7 +1432,7 @@ show_figures= False
 #            plt.plot(t, avp[0],'b-*',  label='expected')
 #            plt.plot(t, a.avp[0], 'r-+', label='calculated')
 #            plt.legend()
-            plt.show()
+#            plt.show()
 
 
             assert_allclose(a.pora[:,:len(tua)], pora, atol=2.0,
@@ -2939,7 +2939,7 @@ show_figures= False
 #            leg = plt.legend(loc=3 )
 #            leg.draggable()
 
-            plt.show()
+#            plt.show()
 
 
             assert_allclose(a.pora, pora, atol=0.2,

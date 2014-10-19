@@ -4651,7 +4651,7 @@ tvals = np.%s
 #            plt.plot(t, avp[0],'b-*',  label='expected')
 #            plt.plot(t, a.avp[0], 'r-+', label='calculated')
 #            plt.legend()
-            plt.show()
+#            plt.show()
 #            assert_allclose(a.avp, avp, atol=1,
 #                            err_msg = ("Fail. dengetal2013, avp, "
 #                                "implementation='%s', dT=%s" % (impl, dT)))
