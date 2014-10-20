@@ -32,7 +32,7 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-from matplotlib.testing.decorators import cleanup
+#from matplotlib.testing.decorators import cleanup
 from numpy.testing import assert_allclose
 try:
     from matplotlib.testing.decorators import CleanupTestCase
@@ -258,7 +258,7 @@ def test_MarkersDashesColors():
     ok_(np.allclose(a.colors[0], (0.7, 0.9, 0.6)))
     ok_(np.allclose(a.colors[1], (0.7, 0.9, 0.6)))
 
-@cleanup
+#@cleanup
 def test_apply_dict_to_object():
     """test for apply_dict_to_object"""
     #apply_dict_to_object(obj, dic)
