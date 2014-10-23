@@ -256,12 +256,20 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
 
         #TODO: adjust for different logarithm bases.
 
+        self.ka_slice = slice(None)
+        self.ea_slice = slice(None)
 
         if np.any(np.diff(self.ka) <= 0):
-            raise ValueError("'ka' must be in monotonically increasing order.")
+            # ka is in decreasing order
+            # reverse the slice for e_from_k interpolation
+            self.ka_slice = slice(None, None, -1)            
+#            raise ValueError("'ka' must be in monotonically increasing order.")
 
         if np.any(np.diff(self.ea) <= 0):
-            raise ValueError("'ea' must be in monotomically increasing order.")
+            # ea is in decreasing order
+            # reverse the slice for k_from_e interpolation
+            self.ka_slice = slice(None, None, -1) 
+#            raise ValueError("'ea' must be in monotomically increasing order.")
 
         if len(ka)!=len(ea):
             raise IndexError("'ka' and 'ea' must be the same length.")
@@ -332,7 +340,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         else:
             ea = self.ea
 
-        e = np.interp(k, ka, ea)
+        e = np.interp(k, ka[self.ka_slice], ea[self.ka_slice])
 
         if self.ylog:
             e = np.power(10, e)
@@ -341,7 +349,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
 
 
 
-        return self.ea + self.Ck * np.log10(k/self.ka)
+        
 
     def k_from_e(self, e, **kwargs):
         """permeability from void ratio
@@ -406,7 +414,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         else:
             ea = self.ea
 
-        k = np.interp(e, ea, ka)
+        k = np.interp(e, ea[self.ea_slice], ka[self.ea_slice])
 
         if self.xlog:
             k = np.power(10, k)
@@ -449,8 +457,8 @@ if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
     pass
-    a = CkPermeabilityModel(Ck=1.5, ka=10, ea=4)
-#    b = a.e_from_k(8.0)
-#    print(b)
-    a.plot_model()
-    plt.show()
+#    a = CkPermeabilityModel(Ck=1.5, ka=10, ea=4)
+##    b = a.e_from_k(8.0)
+##    print(b)
+#    a.plot_model()
+#    plt.show()
