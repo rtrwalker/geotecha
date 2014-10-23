@@ -667,11 +667,20 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         self.Cr = Cr
         #TODO: adjust for different logarithm bases.
 
+        self.siga_slice = slice(None)
+        self.ea_slice = slice(None)
+        
         if np.any(np.diff(self.siga) <= 0):
-            raise ValueError("'siga' must be in monotonically increasing order.")
+            # siga is in decreasing order
+            # reverse the slice for e_from_stress interpolation
+            self.siga_slice = slice(None, None, -1)
+#            raise ValueError("'siga' must be in monotonically increasing order.")
 
-        if np.any(np.diff(self.ea) >= 0):
-            raise ValueError("'ea' must be in monotomically decreasng order.")
+        if np.any(np.diff(self.ea) <= 0):
+            # ea is in decreasing order
+            # reverse the slice for stress_from_e interpolation
+            self.ea_slice = slice(None, None, -1)
+#            raise ValueError("'ea' must be in monotomically decreasng order.")
 
         if len(siga)!=len(ea):
             raise IndexError("'siga' and 'ea' must be the same length.")
@@ -797,7 +806,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
             ea = self.ea
 
         # void ratio at preconsolidation pressure
-        e = np.interp(max_past, siga, ea)
+        e = np.interp(max_past, siga[self.siga_slice], ea[self.siga_slice])
         # void ratio at current effetive stress
         e += Cr * (max_past - estress)
 
@@ -929,7 +938,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         if pstress is None:
             # Normally consolidated
-            estress = np.interp(e, ea[::-1], siga[::-1])
+            estress = np.interp(e, ea[self.ea_slice], siga[self.ea_slice])
             if self.xlog:
                 estress = np.power(10.0, estress)
 #                estress *= fact
@@ -945,7 +954,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         ep = np.interp(pstress, siga, ea)
 
         # stress change from (pstress, ep) if on pwise line
-        dp_interp = np.interp(e, ea[::-1], siga[::-1]) - pstress
+        dp_interp = np.interp(e, ea[self.ea_slice], siga[self.ea_slice]) - pstress
         # stress change from (pstress, ep) if on extended Cr line
         dpCr = (ep - e) / Cr
 
@@ -1096,17 +1105,17 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         #transform x data if needed
         if self.xlog:
-            siga = self.log_siga
+            siga = self.log_siga[self.siga_slice]
             # np.log10(max_past, out=max_past) # doesn't work for single values
             max_past = np.log10(max_past)
             estress = np.log10(estress)
         else:
-            siga=self.siga
+            siga=self.siga[self.siga_slice]
         #transform y data if needed
         if self.ylog:
-            ea = self.log_ea
+            ea = self.log_ea[self.siga_slice]
         else:
-            ea = self.ea
+            ea = self.ea[self.siga_slice]
 
         # interval at preconsolidatio stress
         i = np.searchsorted(siga, max_past)
