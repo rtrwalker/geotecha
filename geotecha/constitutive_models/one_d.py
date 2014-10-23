@@ -785,6 +785,14 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> a.e_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
         array([ 2.76255...,  2.604857...])
 
+        Increasing vs decreasing inputs
+        >>> ea = np.arange(1,10)
+        >>> siga = 3 * ea
+        >>> np.isclose(PwiseLinearSoilModel(siga, ea, Cr=0.1).e_from_stress(7.2),
+        ... PwiseLinearSoilModel(siga[::-1], ea[::-1], Cr=0.1).e_from_stress(7.2))
+        True
+
+
         """
 
         pstress = kwargs.get('pstress', estress)
@@ -914,6 +922,12 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> a.stress_from_e(e=2.65, pstress=np.array([2.25, 2]))
         array([ 1.8948013...,  2.23463...])
 
+        Increasing vs decreasing inputs
+        >>> ea = np.arange(1,10)
+        >>> siga = 3 * ea
+        >>> np.isclose(PwiseLinearSoilModel(siga, ea, Cr=0.1).stress_from_e(3.0),
+        ... PwiseLinearSoilModel(siga[::-1], ea[::-1], Cr=0.1).stress_from_e(3.0))
+        True
         """
 
 
@@ -1096,6 +1110,13 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
         >>> a.av_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
         array([ 0.2210045...,  2.9034...])
+
+        Increasing vs decreasing inputs
+        >>> ea = np.arange(1,10)
+        >>> siga = 3 * ea
+        >>> np.isclose(PwiseLinearSoilModel(siga, ea, Cr=0.1).av_from_stress(7.2),
+        ... PwiseLinearSoilModel(siga[::-1], ea[::-1], Cr=0.1).av_from_stress(7.2))
+        True
 
         """
 

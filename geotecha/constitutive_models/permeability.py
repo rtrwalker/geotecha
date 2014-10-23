@@ -268,7 +268,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         if np.any(np.diff(self.ea) <= 0):
             # ea is in decreasing order
             # reverse the slice for k_from_e interpolation
-            self.ka_slice = slice(None, None, -1) 
+            self.ea_slice = slice(None, None, -1) 
 #            raise ValueError("'ea' must be in monotomically increasing order.")
 
         if len(ka)!=len(ea):
@@ -324,7 +324,12 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.e_from_k(np.array([1.25, 1.75]))
         array([ 5.572...,  6.560...])
 
-
+        Increasing vs decreasing inputs
+        >>> ea = np.arange(1,10)
+        >>> ka = 3 * ea
+        >>> np.isclose(PwiseLinearPermeabilityModel(ka, ea).e_from_k(7.2),
+        ... PwiseLinearPermeabilityModel(ka[::-1], ea[::-1]).e_from_k(7.2))
+        True
 
         """
 
@@ -400,7 +405,13 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.k_from_e(np.array([5.573, 6.561]))
         array([ 1.25...,  1.75...])
 
-
+        Increasing vs decreasing inputs
+        >>> ea = np.arange(1,10)
+        >>> ka = 3 * ea
+        >>> np.isclose(PwiseLinearPermeabilityModel(ka, ea).k_from_e(3.0),
+        ... PwiseLinearPermeabilityModel(ka[::-1], ea[::-1]).k_from_e(3.0))
+        True
+        
         """
 
         if self.xlog:
@@ -462,3 +473,7 @@ if __name__ == '__main__':
 ##    print(b)
 #    a.plot_model()
 #    plt.show()
+    
+    
+    
+    
