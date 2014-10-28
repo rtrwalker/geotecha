@@ -1,13 +1,14 @@
 @REM "@" means don't display the commands that come after the "@".
 
 @ECHO ******************
-@ECHO Install spec1d python module and run nosetests
-@ECHO by Rohan Walker, April 2013
+@ECHO Build and Install geotecha python module then build docs
+@ECHO by Rohan Walker, October 2014
 @ECHO ******************
-cd "C:\Users\Rohan Walker\Documents\GitHub\geotecha"
+@REM assuming run by clicking on bat file in tools directory of source
+cd ..
+python setup.py build --compiler=mingw32
 python setup.py install
 python setup.py clean --all
-@REM cd out of spec1d folder or nosetests will run on source code rather than installed pakcage (not exactly sure where nosetests searches first.  Drill down on currnet directory or what?)
 cd docs
 make html
 @pause

@@ -14,7 +14,7 @@
 LICENSE_header.txt
 
 # auto document folder
-/docs/auto
+/docs/
 
 #IPython Notebook files, save them as .py files and they will then be version controlled.
 *.ipynb
