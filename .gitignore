@@ -14,9 +14,20 @@
 LICENSE_header.txt
 
 # auto document folder
+/docs/auto/
+# docs folder this is temporary once I have some sort of docs sorted remove/refine this
 /docs/
 
 #IPython Notebook files, save them as .py files and they will then be version controlled.
 *.ipynb
 .spyderproject
 *.f95~
+
+# testing with coverage folder
+/tools/cover/
+
+# tools log file
+/tools/log.txt
+
+# record of installation files
+install.record
