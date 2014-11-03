@@ -31,7 +31,7 @@ from __future__ import print_function, division
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-
+import functools
 
 class OneDimensionalVoidRatioEffectiveStress(object):
     """Base class for defining 1D void ratio-effective stress relationships"""
@@ -994,6 +994,95 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         av = Cx * dy / dx
         return av
 
+
+class FunctionSoilModel(OneDimensionalVoidRatioEffectiveStress):
+    """Functional definition of void-ratio stress relationship
+
+    User provides python functions.
+
+    Parameters
+    ----------
+    fn_e_from_stress: callable object
+        function to obtain void ratio from stress.  fn_e_from_stress should
+        be the inverse function of fn_stress_from_e.
+    fn_stress_from_e : callable object
+        function to obtain stress from void ratio. fn_stress_from_e should
+        be the inverse function of fn_e_from_stress.
+    fn_av_from_stress: callable object
+        function to obtain slope of void ratio-stress relationship.
+        fn_av_from_stress should be negative the derivative of
+        fn_e_from_stress w.r.t. stress
+        be the inverse function of fn_k_from_e.
+    *args, **kwargs : anything
+        positional and keyword arguments to be passed to the
+        fn_e_from_stress, fn_stress_from_e, fn_av_from_stress functions.  Note
+        that any additional args and kwargs passed to the functions will be
+        appended to the args, and kwargs.  You may get into a mess for
+        example with e_from_stress because normally the first postional
+        argument passed to such fucntions is estress.  If you add your own
+        positional arguments, then k will be after you own arguments.
+        Just be aware that the usual way to call methods of the base object
+        `OneDimensionalVoidRatioEffectiveStress` a single positonal arguement,
+        e.g. estress, e, followed by any required keyword arguments.
+
+    Notes
+    -----
+    Any function should be able to accept additonal keywords
+
+
+    Examples
+    --------
+    >>> def efs(s, b=2):
+    ...     return s * b
+    >>> def sfe(e, b=2):
+    ...     return e / b
+    >>> def afs(s, b=2):
+    ...     return -b
+    >>> a = FunctionSoilModel(efs, sfe, afs, b=5)
+    >>> a.e_from_stress(3)
+    15
+    >>> a.stress_from_e(15)
+    3.0
+    >>> a.av_from_stress(3)
+    -5
+
+
+    Prconsolidation stress
+
+    >>> def efs2(s, pstress=None, b=2):
+    ...     if pstress is None:
+    ...         pstress=8
+    ...     return s * b + pstress
+    >>> a = FunctionSoilModel(efs2, sfe, afs, b=5)
+    >>> a.e_from_stress(3)
+    23
+
+    """
+
+    def __init__(self,
+                 fn_e_from_stress,
+                 fn_stress_from_e,
+                 fn_av_from_stress,
+                 *args,
+                 **kwargs):
+
+        self.fn_e_from_stress = fn_e_from_stress
+        self.fn_stress_from_e = fn_stress_from_e
+        self.fn_av_from_stress = fn_av_from_stress
+        self.args = args
+        self.kwargs = kwargs
+
+        self.e_from_stress = functools.partial(fn_e_from_stress,
+                                               *args,
+                                               **kwargs)
+        self.stress_from_e = functools.partial(fn_stress_from_e,
+                                               *args,
+                                               **kwargs)
+        self.av_from_stress = functools.partial(fn_av_from_stress,
+                                               *args,
+                                               **kwargs)
+
+        return
 
 if __name__ == '__main__':
 #    print(CcCr_estress_from_e(2.95154499, 50, 3, 0.5, 10, 5))

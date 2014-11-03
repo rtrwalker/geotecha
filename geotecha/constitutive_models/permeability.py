@@ -22,7 +22,7 @@ from __future__ import print_function, division
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-
+import functools
 
 class PermeabilityVoidRatioRelationship(object):
     """Base class for defining permeability void ratio relationships"""
@@ -262,13 +262,13 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         if np.any(np.diff(self.ka) <= 0):
             # ka is in decreasing order
             # reverse the slice for e_from_k interpolation
-            self.ka_slice = slice(None, None, -1)            
+            self.ka_slice = slice(None, None, -1)
 #            raise ValueError("'ka' must be in monotonically increasing order.")
 
         if np.any(np.diff(self.ea) <= 0):
             # ea is in decreasing order
             # reverse the slice for k_from_e interpolation
-            self.ea_slice = slice(None, None, -1) 
+            self.ea_slice = slice(None, None, -1)
 #            raise ValueError("'ea' must be in monotomically increasing order.")
 
         if len(ka)!=len(ea):
@@ -354,7 +354,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
 
 
 
-        
+
 
     def k_from_e(self, e, **kwargs):
         """permeability from void ratio
@@ -411,7 +411,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> np.isclose(PwiseLinearPermeabilityModel(ka, ea).k_from_e(3.0),
         ... PwiseLinearPermeabilityModel(ka[::-1], ea[::-1]).k_from_e(3.0))
         True
-        
+
         """
 
         if self.xlog:
@@ -464,6 +464,74 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         return x, y
 
 
+
+
+class FunctionPermeabilityModel(PermeabilityVoidRatioRelationship):
+    """Functional definition of permeability void-ratio realationship
+
+    User provides python functions.
+
+    Parameters
+    ----------
+    fn_e_from_k: callable object
+        function to obtain void ratio from permeability.  fn_e_from_k should
+        be the inverse function of fn_k_from_e.
+    fn_k_from_e : callable object
+        function to obtain peremability from void ratio. fn_k_from_e should
+        be the inverse function of fn_e_from_k.
+    *args, **kwargs : anything
+        positional and keyword arguments to be passed to the
+        fn_e_from_k, fn_k_from_efunctions.  Note
+        that any additional args and kwargs passed to the functions will be
+        appended to the args, and kwargs.  You may get into a mess for
+        example with e_from_k because normally the first postional
+        argument passed to such fucntions is k.  If you add your own
+        positional arguments, then k will be after you own arguments.
+        Just be aware that the usual way to call methods of the base object
+        `PermeabilityVoidRatioRelationship` a single positonal arguement,
+        e.g. k, e, followed by any required keyword arguments.
+
+    Notes
+    -----
+    Any function should be able to accept additonal keywords
+
+    Examples
+    --------
+    >>> def efk(k, b=2):
+    ...     return k * b
+    >>> def kfe(e, b=2):
+    ...     return e / b
+    >>> a = FunctionPermeabilityModel(efk, kfe, b=5)
+    >>> a.e_from_k(3)
+    15
+    >>> a.k_from_e(15)
+    3.0
+
+
+    """
+
+    def __init__(self,
+                 fn_e_from_k,
+                 fn_k_from_e,
+                 *args,
+                 **kwargs):
+
+        self.fn_e_from_k = fn_e_from_k
+        self.fn_k_from_e = fn_k_from_e
+        self.args = args
+        self.kwargs = kwargs
+
+        self.e_from_k = functools.partial(fn_e_from_k,
+                                               *args,
+                                               **kwargs)
+        self.k_from_e = functools.partial(fn_k_from_e,
+                                               *args,
+                                               **kwargs)
+
+        return
+
+
+
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
@@ -473,7 +541,6 @@ if __name__ == '__main__':
 ##    print(b)
 #    a.plot_model()
 #    plt.show()
-    
-    
-    
-    
+
+
+
