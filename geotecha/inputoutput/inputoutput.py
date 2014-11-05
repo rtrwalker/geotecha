@@ -41,7 +41,8 @@ import logging
 from contextlib import contextmanager
 import pkg_resources
 from geotecha.plotting.one_d import copy_dict
-
+import pkgutil
+import importlib
 
 class SyntaxChecker(ast.NodeVisitor):
     """
@@ -477,7 +478,8 @@ def object_members(obj, info='function', join=True):
         type of members to gather.  Members will be gathered according to
         inspect.is<member_type>. e.g. info='function' will check in object for
         inspect.isfunction. default = 'function'. e.g. 'method' 'function'
-        'routine' etc.
+        'routine' etc. NOTE that it is safer tos use 'routine' when getting
+        functions.
     join: bool, optional
         if join==True then list will be joined together into one large
         space separated string.
@@ -491,9 +493,18 @@ def object_members(obj, info='function', join=True):
     """
     #useful resources
     #http://www.andreas-dewes.de/en/2012/static-code-analysis-with-python/
+    #isroutine vs isfunction: http://stackoverflow.com/a/22428966
+    #pkgutil : http://stackoverflow.com/a/1310912
 
-    members = [i for i,j in
-                inspect.getmembers(obj, getattr(inspect,'is{}'.format(info)))]
+    if info=="module":
+        # for some reason getmembers with modules does not allways return a
+        # complete list.
+        pkgpath = os.path.dirname(obj.__file__)
+        members = [name for _, name, _ in pkgutil.iter_modules([pkgpath])]
+    else:
+        members = [i for i,j in
+                    inspect.getmembers(obj,
+                                       getattr(inspect,'is{}'.format(info)))]
     if join:
         members='\n'.join(textwrap.wrap(" ".join(members),
                                         break_long_words=False, width=65))
@@ -1978,6 +1989,32 @@ def get_filepaths(wildcard=""):
         filepaths = None
     dialog.Destroy()
     return filepaths
+
+
+def modules_in_package(package_name, exclude=['test']):
+    """list of modules in a package
+
+    Parameters
+    ----------
+    package_name : string
+        name of package to import and get modules from
+    exclude : list of string, optional
+        module names to exclude.  Default = ['test']
+
+    Returns
+    -------
+    module_list : lsit of string
+        list of modules in package_name ommiting any names in the
+        exclude list
+
+    """
+
+    pkg = importlib.import_module(package_name)
+
+    pkgpath = os.path.dirname(pkg.__file__)
+    return [name for _, name, _ in pkgutil.iter_modules([pkgpath])
+            if name not in exclude]
+
 
 if __name__ == '__main__':
     import nose
