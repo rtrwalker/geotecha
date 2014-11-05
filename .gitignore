@@ -13,10 +13,11 @@
 # License header for each source file
 LICENSE_header.txt
 
-# auto document folder
+# docs build folders
 /docs/auto/
-# docs folder this is temporary once I have some sort of docs sorted remove/refine this
-/docs/
+/docs/_build/
+/docs/api/
+
 
 #IPython Notebook files, save them as .py files and they will then be version controlled.
 *.ipynb
