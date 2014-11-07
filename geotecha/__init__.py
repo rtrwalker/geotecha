@@ -13,13 +13,10 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""
-This is the `geotecha` package level docstring.
+"""A software package for geotechnical engineering
 
-`geotecha` is a software suite for geotechncial engineering.
+`geotecha` is a software package for geotechncial engineering written by
+Dr. Rohan Walker. There are numerous sub packages that may be useful outside
+of a geotechnical context.  The `geotecha` project began in 2013.
 
-The package contains the following modules:
-    - don't know yet      maybe a short description
-    - don't know yet      maybe a short description
-    
 """

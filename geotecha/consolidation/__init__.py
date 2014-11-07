@@ -13,13 +13,14 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""
-This is the `consolidation` package level docstring.
+"""Soil consolidation
 
-`consolidation` involves soil consolidation problems.
+The `consolidation` sub-package contains modules related to soil
+consolidation.  Primarily it implements analytical solutions to
+consolidation problems described in the literature.
 
-The package contains the following modules:
-    - don't know yet
-    - don't know yet
+See also
+--------
+geotecha.speccon : soil consolidation using the spectral method
 
 """

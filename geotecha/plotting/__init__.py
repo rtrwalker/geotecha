@@ -13,13 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""
-This is the `plotting` package level docstring.
+"""Generation and formatting of `matplotlib` plots
 
-`plotting` provides some functionality for plotting.
+The `plotting` sub-package contains modules/functions to produce various
+plots and format them using `matplotlib`.
 
-The package contains the following modules:
-    - don't know yet
-    - don't know yet
-    
 """

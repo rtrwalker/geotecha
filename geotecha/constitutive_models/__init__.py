@@ -13,13 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""
-This is the `constitutive_models` package level docstring.
+"""Soil constitutive models
 
-`constitutive_models` involves soil constitutive models.
-
-The package contains the following modules:
-    - don't know yet
-    - don't know yet
+The `constitutive_models` package  contains modules that describe soil
+deformation in response to changes in stress and or time.
 
 """

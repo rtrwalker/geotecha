@@ -13,13 +13,16 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""
-This is the `speccon` package level docstring.
+"""Solving soil consolidation PDE's using the spectral method
 
-`speccon` involves solving soil consolidation problems using spectral methods.
+The `speccon` sub-package uses the spectral method (usually the spectral
+Galerkin method) to solve the partial differential equations arising
+in soil consolidation problems.
 
-The package contains the following modules:
-    - don't know yet
-    - don't know yet
-    
+
+See Also
+--------
+geotecha.consolidation : other implementations of soil consolidation problems.
+
+
 """
