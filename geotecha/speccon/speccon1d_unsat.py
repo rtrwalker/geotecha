@@ -24,7 +24,7 @@ from __future__ import division, print_function
 import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.speccon.integrals as integ
-import geotecha.math.transformations as transformations
+import geotecha.mathematics.transformations as transformations
 
 
 import itertools

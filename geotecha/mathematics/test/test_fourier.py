@@ -27,13 +27,13 @@ from numpy.testing import assert_allclose
 import numpy as np
 import unittest
 
-from geotecha.math.fourier import FourierTransform
-from geotecha.math.fourier import real_func
-from geotecha.math.fourier import imag_func
-from geotecha.math.fourier import func_mirror_for_even_weight
-from geotecha.math.fourier import func_mirror_for_odd_weight
-from geotecha.math.fourier import cosine_transform
-from geotecha.math.fourier import sine_transform
+from geotecha.mathematics.fourier import FourierTransform
+from geotecha.mathematics.fourier import real_func
+from geotecha.mathematics.fourier import imag_func
+from geotecha.mathematics.fourier import func_mirror_for_even_weight
+from geotecha.mathematics.fourier import func_mirror_for_odd_weight
+from geotecha.mathematics.fourier import cosine_transform
+from geotecha.mathematics.fourier import sine_transform
 
 
 

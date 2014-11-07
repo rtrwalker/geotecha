@@ -28,7 +28,7 @@ import matplotlib.gridspec as gridspec
 import brewer2mpl
 import random
 import itertools
-import geotecha.math.transformations as transformations
+import geotecha.mathematics.transformations as transformations
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.piecewise.piecewise_linear_1d as pwise
 import warnings

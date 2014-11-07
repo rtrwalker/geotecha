@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for testing geotecha.math.geometry
+module for testing geotecha.mathematics.geometry
 
 """
 from __future__ import division, print_function
@@ -32,16 +32,16 @@ from math import pi
 import numpy as np
 import unittest
 
-from geotecha.math.geometry import xyz_from_pts
-from geotecha.math.geometry import eqn_of_plane
-from geotecha.math.geometry import replace_x0_and_x1_to_vect
-from geotecha.math.geometry import polygon_area
-from geotecha.math.geometry import polygon_centroid
-from geotecha.math.geometry import integrate_f_over_polygon_code
-from geotecha.math.geometry import integrate_f_over_polyhedra_code
-from geotecha.math.geometry import make_hexahedron
-from geotecha.math.geometry import polyhedron_volume
-from geotecha.math.geometry import polygon_2nd_moment_of_area
+from geotecha.mathematics.geometry import xyz_from_pts
+from geotecha.mathematics.geometry import eqn_of_plane
+from geotecha.mathematics.geometry import replace_x0_and_x1_to_vect
+from geotecha.mathematics.geometry import polygon_area
+from geotecha.mathematics.geometry import polygon_centroid
+from geotecha.mathematics.geometry import integrate_f_over_polygon_code
+from geotecha.mathematics.geometry import integrate_f_over_polyhedra_code
+from geotecha.mathematics.geometry import make_hexahedron
+from geotecha.mathematics.geometry import polyhedron_volume
+from geotecha.mathematics.geometry import polygon_2nd_moment_of_area
 
 def test_replace_x0_and_x1_to_vect():
     """test for replace_x0_and_x1_to_vect"""

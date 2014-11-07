@@ -37,7 +37,7 @@ import scipy.optimize
 import geotecha.piecewise.piecewise_linear_1d as pwise
 import cmath
 import time
-from geotecha.math.root_finding import find_n_roots
+from geotecha.mathematics.root_finding import find_n_roots
 import geotecha.plotting.one_d
 import scipy.special
 #from scipy.special import j0, y0, j1, y1

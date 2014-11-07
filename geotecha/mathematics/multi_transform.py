@@ -26,9 +26,9 @@ from numpy.testing import assert_allclose
 
 
 
-from geotecha.math.laplace import Talbot
-from geotecha.math.hankel import HankelTransform
-from geotecha.math.fourier import FourierTransform
+from geotecha.mathematics.laplace import Talbot
+from geotecha.mathematics.hankel import HankelTransform
+from geotecha.mathematics.fourier import FourierTransform
 
 
 

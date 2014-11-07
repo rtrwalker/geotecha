@@ -38,7 +38,7 @@ except ImportError:
                           "Checked mpmath and sympy.mpmath")
 
 
-from geotecha.math.mp_laplace import Talbot
+from geotecha.mathematics.mp_laplace import Talbot
 
 dps = mpmath.mp.dps
 

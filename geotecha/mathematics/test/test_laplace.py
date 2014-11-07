@@ -29,9 +29,9 @@ import textwrap
 import matplotlib.pyplot as plt
 import unittest
 
-from geotecha.math.laplace import Talbot
-from geotecha.math.laplace import cot
-from geotecha.math.laplace import csc
+from geotecha.mathematics.laplace import Talbot
+from geotecha.mathematics.laplace import cot
+from geotecha.mathematics.laplace import csc
 
 def f1(s):
     "L-1{1/(1+s)} = e^(-t)"

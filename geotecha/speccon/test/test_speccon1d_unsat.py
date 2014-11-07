@@ -35,7 +35,7 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
 from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
 
-import geotecha.math.transformations as transformations
+import geotecha.mathematics.transformations as transformations
 
 
 def test_shanetal2012_sig_ka_divide_kw_is_100():

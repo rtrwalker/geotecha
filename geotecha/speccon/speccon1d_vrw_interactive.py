@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 
 import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
-import geotecha.math.transformations as transformations
+import geotecha.mathematics.transformations as transformations
 import textwrap
 
 from geotecha.speccon.speccon1d_vrw import Speccon1dVRW

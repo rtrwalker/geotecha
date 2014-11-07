@@ -27,7 +27,7 @@ from numpy.testing import assert_allclose
 import numpy as np
 import unittest
 
-from geotecha.math.multi_transform import ntransform
+from geotecha.mathematics.multi_transform import ntransform
 
 class test_ntransform(unittest.TestCase):
     """tests for ntransform"""

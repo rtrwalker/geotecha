@@ -27,10 +27,10 @@ from numpy.testing import assert_allclose
 import numpy as np
 import unittest
 
-from geotecha.math.quadrature import gl_quad
-from geotecha.math.quadrature import gk_quad
-from geotecha.math.quadrature import shanks
-from geotecha.math.quadrature import shanks_table
+from geotecha.mathematics.quadrature import gl_quad
+from geotecha.mathematics.quadrature import gk_quad
+from geotecha.mathematics.quadrature import shanks
+from geotecha.mathematics.quadrature import shanks_table
 
 
 

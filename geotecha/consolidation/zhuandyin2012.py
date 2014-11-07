@@ -28,7 +28,7 @@ import textwrap
 import scipy.special
 import geotecha.piecewise.piecewise_linear_1d as pwise
 
-from geotecha.math.root_finding import find_n_roots
+from geotecha.mathematics.root_finding import find_n_roots
 
 
 besselj = scipy.special.jv

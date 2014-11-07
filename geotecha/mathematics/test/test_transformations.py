@@ -31,7 +31,7 @@ import textwrap
 import matplotlib.pyplot as plt
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
-from geotecha.math.transformations import depth_to_reduced_level
+from geotecha.mathematics.transformations import depth_to_reduced_level
 
 
 def test_depth_to_reduced_level():

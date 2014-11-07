@@ -31,8 +31,8 @@ from scipy.special import jn_zeros
 from scipy.special import jn
 
 
-from geotecha.math.hankel import vhankel_transform
-from geotecha.math.hankel import HankelTransform
+from geotecha.mathematics.hankel import vhankel_transform
+from geotecha.mathematics.hankel import HankelTransform
 
 
 

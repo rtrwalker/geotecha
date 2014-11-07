@@ -29,12 +29,12 @@ import unittest
 from numpy.testing import assert_allclose
 from numpy.polynomial.polynomial import Polynomial
 
-from geotecha.math.quadrature import gl_quad
-from geotecha.math.quadrature import gk_quad
-from geotecha.math.quadrature import gauss_kronrod_abscissae_and_weights
-from geotecha.math.quadrature import gauss_legendre_abscissae_and_weights
-from geotecha.math.quadrature import shanks_table
-from geotecha.math.quadrature import shanks
+from geotecha.mathematics.quadrature import gl_quad
+from geotecha.mathematics.quadrature import gk_quad
+from geotecha.mathematics.quadrature import gauss_kronrod_abscissae_and_weights
+from geotecha.mathematics.quadrature import gauss_legendre_abscissae_and_weights
+from geotecha.mathematics.quadrature import shanks_table
+from geotecha.mathematics.quadrature import shanks
 
 class HankelTransform(object):
     """Hankel transform of integer order

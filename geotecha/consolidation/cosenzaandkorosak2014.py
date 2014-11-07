@@ -29,8 +29,8 @@ import textwrap
 import geotecha.piecewise.piecewise_linear_1d as pwise
 
 
-#from geotecha.math.mp_laplace import Talbot
-from geotecha.math.laplace import Talbot
+#from geotecha.mathematics.mp_laplace import Talbot
+from geotecha.mathematics.laplace import Talbot
 
 def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
