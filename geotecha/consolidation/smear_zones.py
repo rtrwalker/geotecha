@@ -14,9 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""
-module for expressions and functions relating to vertical drain smear zone
-permeability distributions
+"""Smear zones associated with vertical drain installation
+
+Smear zone permeability distributions etc.
 
 """
 from __future__ import print_function, division
@@ -27,7 +27,7 @@ from matplotlib import pyplot as plt
 from numpy import log, sqrt
 
 def mu_ideal(n, *args):
-    """smear zone permeability/geometry parameter for ideal drain (no smear zone)
+    """Smear zone permeability/geometry parameter for ideal drain (no smear)
 
     mu parameter in equal strain radial consolidation equations e.g.
     u = u0 * exp(-8*Th/mu)
@@ -35,17 +35,16 @@ def mu_ideal(n, *args):
     Parameters
     ----------
     n : float or ndarray of float
-        ratio of drain influence radius  to drain radius (re/rw).
-
+        Ratio of drain influence radius to drain radius (re/rw).
     args : anything
-        args does not contribute to any calculations it is merely so you
+        `args` does not contribute to any calculations it is merely so you
         can have other arguments such as s and kappa which are used in other
-        smear zone formulations
+        smear zone formulations.
 
     Returns
     -------
     mu : float
-        smear zone permeability/geometry parameter
+        Smear zone permeability/geometry parameter.
 
     Notes
     -----
@@ -62,11 +61,12 @@ def mu_ideal(n, *args):
 
     :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius
 
+
     References
     ----------
-    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
-          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
-          Rotterdam-Boston: A.A. Balkema.
+    .. [1] Hansbo, S. 1981. "Consolidation of Fine-Grained Soils by
+           Prefabricated Drains". In 10th ICSMFE, 3:677-82.
+           Rotterdam-Boston: A.A. Balkema.
 
 
     """
@@ -82,7 +82,7 @@ def mu_ideal(n, *args):
 
 
 def mu_constant(n, s, kap):
-    """vertical drain mu, for smear zone with constant permeability
+    """Smear zone parameter for smear zone with constant permeability
 
 
     mu parameter in equal strain radial consolidation equations e.g.
@@ -91,12 +91,12 @@ def mu_constant(n, s, kap):
     Parameters
     ----------
     n : float or ndarray of float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float or ndarray of float
-        ratio of smear zone radius to  drain radius (rs/rw)
-    kap : float or ndarray of float
-        ratio of undisturbed horizontal permeability to smear zone
-        horizontal permeanility (kh / ks)
+        Ratio of smear zone radius to  drain radius (rs/rw)
+    kap : float or ndarray of float.
+        Ratio of undisturbed horizontal permeability to smear zone
+        horizontal permeanility (kh / ks).
 
     Returns
     -------
@@ -128,13 +128,13 @@ def mu_constant(n, s, kap):
     :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
     :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
     horizontal permeability, :math:`k_s` is the smear zone horizontal
-    permeability
+    permeability.
 
     References
     ----------
-    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
-          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
-          Rotterdam-Boston: A.A. Balkema.
+    .. [1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+           Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+           Rotterdam-Boston: A.A. Balkema.
     """
 
     if np.any(n<=1.0):
@@ -164,7 +164,21 @@ def mu_constant(n, s, kap):
     return mu
 
 def _sx(n, s):
-    """s value at intersection of linear smearzones
+    """Value of s=r/rw marking the start of overlapping linear smear zones
+
+    `s` is usually larger than `n` when considering overlapping smear zones
+
+    Parameters
+    ----------
+    n : float or ndarray of float
+        Ratio of drain influence radius  to drain radius (re/rw).
+    s : float or ndarray of float
+        Ratio of smear zone radius to  drain radius (rs/rw).
+
+    Returns
+    -------
+    sx : float or ndarray of float
+        Value of s=r/rw marking the start of the overlapping zone
 
 
     Notes
@@ -178,13 +192,32 @@ def _sx(n, s):
     --------
     mu_overlapping_linear : uses _sx
     _kapx : used in mu_overlapping_linear
+
     """
 
     sx = 2 * n - s
     return sx
-def _kapx(n, s, kap):
-    """kap value at intersection of linear smearzones
 
+
+def _kapx(n, s, kap):
+    """Value of kap=kh/ks for overlap part of intersecting linear smear zones
+
+    Assumes `s` is greater than `n`.
+
+    Parameters
+    ----------
+    n : float or ndarray of float
+        Ratio of drain influence radius  to drain radius (re/rw).
+    s : float or ndarray of float
+        Ratio of smear zone radius to  drain radius (rs/rw)
+    kap : float or ndarray of float.
+        Ratio of undisturbed horizontal permeability to smear zone
+        horizontal permeanility (kh / ks).
+
+    Returns
+    -------
+    kapx : float
+        Value of kap=kh/ks for overlap part of intersecting linear smear zones
 
     Notes
     -----
@@ -192,10 +225,13 @@ def _kapx(n, s, kap):
     .. math:: \\kappa_X= 1+\\frac{\\kappa-1}{s-1}\\left({s_X-1}\\right)
 
     .. math:: s_X = 2n-s
+
+
     See also
     --------
     mu_overlapping_linear : uses _kapx
     _sx : used in mu_overlapping_linear
+
     """
     sx = _sx(n, s)
     kapx =  1 + (kap - 1) / (s - 1) * (sx - 1)
@@ -203,8 +239,8 @@ def _kapx(n, s, kap):
 
 
 def mu_overlapping_linear(n, s, kap):
-    """vertical drain mu, for smear zone with linear variation of permeability
-    that can overlap
+    """\
+    Smear zone parameter for smear zone with overlapping linear permeability
 
 
     mu parameter in equal strain radial consolidation equations e.g.
@@ -213,12 +249,12 @@ def mu_overlapping_linear(n, s, kap):
     Parameters
     ----------
     n : float or ndarray of float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float or ndarray of float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float or ndarray of float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
 
     Returns
     -------
@@ -229,15 +265,18 @@ def mu_overlapping_linear(n, s, kap):
     -----
     The smear zone parameter :math:`\\mu` is given by:
 
-    .. math:: \\mu_X =
-                \\left\\{\\begin{array}{lr}
-                    \\mu_L\\left({n,s,\\kappa}\\right) & n\\geq s \\\\
-                    \\frac{\\kappa}{\\kappa_X}\\mu_L
-                        \\left({n, s_X,\\kappa_x}\\right)
-                        & \\frac{s+1}{2}<n<s \\\\
-                    \\frac{\\kappa}{\\kappa_X}\\mu_I
-                        \\left({n}\\right) & n\\leq \\frac{s+1}{2}
-                 \\end{array}\\right.
+    .. math::
+
+          \\mu_X =
+            \\left\\{\\begin{array}{lr}
+                \\mu_L\\left({n,s,\\kappa}\\right) & n\\geq s \\\\
+                \\frac{\\kappa}{\\kappa_X}\\mu_L
+                    \\left({n, s_X,\\kappa_x}\\right)
+                    & \\frac{s+1}{2}<n<s \\\\
+                \\frac{\\kappa}{\\kappa_X}\\mu_I
+                    \\left({n}\\right) & n\\leq \\frac{s+1}{2}
+             \\end{array}\\right.
+
 
     where :math:`\\mu_L` is the :math:`\\mu` parameter for non_overlapping
     smear zones with linear permeability, :math:`\\mu_I` is the :math:`\\mu`
@@ -268,9 +307,9 @@ def mu_overlapping_linear(n, s, kap):
 
     References
     ----------
-    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
-          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
-          doi:10.1680/geot.2007.57.5.463.
+    .. [1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+           with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+           doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -2891,3 +2930,4 @@ if __name__ == '__main__':
 #    print(mu_linear(np.array([50,100]),
 #                      np.array([10,20]),
 #                      np.array([5,3])))
+    mu_ideal()

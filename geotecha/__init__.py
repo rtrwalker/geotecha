@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 """A software package for geotechnical engineering
 
-`geotecha` is a software package for geotechncial engineering written by
+`geotecha` is a software package for geotechnical engineering written by
 Dr. Rohan Walker. There are numerous sub packages that may be useful outside
 of a geotechnical context.  The `geotecha` project began in 2013.
 
