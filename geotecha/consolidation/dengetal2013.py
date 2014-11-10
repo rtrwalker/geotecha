@@ -14,84 +14,74 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""
-Module implementing 'Consolidation by Vertical Drains When the Discharge
-Capacity Varies with Depth and Time' as per Deng et al. (2013)[1]_.
-
-References
-----------
-.. [1] Deng, Yue-Bao, Kang-He Xie, and Meng-Meng Lu. 2013. 'Consolidation by
-       Vertical Drains When the Discharge Capacity Varies with Depth and
-       Time'. Computers and Geotechnics 48 (March): 1-8.
-       doi:10.1016/j.compgeo.2012.09.012.
-
-
+"""\
+Deng et al. (2013) and (2014), 'Consolidation by vertical drains when
+the discharge capacity varies with depth and time'
 
 """
 from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
-#import cmath
-import math
-#import scipy
-#from scipy.integrate import quad
+
 import geotecha.consolidation.smear_zones as smear_zones
 
-def dengetal2013(z,t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
+def dengetal2013(z, t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
                  kw0=1e10, kh=1, mv=0.1, gamw=10, ui=1):
-    """radial consolidation with depth and time dependent well resistance
+    """Radial consolidation with depth and time dependent well resistance
 
     Average excess pore pressure at specified depth and time
 
     kw = kw0 * (A1 - A2 * z / H) * exp(-A3 * t)
 
+
     Parameters
     ----------
     z : float or 1d array/list of float
-        depth
+        Depth.
     t : float or 1d array/list of float
-        time
+        Time.
     rw : float
-        drain radius
+        Drain radius.
     re : float
-        drain influence radius
+        Drain influence radius.
     A1 : float, optional
-        parameter controlling depth dependance of well resistance. default = 1
+        Parameter controlling depth dependance of well resistance.
+        Default A1=1.
     A2 : float, optional
-        parameter controlling depth dependance of well resistance. default = 0
+        Parameter controlling depth dependance of well resistance.
+        Default A2=0.
     A3 : float, optional
-        parameter controlling time dependance of well resistance. default = 0
+        Parameter controlling time dependance of well resistance.
+        Default A3=0.
     H : float, optional
-        drainage path length.  default H = 1
+        Drainage path length.  Default H=1.
     rs : float, optional
-        drain influence radius, default=None i.e. no smear zone
+        Drain influence radius. Default rs=None i.e. no smear zone.
     ks : float, optional
-        smear zone permeability, default = None, i.e. no smear zone
+        Smear zone permeability. Default ks=None, i.e. no smear zone.
     kw0 : float, optional
-        initial well permeability, default = 1e10 i.e. infinite
+        Initial well permeability.  Default kw0=1e10 i.e. ideal drain.
     kh : float, optional
-        horizontal coefficient of permeability.  default kh = 1
+        Horizontal coefficient of permeability.  Default kh=1.
     mv : float, optional
-        volume compressibility. default mv = 0.1
+        Volume compressibility.  Default mv=0.1.
     gamw : float, optional
-        unit weight of water.  defaule gamw = 10
+        Unit weight of water.  Default gamw=10.
     ui : float, optional
-        initial uniform pore water pressure.  default ui = 1
-
+        Initial uniform pore water pressure.  Default ui=1.
 
     Returns
     -------
     por : 2d array of float
-        pore pressure at depth and time.  por is an array of size
+        Pore pressure at depth and time.  `por` is an array of size
         (len(z), len(t)).
 
     References
     ----------
     .. [1] Deng, Yue-Bao, Kang-He Xie, and Meng-Meng Lu. 2013. 'Consolidation
-           by
-           Vertical Drains When the Discharge Capacity Varies with Depth and
-           Time'. Computers and Geotechnics 48 (March): 1-8.
+           by Vertical Drains When the Discharge Capacity Varies
+           with Depth and Time'. Computers and Geotechnics 48 (March): 1-8.
            doi:10.1016/j.compgeo.2012.09.012.
 
     """
@@ -99,13 +89,13 @@ def dengetal2013(z,t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
 
     if A1 < 0:
         raise ValueError("A1 must be greater than 0.  "
-                            "You have A1={}".format(A1))
+                         "You have A1={}".format(A1))
     if A2 > A1:
         raise ValueError("A2 must be less than A1.  "
-                            "You have A1={}, A2={}".format(A1, A2))
+                         "You have A1={}, A2={}".format(A1, A2))
     if A3 < 0:
         raise ValueError("A3 must be greater than or equal to 0.  "
-                            "You have A3={}".format(A3))
+                         "You have A3={}".format(A3))
     t = np.atleast_1d(t)
     z = np.atleast_1d(z)
 
@@ -123,13 +113,13 @@ def dengetal2013(z,t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
         kap = kh / ks
         mu0 = smear_zones.mu_constant(n, s, kap)
 
-    if A3==0 and A2==0:
+    if A3 == 0 and A2 == 0:
         # qw is constant
         mus = mu0 + np.pi * kh / (qw0 * A1) * (2 * H * z - z ** 2)
         por = ui * np.exp(-8 * Th[None, :] / mus[:, None])
         return por
 
-    if A3==0 and A2 > 0:
+    if A3 == 0 and A2 > 0:
         # qw varies with depth
         mu1 = A2 * z / H + (A1 - A2)*np.log(1 - A2 / A1 * z / H)
         mu1 *= 2 * np.pi * kh * H**2 / (qw0 * A2**2)
@@ -137,83 +127,87 @@ def dengetal2013(z,t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
         por = ui * np.exp(-8 * Th[None, :] / mu1[:, None])
         return por
 
-    if A3>0 and A2==0:
+    if A3 > 0 and A2 == 0:
         # qw varies with time
         a3 = A3 * 4 * re**2 / ch
-        alp0 = qw0 * A1 * mu0 / ( np.pi * kh * (2*H*z - z**2))
+        alp0 = qw0 * A1 * mu0 / (np.pi * kh * (2*H*z - z**2))
         por = (ui * ((1+alp0[:, None] * np.exp(-a3 * Th[None, :])) /
-                (1+alp0[:, None])) ** (8/(a3 * mu0)))
+              (1+alp0[:, None])) ** (8/(a3 * mu0)))
         return por
 
-    if A3>0 and A2>0:
+    if A3 > 0 and A2 > 0:
         # qw varies with depth and time:
         a3 = A3 * 4 * re**2 / ch
         alp = mu0 * qw0 * A2**2 / (2 * np.pi * H**2 * kh)
         alp /= A2* z / H + (A1 - A2) * np.log(1 - A2 / A1 * z / H)
         por = (ui * ((1+alp[:, None] * np.exp(-a3 * Th[None, :])) /
-                (1+alp[:, None])) ** (8/(a3 * mu0)))
+              (1+alp[:, None])) ** (8/(a3 * mu0)))
         return por
 
 
-def dengetal2014(z,t, rw, re, A3=0, H=1, rs=None, ks=None,
+def dengetal2014(z, t, rw, re, A3=0, H=1, rs=None, ks=None,
                  kw0=1e10, kh=1, mv=0.1, gamw=10, ui=1, nterms=100):
-    """radial consolidation with  time dependent well resistance
+    """Radial consolidation with  time dependent well resistance
 
-    radially Average excess pore pressure at specified depth and time
+    An implementation of [1]_
+
+    Radially Average excess pore pressure at specified depth and time
     This is the rigorous formulation, i.e. infinite sum.
 
+    Drain permeability is kw = kw0 * exp(-A3 * t)
 
-    kw = kw0 * exp(-A3 * t)
 
     Parameters
     ----------
     z : float or 1d array/list of float
-        depth
+        Depth.
     t : float or 1d array/list of float
-        time
+        Time.
     rw : float
-        drain radius
+        Drain radius.
     re : float
-        drain influence radius
+        Drain influence radius.
     A3 : float, optional
-        parameter controlling time dependance of well resistance. default = 0
+        Parameter controlling time dependance of well resistance.
+        Default A3=0.
     H : float, optional
-        drainage path length.  default H = 1
+        Drainage path length.  Default H=1.
     rs : float, optional
-        drain influence radius, default=None i.e. no smear zone
+        Drain influence radius. Default rs=None i.e. no smear zone.
     ks : float, optional
-        smear zone permeability, default = None, i.e. no smear zone
+        Smear zone permeability. Default ks=None, i.e. no smear zone.
     kw0 : float, optional
-        initial well permeability, default = 1e10 i.e. infinite
+        Initial well permeability.  Default kw0=1e10 i.e. ideal drain.
     kh : float, optional
-        horizontal coefficient of permeability.  default kh = 1
+        Horizontal coefficient of permeability.  Default kh=1.
     mv : float, optional
-        volume compressibility. default mv = 0.1
+        Volume compressibility.  Default mv=0.1.
     gamw : float, optional
-        unit weight of water.  defaule gamw = 10
+        Unit weight of water.  Default gamw=10.
     ui : float, optional
-        initial uniform pore water pressure.  default ui = 1
+        Initial uniform pore water pressure.  Default ui=1.
     nterms : int, optional
         number of summation terms, default = 100.
 
     Returns
     -------
     por : 2d array of float
-        pore pressure at depth and time.  por is an array of size
+        Pore pressure at depth and time.  `por` is an array of size
         (len(z), len(t)).
 
     References
     ----------
-    .. [1] Evaluation the consolidation behavior of soft deposit via
-           considering the variation of discharge capacity of prefabricated vertical
-           drains.
-
+    .. [1] Deng, Yue-Bao, Gan-Bin Liu, Meng-Meng Lu,
+           and Kang-he Xie. 'Consolidation Behavior of Soft Deposits
+           Considering the Variation of Prefabricated Vertical Drain
+           Discharge Capacity'. Computers and Geotechnics 62
+           (October 2014): 310-16. doi:10.1016/j.compgeo.2014.08.006.
     """
 
 
     if A3 < 0:
         raise ValueError("A3 must be greater than or equal to 0.  "
-                            "You have A3={}".format(A3))
+                         "You have A3={}".format(A3))
     t = np.atleast_1d(t)
     z = np.atleast_1d(z)
 
@@ -239,7 +233,7 @@ def dengetal2014(z,t, rw, re, A3=0, H=1, rs=None, ks=None,
     G0 = np.pi * kh * H**2 / 4 / qw0
     M = ((2 * np.arange(nterms) + 1) / 2 * np.pi)
     C0 = M**2*mu0/8/G0 * n**2/ (n**2-1)
-    alp0 = qw0 * mu0 / ( np.pi * kh * (2*H*z - z**2))
+    alp0 = qw0 * mu0 / (np.pi * kh * (2*H*z - z**2))
 
     Th = Th[np.newaxis, :, np.newaxis]
 
@@ -247,7 +241,8 @@ def dengetal2014(z,t, rw, re, A3=0, H=1, rs=None, ks=None,
     C0 = C0[np.newaxis, np.newaxis, :]
     Z = (z / H)[:, np.newaxis, np.newaxis]
 
-    por =  2 / M * np.sin(M * Z) * ((1+C0 * np.exp(-a3 * Th))/ (1 + C0))**(8 / (a3 * mu0))
+    por = (2 / M * np.sin(M * Z) * ((1+C0 * np.exp(-a3 * Th))/
+          (1 + C0))**(8 / (a3 * mu0)))
     por = ui * np.sum(por, axis=2)
 
     return por
