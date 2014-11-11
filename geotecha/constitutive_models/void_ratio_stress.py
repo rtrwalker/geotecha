@@ -15,14 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-
-
- The :class:`AvSoilModel` is great
-
-
-
-
-
+Relationships between void-ratio and effective stress.
 
 """
 
@@ -37,21 +30,21 @@ class OneDimensionalVoidRatioEffectiveStress(object):
     """Base class for defining 1D void ratio-effective stress relationships"""
 
     def e_from_stress(self, estress, **kwargs):
-        """void ratio from effective stress"""
+        """Void ratio from effective stress"""
         raise NotImplementedError("e_from_stress must be implemented")
 
     def stress_from_e(self, e, **kwargs):
-        """effective stress from void ratio"""
+        """Effective stress from void ratio"""
         raise NotImplementedError("stress_from_e must be implemented")
 
     def e_and_stress_for_plotting(self, **kwargs):
-        """void ratio and stress values that plot the method"""
+        """Void ratio and stress values that plot the method"""
         # should return a tuple of x and y values
         raise NotImplementedError("e_and_stress_for_plotting must be "
                                   "implemented")
 
     def av_from_stress(self, estress, **kwargs):
-        """slope of void ratio from effective stress"""
+        """Slope of void ratio from effective stress"""
         raise NotImplementedError("av_from_stress must be implemented")
 
     def plot_model(self, **kwargs):
@@ -63,14 +56,14 @@ class OneDimensionalVoidRatioEffectiveStress(object):
         return
 
 class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
-    """linear void ratio-effective stress realationship
+    """Linear void ratio-effective stress relationship
 
     Parameters
     ----------
     av : float
-        slope of compression line
+        Slope of compression line.
     siga, ea : float
-        effective stress and void ratio specifying point on av line
+        Effective stress and void ratio specifying point on av line.
 
     """
 
@@ -80,17 +73,17 @@ class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
         self.ea = ea
 
     def e_from_stress(self, estress, **kwargs):
-        """void ratio from effective stress
+        """Void ratio from effective stress
 
         Parameters
         ----------
         estress : float
-            current effective stress
+            Current effective stress.
 
         Returns
         -------
         e : float
-            void ratio corresponding to current stress state
+            Void ratio corresponding to current stress state.
 
         Examples
         --------
@@ -109,17 +102,17 @@ class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
         return self.ea - self.av * (estress - self.siga)
 
     def stress_from_e(self, e, **kwargs):
-        """effective stress from void ratio
+        """Effective stress from void ratio
 
         Parameters
         ----------
         e : float
-            current void ratio
+            Current void ratio.
 
         Returns
         -------
         estress : float
-            effective stress corresponding to current void ratio
+            Effective stress corresponding to current void ratio
 
         Examples
         --------
@@ -140,20 +133,20 @@ class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
         return  estress
 
     def e_and_stress_for_plotting(self, **kwargs):
-        """void ratio and stress values that plot the model
+        """Void ratio and stress values that plot the model
 
         Parameters
         ----------
         npts : int, optional
-            number of points to return.  Default npts=100
-        xmin, ymin : float, optional
+            Number of points to return.  Default npts=100.
+        xmin, xmax : float, optional
             range of x (i.e. effective stress) values from which
-            to return points. Default xmin, ymin=1, 100
+            to return points. Default xmin=1, xmax=100
 
         Returns
         -------
         x, y : 1d ndarray
-            `npts` stress, and void ratio values between `xmin` and `ymin`
+            `npts` stress, and void ratio values between `xmin` and `xmax`.
 
         """
 
@@ -165,22 +158,22 @@ class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
         return x, y
 
     def av_from_stress(self, *args, **kwargs):
-        """slope of void ratio from effective stress"""
+        """Slope of void ratio from effective stress"""
         return self.av
 
 
 class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
-    """semi-log void ratio-effective stress realationship
+    """Semi-log void ratio-effective stress realationship
 
     Parameters
     ----------
     Cc : float
-        compressibility index, slope of e-log(sig) line
+        Compressibility index, slope of e-log(sig) line.
     Cr : float
-        recompression index, slope of e-log(sig) line
+        Recompression index, slope of e-log(sig) line.
     siga, ea : float
-        point on compression line fixing it in effective stress-void ratio
-        space
+        Point on compression line fixing it in effective stress-void ratio
+        space.
 
     """
 
@@ -191,20 +184,20 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
         self.ea = ea
 
     def e_from_stress(self, estress, **kwargs):
-        """void ratio from effective stress
+        """Void ratio from effective stress
 
         Parameters
         ----------
         estress : float
-            current effective stress
+            Current effective stress.
         pstress : float, optional
-            reconsolidation stress.  Default pstress=estress i.e. normally
+            Preconsolidation stress.  Default pstress=estress i.e. normally
             consolidated.
 
         Returns
         -------
         e : float
-            void ratio corresponding to current stress state
+            Void ratio corresponding to current stress state.
 
         Examples
         --------
@@ -253,20 +246,20 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
         return e
 
     def stress_from_e(self, e, **kwargs):
-        """effective stress from void ratio
+        """Effective stress from void ratio
 
         Parameters
         ----------
         e : float
-            current void ratio
+            Current void ratio.
         pstress : float, optional
-            reconsolidation stress.  Default pstress=estress i.e. normally
+            Preconsolidation stress.  Default pstress=estress i.e. normally
             consolidated.
 
         Returns
         -------
         estress : float
-            effective stress corresponding to current void ratio
+            Effective stress corresponding to current void ratio.
 
         Examples
         --------
@@ -323,24 +316,24 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
         return  estress
 
     def e_and_stress_for_plotting(self, **kwargs):
-        """void ratio and stress values that plot the model
+        """Void ratio and stress values that plot the model
 
         Parameters
         ----------
         pstress : float, optional
-            reconsolidation stress.  Default behaviour is normally
+            Preconsolidation stress.  Default behaviour is normally
             consolidated.
         npts : int, optional
-            number of points to return.  Default npts=100
-        xmin, ymin : float, optional
+            Number of points to return.  Default npts=100.
+        xmin, xmax : float, optional
             range of x (i.e. effective stress) values from which
-            to return points. Default xmin, ymin=1, 100
+            to return points. Default xmin=1, xmax=100
 
 
         Returns
         -------
         x, y : 1d ndarray
-            `npts` stress, and void ratio values between `xmin` and `ymin`
+            `npts` stress, and void ratio values between `xmin` and `xmax`.
 
         """
 
@@ -357,21 +350,21 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
 
     def av_from_stress(self, estress, **kwargs):
-        """slope of void ratio from effective stress
+        """Slope of void ratio from effective stress
 
         Parameters
         ----------
         estress : float
-            current effective stress
+            Current effective stress.
         pstress : float, optional
-            reconsolidation stress.  Default pstress=estress i.e. normally
+            Preconsolidation stress.  Default pstress=estress i.e. normally
             consolidated.
 
         Returns
         -------
         av : float
-            slope of void-ratio vs effective stress plot at current stress
-            state
+            Slope of void-ratio vs effective stress plot at current stress
+            state.
 
         Examples
         --------
@@ -415,22 +408,21 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
     """Pwise linear void ratio-effective stress realationship
 
     x and y data can be interpolated natural-natural, natural-log10,
-    log10-natural, or log10, log10
+    log10-natural, or log10, log10.
 
     Parameters
     ----------
     siga, ea : 1d array
-        effective stress values and void ratio values defining a one-to-one
+        Effective stress values and void ratio values defining a one-to-one
         relationship.  Slope of void ratio-effectinve stress plot should never
-        fall below `Cr`
+        fall below `Cr`.
     Cr : float
-        recompression index, slope of void rato-effective stress line.  Note
+        Precompression index, slope of void rato-effective stress line.  Note
         that `Cr` is the slope in whatever scales of slog and ylog that have
         been chosen.
     xlog, ylog : True/False, Optional
         If True then interpolation on each axis is assumed to be logarithmic
-        with base 10.
-        Default=False
+        with base 10. Default xlog=ylog=False
 
     """
 
@@ -464,22 +456,22 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         self.log_ea = np.log10(self.ea)
 
     def e_from_stress(self, estress, **kwargs):
-        """void ratio from effective stress
+        """Void ratio from effective stress
 
         Parameters
         ----------
         estress : float
-            current effective stress.  etress must be within the range of the
+            Current effective stress.  etress must be within the range of the
             soil model points.
         pstress : float, optional
-            reconsolidation stress.  Default pstress=estress i.e. normally
+            Preconsolidation stress.  Default pstress=estress i.e. normally
             consolidated. pstress must be in the range of the soil model
             points.
 
         Returns
         -------
         e : float
-            void ratio corresponding to current stress state
+            Void ratio corresponding to current stress state.
 
         Examples
         --------
@@ -622,20 +614,20 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         return e
 
     def stress_from_e(self, e, **kwargs):
-        """effective stress from void ratio
+        """Effective stress from void ratio
 
         Parameters
         ----------
         e : float
-            current void ratio
+            Current void ratio.
         pstress : float, optional
-            reconsolidation stress.  Default pstress=estress i.e. normally
+            Preconsolidation stress.  Default pstress=estress i.e. normally
             consolidated.
 
         Returns
         -------
         estress : float
-            effective stress corresponding to current void ratio
+            Effective stress corresponding to current void ratio.
 
         Examples
         --------
@@ -742,6 +734,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> np.isclose(PwiseLinearSoilModel(siga, ea, Cr=0.1).stress_from_e(3.0, pstress=4.0),
         ... PwiseLinearSoilModel(siga[::-1], ea[::-1], Cr=0.1).stress_from_e(3.0, pstress=4.0))
         True
+
         """
 
 
@@ -796,24 +789,24 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         return  estress
 
     def e_and_stress_for_plotting(self, **kwargs):
-        """void ratio and stress values that plot the model
+        """Void ratio and stress values that plot the model
 
         Parameters
         ----------
         pstress : float, optional
-            reconsolidation stress.  Default behaviour is normally
+            Preconsolidation stress.  Default behaviour is normally
             consolidated.
         npts : int, optional
-            number of points to return.  Default npts=100
-        xmin, ymin : float, optional
-            range of x (i.e. effective stress) values from which
-            to return points. Default minumum of model siga
+            Number of points to return.  Default npts=100
+        xmin, xmax : float, optional
+            Range of x (i.e. effective stress) values from which
+            to return points. Default minumum of model `siga`.
 
 
         Returns
         -------
         x, y : 1d ndarray
-            `npts` stress, and void ratio values between `xmin` and `ymin`
+            `npts` stress, and void ratio values between `xmin` and `xmax`.
 
         """
 
@@ -828,21 +821,21 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
 
     def av_from_stress(self, estress, **kwargs):
-        """slope of void ratio from effective stress
+        """Slope of void ratio from effective stress
 
         Parameters
         ----------
         estress : float
-            current effective stress
+            Current effective stress.
         pstress : float, optional
-            reconsolidation stress.  Default pstress=estress i.e. normally
+            Preconsolidation stress.  Default pstress=estress i.e. normally
             consolidated.
 
         Returns
         -------
         av : float
-            slope of void-ratio vs effective stress plot at current stress
-            state
+            Slope of void-ratio vs effective stress plot at current stress
+            state.
 
         Examples
         --------
@@ -1003,18 +996,18 @@ class FunctionSoilModel(OneDimensionalVoidRatioEffectiveStress):
     Parameters
     ----------
     fn_e_from_stress: callable object
-        function to obtain void ratio from stress.  fn_e_from_stress should
+        Function to obtain void ratio from stress.  fn_e_from_stress should
         be the inverse function of fn_stress_from_e.
     fn_stress_from_e : callable object
-        function to obtain stress from void ratio. fn_stress_from_e should
+        Function to obtain stress from void ratio. fn_stress_from_e should
         be the inverse function of fn_e_from_stress.
     fn_av_from_stress: callable object
-        function to obtain slope of void ratio-stress relationship.
+        Function to obtain slope of void ratio-stress relationship.
         fn_av_from_stress should be negative the derivative of
         fn_e_from_stress w.r.t. stress
         be the inverse function of fn_k_from_e.
     *args, **kwargs : anything
-        positional and keyword arguments to be passed to the
+        Positional and keyword arguments to be passed to the
         fn_e_from_stress, fn_stress_from_e, fn_av_from_stress functions.  Note
         that any additional args and kwargs passed to the functions will be
         appended to the args, and kwargs.  You may get into a mess for
@@ -1027,7 +1020,7 @@ class FunctionSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
     Notes
     -----
-    Any function should be able to accept additonal keywords
+    Any function should be able to accept additonal keywords.
 
 
     Examples
@@ -1046,8 +1039,7 @@ class FunctionSoilModel(OneDimensionalVoidRatioEffectiveStress):
     >>> a.av_from_stress(3)
     -5
 
-
-    Prconsolidation stress
+    Prconsolidation stress:
 
     >>> def efs2(s, pstress=None, b=2):
     ...     if pstress is None:

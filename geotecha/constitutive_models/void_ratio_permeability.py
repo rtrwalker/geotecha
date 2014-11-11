@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for permeability relationships
+Relationships between permeability and void-ratio
 """
 from __future__ import print_function, division
 
@@ -28,21 +28,21 @@ class PermeabilityVoidRatioRelationship(object):
     """Base class for defining permeability void ratio relationships"""
 
     def e_from_k(self, estress, **kwargs):
-        """void ratio from permeability"""
+        """Void ratio from permeability"""
         raise NotImplementedError("e_from_k must be implemented")
 
     def k_from_e(self, e, **kwargs):
-        """permeability from void ratio"""
+        """Permeability from void ratio"""
         raise NotImplementedError("k_from_e must be implemented")
 
     def e_and_k_for_plotting(self, **kwargs):
-        """void ratio and permeability that plot the method"""
+        """Void ratio and permeability that plot the method"""
         # should return a tuple of x and y values
         # x-values are peremability, y-values are void ratio.
         raise NotImplementedError("e_and_k_for_plotting must be implemented")
 
     def plot_model(self, **kwargs):
-        """plot the void ratio-permeability"""
+        """Plot the void ratio-permeability"""
         ax = kwargs.pop('ax', plt.gca())
         x, y = self.e_and_k_for_plotting(**kwargs)
 
@@ -56,9 +56,10 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
     Parameters
     ----------
     Ck : float
-        slope of void-ratio vs permeability
+        Slope of void-ratio vs permeability.
     ka, ea : float
-        permeability and void ratio specifying a point on e-k line
+        Permeability and void ratio specifying a point on e-k line.
+
 
     """
 
@@ -68,17 +69,17 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
         self.ea = ea
 
     def e_from_k(self, k, **kwargs):
-        """void ratio from permeability
+        """Void ratio from permeability
 
         Parameters
         ----------
         k : float
-            current permeability
+            Current permeability.
 
         Returns
         -------
         e : float
-            void ratio corresponding to current permeability
+            Void ratio corresponding to current permeability.
 
         Examples
         --------
@@ -86,26 +87,28 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.e_from_k(8.0)
         3.854...
 
-        Array Inputs
+        Array Inputs:
+
         >>> a.e_from_k(np.array([8.0, 4.0]))
         array([ 3.854...,  3.403...])
+
 
         """
 
         return self.ea + self.Ck * np.log10(k/self.ka)
 
     def k_from_e(self, e, **kwargs):
-        """permeability from void ratio
+        """Permeability from void ratio
 
         Parameters
         ----------
         e : float
-            void ratio
+            Void ratio.
 
         Returns
         -------
         k : float
-            permeability corresponding to current void ratio
+            Permeability corresponding to current void ratio.
 
         Examples
         --------
@@ -114,6 +117,7 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
         8.0...
 
         Array Inputs
+
         >>> a.k_from_e(np.array([3.855, 3.404]))
         array([ 8.0...,  4.0...])
 
@@ -128,21 +132,21 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
 
 
     def e_and_k_for_plotting(self, **kwargs):
-        """void ratio and permeability that plot the model
+        """Void ratio and permeability that plot the model
 
         Parameters
         ----------
         npts : int, optional
-            number of points to return.  Default npts=100
-        xmin, ymin : float, optional
-            range of x (i.e. effective stress) values from which
-            to return points. Default xmin, ymin=1, 100
+            Number of points to return.  Default npts=100.
+        xmin, xmax : float, optional
+            Range of x (i.e. effective stress) values from which
+            to return points. Default xmin=1, xmax=100.
 
         Returns
         -------
         x, y : 1d ndarray
             `npts` permeability, and void ratio values between
-            `xmin` and `ymin`
+            `xmin` and `xmax`.
 
         """
 
@@ -157,12 +161,12 @@ class ConstantPermeabilityModel(PermeabilityVoidRatioRelationship):
     """Permeability constant with void ratio
 
     Note that the method e_from_k is meaningless because there are multiple
-    e values for single k value
+    e values for single k value.
 
     Parameters
     ----------
     ka : float
-        permeability
+        Permeability.
 
 
     """
@@ -171,22 +175,22 @@ class ConstantPermeabilityModel(PermeabilityVoidRatioRelationship):
         self.ka = ka
 
     def e_from_k(self, k, **kwarks):
-        """void ratio from permeability"""
+        """Void ratio from permeability, parameters are irrelevant."""
         raise ValueError("e_from_k is meaningless for a constant permeability model")
 
 
     def k_from_e(self, e, **kwargs):
-        """permeability from void ratio
+        """Permeability from void ratio
 
         Parameters
         ----------
         e : float
-            void ratio
+            Void ratio.
 
         Returns
         -------
         ka : float
-            the constant permeability
+            The constant permeability.
 
         Examples
         --------
@@ -194,7 +198,8 @@ class ConstantPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.k_from_e(3.855)
         2.5
 
-        Array Inputs
+        Array Inputs:
+
         >>> a.k_from_e(np.array([3.855, 3.404]))
         array([ 2.5,  2.5])
 
@@ -204,21 +209,21 @@ class ConstantPermeabilityModel(PermeabilityVoidRatioRelationship):
 
 
     def e_and_k_for_plotting(self, **kwargs):
-        """void ratio and permeability that plot the model
+        """Void ratio and permeability that plot the model
 
         Parameters
         ----------
         npts : int, optional
-            number of points to return.  Default npts=100
-        xmin, ymin : float, optional
-            range of x (i.e. effective stress) values from which
-            to return points. Default xmin, ymin=1, 100
+            Number of points to return.  Default npts=100
+        xmin, xmax : float, optional
+            Range of x (i.e. effective stress) values from which
+            to return points. Default xmin=1, xmax=100.
 
         Returns
         -------
         x, y : 1d ndarray
             `npts` permeability, and void ratio values between
-            `xmin` and `ymin`
+            `xmin` and `xmax`.
 
         """
 
@@ -234,17 +239,17 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
     """Piecewise linear ratio permeability relationship
 
     x and y data can be interpolated natural-natural, natural-log10,
-    log10-natural, or log10, log10
+    log10-natural, or log10, log10.
 
     Parameters
     ----------
     ka, ea : 1d array
-        permeability values and void ratio values defining a one-to-one
+        Permeability values and void ratio values defining a one-to-one
         relationship.
     xlog, ylog : True/False, Optional
         If True then interpolation on each axis is assumed to be logarithmic
         with base 10. x refers to the peremability axis, y to the void ratio
-        axis.  Default=False
+        axis.  Default xlog=ylog=False.
 
     """
 
@@ -278,17 +283,17 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         self.log_ea = np.log10(self.ea)
 
     def e_from_k(self, k, **kwargs):
-        """void ratio from permeability
+        """Void ratio from permeability
 
         Parameters
         ----------
         k : float
-            current permeability
+            Current permeability.
 
         Returns
         -------
         e : float
-            void ratio corresponding to current permeability
+            Void ratio corresponding to current permeability.
 
         Examples
         --------
@@ -296,11 +301,13 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.e_from_k(1.25)
         5.5
 
-        Array Inputs
+        Array Inputs:
+
         >>> a.e_from_k(np.array([1.25, 1.75]))
         array([ 5.5,  6.5])
 
         Logarithmic permeability scale:
+
         >>> a = PwiseLinearPermeabilityModel(ka=np.array([1.0, 2.0]),
         ... ea=np.array([5, 7.0]), xlog=True)
         >>> a.e_from_k(1.25)
@@ -309,6 +316,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         array([ 5.643...,  6.614...])
 
         Logarithmic void ratio scale:
+
         >>> a = PwiseLinearPermeabilityModel(ka=np.array([1.0, 2.0]),
         ... ea=np.array([5, 7.0]), ylog=True)
         >>> a.e_from_k(1.25)
@@ -317,6 +325,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         array([ 5.4387...,  6.435...])
 
         Logarithmic permeability and void ratio scale:
+
         >>> a = PwiseLinearPermeabilityModel(ka=np.array([1.0, 2.0]),
         ... ea=np.array([5, 7.0]), xlog=True, ylog=True)
         >>> a.e_from_k(1.25)
@@ -324,7 +333,8 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.e_from_k(np.array([1.25, 1.75]))
         array([ 5.572...,  6.560...])
 
-        Increasing vs decreasing inputs
+        Increasing vs decreasing inputs:
+
         >>> ea = np.arange(1,10)
         >>> ka = 3 * ea
         >>> np.isclose(PwiseLinearPermeabilityModel(ka, ea).e_from_k(7.2),
@@ -357,17 +367,17 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
 
 
     def k_from_e(self, e, **kwargs):
-        """permeability from void ratio
+        """Permeability from void ratio
 
         Parameters
         ----------
         e : float
-            void ratio
+            Void ratio.
 
         Returns
         -------
         k : float
-            permeability corresponding to current void ratio
+            Permeability corresponding to current void ratio.
 
         Examples
         --------
@@ -375,11 +385,13 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.k_from_e(5.5)
         1.25
 
-        Array Inputs
+        Array Inputs:
+
         >>> a.k_from_e(np.array([5.5, 6.5]))
         array([ 1.25,  1.75])
 
         Logarithmic permeability scale:
+
         >>> a = PwiseLinearPermeabilityModel(ka=np.array([1.0, 2.0]),
         ... ea=np.array([5, 7.0]), xlog=True)
         >>> a.k_from_e(5.644)
@@ -389,6 +401,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         array([ 1.25...,  1.75...])
 
         Logarithmic void ratio scale:
+
         >>> a = PwiseLinearPermeabilityModel(ka=np.array([1.0, 2.0]),
         ... ea=np.array([5, 7.0]), ylog=True)
         >>> a.k_from_e(5.4388)
@@ -398,6 +411,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         array([ 1.25...,  1.75...])
 
         Logarithmic permeability and void ratio scale:
+
         >>> a = PwiseLinearPermeabilityModel(ka=np.array([1.0, 2.0]),
         ... ea=np.array([5, 7.0]), xlog=True, ylog=True)
         >>> a.k_from_e(5.573)
@@ -405,7 +419,8 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.k_from_e(np.array([5.573, 6.561]))
         array([ 1.25...,  1.75...])
 
-        Increasing vs decreasing inputs
+        Increasing vs decreasing inputs:
+
         >>> ea = np.arange(1,10)
         >>> ka = 3 * ea
         >>> np.isclose(PwiseLinearPermeabilityModel(ka, ea).k_from_e(3.0),
@@ -437,21 +452,21 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
 
 
     def e_and_k_for_plotting(self, **kwargs):
-        """void ratio and permeability that plot the model
+        """Void ratio and permeability that plot the model
 
         Parameters
         ----------
         npts : int, optional
-            number of points to return.  Default npts=100
-        xmin, ymin : float, optional
-            range of x (i.e. effective stress) values from which
-            to return points. Default xmin, ymin=1, 100
+            Number of points to return.  Default npts=100.
+        xmin, xmax : float, optional
+            Range of x (i.e. effective stress) values from which
+            to return points. Default min and max of model `ka`.
 
         Returns
         -------
         x, y : 1d ndarray
             `npts` permeability, and void ratio values between
-            `xmin` and `ymin`
+            `xmin` and `xmax`.
 
         """
 
@@ -474,13 +489,13 @@ class FunctionPermeabilityModel(PermeabilityVoidRatioRelationship):
     Parameters
     ----------
     fn_e_from_k: callable object
-        function to obtain void ratio from permeability.  fn_e_from_k should
+        Function to obtain void ratio from permeability.  fn_e_from_k should
         be the inverse function of fn_k_from_e.
     fn_k_from_e : callable object
-        function to obtain peremability from void ratio. fn_k_from_e should
+        Function to obtain peremability from void ratio. fn_k_from_e should
         be the inverse function of fn_e_from_k.
     *args, **kwargs : anything
-        positional and keyword arguments to be passed to the
+        Positional and keyword arguments to be passed to the
         fn_e_from_k, fn_k_from_efunctions.  Note
         that any additional args and kwargs passed to the functions will be
         appended to the args, and kwargs.  You may get into a mess for
@@ -493,7 +508,7 @@ class FunctionPermeabilityModel(PermeabilityVoidRatioRelationship):
 
     Notes
     -----
-    Any function should be able to accept additonal keywords
+    Any function should be able to accept additonal keywords.
 
     Examples
     --------
