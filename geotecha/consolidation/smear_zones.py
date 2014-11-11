@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""Smear zones associated with vertical drain installation
+"""Smear zones associated with vertical drain installation.
 
 Smear zone permeability distributions etc.
 
@@ -71,7 +71,7 @@ def mu_ideal(n, *args):
 
     """
 
-    if np.any(n<=1):
+    if np.any(n <= 1):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
 
@@ -137,23 +137,24 @@ def mu_constant(n, s, kap):
            Rotterdam-Boston: A.A. Balkema.
     """
 
-    if np.any(n<=1.0):
+    if np.any(n <= 1.0):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
 
-    if np.any(s<1.0):
+    if np.any(s < 1.0):
         raise ValueError('s must be greater than 1. You have s = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(s)])))
 
-    if np.any(kap<=0.0):
+    if np.any(kap <= 0.0):
         raise ValueError('kap must be greater than 0. You have kap = '
-                '{}'.format(', '.join([str(v) for v in np.atleast_1d(kap)])))
+                         '{}'.format(', '.join([str(v) for v in
+                                                np.atleast_1d(kap)])))
 
-    if np.any(s>n):
+    if np.any(s > n):
         raise ValueError('s must be less than n. You have s = '
-                '{} and n = {}'.format(
-                ', '.join([str(v) for v in np.atleast_1d(s)]),
-                ', '.join([str(v) for v in np.atleast_1d(n)])))
+                         '{} and n = {}'.format(
+                             ', '.join([str(v) for v in np.atleast_1d(s)]),
+                             ', '.join([str(v) for v in np.atleast_1d(n)])))
 
 
 
@@ -234,7 +235,7 @@ def _kapx(n, s, kap):
 
     """
     sx = _sx(n, s)
-    kapx =  1 + (kap - 1) / (s - 1) * (sx - 1)
+    kapx = 1 + (kap - 1) / (s - 1) * (sx - 1)
     return kapx
 
 
@@ -316,21 +317,22 @@ def mu_overlapping_linear(n, s, kap):
     def mu_intersecting(n, s, kap):
         """mu for intersecting smear zones that do not completely overlap"""
         sx = _sx(n, s)
-        kapx =  _kapx(n, s, kap)
+        kapx = _kapx(n, s, kap)
         mu = mu_linear(n, sx, kapx) * kap / kapx
         return mu
 
-    if np.any(n<=1.0):
+    if np.any(n <= 1.0):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
 
-    if np.any(s<1.0):
+    if np.any(s < 1.0):
         raise ValueError('s must be greater than 1. You have s = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(s)])))
 
-    if np.any(kap<=0.0):
+    if np.any(kap <= 0.0):
         raise ValueError('kap must be greater than 0. You have kap = '
-                '{}'.format(', '.join([str(v) for v in np.atleast_1d(kap)])))
+                         '{}'.format(', '.join([str(v) for v in
+                                                np.atleast_1d(kap)])))
 
     is_array = any([isinstance(v, np.ndarray) for v in [n, s, kap]])
 
@@ -339,15 +341,15 @@ def mu_overlapping_linear(n, s, kap):
     kap = np.atleast_1d(kap)
 
 
-    if len([v for v in [n, s] if v.shape==kap.shape])!=2:
+    if len([v for v in [n, s] if v.shape == kap.shape]) != 2:
         raise ValueError('n, s, and kap must have the same shape.  You have '
-            'lengths for n, s, kap of {}, {}, {}.'.format(
-            len(n), len(s), len(kap)))
+                         'lengths for n, s, kap of {}, {}, {}.'.format(
+                             len(n), len(s), len(kap)))
 
 
     ideal = np.isclose(s, 1) | np.isclose(kap, 1)
     normal = (n >= s) & (~ideal)
-    all_disturbed = (2*n-s <=1) & (~ideal)
+    all_disturbed = (2 * n - s <= 1) & (~ideal)
     intersecting = ~(ideal | normal | all_disturbed)
 
     mu = np.empty_like(n, dtype=float)
@@ -356,7 +358,7 @@ def mu_overlapping_linear(n, s, kap):
     mu[normal] = mu_linear(n[normal], s[normal], kap[normal])
     mu[all_disturbed] = kap[all_disturbed] * mu_ideal(n[all_disturbed])
     mu[intersecting] = mu_intersecting(n[intersecting], s[intersecting],
-                                    kap[intersecting])
+                                       kap[intersecting])
 
     if is_array:
         return mu
@@ -365,8 +367,7 @@ def mu_overlapping_linear(n, s, kap):
 
 
 def mu_linear(n, s, kap):
-    """vertical drain mu, for smear zone with linear variation of permeability
-
+    """Smear zone parameter for smear zone linear variation of permeability
 
     mu parameter in equal strain radial consolidation equations e.g.
     u = u0 * exp(-8*Th/mu)
@@ -374,17 +375,17 @@ def mu_linear(n, s, kap):
     Parameters
     ----------
     n : float or ndarray of float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float or ndarray of float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float or ndarray of float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
 
     Returns
     -------
     mu : float
-        smear zone permeability/geometry parameter
+        Smear zone permeability/geometry parameter.
 
     Notes
     -----
@@ -443,23 +444,24 @@ def mu_linear(n, s, kap):
 
     References
     ----------
-    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
-          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
-          doi:10.1680/geot.2007.57.5.463.
+    .. [1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+           with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+           doi:10.1680/geot.2007.57.5.463.
     """
 
 
-    def mu_s_neq_kap(n,s,kap):
+    def mu_s_neq_kap(n, s, kap):
         """mu for when s != kap"""
 
         A = (kap - 1) / (s - 1)
         B = (s - kap) / (s - 1)
 
         term1 = n**2 / (n**2 - 1)
-        term2 = log(n / s) + s ** 2 / (n ** 2) * (1 - s ** 2 / (4 * n ** 2)) - 3 / 4
+        term2 = (log(n / s) + s ** 2 / (n ** 2) *
+                 (1 - s ** 2 / (4 * n ** 2)) - 3 / 4)
         term3 = kap * (1 - s ** 2 / n ** 2)
         term4 = (1 / B * log(s / kap)
-            - 1 / (n ** 2 * A ** 2) * (kap - 1 - B * log(kap)))
+                 - 1 / (n ** 2 * A ** 2) * (kap - 1 - B * log(kap)))
         term5 = term2 + term3 * term4
 
         term6 = 1 / (n ** 2 * B)
@@ -476,7 +478,7 @@ def mu_linear(n, s, kap):
         mu = term1 * (term5 + term10)
         return mu
 
-    def mu_s_eq_kap(n,s):
+    def mu_s_eq_kap(n, s):
         """mu for s == kap"""
 
         term1 = n ** 2 / (n ** 2 - 1)
@@ -542,8 +544,7 @@ def mu_linear(n, s, kap):
         return mu[0]
 
 def mu_parabolic(n, s, kap):
-    """vertical drain mu, smear zone with parabolic variation of permeability
-
+    """Smear zone parameter for parabolic variation of permeability
 
     mu parameter in equal strain radial consolidation equations e.g.
     u = u0 * exp(-8*Th/mu)
@@ -551,17 +552,17 @@ def mu_parabolic(n, s, kap):
     Parameters
     ----------
     n : float or ndarray of float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float or ndarray of float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float or ndarray of float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh/ks).
 
     Returns
     -------
     mu : float
-        smear zone permeability/geometry parameter
+        Smear zone permeability/geometry parameter
 
     Notes
     -----
@@ -641,11 +642,11 @@ def mu_parabolic(n, s, kap):
 
     References
     ----------
-    ..[1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
-          Consolidation with Parabolic Distribution of Permeability in
-          Smear Zone'. Journal of Geotechnical and Geoenvironmental
-          Engineering 132 (7): 937-41.
-          doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
+    .. [1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
+           Consolidation with Parabolic Distribution of Permeability in
+           Smear Zone'. Journal of Geotechnical and Geoenvironmental
+           Engineering 132 (7): 937-41.
+           doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
 
     """
 
@@ -739,12 +740,8 @@ def mu_parabolic(n, s, kap):
         return mu[0]
 
 
-
-
-
 def mu_piecewise_constant(s, kap, n=None, kap_m=None):
-    """vertical drain mu, smear zone with piecewise constant variation of
-    permeability
+    """Smear zone parameter for piecewise constant permeability distribution
 
 
     mu parameter in equal strain radial consolidation equations e.g.
@@ -753,14 +750,14 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
     Parameters
     ----------
     s : list or 1d ndarray of float
-        ratio of segment outer radii to drain radius (r_i/r_0). The first value
+        Ratio of segment outer radii to drain radius (r_i/r_0). The first value
         of s should be greater than 1, i.e. the first value should be s_1;
-        s_0=1 at the drain soil interface is implied
+        s_0=1 at the drain soil interface is implied.
     kap : list or ndarray of float
-        ratio of undisturbed horizontal permeability to permeability in each
-        segment kh/khi
+        Ratio of undisturbed horizontal permeability to permeability in each
+        segment kh/khi.
     n, kap_m : float, optional
-        if `n` and `kap_m` are given then they will each be appended to `s` and
+        If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
         specification of the drain influence radius.  Default=None, i.e. soil
         permeability is completely described by `s` and `kap`. If n is given
@@ -768,7 +765,7 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
     Returns
     -------
     mu : float
-        smear zone permeability/geometry parameter
+        Smear zone permeability/geometry parameter
 
     Notes
     -----
@@ -816,14 +813,12 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
 
     References
     ----------
-    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
-          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
-          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
-    ..[2] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
-          One, Two and Three Dimensions'. Computers and
-          Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
-
-
+    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+           Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+           Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    .. [2] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
+           One, Two and Three Dimensions'. Computers and
+           Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
 
     """
 
@@ -862,7 +857,6 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
         '{}'.format(', '.join([str(v) for v in np.atleast_1d(s)])))
 
 
-
     n = s[-1]
     s_ = np.ones_like(s , dtype=float)
     s_[1:] = s[:-1]
@@ -883,9 +877,9 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
     mu = sumi * n ** 2 / (n ** 2 - 1)
     return mu
 
+
 def mu_piecewise_linear(s, kap, n=None, kap_m=None):
-    """vertical drain mu, smear zone with piecewise linear variation of
-    permeability
+    """Smear zone parameter for piecewise linear permeability distribution
 
 
     mu parameter in equal strain radial consolidation equations e.g.
@@ -894,21 +888,22 @@ def mu_piecewise_linear(s, kap, n=None, kap_m=None):
     Parameters
     ----------
     s : list or 1d ndarray of float
-        ratio of radii to drain radius (r_i/r_0). The first value
-        of s should be 1, i.e. at the drain soil interface
+        Ratio of radii to drain radius (r_i/r_0). The first value
+        of s should be 1, i.e. at the drain soil interface.
     kap : list or ndarray of float
-        ratio of undisturbed horizontal permeability to permeability at each
+        Ratio of undisturbed horizontal permeability to permeability at each
         value of s.
     n, kap_m : float, optional
-        if `n` and `kap_m` are given then they will each be appended to `s` and
+        If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
         specification of the drain influence radius.  Default=None, i.e. soil
         permeability is completely described by `s` and `kap`. If n is given
         but kap_m is None then the last kappa value in kap will be used.
+
     Returns
     -------
     mu : float
-        smear zone permeability/geometry parameter
+        Smear zone permeability/geometry parameter.
 
     Notes
     -----
@@ -1011,12 +1006,12 @@ def mu_piecewise_linear(s, kap, n=None, kap_m=None):
     Derivation steps are the same as for mu_piecewise_constant in appendix of
     [1]_ but permeability is linear in a segemetn as in [2]_.
 
-    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
-          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
-          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
-    ..[2] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
-          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
-          doi:10.1680/geot.2007.57.5.463.
+    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+           Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+           Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    .. [2] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+           with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+           doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -1115,8 +1110,10 @@ def mu_piecewise_linear(s, kap, n=None, kap_m=None):
 
     return mu
 
+
 def mu_well_resistance(kh, qw, n, H, z=None):
-    """additional mu parameter for well resistance
+    """Additional smear zone parameter for well resistance
+
 
     Parameters
     ----------
@@ -1125,20 +1122,20 @@ def mu_well_resistance(kh, qw, n, H, z=None):
         calcs.  Usually the undisturbed permeability i.e. the kh in
         kappa = kh/ks
     qw : float
-        drain capacity.  qw = kw * pi * rw**2.  make sure the kw used has the
-        same units as kh
+        Drain discharge capacity.  qw = kw * pi * rw**2.  Make sure
+        the kw used has the same units as kh.
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     H : float
-        length of drainage path.
+        Length of drainage path.
     z : float, optional
-        evaluation depth. default = none, in which case the well resistance
+        Evaluation depth. Default = None, in which case the well resistance
         factor will be averaged.
-
 
     Returns
     -------
-    mu : mu parameter for well resistance
+    mu : float
+        mu parameter for well resistance
 
     Notes
     -----
@@ -1165,9 +1162,9 @@ def mu_well_resistance(kh, qw, n, H, z=None):
 
     References
     ----------
-    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
-          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
-          Rotterdam-Boston: A.A. Balkema.
+    .. [1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+           Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+           Rotterdam-Boston: A.A. Balkema.
 
     """
 
@@ -1189,32 +1186,32 @@ def k_parabolic(n, s, kap, si):
     actual permeability then multiply by whatever you used to determine kap.
 
 
-    permeability is parabolic with value 1/kap at the drain soil interface
+    Permeability is parabolic with value 1/kap at the drain soil interface
     i.e. at s=1 k=k0=1/kap.  for si>s, permeability=1.
 
     Parameters
     ----------
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the permeability
+        Normalised radial coordinate(s) at which to calc the permeability
         i.e. si=ri/rw
 
     Returns
     -------
     permeability : float or ndarray of float
-        normalised permeability (i.e. ki/kh) at the si values.
+        Normalised permeability (i.e. ki/kh) at the si values.
 
     Notes
     -----
-    parabolic distribution of permeability in smear zone is given by:
+    Parabolic distribution of permeability in smear zone is given by:
 
-    .. math:: \\frac{k_h^'\\left({r}\\right)}{k_h}=
+    .. math:: \\frac{k_h^\\prime\\left({r}\\right)}{k_h}=
                 \\frac{\\kappa-1}{\\kappa}
                 \\left({A-B+C\\frac{r}{r_w}}\\right)
                 \\left({A+B-C\\frac{r}{r_w}}\\right)
@@ -1243,11 +1240,11 @@ def k_parabolic(n, s, kap, si):
 
     References
     ----------
-    ..[1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
-          Consolidation with Parabolic Distribution of Permeability in
-          Smear Zone'. Journal of Geotechnical and Geoenvironmental
-          Engineering 132 (7): 937-41.
-          doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
+    .. [1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
+           Consolidation with Parabolic Distribution of Permeability in
+           Smear Zone'. Journal of Geotechnical and Geoenvironmental
+           Engineering 132 (7): 937-41.
+           doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
 
     """
 
@@ -1273,7 +1270,7 @@ def k_parabolic(n, s, kap, si):
         raise ValueError('si must satisfy 1 >= si >= n)')
 
     def parabolic_part(n,s, kap, si):
-        """parbolic smear zone part i.e from si=1 to si=s"""
+        """Parbolic smear zone part i.e from si=1 to si=s"""
 
         A = sqrt((kap / (kap - 1)))
         B = s / (s - 1)
@@ -1293,45 +1290,47 @@ def k_parabolic(n, s, kap, si):
 
     return permeability
 
+
 def k_linear(n, s, kap, si):
     """Permeability distribution for smear zone with linear permeability
 
     Normalised with respect to undisturbed permeability.  i.e. if you want the
     actual permeability then multiply by whatever you used to determine kap.
 
-
-    permeability is linear with value 1/kap at the drain soil interface
+    Permeability is linear with value 1/kap at the drain soil interface
     i.e. at s=1 k=k0=1/kap.  for si>s, permeability=1.
 
     Parameters
     ----------
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the permeability
-        i.e. si=ri/rw
+        Normalised radial coordinate(s) at which to calc the permeability
+        i.e. si=ri/rw.
 
     Returns
     -------
     permeability : float or ndarray of float
-        normalised permeability (i.e. ki/kh) at the si values.
+        Normalised permeability (i.e. ki/kh) at the si values.
 
     Notes
     -----
-    linear distribution of permeability in smear zone is given by:
+    Linear distribution of permeability in smear zone is given by:
 
-    .. math:: \\frac{k_h^'\\left({r}\\right)}{k_h}=
-                \\left\\{\\begin{array}{lr}
-                \\frac{1}{\\kappa}
-                            \\left({A\\frac{r}{r_w}+B}\\right)
-                            & s\\neq\\kappa \\\\
-                            \\frac{r}{\\kappa r_w}
-                            & s=\\kappa \\end{array}\\right.
+    .. math::
+
+       \\frac{k_h^\\prime\\left({r}\\right)}{k_h}=
+        \\left\\{\\begin{array}{lr}
+        \\frac{1}{\\kappa}
+                    \\left({A\\frac{r}{r_w}+B}\\right)
+                    & s\\neq\\kappa \\\\
+                    \\frac{r}{\\kappa r_w}
+                    & s=\\kappa \\end{array}\\right.
 
     where :math:`A` and :math:`B` are:
 
@@ -1354,14 +1353,14 @@ def k_linear(n, s, kap, si):
 
     References
     ----------
-    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
-          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
-          doi:10.1680/geot.2007.57.5.463.
+    .. [1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+           with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+           doi:10.1680/geot.2007.57.5.463.
 
     """
 
     def s_neq_kap_part(n, s, kap, si):
-        """linear permeability in smear zome when s!=kap"""
+        """Linear permeability in smear zome when s!=kap"""
 
         A = (kap - 1) / (s - 1)
         B = (s - kap) / (s - 1)
@@ -1372,7 +1371,7 @@ def k_linear(n, s, kap, si):
         return k0*(A*si+B)
 
     def s_eq_kap_part(n, s, si):
-        """linear permeability in smear zome when s!=kap"""
+        """Linear permeability in smear zome when s!=kap"""
 
         k0 = 1 / kap
         return k0 * si
@@ -1412,11 +1411,10 @@ def k_linear(n, s, kap, si):
 
 
 def k_overlapping_linear(n, s, kap, si):
-    """Permeability distribution for smear zone with overlapping linear permeability
+    """Permeability smear zone with overlapping linear permeability
 
     Normalised with respect to undisturbed permeability.  i.e. if you want the
     actual permeability then multiply by whatever you used to determine kap.
-
 
     mu parameter in equal strain radial consolidation equations e.g.
     u = u0 * exp(-8*Th/mu)
@@ -1424,20 +1422,20 @@ def k_overlapping_linear(n, s, kap, si):
     Parameters
     ----------
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the permeability
+        Normalised radial coordinate(s) at which to calc the permeability
         i.e. si=ri/rw
 
     Returns
     -------
     permeability : float or ndarray of float
-        normalised permeability (i.e. ki/kh) at the si values.
+        Normalised permeability (i.e. ki/kh) at the si values.
 
     Notes
     -----
@@ -1450,7 +1448,7 @@ def k_overlapping_linear(n, s, kap, si):
     When :math:`(s+1)/2<n<s` then the smear zones overlap.
     the permeability for :math:`r/r_w<s_X` is given by:
 
-    .. math:: \\frac{k_h^'\\left({r}\\right)}{k_h}=
+    .. math:: \\frac{k_h^\\prime\\left({r}\\right)}{k_h}=
                 \\left\\{\\begin{array}{lr}
                 \\frac{1}{\\kappa}
                             \\left({A\\frac{r}{r_w}+B}\\right)
@@ -1490,9 +1488,9 @@ def k_overlapping_linear(n, s, kap, si):
 
     References
     ----------
-    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
-          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
-          doi:10.1680/geot.2007.57.5.463.
+    .. [1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+           with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+           doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -1543,66 +1541,28 @@ def k_overlapping_linear(n, s, kap, si):
 
 
 
-
-    permeability = np.ones_like(si, dtype=float)
-    if np.isclose(s, kap):
-        permeability[smear] = s_eq_kap_part(n, s, si[smear])
-    else:
-        permeability[smear] = s_neq_kap_part(n, s, kap, si[smear])
-
-    return permeability
-#
-#    n = np.atleast_1d(n)
-#    s = np.atleast_1d(s)
-#    kap = np.atleast_1d(kap)
-#
-#
-#    if len([v for v in [n, s] if v.shape==kap.shape])!=2:
-#        raise ValueError('n, s, and kap must have the same shape.  You have '
-#            'lengths for n, s, kap of {}, {}, {}.'.format(
-#            len(n), len(s), len(kap)))
-#
-#
-#    ideal = np.isclose(s, 1) | np.isclose(kap, 1)
-#    normal = (n >= s) & (~ideal)
-#    all_disturbed = (2*n-s <=1) & (~ideal)
-#    intersecting = ~(ideal | normal | all_disturbed)
-#
-#    mu = np.empty_like(n, dtype=float)
-#
-#    mu[ideal] = mu_ideal(n[ideal])
-#    mu[normal] = mu_linear(n[normal], s[normal], kap[normal])
-#    mu[all_disturbed] = kap[all_disturbed] * mu_ideal(n[all_disturbed])
-#    mu[intersecting] = mu_intersecting(n[intersecting], s[intersecting],
-#                                    kap[intersecting])
-#
-#    if is_array:
-#        return mu
-#    else:
-#        return mu[0]
-
 def u_ideal(n, si, uavg=1, uw=0, muw=0):
     """Pore pressure at radius for ideal drain with no smear zone
 
     Parameters
     ----------
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the pore pressure
-        i.e. si=ri/rw
+        Normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw.
     uavg : float, optional = 1
-        average pore pressure in soil. default = 1.  when `uw`=0 , then if
-        uavg=1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
     uw : float, optional
-        pore pressure in drain, default = 0.
+        Pore pressure in drain, default = 0.
     muw : float, optional
-        well resistance mu parameter
+        Well resistance mu parameter
 
     Returns
     -------
-    u : pore pressure at specified si
-
+    u : float or ndarray of float
+        Pore pressure at specified si
 
 
     Notes
@@ -1629,9 +1589,9 @@ def u_ideal(n, si, uavg=1, uw=0, muw=0):
 
     References
     ----------
-    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
-          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
-          Rotterdam-Boston: A.A. Balkema.
+    .. [1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+           Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+           Rotterdam-Boston: A.A. Balkema.
 
     """
 
@@ -1657,26 +1617,27 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
     Parameters
     ----------
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the pore pressure
-        i.e. si=ri/rw
+        Normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw.
     uavg : float, optional = 1
-        average pore pressure in soil. default = 1.  when `uw`=0 , then if
-        uavg=1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
     uw : float, optional
-        pore pressure in drain, default = 0.
+        Pore pressure in drain, default = 0.
     muw : float, optional
-        well resistance mu parameter
+        Well resistance mu parameter.
 
     Returns
     -------
-    u : pore pressure at specified si
+    u : float or ndarray of float
+        Pore pressure at specified si
 
     Notes
     -----
@@ -1687,7 +1648,7 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
     Noteing that :math:`s_i=r_i/r_w`, the radial pore pressure distribution
     in the smear zone is given by:
 
-    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+    .. math:: u^\\prime(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
                             \\left[{
                                 \\kappa\\left({
                                 \\ln\\left({s_i}\\right)
@@ -1724,9 +1685,9 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
 
     References
     ----------
-    ..[1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
-          Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
-          Rotterdam-Boston: A.A. Balkema.
+    .. [1] Hansbo, S. 1981. 'Consolidation of Fine-Grained Soils by
+           Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
+           Rotterdam-Boston: A.A. Balkema.
 
     """
 
@@ -1791,26 +1752,27 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
     Parameters
     ----------
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the pore pressure
-        i.e. si=ri/rw
+        Normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw.
     uavg : float, optional = 1
-        average pore pressure in soil. default = 1.  when `uw`=0 , then if
-        uavg=1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
     uw : float, optional
-        pore pressure in drain, default = 0.
+        Pore pressure in drain, default = 0.
     muw : float, optional
-        well resistance mu parameter
+        Well resistance mu parameter.
 
     Returns
     -------
-    u : pore pressure at specified si
+    u : float or ndarray of float
+        Pore pressure at specified si.
 
     Notes
     -----
@@ -1821,7 +1783,7 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
     Noteing that :math:`s_i=r_i/r_w`, the radial pore pressure distribution
     in the smear zone is given by:
 
-    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+    .. math:: u^\\prime(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
                             \\left[{
                                 \\kappa\\left({\\frac{1}{B}\\ln\\left({s_i}\\right)
                                 +\\left({\\frac{B}{A^2n^2}-\\frac{1}{B}}\\right)
@@ -1850,7 +1812,7 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
     for the special case where :math:`s=\\kappa` the pore pressure
     in the undisturbed zone is:
 
-    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+    .. math:: u^\\prime(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
                             \\left[{
                                 s\\frac{\\left({n^2-s_i}\\right)
                                     \\left({s_i-1}\\right)}{n^2s_i}
@@ -1884,9 +1846,9 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
 
     References
     ----------
-    ..[1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
-          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
-          doi:10.1680/geot.2007.57.5.463.
+    .. [1] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+           with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+           doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -1974,26 +1936,27 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
     Parameters
     ----------
     n : float
-        ratio of drain influence radius  to drain radius (re/rw).
+        Ratio of drain influence radius  to drain radius (re/rw).
     s : float
-        ratio of smear zone radius to  drain radius (rs/rw)
+        Ratio of smear zone radius to  drain radius (rs/rw).
     kap : float
-        ratio of undisturbed horizontal permeability to permeability at
-        the drain-soil interface (kh / ks)
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the pore pressure
-        i.e. si=ri/rw
+        Normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw.
     uavg : float, optional = 1
-        average pore pressure in soil. default = 1.  when `uw`=0 , then if
-        uavg=1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
     uw : float, optional
-        pore pressure in drain, default = 0.
+        Pore pressure in drain, default = 0.
     muw : float, optional
-        well resistance mu parameter
+        Well resistance mu parameter.
 
     Returns
     -------
-    u : pore pressure at specified si
+    u : float of ndarray of float
+        Pore pressure at specified si.
 
     Notes
     -----
@@ -2004,7 +1967,7 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
     Noteing that :math:`s_i=r_i/r_w`, the radial pore pressure distribution
     in the smear zone is given by:
 
-    .. math:: u^'(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+    .. math:: u^\\prime(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
                             \\left[{
                                 \\frac{\\kappa}{\\kappa-1}\\left\\{{
                                 \\frac{1}{A^2-B^2}
@@ -2079,11 +2042,11 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
 
     References
     ----------
-    ..[1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
-          Consolidation with Parabolic Distribution of Permeability in
-          Smear Zone'. Journal of Geotechnical and Geoenvironmental
-          Engineering 132 (7): 937-41.
-          doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
+    .. [1] Walker, Rohan, and Buddhima Indraratna. 2006. 'Vertical Drain
+           Consolidation with Parabolic Distribution of Permeability in
+           Smear Zone'. Journal of Geotechnical and Geoenvironmental
+           Engineering 132 (7): 937-41.
+           doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
 
     """
 
@@ -2170,6 +2133,7 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
     u = term1 * (term2 + muw) + uw
     return u
 
+
 def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     """Pore pressure at radius for piecewise constant permeability distribution
 
@@ -2177,24 +2141,24 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     Parameters
     ----------
     s : list or 1d ndarray of float
-        ratio of segment outer radii to drain radius (r_i/r_0). The first value
+        Ratio of segment outer radii to drain radius (r_i/r_0). The first value
         of s should be greater than 1, i.e. the first value should be s_1;
-        s_0=1 at the drain soil interface is implied
+        s_0=1 at the drain soil interface is implied.
     kap : list or ndarray of float
-        ratio of undisturbed horizontal permeability to permeability in each
-        segment kh/khi
+        Ratio of undisturbed horizontal permeability to permeability in each
+        segment kh/khi.
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the pore pressure
-        i.e. si=ri/rw
+        Normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw.
     uavg : float, optional = 1
-        average pore pressure in soil. default = 1.  when `uw`=0 , then if
-        uavg=1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
     uw : float, optional
-        pore pressure in drain, default = 0.
+        Pore pressure in drain, default = 0.
     muw : float, optional
-        well resistance mu parameter
+        Well resistance mu parameter
     n, kap_m : float, optional
-        if `n` and `kap_m` are given then they will each be appended to `s` and
+        If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
         specification of the drain influence radius.  Default=None, i.e. soil
         permeability is completely described by `s` and `kap`. If n is given
@@ -2202,7 +2166,8 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
 
     Returns
     -------
-    u : pore pressure at specified si
+    u : float of ndarray of float
+        Pore pressure at specified si.
 
     Notes
     -----
@@ -2244,12 +2209,12 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
 
     References
     ----------
-    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
-          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
-          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
-    ..[2] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
-          One, Two and Three Dimensions'. Computers and
-          Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
+    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+           Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+           Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    .. [2] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
+           One, Two and Three Dimensions'. Computers and
+           Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
 
     """
 
@@ -2329,27 +2294,26 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
 def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     """Pore pressure at radius for piecewise constant permeability distribution
 
-
     Parameters
     ----------
     s : list or 1d ndarray of float
-        ratio of radii to drain radius (r_i/r_0). The first value
-        of s should be 1, i.e. at the drain soil interface
+        Ratio of radii to drain radius (r_i/r_0). The first value
+        of s should be 1, i.e. at the drain soil interface.
     kap : list or ndarray of float
-        ratio of undisturbed horizontal permeability to permeability at each
+        Ratio of undisturbed horizontal permeability to permeability at each
         value of s.
     si : float of ndarray of float
-        normalised radial coordinate(s) at which to calc the pore pressure
-        i.e. si=ri/rw
+        Normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw.
     uavg : float, optional = 1
-        average pore pressure in soil. default = 1.  when `uw`=0 , then if
-        uavg=1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
     uw : float, optional
-        pore pressure in drain, default = 0.
+        Pore pressure in drain, default = 0.
     muw : float, optional
-        well resistance mu parameter
+        Well resistance mu parameter.
     n, kap_m : float, optional
-        if `n` and `kap_m` are given then they will each be appended to `s` and
+        If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
         specification of the drain influence radius.  Default=None, i.e. soil
         permeability is completely described by `s` and `kap`. If n is given
@@ -2357,7 +2321,8 @@ def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
 
     Returns
     -------
-    u : pore pressure at specified si
+    u : float or ndarray of float
+        Pore pressure at specified si.
 
     Notes
     -----
@@ -2444,12 +2409,12 @@ def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     Derivation steps are the same as for mu_piecewise_constant in appendix of
     [1]_ but permeability is linear in a segemetn as in [2]_.
 
-    ..[1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
-          Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
-          Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
-    ..[2] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
-          with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
-          doi:10.1680/geot.2007.57.5.463.
+    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+           Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+           Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    .. [2] Walker, R., and B. Indraratna. 2007. 'Vertical Drain Consolidation
+           with Overlapping Smear Zones'. Geotechnique 57 (5): 463-67.
+           doi:10.1680/geot.2007.57.5.463.
 
     """
 
@@ -2546,13 +2511,12 @@ def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
 def re_from_drain_spacing(sp, pattern = 'Triangle'):
     """Calculate drain influence radius from drain spacing
 
-
     Parameters
     ----------
     sp : float
-        distance between drain centers
+        Distance between drain centers.
     pattern : ['Triangle', 'Square'], optional
-        drain installation pattern. default = 'triangle'
+        Drain installation pattern. default = 'Triangle'.
 
     Returns
     -------
@@ -2575,9 +2539,10 @@ def re_from_drain_spacing(sp, pattern = 'Triangle'):
     References
     ----------
     Eta method is described in [1]_.
-    ..[1] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
-          One, Two and Three Dimensions'. Computers and
-          Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
+
+    .. [1] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
+           One, Two and Three Dimensions'. Computers and
+           Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
 
     """
 
@@ -2602,23 +2567,24 @@ def drain_eta(re, mu_function, *args, **kwargs):
     eta = 2 / re**2 / (mu+muw)
 
     eta is used in radial consolidation equations u= u0 * exp(-eta*kh/gamw*t)
+
     Parameters
     ----------
     re : float
-        drain influence radius
+        Drain influence radius.
     mu_function : obj
-        the mu_funtion to use. e.g. mu_ideal, mu_constant, mu_linear,
+        The mu_funtion to use. e.g. mu_ideal, mu_constant, mu_linear,
         mu_overlapping_linear, mu_parabolic, mu_piecewise_constant,
-        mu_piecewise_linear
+        mu_piecewise_linear.
     muw : float, optional
-        well resistance mu term, default=0
+        Well resistance mu term, default=0.
     *args, *kwargs : various
-        the arguments to pass to the mu_function
+        The arguments to pass to the mu_function.
 
     Returns
     -------
     eta : float
-        value of eta parameter
+        Value of eta parameter
 
     Examples
     --------
@@ -2642,40 +2608,40 @@ def back_calc_drain_spacing_from_eta(eta, pattern, mu_function, rw, s, kap, muw=
 
     eta is used in radial consolidation equations u= u0 * exp(-eta*kh/gamw*t)
 
+
     Parameters
     ----------
     eta : float
-        eta value
+        eta value.
     pattern : ['Triangle', 'Square']
-        drain installation pattern.
+        Drain installation pattern.
     mu_function : obj
-        the mu_funtion to use. e.g. mu_ideal, mu_constant, mu_linear,
+        The mu_funtion to use. e.g. mu_ideal, mu_constant, mu_linear,
         mu_overlapping_linear, mu_parabolic, mu_piecewise_constant,
-        mu_piecewise_linear
+        mu_piecewise_linear.
     rw : float
-        drain/well radius
+        Drain/well radius.
     s : float or 1d array_like of float
-        ratio of smear zone radius to drain radius (rs/rw).  s ican only be
+        Ratio of smear zone radius to drain radius (rs/rw).  s can only be
         a 1d array is using a mu_piecewise function
     kap : float or 1d array_like of float
-        ratio of undisturbed horizontal permeability to permeability at
+        Ratio of undisturbed horizontal permeability to permeability at
         in smear zone (kh / ks) (often at the drain-soil interface).  Be
         careful when defining s and kap for mu_piecewise_constant, and
         mu_piecewise_linear because the last value of kap will be used at
         the influence drain periphery.  In general the last value of kap
         should be one, representing the start of the undisturbed zone.
     muw : float, optional
-        well resistance mu term, default=0
-
+        Well resistance mu term, default=0.
 
     Returns
     -------
     sp : float
-        drain spacing to get the required eta value
+        Drain spacing to get the required eta value
     re : float
-        drain influence radius
+        Drain influence radius
     n : float
-        ratio of drain influence radius to drain radius, re/rw
+        Ratio of drain influence radius to drain radius, re/rw
 
     Notes
     -----
@@ -2684,6 +2650,8 @@ def back_calc_drain_spacing_from_eta(eta, pattern, mu_function, rw, s, kap, muw=
 
     For anyting other than mu_overlapping_linear do not trust any returned
     spacing that gives an n value less than the extent of the smear zone.
+
+
     """
 
     def calc_eta(sp, eta, rw, s, kap, mu_function, pattern, muw=0):
@@ -2736,50 +2704,11 @@ def back_calc_drain_spacing_from_eta(eta, pattern, mu_function, rw, s, kap, muw=
 
 
 
-class VerticalDrainSmearZone(object):
-    """Smear zone around a vertical drain
 
-    Optional keyword arguments:
-
-          ============   =========================================
-          Keyword        Description
-          ============   =========================================
-          *style*        [ 'sci' (or 'scientific') | 'plain' ]
-                         plain turns off scientific notation
-          *scilimits*    (m, n), pair of integers; if *style*
-                         is 'sci', scientific notation will
-                         be used for numbers outside the range
-                         10`m`:sup: to 10`n`:sup:.
-                         Use (0,0) to include all numbers.
-          *useOffset*    [True | False | offset]; if True,
-                         the offset will be calculated as needed;
-                         if False, no offset will be used; if a
-                         numeric offset is specified, it will be
-                         used.
-          *axis*         [ 'x' | 'y' | 'both' ]
-          *useLocale*    If True, format the number according to
-                         the current locale.  This affects things
-                         such as the character used for the
-                         decimal separator.  If False, use
-                         C-style (English) formatting.  The
-                         default setting is controlled by the
-                         axes.formatter.use_locale rcparam.
-          ============   =========================================
-
-    """
-
-
-    def __init__(self, **kwargs):
-        pass
 
 
 
 ########################################################################
-import unittest
-from numpy.testing import assert_allclose
-import nose
-from nose.tools.trivial import assert_raises
-from nose.tools.trivial import ok_
 
 
 
@@ -2793,6 +2722,10 @@ def scratch():
 
 
 if __name__ == '__main__':
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+
+
 
     eta = 5
     pattern = 't'
@@ -2923,11 +2856,8 @@ if __name__ == '__main__':
     print(k_parabolic(30, 5, 2, [1, 1.13559322]))
     k_parabolic(20,1,2,[4,6,7])
 #    mu_linear()
-    #    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
 #    print(mu_ideal(0.5))
 #    print(mu_linear(np.array([50,100]),
 #                      np.array([10,20]),
 #                      np.array([5,3])))
-    mu_ideal()
