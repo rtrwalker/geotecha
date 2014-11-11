@@ -15,14 +15,14 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for Zhu and Yin 2012
+Zhu and Yin (2012) "Analysis and mathematical solutions for consolidation
+of a soil layer with depth-dependent parameters under confined compression".
 
 """
 from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
-#import geotecha.inputoutput.inputoutput as inputoutput
 import math
 import textwrap
 import scipy.special
@@ -37,58 +37,77 @@ bessely = scipy.special.yv
 
 def zhuandyin2012(z, t, alpha, p, q, drn=0, tpor=None, H = 1, kv0 = 1, mv0 = 0.1, gamw = 10,
                 ui = 1, nterms = 20, plot_eigs=False):
-    """Single layer consolidation with depth dependant properties
+    """Analysis and mathematical solutions for consolidation of a soil layer
+    with depth-dependent parameters under confined compression.
+
+    An implementation of Zhu and Yin (2012) [1]_.
+
+    Features:
+
+     - Single layer.
+     - Permeability and volume compressibility can vary with depth with a
+       power lay relationship.
+     - Instant load uniform with depth.
+     - PTIB ansd PTPB drainage conditions.
+     - Pore pressure vs depth at variaous times
+     - Degree of consolidation based on surface settlement vs time.
+     - Settlement vs time.
+
 
     Parameters
     ----------
     z : float or 1d array/list of float
-        depth
+        Depth.
     t : float or 1d array/list of float
-        time for degree of consolidation calcs
+        Time for degree of consolidation calcs.
     tpor : float or 1d array/list of float
-        time for pore pressure vs depth calcs
+        Time for pore pressure vs depth calcs.
     alpha, p, q : float
-        exponent in depth dependence of permeability and compressibility
+        Exponent in depth dependence of permeability and compressibility
         respectively. e.g. mv = mv0 * (1+alpha*z/H)**q. Note  p/q cannot be
         2; alpha cannot be zero.
     drn : [0,1], optional
-        drainage. drn=0 is pervious top pervious bottom.  drn=1 is pervious
-        bottom, impervious bottom.  default drn=0
+        Drainage. drn=0 is pervious top pervious bottom.  drn=1 is pervious
+        bottom, impervious bottom.  default drn=0.
     tpor : float or 1d array/list of float, optional
-        time values for pore pressure vs depth calcs.  default = None i.e.
+        Time values for pore pressure vs depth calcs.  Default tpor=None i.e.
         time values will be taken from `t`.
     H : float, optional
-        drainage path length.  default H = 1
+        Drainage path length.  default H=1.
     kv0 : float, optional
-        vertical coefficient of permeability.  default kv = 1
+        Vertical coefficient of permeability.  Default kv=1.
     mv0 : float, optional
-        volume compressibility. default mv = 0.1
+        Volume compressibility. Default mv=0.1.
     gamw : float, optional
-        unit weight of water.  defaule gamw = 10
+        Unit weight of water. Default gamw=10.
     ui : float, optional
-        initial uniform pore water pressure.  default ui = 1
+        Initial uniform pore water pressure. Default ui=1.
     nterms : int, optional
-        maximum number of series terms. default nterms= 20
+        maximum number of series terms. default nterms=20.
     plot_eigs : True/False, optional
-        if True then a plot of the characteristic curve and associated
-        eigenvalues will be created.  use plt.show after runnning the program
+        If True then a plot of the characteristic curve and associated
+        eigenvalues will be created.  Use plt.show after runnning the program
         to display the curve.  Use this to assess if the eigenvalues are
-        correct.  Default = False
+        correct.  Default plot_eigs=False.
+
+
     Returns
     -------
-    por: 2d array of float
-        pore pressure at depth and time.  ppress is an array of size
+    por : 2d array of float
+        Pore pressure at depth and time.  ppress is an array of size
         (len(z), len(t)).
-    doc: 1d array of float
-        degree of consolidation based on surface settlement.
+    doc : 1d array of float
+        Degree of consolidation based on surface settlement.
     settlement : 1d array of float
-        surface settlement
+        Surface settlement at time values
+
 
     Notes
     -----
 
     kv = kv0 * (1+alp*z/H)**p
     mv = mv0 * (1+alp*z/H)**q
+
 
     References
     ----------

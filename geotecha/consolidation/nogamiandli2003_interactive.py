@@ -17,7 +17,12 @@
 """
 This is really just way to interactively run a nomagimandli2003 analysis
 without polluting the the if __name__ == '__main__' area of
-geotecha.consolidation.nogamiandli2003
+the nogamiandli2003 module.
+
+
+See Also
+--------
+geotecha.consolidation.nogamiandli2003.NogamiAndLi2003 : calculations
 
 """
 from __future__ import division, print_function

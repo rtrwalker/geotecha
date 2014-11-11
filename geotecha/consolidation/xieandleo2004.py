@@ -15,25 +15,11 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-Module implementing
-
-
-
-Module implementing 'Analytical Solutions of
-       One-Dimensional Large Strain Consolidation of Saturated and
-       Homogeneous Clays' as per Xie and Leo (2004)[1]_.
-
-References
-----------
-.. [1] Xie, K. H., and C. J. Leo. 2004. 'Analytical Solutions of
-       One-Dimensional Large Strain Consolidation of Saturated and
-       Homogeneous Clays'. Computers and Geotechnics 31 (4): 301-14.
-       doi:10.1016/j.compgeo.2004.02.006.
-
-
-
+Xie and Leo (2004) "Analytical solutions of one-dimensional large strain
+consolidation of saturated and homogeneous clays".
 
 """
+
 from __future__ import print_function, division
 
 import numpy as np
@@ -45,41 +31,73 @@ import scipy.integrate as integrate
 class XieAndLeo2004(object):
     """Large strain analytical one-dimensional consolidation
 
+    Implementation of Xie and Leo (2004)[1]_.
+
+    Features:
+
+     - Single layer, vertical flow.
+     - Large strain.
+     - Instant applied load uniform with depth
+     - Vert permeability kv = (1+e)**2/(1+e0)**2
+     - Large strain volume compressibility is constant over time
+     -
+
+
     Parameters
     ----------
     qp : float
-        existing load
+        Existing load.
     qp : float
-        instant applied load
+        Instant applied load.
     H : float
-        initial thickness of clay layer
+        Initial thickness of clay layer.
     Hw : float
-        Height of water surface above initial surface
+        Height of water surface above initial surface.
     kv0 : float
-        coefficient of vertical permeability
+        Coefficient of vertical permeability.
     mvl : float
-        coefficeint of volume compressibility
+        Coefficient of volume compressibility.
     e00 : float
-        initial void ratio at surface
+        Initial void ratio at surface.
     Gs : float
-        specific gravity of solids
+        Specific gravity of solids.
     gamw : float, optional
-        unit weight of water. default gamw=10
+        Unit weight of water. Default gamw=10
     drn : [0,1]
-        drainage condition.  drn=0 is PTPB, drn=1 is PTIB, default=0
+        Drainage condition.  drn=0 is PTPB, drn=1 is PTIB, default=0.
     nterms : int, optional
-        number of summation terms. default nterms=100
+        Number of summation terms. Default nterms=100.
+
 
 
     Notes
     -----
     Basically initialize the XieAndLeo2004 object, then use individual methods
-    of the data to extract data at particualr dpths and times.
+    of the data to extract data at particualr depths and times.
+
 
     The most common error is if input data is not numpy arrays.
 
+
+    See Also
+    --------
+    xie_and_leo2004_figure_4 : example of use.
+    xie_and_leo2004_figure_5 : example of use.
+    xie_and_leo2004_figure_6 : example of use.
+
+
+    References
+    ----------
+    .. [1] Xie, K. H., and C. J. Leo. "Analytical Solutions of
+           One-Dimensional Large Strain Consolidation of Saturated and
+           Homogeneous Clays". Computers and Geotechnics 31,
+           no. 4 (June 2004): 301-14.
+           doi:10.1016/j.compgeo.2004.02.006.
+
+
     """
-    def __init__(self, qu, qp, H, Hw, kv0, mvl, e00, Gs, gamw=10, drn=0, nterms=100):
+    def __init__(self, qu, qp, H, Hw, kv0, mvl, e00, Gs,
+                 gamw=10, drn=0, nterms=100):
 
         self.qu = qu
         self.qp = qp
@@ -117,7 +135,7 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         t : array-like of float
-            time(s)
+            Time(s).
 
         Returns
         -------
@@ -135,12 +153,12 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
 
         Returns
         -------
         e0 : float
-            initial void ratio at depth a
+            Initial void ratio at depth a.
 
         """
 
@@ -149,17 +167,17 @@ class XieAndLeo2004(object):
         return e0
 
     def efinal(self, a):
-        """final void ration ratio at depth
+        """Final void ration ratio at depth
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
 
         Returns
         -------
         efinal : float
-            final void ratio at depth a
+            Final void ratio at depth a.
 
         """
 
@@ -173,21 +191,21 @@ class XieAndLeo2004(object):
         return efinal
 
     def settlement_final(self):
-        """final settlement of clay layer"""
+        """Final settlement of clay layer"""
         return self.H * (1 - np.exp(-self.mvl * self.qu))
 
     def initial_effective_stress(self, a):
-        """initial effective stress
+        """Initial effective stress
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord
 
         Returns
         -------
         eff0 : float
-            initial effective stress at depth a
+            Initial effective stress at depth a
 
         """
 
@@ -203,19 +221,19 @@ class XieAndLeo2004(object):
 
 
     def u_PTIB(self, a, t):
-        """pore pressure for PTIB drainage
+        """Pore pressure for PTIB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         u : float of size (len(a), len(t))
-            excess pore pressure at depth a, time t
+            Excess pore pressure at depth a, time t.
 
         """
 #        a = np.atleast_1d(a)
@@ -236,19 +254,19 @@ class XieAndLeo2004(object):
 
         return f
     def u_PTPB(self, a, t):
-        """pore pressure for PTPB drainage
+        """Pore pressure for PTPB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         u : float of size (len(a), len(t))
-            excess pore pressure at depth a, time t
+            Excess pore pressure at depth a, time t.
 
         """
 
@@ -269,19 +287,19 @@ class XieAndLeo2004(object):
         return f
 
     def settlement_PTIB(self, a, t):
-        """settlement for PTIB drainage
+        """Settlement for PTIB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         settlement : float of size (len(a), len(t))
-            settlement at depth a, time t
+            Settlement at depth a, time t.
 
         """
 
@@ -302,19 +320,19 @@ class XieAndLeo2004(object):
         return f
 
     def settlement_PTPB(self, a, t):
-        """settlement for PTPB drainage
+        """Settlement for PTPB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         settlement : float of size (len(a), len(t))
-            settlement at depth a, time t
+            Settlement at depth a, time t.
 
         """
 
@@ -340,12 +358,12 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         Us : array of float of size len(t)
-            settlement degree of consolidation at time t
+            Settlement degree of consolidation at time t
 
         """
 
@@ -368,12 +386,12 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         Us : array of float of size len(t)
-            settlement degree of consolidation at time t
+            Settlement degree of consolidation at time t.
 
         """
 
@@ -398,12 +416,12 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         Up : array of float of size len(t)
-            pore pressure average degree of consolidation at time t
+            Pore pressure average degree of consolidation at time t/
 
         """
 
@@ -430,12 +448,12 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         Up : array of float of size len(t)
-            pore pressure average degree of consolidation at time t
+            Pore pressure average degree of consolidation at time t.
 
         """
 
@@ -463,14 +481,14 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         effective_stress : float of size (len(a), len(t))
-            effective stress at depth a, time t
+            Effective stress at depth a, time t.
 
         """
 
@@ -487,14 +505,14 @@ class XieAndLeo2004(object):
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         effective_stress : float of size (len(a), len(t))
-            effective stress at depth a, time t
+            Effective stress at depth a, time t.
 
         """
 
@@ -506,19 +524,19 @@ class XieAndLeo2004(object):
         return sig_
 
     def total_stress_PTIB(self, a, t):
-        """total stress for PTIB drainage
+        """Total stress for PTIB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         total_stress : float of size (len(a), len(t))
-            total stress at depth a, time t
+            Total stress at depth a, time t.
 
         """
         gamw = self.gamw
@@ -533,19 +551,19 @@ class XieAndLeo2004(object):
         return sig
 
     def total_stress_PTPB(self, a, t):
-        """total stress for PTPB drainage
+        """Total stress for PTPB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         total_stress : float of size (len(a), len(t))
-            total stress at depth a, time t
+            Total stress at depth a, time t.
 
         """
         gamw = self.gamw
@@ -560,19 +578,19 @@ class XieAndLeo2004(object):
         return sig
 
     def total_pore_pressure_PTIB(self, a, t):
-        """total pore pressure for PTIB drainage
+        """Total pore pressure for PTIB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         total_pore_pressure : float of size (len(a), len(t))
-            total pore pressure at depth a, time t
+            Total pore pressure at depth a, time t.
 
         """
 
@@ -587,19 +605,19 @@ class XieAndLeo2004(object):
         return p
 
     def total_pore_pressure_PTPB(self, a, t):
-        """total pore pressure for PTPB drainage
+        """Total pore pressure for PTPB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         total_pore_pressure : float of size (len(a), len(t))
-            total pore pressure at depth a, time t
+            Total pore pressure at depth a, time t.
 
         """
 
@@ -614,19 +632,19 @@ class XieAndLeo2004(object):
         return p
 
     def e_PTIB(self, a, t):
-        """void ration for PTIB drainage
+        """Void ration for PTIB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         e : float of size (len(a), len(t))
-            void ration at depth a, time t
+            Void ration at depth a, time t.
 
         """
 
@@ -646,19 +664,19 @@ class XieAndLeo2004(object):
         return f
 
     def e_PTPB(self, a, t):
-        """void ration for PTPB drainage
+        """Void ration for PTPB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         e : float of size (len(a), len(t))
-            void ration at depth a, time t
+            Void ration at depth a, time t.
 
         """
 
@@ -678,19 +696,19 @@ class XieAndLeo2004(object):
         return f
 
     def vs_PTIB(self, a, t):
-        """velocity of soil particles for PTIB drainage
+        """Velocity of soil particles for PTIB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         vs : float of size (len(a), len(t))
-            velocity of soil particles at depth a, time t
+            Velocity of soil particles at depth a, time t.
 
         """
 
@@ -711,19 +729,19 @@ class XieAndLeo2004(object):
         return f
 
     def vs_PTPB(self, a, t):
-        """velocity of soil particles for PTPB drainage
+        """Velocity of soil particles for PTPB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         vs : float of size (len(a), len(t))
-            velocity of soil particles at depth a, time t
+            Velocity of soil particles at depth a, time t.
 
         """
 
@@ -744,19 +762,19 @@ class XieAndLeo2004(object):
         return f
 
     def vw_PTIB(self, a, t):
-        """velocity of fluid for PTIB drainage
+        """Velocity of fluid for PTIB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         vw : float of size (len(a), len(t))
-            velocity of fluid at depth a, time t
+            Velocity of fluid at depth a, time t.
 
         """
 
@@ -780,19 +798,19 @@ class XieAndLeo2004(object):
         return f
 
     def vw_PTPB(self, a, t):
-        """velocity of fluid for PTPB drainage
+        """Velocity of fluid for PTPB drainage
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         vw : float of size (len(a), len(t))
-            velocity of fluid at depth a, time t
+            Velocity of fluid at depth a, time t.
 
         """
 
@@ -825,19 +843,19 @@ class XieAndLeo2004(object):
         return f1-f2
 
     def xi_PTIB(self, a,t):
-        """convectove cordinate from lagrange coordinate
+        """Convectove cordinate from Lagrange coordinate
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         xi : float of size (len(a), len(t))
-            convective coordinate at depth a, time t
+            Convective coordinate at depth a, time t.
 
         """
 
@@ -847,19 +865,19 @@ class XieAndLeo2004(object):
         return f
 
     def xi_PTPB(self, a,t):
-        """convectove cordinate from lagrange coordinate
+        """Convectove cordinate from lagrange coordinate
 
         Parameters
         ----------
         a : array like of float
-            depth coord
+            Depth coord.
         t : array like of float
-            time coord
+            Time coord.
 
         Returns
         -------
         xi : float of size (len(a), len(t))
-            convective coordinate at depth a, time t
+            Convective coordinate at depth a, time t.
 
         """
 
@@ -870,6 +888,23 @@ class XieAndLeo2004(object):
 
 
     def plot_all(self, a=None, t=None, figsize=(15,10)):
+        """produce generic plots of all analysis variables
+
+        Parameters
+        ----------
+        a : array like of float
+            Depth coord.
+        t : array like of float
+            Time coord.
+        figsize : 2-element tuple, optional
+            Width and height of figure in inches.  Default figsize=(15, 10)
+
+        Returns
+        -------
+        fig : matplotlib.Figure
+            figure with all properties.
+
+        """
 
         if self.drn==1:
             u_ = self.u_PTIB
@@ -1055,18 +1090,18 @@ class XieAndLeo2004(object):
 
 
     def t_from_Us_PTIB(self, Us):
-        """ back calculate t from Us
+        """Back calc t from specified settlement doc for PTIB
 
         Parameters
         ----------
         Us : 1d array
-            values of degree of consolidation by settlement to calc the t at
+            Values of degree of consolidation by settlement to calc the t at.
 
 
         Returns
         -------
         t : 1d array
-            times coresponding to Us
+            Times coresponding to Us.
 
         """
 
@@ -1079,18 +1114,18 @@ class XieAndLeo2004(object):
 
         return t
     def t_from_Us_PTPB(self, Us):
-        """ back calculate t from Us
+        """Back calc t from specified settlement doc for PTPB
 
         Parameters
         ----------
         Us : 1d array
-            values of degree of consolidation by settlement to calc the t at
+            Values of degree of consolidation by settlement to calc the t at.
 
 
         Returns
         -------
         t : 1d array
-            times coresponding to Us
+            Times coresponding to Us.
 
         """
 
@@ -1104,13 +1139,15 @@ class XieAndLeo2004(object):
 
 
 def xie_and_leo_2004_figure_4(ax=None):
-    """reproduce fig 4 from article by Xie and Leo 2004
-    pore pressure vs xi plot for various degrees of consolidation PTIB
+    """Reproduce figure 4 from article by Xie and Leo 2004
+
+    Pore pressure vs xi plot for various degrees of consolidation PTIB
+
 
     Parameters
     ----------
     ax : matplotlib.Axes
-        Axes object to plot on. If ax=None. plt.gca() will be used
+        Axes object to plot on. If ax=None. plt.gca() will be used.
 
     """
 
@@ -1159,13 +1196,15 @@ def xie_and_leo_2004_figure_4(ax=None):
 
 
 def xie_and_leo_2004_figure_5(ax=None):
-    """reproduce fig 5 from article by Xie and Leo 2004
-    pore pressure vs xi plot for various degrees of consolidation PTPB
+    """Reproduce fig 5 from article by Xie and Leo 2004
+
+    Pore pressure vs xi plot for various degrees of consolidation PTPB.
+
 
     Parameters
     ----------
     ax : matplotlib.Axes
-        Axes object to plot on. If ax=None. plt.gca() will be used
+        Axes object to plot on. If ax=None. plt.gca() will be used.
 
     """
 
@@ -1215,13 +1254,15 @@ def xie_and_leo_2004_figure_5(ax=None):
 
 
 def xie_and_leo_2004_figure_6(ax=None):
-    """reproduce fig 6 from article by Xie and Leo 2004
-    settlement vs time and degree of consolidation vs time
+    """Reproduce fig 6 from article by Xie and Leo 2004
+
+    Settlement vs time and degree of consolidation vs time.
+
 
     Parameters
     ----------
     ax : matplotlib.Axes
-        Axes object to plot on. If ax=None. plt.gca() will be used
+        Axes object to plot on. If ax=None. plt.gca() will be used.
 
     """
 
@@ -1324,7 +1365,7 @@ if __name__ == '__main__':
         plt.show()
 
 
-    if 1:
+    if 0:
         # plot all
         qu=100
         qp=10

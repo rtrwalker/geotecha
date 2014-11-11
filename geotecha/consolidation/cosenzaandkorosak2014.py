@@ -15,14 +15,14 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for Cosenza and Korosak 2014
+Cosenza and Korosak (2014) "Secondary Consolidation of Clay as
+an Anomalous Diffusion Process".
 
 """
 from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
-#import geotecha.inputoutput.inputoutput as inputoutput
 import math
 import textwrap
 
@@ -71,46 +71,59 @@ def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
 
 def cosenzaandkorosak2014(z, t, theta, v, tpor=None, L = 1, kv = 1, mv = 0.1, gamw = 10,
                 ui = 1, nterms = 100):
-    """Terzaghi 1d consolidation
+    """Secondary consolidation of Clay as an anomalous diffusion process
+
+    An implementation of [1]_.
+
+    Features:
+
+     - Single layer, soil properties constant over time.
+     - Instant load uniform with depth.
+     - Vertical flow.
+     - Similar to Terzaghi 1d consolidation equation but with additional
+       fractional time derivative that retards pore pressure dissipation
+       as a possible creep mechanism.
+     - Uses Laplace transform in solution.
+
 
     Parameters
     ----------
     z : float or 1d array/list of float
-        depth
+        Depth.
     t : float or 1d array/list of float
-        time
+        Time.
     theta : float or array/list of float
-        parameter in cosenzaandkorosak2014
+        Parameter in [1]_.
     v : float or array/list of float
-        parameter in cosenzaandkorosak2014
+        Parameter in [1]_.
     tpor : float or 1d array/list of float
-        time values for pore pressure vs depth calcs
+        Time values for pore pressure vs depth calcs.
     L : float, optional
-        drainage path length.  default H = 1
+        Drainage path length.  Default H = 1.
     kv : float, optional
-        vertical coefficient of permeability.  default kv = 1
+        Vertical coefficient of permeability.  Default kv = 1.
     mv : float, optional
-        volume compressibility. default mv = 0.1
+        Volume compressibility.  Default mv = 0.1.
     gamw : float, optional
-        unit weight of water.  defaule gamw = 10
+        Unit weight of water.  defaule gamw = 10.
     ui : float, optional
-        initial uniform pore water pressure.  default ui = 1
+        Initial uniform pore water pressure.  Default ui = 1.
     nterms : int, optional
-        maximum number of series terms. default nterms= 100
+        Maximum number of series terms.  Default nterms= 100.
 
     Returns
     -------
     por: 2d array of float
-        pore pressure at depth and time.  ppress is an array of size
+        Pore pressure at depth and time.  ppress is an array of size
         (len(z), len(t)).
     avp: 1d array of float
-        average pore pressure between depth H and depth Z
+        Average pore pressure between depth H and depth Z.
     settlement : 1d array of float
-        surface settlement at depth z
+        Surface settlement at depth z.
 
     Notes
     -----
-    The article Cosenza and Korosak 2014 only has singel values of theta-v.
+    The article [1]_ only has single values of `theta` and `v`.
     Here I've simply added more.
 
     References

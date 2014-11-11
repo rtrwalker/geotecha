@@ -29,7 +29,7 @@ from math import pi
 import numpy as np
 import textwrap
 import matplotlib.pyplot as plt
-from geotecha.consolidation.dengetal2013 import dengetal2013
+from geotecha.consolidation.dengetal2013and2014 import dengetal2013
 
 class test_dengetal2013(unittest.TestCase):
 

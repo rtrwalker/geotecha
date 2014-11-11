@@ -14,38 +14,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""
-Module implementing 'Consolidation Theory
-       for a Composite Foundation Considering Radial and Vertical Flows
-       within the Column and the Variation of Soil Permeability within the
-       Disturbed Soil Zone' as per Lu et al (2010)[1]_.
-
-References
-----------
-.. [1] Lu, Meng-Meng, Kang-He Xie, and Biao Guo. 2010. 'Consolidation Theory
-       for a Composite Foundation Considering Radial and Vertical Flows
-       within the Column and the Variation of Soil Permeability within the
-       Disturbed Soil Zone'. Canadian Geotechnical Journal 47 (2):
-       207-17. doi:10.1139/T09-086.
-
-
-
+"""Lu et al (2010) "Composite foundation considering radial and vertical flows
+within the column and the variation of soil permeability within the
+disturbed soil zone".
 
 """
 from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
-#import cmath
-import math
-#import scipy
-#from scipy.integrate import quad
 import geotecha.consolidation.smear_zones as smear_zones
 
-def luetal2010(z,t, rc, re, H=1, rs=None, ks=None,
-                 kv=1.0, kvc=1.0, kh=1.0, khc=1.0,
-                 mvs=0.1, mvc=0.1, gamw=10, utop=1, ubot=1, nterms=100):
-    """stone column consolidation
+def luetal2010(z, t, rc, re, H=1, rs=None, ks=None,
+               kv=1.0, kvc=1.0, kh=1.0, khc=1.0,
+               mvs=0.1, mvc=0.1, gamw=10, utop=1, ubot=1, nterms=100):
+    """Composite foundation considering radial and vert flows in the column
+
+    An implementation of [1]_.
+
+    Features:
+
+     - Single layer, soil properties constant over time.
+     - Instant load linear with depth.
+     - Vertical and radial flow in in soil
+     - Vertical and radial flow in drain/column
+     - Different stiffness in column and soil
+     - Pore pressure in soil, column and averaged at depth
+     - Average pore pressure over whole profile vs time
+     - Settlement of whole profile vs time
+
 
     Average excess pore pressure in soil, column, and overall
     at specified depth and time.
@@ -54,44 +51,44 @@ def luetal2010(z,t, rc, re, H=1, rs=None, ks=None,
     Parameters
     ----------
     z : float or 1d array/list of float
-        depth
+        Depth.
     t : float or 1d array/list of float
-        time
+        Time.
     rc : float
-        drain radius
+        Drain radius
     re : float
-        drain influence radius
+        Drain influence radius.
     H : float, optional
-        drainage path length.  default H = 1
+        Drainage path length.  Default H=1.
     rs : float, optional
-        drain influence radius, default=None i.e. no smear zone
+        Drain influence radius.  Default rs=None i.e. no smear zone.
     ks : float, optional
-        smear zone permeability, default = None, i.e. no smear zone
+        Smear zone permeability. Default ks=None, i.e. no smear zone.
     kv, kvc : float, optional
-        vertical coefficient of permeability in soil and column.
-        default kv= kvc = 1
+        Vertical coefficient of permeability in soil and column.
+        Default kv= kvc = 1
     kh, khc : float, optional
-        horizontal coefficient of permeability in soil and column.
+        Horizontal coefficient of permeability in soil and column.
         default kh = khc = 1
     mvs, mvc : float, optional
-        volume compressibility in soil and column. default mvs = mvc = 0.1
+        Volume compressibility in soil and column. default mvs=mvc=0.1.
     gamw : float, optional
-        unit weight of water.  default gamw = 10
+        Unit weight of water.  Default gamw=10.
     utop, ubot : float, optional
-        initial pore water pressure at top and bottom of soil.
-        default utop = ubot = 1
+        Initial pore water pressure at top and bottom of soil.
+        Default utop=ubot=1.
     nterms : int, optional
-        number of terms to use in solution. default = 100
+        number of terms to use in solution. Default=100.
 
     Returns
     -------
     por, pors, porc : 2d array of float
-        pore pressure at depth and time overall, in soil, in column.
+        Pore pressure at depth and time overall, in soil, in column.
         por is an array of size (len(z), len(t)).
     avp : 2d array of float
-        average overall pore pressure of whole soil profile.
+        Average overall pore pressure of whole soil profile.
     settle : 2d array of float
-        settlement of whole layer
+        Settlement of whole layer.
 
     References
     ----------

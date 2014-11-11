@@ -14,9 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""\
-Deng et al. (2013) and (2014), 'Consolidation by vertical drains when
-the discharge capacity varies with depth and time'
+"""
+Deng et al (2013) and (2014), "Consolidation by vertical drains when
+the discharge capacity varies with depth and time".
 
 """
 from __future__ import print_function, division
@@ -30,9 +30,20 @@ def dengetal2013(z, t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
                  kw0=1e10, kh=1, mv=0.1, gamw=10, ui=1):
     """Radial consolidation with depth and time dependent well resistance
 
-    Average excess pore pressure at specified depth and time
+    Implementation of [1]_.
 
-    kw = kw0 * (A1 - A2 * z / H) * exp(-A3 * t)
+    Features:
+
+     - Radial flow to drain (no vertical flow in soil)
+     - Vertical flow in drain.
+     - Linear depth variation of drain permeability in time.
+     - Exponential decrease in drain peremability with time.
+     - Uses approximate (like Hansbo) method to solve pore pressure in drain.
+     - Radially averaged pore pressure at depth and time in soil.
+
+
+
+    Drain pereability is kw = kw0 * (A1 - A2 * z / H) * exp(-A3 * t)
 
 
     Parameters
@@ -147,12 +158,20 @@ def dengetal2013(z, t, rw, re, A1=1, A2=0, A3=0, H=1, rs=None, ks=None,
 
 def dengetal2014(z, t, rw, re, A3=0, H=1, rs=None, ks=None,
                  kw0=1e10, kh=1, mv=0.1, gamw=10, ui=1, nterms=100):
-    """Radial consolidation with  time dependent well resistance
+    """Radial consolidation with time dependent well resistance
 
     An implementation of [1]_
 
-    Radially Average excess pore pressure at specified depth and time
-    This is the rigorous formulation, i.e. infinite sum.
+    Features:
+
+     - Single layer, soil properties constant over time.
+     - Instant load uniform with depth.
+     - Radial flow to drain (no vertical flow in soil)
+     - Vertical flow in drain.
+     - Exponential decrease in drain peremability with time.
+     - Uses rigorous (infintite sum ) method to solve pore pressure in drain.
+     - Radially averaged pore pressure at depth and time in soil.
+
 
     Drain permeability is kw = kw0 * exp(-A3 * t)
 

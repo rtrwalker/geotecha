@@ -15,16 +15,9 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-Module implementing 'Exact solutions for one-dimensional consolidation of
-single-layer unsaturated soil' as per Shan et al (2012)[1]_.
+Shan et al (2012) "Exact solutions for one-dimensional consolidation of
+single-layer unsaturated soil".
 
-References
-----------
-.. [1] Shan, Zhendong, Daosheng Ling, and Haojiang Ding. 2012. 'Exact
-       Solutions for One-dimensional Consolidation of Single-layer
-       Unsaturated Soil'. International Journal for Numerical and
-       Analytical Methods in Geomechanics 36 (6): 708-22.
-       doi:10.1002/nag.1026.
 
 """
 from __future__ import print_function, division
@@ -34,7 +27,7 @@ from matplotlib import pyplot as plt
 import sympy
 
 def _integral_for_homogenous_case_linear_initial_condition():
-    """equ 52 from shan et al 2012"""
+    """equ 52 from shan et al 2012 for depth-linear initial conditon"""
     z, H, M, utop, ubot = sympy.symbols('z, H, M, utop, ubot')
 
 
@@ -128,14 +121,28 @@ def shanetal2012(z, t, H, Cw, Cvw, Ca, Cva, drn=1, Csw=0, Csa=0,
                  f=None, f1=None, f2=None, f3=None, f4=None):
     """1D unsaturated consolidation
 
+    Features:
+
+     - Unsaturated soil.
+     - Vertical flow.
+     - Soil properties constant with time.
+     - Initial pore pressure distribution is linear with depth.
+       Load is uniform with depth but can be sinusoidal with time,
+       or exponential with time.
+     - Drainage boundaries in air and water phase can be pervious, impervious
+       or piecewise linear with time or sinusoidal with time or exponential
+       with time.
+     - Pore pressure vs depth in air and water at various times.
+
+
     Parameters
     ----------
     z : float or 1d array/list of float
-        depth
+        Depth values for output.
     t : float or 1d array/list of float
-        time
+        Time values for output
     H : float
-        drainage path length.
+        Drainage path length.
     Cw : float
         Cw = (1 - (m2w/m1kw)) / (m2w - m1kw)
     Cvw : float
@@ -152,24 +159,24 @@ def shanetal2012(z, t, H, Cw, Cvw, Ca, Cva, drn=1, Csw=0, Csa=0,
         dissipates during consolidation ua_ can be considered a constant;
         so let ua_=uatm
     drn : int, optional
-        drainage condition. drn=0 is PTPB, drn=1 is PTIB.  default=1
+        Drainage condition. drn=0 is PTPB, drn=1 is PTIB.  Default drn=1.
     Csw : float, optional
-        Csw = m1kw/m2w    default=0
+        Csw = m1kw/m2w    default=0.
     Csa : float, optional
         Csa = (m2a/m1ka) / (1 - m2a/m1ka - n(1-S)/(ua_*m1ka)) default=0,
 
     uwi : 2-element tuple, optioanl
-        initial pore water pressure at top and bottom of soil.  Initial pore
+        Initial pore water pressure at top and bottom of soil.  Initial pore
         water pressure within soil is assumed to vary linearly between the
-        top and bottom values. default = (0,0)
+        top and bottom values. Default uwi=(0,0).
     uai : 2-element tuple, optioanl
-        initial pore air pressure at top and bottom of soil.  Initial pore
+        Initial pore air pressure at top and bottom of soil.  Initial pore
         air pressure within soil is assumed to vary linearly between the
-        top and bottom values. default = (0,0)
+        top and bottom values. Default uai=(0,0).
     nterms : int, optional
-        number of terms to use in solution. default = 100
+        Number of terms to use in solution. default nterms=100.
     f : dict, optional
-        ditionary describing a loading function. default=None i.e. no load
+        Ditionary describing a loading function. default=None i.e. no load
         e.g.
         f = {'type': 'exp', 'q0': 100, 'b': 0.00005} is a load described by
         q(t) = q0 * exp[-b * t].
@@ -188,6 +195,7 @@ def shanetal2012(z, t, H, Cw, Cvw, Ca, Cva, drn=1, Csw=0, Csa=0,
     porw, pora: 2d array of float
         pore pressure at depth and time in water and air phase
         por is an array of size (len(z), len(t)).
+
 
     References
     ----------

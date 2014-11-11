@@ -15,13 +15,8 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-Module implementing 'Consolidation of Clay with a System of Vertical and
-Horizontal Drains' as per Nogami and Li (2003)[1]_.
-
-References
-----------
-.. [1] Nogami, Toyoaki, and Maoxin Li. (2003). 'Consolidation of Clay with a System of Vertical and Horizontal Drains'. Journal of Geotechnical and Geoenvironmental Engineering 129 (9): 838-48. doi:10.1061/(ASCE)1090-0241(2003)129:9(838).
-
+Nogami and Li (2003) 'Consolidation of Clay with a System of Vertical and
+Horizontal Drains'.
 
 """
 from __future__ import print_function, division
@@ -29,7 +24,7 @@ from __future__ import print_function, division
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-#from matplotlib import pyplot as plt
+
 import geotecha.inputoutput.inputoutput as inputoutput
 import math
 import textwrap
@@ -48,8 +43,6 @@ bessely = scipy.special.yn
 from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 
 
-
-
 class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
     """Multi-layer vertical and radial consolidation using matrix transfer
 
@@ -64,6 +57,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
     Features:
 
+     - Multiple layers.
      - Vertical flow and radial flow to a central drain (no smear zone).
      - Load is uniform with depth but varies piecewise-linear with time.
      - No assumptions on radial distribution of strain (i.e. NOT equal-strain).
@@ -72,120 +66,149 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
      - Average pore pressure vs time.  Average is over the entire soil layer.
 
 
-    Attributes
+    .. warning::
+        The 'Parameters' and 'Attributes' sections below require further
+        explanation.  The parameters listed below are not used to explicitly
+        initialize the object.  Rather they are defined in either a
+        multi-line string or a file-like object using python syntax.
+        It is the file object or string object that is used to initialize
+        the object.  Each  'parameter' will be turned into an attribute that
+        can be accessed using conventional python dot notation, after the
+        object has been initialised.  The attributes listed below are
+        calculated values (i.e. they could be interpreted as results) which
+        are accessible using dot notation after all calculations are
+        complete.
+
+
+    Parameters
     ----------
     z : list/array of float
-        depth to calc pore pressure at
+        Depth to calc pore pressure at.
     t : list/array of float
-        time values to calc average pore pressure at
+        Time values to calc average pore pressure at.
     tpor : list/array of float
-        time values to calc pore pressure profiles at
+        Time values to calc pore pressure profiles at.
     h : list/array of float
-        layer depths thickness
+        Layer thicknesses.
     nv, nh : tuple of 2 int, optional
-        number of series terms to use in vertical and horizontal direction.
-        default nv=nh=5
+        Number of series terms to use in vertical and horizontal direction.
+        Default nv=nh=5.
     kv, kh : list/array of float
-        layer vertical and horizontal permeability divided by unit weight of
-        water
+        Layer vertical and horizontal permeability divided by unit weight of
+        water.
     mv : list/array of float
-        layer volume compressibility
+        Layer volume compressibility.
     bctop, bcbot : [0, 1]
-        boundary condition. bctop=0 is free draining, bctop=1 is
+        Boundary condition. bctop=0 is free draining, bctop=1 is
         impervious.
     surcharge_vs_time : PolyLine
-        piecewise linear variation of surcharge with time
+        Piecewise linear variation of surcharge with time
     r1, r0 : float optional
-        drain influence zone and drain radius. if either is none then only
+        drain influence zone and drain radius. If either is none then only
         vertical drainage will be considered.
     rcalc : float, optional
-        radial coordinate at whcih to calc pore pressure.  Default = None
-        so pore pressure is averaged in the radial direction.
+        Radial coordinate at which to calc pore pressure.  Default rcalc=None
+        i.e. pore pressure is averaged in the radial direction.
     radial_roots_x0 : float, optional
-        starting point for finding radial eigenvalues, default = 1e-3
+        Starting point for finding radial eigenvalues.
+        Default radial_roots_x0=1e-3.
     radial_roots_dx : float, optional
-        starting increment for finding radial eigenvalues, default= 1e-3
+        Starting increment for finding radial eigenvalues.
+        Default radial_roots_dx=1e-3.
     radial_roots_p : float, optional
-        succesive increment lenght increase factor for finding radial
-        eigenvalues, default = 1.05
+        Succesive increment length increase factor for finding radial
+        eigenvalues. default radial_roots_p=1.05.
     vertical_roots_x0 : float, optional
-        starting point for finding vertical eigenvalues, default = 1e-7
+        Starting point for finding vertical eigenvalues.
+        Default vertical_roots_x0=1e-7.
     vertical_roots_dx : float, optional
-        starting increment for finding vertical eigenvalues, default= 1e-7
+        Starting increment for finding vertical eigenvalues.
+        Default vertical_roots_dx=1e-7.
     vertical_roots_p : float, optional
-        succesive increment lenght increase factor for finding vertical
-        eigenvalues, default = 1.05
+        Succesive increment lenght increase factor for finding vertical
+        eigenvalues.  Default vertical_roots_p=1.05.
     max_iter : int, optional
-        max iterations when searching for eigenvalue intervals. default=10000
-
-
-
+        Max iterations when searching for eigenvalue intervals.
+        Default max_iter=10000
+    show_vert_eigs : True/False, optional
+        If true a vertical eigen value plot will be made.
+        Default show_vert_eigs=False
     plot_properties : dict of dict, optional
         dictionary that overrides some of the plot properties.
         Each member of `plot_properties` will correspond to one of the plots.
+
         ==================  ============================================
         plot_properties    description
         ==================  ============================================
         por                 dict of prop to pass to pore pressure plot.
-        avp                 dict of prop to pass to avergae pore
+        avp                 dict of prop to pass to average pore
                             pressure plot.
         set                 dict of prop to pass to settlement plot.
-        load                dict of prop to pass to pore pressure plot.
-        material            dict of prop to pass to materials plot.
         ==================  ============================================
-        see blah blah blah for what options can be specified in each plot dict.
-
-    save_data_to_file: True/False, optional
-        If True data will be saved to file.  Default=False
-    save_figures_to_file: True/False
-        If True then figures will be saved to file.  default=False
-    show_figures: True/False, optional
+        see geotecha.plotting.one_d.plot_vs_depth and
+        geotecha.plotting.one_d.plot_vs_time for options to specify in
+        each plot dict.
+    save_data_to_file : True/False, optional
+        If True data will be saved to file.  Default save_data_to_file=False
+    save_figures_to_file : True/False
+        If True then figures will be saved to file.
+        Default save_figures_to_file=False
+    show_figures : True/False, optional
         If True the after calculation figures will be shown on screen.
+        Default show_figures=False.
     directory : string, optional
-        path to directory where files should be stored.  Default = None which
+        Path to directory where files should be stored.
+        Default directory=None which
         will use the current working directory.  Note if you keep getting
         directory does not exist errors then try putting an r before the
         string definition. i.e. directory = r'C:\\Users\\...'
     overwrite : True/False, optional
-        If True then exisitng files will be overwritten. default=False.
+        If True then existing files will be overwritten.
+        Default overwrite=False.
     prefix : string, optional
-         filename prefix for all output files default = 'out'
-
-    create_directory: True/Fase, optional
-        If True a new sub-folder named `file_stem` will contain the output
-        files. default=True
-    data_ext: string, optional
-        file extension for data files. default = '.csv'
-    input_ext: string, optional
-        file extension for original and parsed input files. default = ".py"
-    figure_ext: string, optional
-        file extension for figures, default = ".eps".  can be any valid
-        matplotlib option for savefig.
-
+         Filename prefix for all output files.  Default prefix= 'out'
+    create_directory : True/Fase, optional
+        If True a new sub-folder with name based on  `prefix` and an
+        incremented number will contain the output
+        files. Default create_directory=True.
+    data_ext : string, optional
+        File extension for data files. Default data_ext='.csv'
+    input_ext : string, optional
+        File extension for original and parsed input files. default = ".py"
+    figure_ext : string, optional
+        File extension for figures.  Can be any valid matplotlib option for
+        savefig. Default figure_ext=".eps". Others include 'pdf', 'png'.
     title: str, optional
         A title for the input file.  This will appear at the top of data files.
-        Default = None, i.e. no title
+        Default title=None, i.e. no title.
     author: str, optional
-        author of analysis. default= unknown
+        Author of analysis. Default='unknown'.
 
-    show_vert_eigs : True/False, optional
-        if true a vertical eigen value plot will be made.  default= False
 
+    Attributes
+    ----------
     por : array of shape (len(z), len(tpor))
-        pore pressure vs depth at various times.  Only present if tpor defined.
+        Pore pressure vs depth at various times.  Only present if tpor defined.
         If rcalc defined then porepressure will be at r=rcalc.  If rcalc is
         not defined then pore pressure is averaged radially
     avp : array of shape (1, len(t))
-        averge pore pressure of profile various times.  Only present if t
+        Averge pore pressure of profile various times.  Only present if t
         defined. If rcalc defined then pore pressure will be at r=rcalc.
         If rcalc is not defined then pore pressure is averaged radially
     set : array of shape (1, len(t))
-        surface settlement at various times.  Only present if t
+        Surface settlement at various times.  Only present if t
         defined. If rcalc defined then settlement will be at r=rcalc.
-        If rcalc is not defined then settlement is averaged radially.
+        If `rcalc` is not defined then settlement is averaged radially.
+
 
     Notes
     -----
+    It is possbile to initialize the object without a file-like object or
+    multi-line string, i.e. using the default reader=None.  This is not
+    recommended because you have to explicitly set each attribute.  It will
+    most likely be easier to use a string or file object and then do any
+    custom modifications to the attributes afterwards.
+
 
     This program relies on numerical root finding, which can be extremely
     troublesome in for the vertical eigenvalue case here (Mainly because I
@@ -199,7 +222,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         `max_iter` untill the program excecutes.
      3. Does your pore pressure vs depth plots look ok.  If yes, then possibly
         accept the results.  But better to check eigen values in step 4.
-     4. run the method `_plot_vert_roots` with enough points to smoothly
+     4. Run the method `_plot_vert_roots` with enough points to smoothly
         show the characteristic curve.  zoom in on the roots and check if
         all the roots are found (usually the problems occur with leftmost line.
         If not alter `vertical_roots_dx`, `vertical_roots_p` and
@@ -214,6 +237,18 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
     article of Nogami and Li.  Also I could never get the vertical
     normalisation to work.  Also I've done my own normalising for the radial
     part.
+
+    See Also
+    --------
+    geotecha.piecewise.piecewise_linear_1d.PolyLine : how to specify loadings
+
+
+    References
+    ----------
+    .. [1] Nogami, Toyoaki, and Maoxin Li. 'Consolidation of Clay with a
+           System of Vertical and Horizontal Drains'. Journal of
+           Geotechnical and Geoenvironmental Engineering 129, no. 9
+           (2003): 838-48. doi:10.1061/(ASCE)1090-0241(2003)129:9(838).
 
     """
 
@@ -1015,13 +1050,10 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
         fig.tight_layout()
         return fig
 
-#
-#
-
-
 
 
 def main():
+    """Run nogamiandli2003 as script"""
     a = GenericInputFileArgParser(obj=NogamiAndLi2003,
                                   methods=[('make_all', [], {})],
                                  pass_open_file=True)

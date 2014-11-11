@@ -15,64 +15,89 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for Tang and Onitsuka 2000
+Tang and Onitsuka (2000) "Consolidation by vertical drains under
+time-dependent loading".
 
 """
 from __future__ import print_function, division
 
 import numpy as np
 from matplotlib import pyplot as plt
-#import geotecha.inputoutput.inputoutput as inputoutput
-import math
-import textwrap
-import scipy.special
-import geotecha.piecewise.piecewise_linear_1d as pwise
+
+#import math
+#import textwrap
+#import scipy.special
+#import geotecha.piecewise.piecewise_linear_1d as pwise
 
 
 def tangandonitsuka2000(z, t, kv, kh, ks, kw, mv, gamw, rw, rs, re, H,
-                       drn, surcharge_vs_time=((0,0,100.0), (0,1.0,1.0)),
-                       tpor=None, nterms=20):
+                        drn, surcharge_vs_time=((0, 0, 100.0), (0, 1.0, 1.0)),
+                        tpor=None, nterms=20):
+    """Consolidation by vertical drains under time-dependent loading
 
-    """Vertical and radial consolidation with well resistance, ramp loading
+    An implementation of Tang and Onitsuka (2000)[1]_.
+
+    Features:
+
+     - Single layer.
+     - Soil and drain properties constant with time.
+     - Vertical and radial drainage
+     - Well resistance.
+     - Load is uniform with depth but piecewise linear with time.
+     - Radially averaged pore pressure at depth.
+     - Average pore pressure of whole layer vs time.
+     - Settlement of whole layer vs time.
+
 
     Parameters
     ----------
     z : float or 1d array/list of float
-        depth
+        Depth values for output.
     t : float or 1d array/list of float
-        time for degree of consolidation calcs
+        Time for degree of consolidation calcs.
     kv, kh, ks, kw: float
-        vertical, horizontal, smear zone, and drain permeability
-    mv : float, optional
-        volume compressibility
-    gamw : float, optional
-        unit weight of water
+        Vertical, horizontal, smear zone, and drain permeability.
+    mv : float
+        Volume compressibility.
+    gamw : float
+        Unit weight of water.
     rw, rs, re: float
-        drain radius, smear radius, radius of influence
+        Drain radius, smear radius, radius of influence.
     H : float
-        drainage path length.
+        Drainage path length.
     drn : [0,1]
-        drainage. drn=0 is pervious top pervious bottom.  drn=1 is pervious
-        bottom, impervious bottom.
+        Drainage boundary condition. drn=0 is pervious top pervious bottom.
+        drn=1 is perviousbottom, impervious bottom.
     surcharge_vs_time: 2 element tuple or array/list, optional
         (time, magnitude). default = ((0,0,100.0), (0,1.0,1.0)), i.e. instant
         load of magnitude one.
     tpor : float or 1d array/list of float, optional
-        time values for pore pressure vs depth calcs.  default = None i.e.
+        Time values for pore pressure vs depth calcs.  Default tpor=None i.e.
         time values will be taken from `t`.
     nterms : int, optional
-        maximum number of series terms. default nterms= 20
+        Maximum number of series terms.  Default nterms=20
 
 
     Returns
     -------
-    por: 2d array of float
-        pore pressure at depth and time.  ppress is an array of size
+    por : 2d array of float
+        Pore pressure at depth and time.  ppress is an array of size
         (len(z), len(t)).
-    avp: 1d array of float
-        average pore pressure of layer
+    avp : 1d array of float
+        Average pore pressure of layer
     settlement : 1d array of float
         surface settlement
+
+
+    References
+    ----------
+    .. [1] Tang, Xiao-Wu, and Katsutada Onitsuka. 'Consolidation by
+           vertical drains under Time-Dependent Loading'. Int
+           Journal for Numerical and Analytical Methods in
+           Geomechanics 24, no. 9 (2000): 739-51.
+           doi:10.1002/1096-9853(20000810)24:9<739::AID-NAG94>3.0.CO;2-B.
+
+
     """
 
     def F_func(n, s, kap):
@@ -105,7 +130,7 @@ def tangandonitsuka2000(z, t, kv, kh, ks, kw, mv, gamw, rw, rs, re, H,
         loadmag = mag_vs_time.y
         loadtim = mag_vs_time.x
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
-            ramps_containing_t, constants_containing_t) = pwise.segment_containing_also_segments_less_than_xi(loadtim, loadmag, t, steps_or_equal_to = True)
+         ramps_containing_t, constants_containing_t) = (pwise.segment_containing_also_segments_less_than_xi(loadtim, loadmag, t, steps_or_equal_to = True))
 
         exp = math.exp
         Tm=0
@@ -147,7 +172,7 @@ def tangandonitsuka2000(z, t, kv, kh, ks, kw, mv, gamw, rw, rs, re, H,
 
 
     if drn==0:
-        'PTPB'
+        #'PTPB'
         H_ = H/2
 #        z = z / 2
 
@@ -157,7 +182,7 @@ def tangandonitsuka2000(z, t, kv, kh, ks, kw, mv, gamw, rw, rs, re, H,
         z[i]= (H - z[i])
 
     else:
-        'PTIB'
+        #'PTIB'
         H_ = H
 
     surcharge_vs_time = pwise.PolyLine(surcharge_vs_time[0], surcharge_vs_time[1])

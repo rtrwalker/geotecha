@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for Schiffman and Stein 1970 multi layer consolidation
+Schiffman and Stein 1970 "One-Dimensional consolidation of layered systems".
 
 """
 from __future__ import print_function, division
@@ -37,98 +37,142 @@ import geotecha.plotting.one_d
 from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 
 class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
-    """Multi-layer consolidation
+    """One-dimensional consolidation of layered systems
+
+    Implements Schiffman and Stein (1970) [1]_.
+
+    Features:
+
+     - Vertical flow, multiple layers.
+     - Soil properties constant with time.
+     - Drained or Undrained boundary condtions. Also possbile to have
+       stiff high peremability impeding layers at top and bottom.
+     - Load is uniform with depth but varies piecewise-linear with time.
+     - Pore pressure vs depth at various times.
+     - Average pore pressure vs time.  Average is over the entire soil layer.
+     - Settlement vs time.  Settlement is over whole profile.
 
 
-    Attributes
+    .. warning::
+        The 'Parameters' and 'Attributes' sections below require further
+        explanation.  The parameters listed below are not used to explicitly
+        initialize the object.  Rather they are defined in either a
+        multi-line string or a file-like object using python syntax.
+        It is the file object or string object that is used to initialize
+        the object.  Each  'parameter' will be turned into an attribute that
+        can be accessed using conventional python dot notation, after the
+        object has been initialised.  The attributes listed below are
+        calculated values (i.e. they could be interpreted as results) which
+        are accessible using dot notation after all calculations are
+        complete.
+
+
+    Parameters
     ----------
     z : list/array of float
-        depth to calc pore pressure at
+        Depth to calc pore pressure at.
     t : list/array of float
-        time values to calc at
+        Time values to calc time variation of parameters at.
     tpor : list/array of float
-        time values to calc pore pressure profiles at
+        Time values to calc pore pressure profiles at.
     h : list/array of float
-        layer depths thickness
+        Layer thicknesses.
     n : int, optional
-        number of series terms to use. default n=5
+        Number of series terms to use.  Default n=5.
     kv : list/array of float
-        layer vertical permeability divided by unit weight of water
+        Layer vertical permeability divided by unit weight of water.
     mv : list/array of float
-        layer volume compressibility
-    bctop, bcbot : [0, 1, 2]
-        boundary condition. bctop=0 is free draining, bctop=1 is
-        impervious, bctop = impeded.
-    htop, hbot : float
-        thickness of impeding layer.
-    ktop, hbot : float
-        impeding layer vertical permeability divided py unit weight of
-        water
+        Layer volume compressibility.
+    bctop, bcbot : [0, 1, 3]
+        Boundary condition. bctop=0 is free draining, bctop=1 is
+        impervious, bctop=3 is impeded by stiff layer of thickness htop
+        and permeability ktop.
+    htop, hbot : float, optional
+        Thickness of top and bottom impeding layer. Only used if bcbot==3 or
+        bctop==3.
+    ktop, kbot : float, optional
+        Top and bottom impeding layer vertical permeability divided by
+        unit weight of water. Only used if bcbot==3 or bctop==3.
     surcharge_vs_time : PolyLine
-        piecewise linear variation of surcharge with time
-
-
+        Piecewise linear variation of surcharge with time
+    show_vert_eigs : True/False, optional
+        If true a vertical eigen value plot will be made.  This is useful to
+        to chekc if the correct eigenvalues have been found.
+        Default show_vert_eigs=False
     plot_properties : dict of dict, optional
         dictionary that overrides some of the plot properties.
         Each member of `plot_properties` will correspond to one of the plots.
+
         ==================  ============================================
         plot_properties    description
         ==================  ============================================
         por                 dict of prop to pass to pore pressure plot.
-        avp                 dict of prop to pass to avergae pore
+        avp                 dict of prop to pass to average pore
                             pressure plot.
         set                 dict of prop to pass to settlement plot.
-        load                dict of prop to pass to pore pressure plot.
-        material            dict of prop to pass to materials plot.
         ==================  ============================================
-        see blah blah blah for what options can be specified in each plot dict.
-
-    save_data_to_file: True/False, optional
-        If True data will be saved to file.  Default=False
-    save_figures_to_file: True/False
-        If True then figures will be saved to file.  default=False
-    show_figures: True/False, optional
+        see geotecha.plotting.one_d.plot_vs_depth and
+        geotecha.plotting.one_d.plot_vs_time for options to specify in
+        each plot dict.
+    save_data_to_file : True/False, optional
+        If True data will be saved to file.  Default save_data_to_file=False
+    save_figures_to_file : True/False
+        If True then figures will be saved to file.
+        Default save_figures_to_file=False
+    show_figures : True/False, optional
         If True the after calculation figures will be shown on screen.
+        Default show_figures=False.
     directory : string, optional
-        path to directory where files should be stored.  Default = None which
+        Path to directory where files should be stored.
+        Default directory=None which
         will use the current working directory.  Note if you keep getting
         directory does not exist errors then try putting an r before the
         string definition. i.e. directory = r'C:\\Users\\...'
     overwrite : True/False, optional
-        If True then exisitng files will be overwritten. default=False.
+        If True then existing files will be overwritten.
+        Default overwrite=False.
     prefix : string, optional
-         filename prefix for all output files default = 'out'
-
-    create_directory: True/Fase, optional
-        If True a new sub-folder named `file_stem` will contain the output
-        files. default=True
-    data_ext: string, optional
-        file extension for data files. default = '.csv'
-    input_ext: string, optional
-        file extension for original and parsed input files. default = ".py"
-    figure_ext: string, optional
-        file extension for figures, default = ".eps".  can be any valid
-        matplotlib option for savefig.
-
+         Filename prefix for all output files.  Default prefix= 'out'
+    create_directory : True/Fase, optional
+        If True a new sub-folder with name based on  `prefix` and an
+        incremented number will contain the output
+        files. Default create_directory=True.
+    data_ext : string, optional
+        File extension for data files. Default data_ext='.csv'
+    input_ext : string, optional
+        File extension for original and parsed input files. default = ".py"
+    figure_ext : string, optional
+        File extension for figures.  Can be any valid matplotlib option for
+        savefig. Default figure_ext=".eps". Others include 'pdf', 'png'.
     title: str, optional
         A title for the input file.  This will appear at the top of data files.
-        Default = None, i.e. no title
+        Default title=None, i.e. no title.
     author: str, optional
-        author of analysis. default= unknown
+        Author of analysis. Default='unknown'.
 
-    show_vert_eigs : True/False, optional
-        if true a vertical eigen value plot will be made.  default= False
 
+    Attributes
+    ----------
     por : array of shape (len(z), len(tpor))
-        pore pressure vs depth at various times.
+        Pore pressure vs depth at various times.  Only present if tpor defined.
     avp : array of shape (1, len(t))
-        averge pore pressure of profile various times.  Only present if t
-        defined. If rcalc defined then pore pressure will be at r=rcalc.
-        If rcalc is not defined then pore pressure is averaged radially
+        Averge pore pressure of profile various times.  Only present if t
+        defined.
     set : array of shape (1, len(t))
-        surface settlement at various times.  Only present if t
-        defined. If rcalc defined then settlement will be at r=rcalc.
-        If rcalc is not defined then settlement is averaged radially.
+        Surface settlement at various times.  Only present if t
+        defined.
+
+
+    See Also
+    --------
+    geotecha.piecewise.piecewise_linear_1d.PolyLine : how to specify loadings
+
+
+    References
+    ----------
+    .. [1] Schiffman, R. L, and J. R Stein. 'One-Dimensional Consolidation
+           of Layered Systems'. Journal of the Soil Mechanics and
+           Foundations Division 96, no. 4 (1970): 1499-1504.
 
     """
 
@@ -726,6 +770,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
                     self.por[k, j] += Am * Zm * Tm
 
 def main():
+    """Run schiffmanandstein1970 as script"""
     a = GenericInputFileArgParser(obj=SchiffmanAndStein1970,
                                   methods=[('make_all', [], {})],
                                  pass_open_file=True)

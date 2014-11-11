@@ -15,9 +15,9 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-This is really just way to interactively run a nomagimandli2003 analysis
+This is really just way to interactively run a schiffmanandstein1970 analysis
 without polluting the the if __name__ == '__main__' area of
-geotecha.consolidation.nogamiandli2003
+the schiffmanandstein1970 module.
 
 """
 from __future__ import division, print_function
