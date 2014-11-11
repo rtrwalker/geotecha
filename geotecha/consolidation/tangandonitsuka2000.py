@@ -24,10 +24,10 @@ from __future__ import print_function, division
 import numpy as np
 from matplotlib import pyplot as plt
 
-#import math
+import math
 #import textwrap
 #import scipy.special
-#import geotecha.piecewise.piecewise_linear_1d as pwise
+import geotecha.piecewise.piecewise_linear_1d as pwise
 
 
 def tangandonitsuka2000(z, t, kv, kh, ks, kw, mv, gamw, rw, rs, re, H,

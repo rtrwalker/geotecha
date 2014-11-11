@@ -144,10 +144,10 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
     figure_ext : string, optional
         File extension for figures.  Can be any valid matplotlib option for
         savefig. Default figure_ext=".eps". Others include 'pdf', 'png'.
-    title: str, optional
+    title : str, optional
         A title for the input file.  This will appear at the top of data files.
         Default title=None, i.e. no title.
-    author: str, optional
+    author : str, optional
         Author of analysis. Default='unknown'.
 
 
@@ -268,7 +268,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
 
     def produce_plots(self):
-        """produce plots of analysis"""
+        """Produce plots of analysis"""
 
 #        geotecha.plotting.one_d.pleasing_defaults()
 
@@ -356,7 +356,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         return fig_set
 
     def make_all(self):
-
+        """make_output, produce files and plots"""
 
 #        self.check_input_attributes()
         self.make_output()
@@ -512,6 +512,21 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         return beta
 
     def plot_characteristic_curve_and_roots(self, npts=400):
+        """Plot the characteristic curve for the problem showing roots
+
+        Run after an analysis to check if roots are reasonable.
+
+
+        Paramters
+        ---------
+        npts : int
+            Number of points to plot.  Default npts=400.
+
+        Returns
+        -------
+        fig : matplotlib.Figure
+            A plot.
+        """
 
         x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, npts)
         y = np.zeros_like(x)
@@ -700,6 +715,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         return Tm
 
     def calc_settle_and_avp(self):
+        """Calculate settlement and average pore pressure at time"""
 
         self.set = np.zeros(len(self.t), dtype=float)
         self.avp = np.zeros(len(self.t), dtype=float)
@@ -743,6 +759,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
 
     def calc_por(self):
+        """Calculate pore pressure at depth and time"""
 
         if self.tpor is None:
             self.tpor==self.t

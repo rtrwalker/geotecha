@@ -44,10 +44,6 @@ def luetal2010(z, t, rc, re, H=1, rs=None, ks=None,
      - Settlement of whole profile vs time
 
 
-    Average excess pore pressure in soil, column, and overall
-    at specified depth and time.
-
-
     Parameters
     ----------
     z : float or 1d array/list of float
@@ -78,7 +74,7 @@ def luetal2010(z, t, rc, re, H=1, rs=None, ks=None,
         Initial pore water pressure at top and bottom of soil.
         Default utop=ubot=1.
     nterms : int, optional
-        number of terms to use in solution. Default=100.
+        Number of terms to use in solution. Default=100.
 
     Returns
     -------

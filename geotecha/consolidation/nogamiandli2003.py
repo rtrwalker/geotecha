@@ -46,7 +46,7 @@ from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
 class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
     """Multi-layer vertical and radial consolidation using matrix transfer
 
-    Partially implements the article by Nogami and Li (2003)[1]_. While the
+    Partially implements the article by Nogami and Li (2003) [1]_. While the
     article includes special treatment for sand layers and geotextile layers,
     this implementation only considers 'soil' layers.  (Sand layers are
     just normal layers  with high kv and low mv).
@@ -178,10 +178,10 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
     figure_ext : string, optional
         File extension for figures.  Can be any valid matplotlib option for
         savefig. Default figure_ext=".eps". Others include 'pdf', 'png'.
-    title: str, optional
+    title : str, optional
         A title for the input file.  This will appear at the top of data files.
         Default title=None, i.e. no title.
-    author: str, optional
+    author : str, optional
         Author of analysis. Default='unknown'.
 
 
@@ -240,7 +240,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
     See Also
     --------
-    geotecha.piecewise.piecewise_linear_1d.PolyLine : how to specify loadings
+    geotecha.piecewise.piecewise_linear_1d.PolyLine : How to specify loadings
 
 
     References
@@ -674,6 +674,7 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
 
 
     def make_all(self):
+        """Check input, make_output produce files and plots"""
 
 
         self.check_input_attributes()
@@ -852,17 +853,6 @@ class NogamiAndLi2003(inputoutput.InputFileLoaderCheckerSaver):
                            prop_dict=set_prop)
         fig_set.gca().invert_yaxis()
         return fig_set
-
-    def temp(self):
-        if getattr(self, 'save_data_to_file', False):
-            self._save_data()
-        if (getattr(self, 'save_figures_to_file', False) or
-                getattr(self, 'show_figures', False)):
-            self.produce_plots()
-            if getattr(self, 'save_figures_to_file', False):
-                self._save_figures()
-            if getattr(self, 'show_figures', False):
-                plt.show()
 
 
     def _calc_Tm(self, alp, t):

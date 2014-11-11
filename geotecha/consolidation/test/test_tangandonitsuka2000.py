@@ -375,9 +375,9 @@ def test_tang_and_onitsuka_well_resistance():
 
 
 if __name__ == '__main__':
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
 
 #    test_tang_and_onitsuka_one()
-    test_tang_and_onitsuka_well_resistance()
+#    test_tang_and_onitsuka_well_resistance()

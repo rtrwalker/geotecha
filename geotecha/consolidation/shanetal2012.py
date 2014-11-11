@@ -163,8 +163,7 @@ def shanetal2012(z, t, H, Cw, Cvw, Ca, Cva, drn=1, Csw=0, Csa=0,
     Csw : float, optional
         Csw = m1kw/m2w    default=0.
     Csa : float, optional
-        Csa = (m2a/m1ka) / (1 - m2a/m1ka - n(1-S)/(ua_*m1ka)) default=0,
-
+        Csa = (m2a/m1ka) / (1 - m2a/m1ka - n(1-S)/(ua_*m1ka)) Default=0,
     uwi : 2-element tuple, optioanl
         Initial pore water pressure at top and bottom of soil.  Initial pore
         water pressure within soil is assumed to vary linearly between the
@@ -174,26 +173,27 @@ def shanetal2012(z, t, H, Cw, Cvw, Ca, Cva, drn=1, Csw=0, Csa=0,
         air pressure within soil is assumed to vary linearly between the
         top and bottom values. Default uai=(0,0).
     nterms : int, optional
-        Number of terms to use in solution. default nterms=100.
+        Number of terms to use in solution. Default nterms=100.
     f : dict, optional
-        Ditionary describing a loading function. default=None i.e. no load
+        Ditionary describing a loading function. Default f=None i.e. no load
         e.g.
         f = {'type': 'exp', 'q0': 100, 'b': 0.00005} is a load described by
         q(t) = q0 * exp[-b * t].
         f = {'type': 'sin', 'q0': 100, 'omega': 2*np.pi/1e8} is a load
         described by q(t) = q0 * sin(omega*t).
     f1, f2 : dict, optional
-        dict describing loading function for uwtop and uatop. default=None
-        i.e. no load
+        dict describing loading function for uwtop and uatop.
+        Default f1=f2==None i.e. no load.
     f3, f4 : dict, optional
-        dict describing loading function for uwbot and uabot. default=None
-        i.e. no load
+        dict describing loading function for uwbot and uabot.
+        Default f3=f4==None i.e. no load.
+
 
 
     Returns
     -------
-    porw, pora: 2d array of float
-        pore pressure at depth and time in water and air phase
+    porw, pora : 2d array of float
+        Pore pressure at depth and time in water and air phase
         por is an array of size (len(z), len(t)).
 
 

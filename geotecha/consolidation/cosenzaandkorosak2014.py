@@ -33,6 +33,7 @@ import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.mathematics.laplace import Talbot
 
 def plot_one_dim_consol(z, t, por=None, doc=None, settle=None, uavg=None):
+    """Rough plotting routine"""
 
     if not por is None:
         plt.figure()
@@ -113,10 +114,10 @@ def cosenzaandkorosak2014(z, t, theta, v, tpor=None, L = 1, kv = 1, mv = 0.1, ga
 
     Returns
     -------
-    por: 2d array of float
+    por : 2d array of float
         Pore pressure at depth and time.  ppress is an array of size
         (len(z), len(t)).
-    avp: 1d array of float
+    avp : 1d array of float
         Average pore pressure between depth H and depth Z.
     settlement : 1d array of float
         Surface settlement at depth z.
@@ -130,10 +131,10 @@ def cosenzaandkorosak2014(z, t, theta, v, tpor=None, L = 1, kv = 1, mv = 0.1, ga
     ----------
     Code developed based on [1]_
 
-    ..[1] Cosenza, Philippe, and Dean Korosak. 2014. 'Secondary Consolidation
-          of Clay as an Anomalous Diffusion Process'. International Journal
-          for Numerical and Analytical Methods in Geomechanics:
-          doi:10.1002/nag.2256.
+    .. [1] Cosenza, Philippe, and Dean Korosak. 2014. 'Secondary Consolidation
+           of Clay as an Anomalous Diffusion Process'. International Journal
+           for Numerical and Analytical Methods in Geomechanics:
+           doi:10.1002/nag.2256.
 
 
     """

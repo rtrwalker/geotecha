@@ -19,6 +19,7 @@
 Smear zone permeability distributions etc.
 
 """
+
 from __future__ import print_function, division
 
 import numpy as np
@@ -260,7 +261,7 @@ def mu_overlapping_linear(n, s, kap):
     Returns
     -------
     mu : float
-        smear zone permeability/geometry parameter
+        Smear zone permeability/geometry parameter.
 
     Notes
     -----
@@ -759,9 +760,12 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
     n, kap_m : float, optional
         If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
-        specification of the drain influence radius.  Default=None, i.e. soil
-        permeability is completely described by `s` and `kap`. If n is given
-        but kap_m is None then the last kappa value in kap will be used.
+        specification of the drain influence radius.
+        Default n=kap_m=None, i.e. soilpermeability is completely described
+        by `s` and `kap`. If n is given but kap_m is None then the last
+        kappa value in kap will be used.
+
+
     Returns
     -------
     mu : float
@@ -896,9 +900,11 @@ def mu_piecewise_linear(s, kap, n=None, kap_m=None):
     n, kap_m : float, optional
         If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
-        specification of the drain influence radius.  Default=None, i.e. soil
-        permeability is completely described by `s` and `kap`. If n is given
-        but kap_m is None then the last kappa value in kap will be used.
+        specification of the drain influence radius.
+        Default n=kap_m=None, i.e. soilpermeability is completely described
+        by `s` and `kap`. If n is given but kap_m is None then the last
+        kappa value in kap will be used.
+
 
     Returns
     -------
@@ -2160,9 +2166,10 @@ def u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     n, kap_m : float, optional
         If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
-        specification of the drain influence radius.  Default=None, i.e. soil
-        permeability is completely described by `s` and `kap`. If n is given
-        but kap_m is None then the last kappa value in kap will be used.
+        specification of the drain influence radius.
+        Default n=kap_m=None, i.e. soilpermeability is completely described
+        by `s` and `kap`. If n is given but kap_m is None then the last
+        kappa value in kap will be used.
 
     Returns
     -------
@@ -2315,9 +2322,11 @@ def u_piecewise_linear(s, kap, si, uavg=1, uw=0, muw=0, n=None, kap_m=None):
     n, kap_m : float, optional
         If `n` and `kap_m` are given then they will each be appended to `s` and
         `kap`. This allows the specification of a smear zone separate to the
-        specification of the drain influence radius.  Default=None, i.e. soil
-        permeability is completely described by `s` and `kap`. If n is given
-        but kap_m is None then the last kappa value in kap will be used.
+        specification of the drain influence radius.
+        Default n=kap_m=None, i.e. soilpermeability is completely described
+        by `s` and `kap`. If n is given but kap_m is None then the last
+        kappa value in kap will be used.
+
 
     Returns
     -------
@@ -2578,7 +2587,7 @@ def drain_eta(re, mu_function, *args, **kwargs):
         mu_piecewise_linear.
     muw : float, optional
         Well resistance mu term, default=0.
-    *args, *kwargs : various
+    *args, **kwargs : various
         The arguments to pass to the mu_function.
 
     Returns
