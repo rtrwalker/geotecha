@@ -2,19 +2,17 @@
 Code to timeout with processes.
 
 
-
 References
 ----------
-
 Code in this module comes from an activestate code recipe [1]_. For an
 asynchronous solution see the active activestate code recipe [2]_.
 
-..  _synchronous: http://code.activestate.com/recipes/577853-timeout-decorator-with-multiprocessing/
+.. _synchronous: http://code.activestate.com/recipes/577853-timeout-decorator-with-multiprocessing/
 
 .. _asynchronous: http://code.activestate.com/recipes/577028/
 
-.. [1] `timeout decorator (with multiprocessing) (Python recipe)`_synchronous
-.. [2] `Timeout Any Function (Python recipe) `_asynchronous
+.. [1] timeout decorator (with multiprocessing) (Python recipe) synchronous_
+.. [2] Timeout Any Function (Python recipe) asynchronous_
 
 Examples
 --------
@@ -28,33 +26,39 @@ TimeoutException: timed out after 2 seconds
 
 Notes
 -----
-The following commented examples from the original activestate code recipe
+The following examples from the original activestate code recipe
 demonstrate how to use timeout as a decorator.  They don't seem to work for
 me as the functions must be defined in __main__ to be pickled.  you get the
-idea though
+idea though.
 
-#>>> @timeout(.5)
-#... def sleep(x):
-#...     print "ABOUT TO SLEEP {0} SECONDS".format(x)
-#...     time.sleep(x)
-#...     return x
+#TODO: make this a literal block that doesnt get discovered with nosetests.
+#    ::
 #
-#>>> sleep(1)
-#Traceback (most recent call last):
-#   ...
-#TimeoutException: timed out after 0 seconds
+#    >>> @timeout(.5)
+#    ... def sleep(x):
+#    ...     print "ABOUT TO SLEEP {0} SECONDS".format(x)
+#    ...     time.sleep(x)
+#    ...     return x
 #
-#>>> sleep(.2)
-#0.2
+#    >>> sleep(1)
+#    Traceback (most recent call last):
+#       ...
+#    TimeoutException: timed out after 0 seconds
 #
-#>>> @timeout(.5)
-#... def exc():
-#...     raise Exception('Houston we have problems!')
+#    >>> sleep(.2)
+#    0.2
 #
-#>>> exc()
-#Traceback (most recent call last):
-#   ...
-#Exception: Houston we have problems!
+#    >>> @timeout(.5)
+#    ... def exc():
+#    ...     raise Exception('Houston we have problems!')
+#
+#    >>> exc()
+#    Traceback (most recent call last):
+#       ...
+#    Exception: Houston we have problems!
+
+
+This is the end!
 
 """
 #Someuseful stuff

@@ -14,7 +14,10 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""some input output stuff and checking stuff"""
+"""Input/output operations,attribute checking, proccess input files that
+have python syntax.
+
+"""
 
 from __future__ import division, print_function
 import __builtin__
@@ -45,24 +48,23 @@ import pkgutil
 import importlib
 
 class SyntaxChecker(ast.NodeVisitor):
-    """
+    """Check if a string contains only allowabel python syntax
 
-    SyntaxChecker(allow=[])
 
-    `SyntaxChecker` provide functionality to check syntax of string using the
+    `SyntaxChecker` provides functionality to check syntax of string using the
     ast module.  Basically white-list allowable functions and attributes.  A
     SyntaxError will be raised if any code is found that is not allowed.
 
     Parameters
     ----------
     allow : list of str
-        list of SyntaxChecker 'allow' methods to call. Default = [].
-        e.g. allow=['ast', 'numpy'] will call self.allow_ast(),
-        self.allow_numpy()
+        List of SyntaxChecker 'allow' methods to call. Default = [].
+        e.g. allow=['ast', 'numpy'] will call SyntaxChecker.allow_ast(),
+        SyntaxChecker.allow_numpy()
 
     Attributes
     ----------
-    allowed_functions: dict
+    allowed_functions : dict
         A dictionary of allowable functions. e.g. allowed_functions['cos'] =
         math.cos would permit the use of 'cos' from the math module.
         allowed_functions['math'] = math would allow use of the math
@@ -70,12 +72,12 @@ class SyntaxChecker(ast.NodeVisitor):
         add 'sin' to the allowable_attributes).  Adding functions one by one
         can be cumbersome; see the 'allow_<some_name>' methods for bulk adding
         of common functionality.
-    allowed_node_types: dict
+    allowed_node_types : dict
         Dictionary of allowable ast node names.
         e.g. allowed_node_types['Name'] = ast.Name would allow ast.Name nodes.
         typically use SytaxChecker.allow_ast to allow a reasonable set of ast
         nodes
-    allowed_attributes: set of string
+    allowed_attributes : set of string
         set of allowable attributes.  e.g. you have already allowed the math
         module with allowed_functions['math'] = math.
         allowable_attributes.add('tan') will allow use of math.tan(34) etc.
@@ -85,30 +87,31 @@ class SyntaxChecker(ast.NodeVisitor):
         fail if the code was executed. Adding attributes one by one
         can be cumbersome; see the 'allow_<some_name>' methods for bulk adding
         of common functionality.
-    safe_names: dict
-        dictionary of safe names.
-        default = {'True': True, 'False': False, 'None': None}
-    print_each_node: bool
-        print out each node when they are visited.  default=False. Note that
+    safe_names : dict
+        Dictionary of safe names.
+        Default safe_names={'True': True, 'False': False, 'None': None}.
+    print_each_node : bool
+        Print out each node when they are visited.
+        Default print_each_node=False. Note that
         nodes may be printed twice, once for a generic visit and once for a
         specific visit such as visit_Name, visit_Attribute etc.
 
     Methods
     -------
-    allow_ast():
+    allow_ast
         Allow a subset of ast node types.
-    allow_builtin():
-        Allow a subset of __builtins__ functions
+    allow_builtin
+        Allow a subset of __builtins__ functions.
     allow_numpy
-        Allow a subset of numpy functionality via np.funtion syntax
+        Allow a subset of numpy functionality via np.funtion syntax.
     allow_PolyLine
-        Allow PolyLine class from geotecha.piecewise.piecewise_linear_1d
+        Allow PolyLine class from geotecha.piecewise.piecewise_linear_1d.
 
     See also
     --------
-    ast.NodeVisitor: parent class.  Descriptions of python syntax grammar
-    object_members: easily print a string of an objects routines for use in
-        a 'allow_<some_name>' methods.
+    ast.NodeVisitor : Parent class.  Descriptions of python syntax grammar.
+    object_members : Easily print a string of an objects routines for use in
+        a 'allow_<some_name>' method.
 
     Notes
     -----
@@ -137,15 +140,7 @@ class SyntaxChecker(ast.NodeVisitor):
     #http://eli.thegreenplace.net/2009/11/28/python-internals-working-with-python-asts/
 
     def __init__(self, allow=[]):
-        """Initialize a SyntaxChecker object
-
-        Parameters
-        ----------
-        allow : list of str
-            list of SyntaxChecker 'allow' methods to call. Default = [].
-            e.g. allow=['ast', 'numpy'] will call self.allow_ast(), self.allow_numpy()
-
-        """
+        """Initialize a SyntaxChecker object"""
 
         #super(SyntaxChecker, self).__init__() # not sure if I need this
 
@@ -215,21 +210,21 @@ class SyntaxChecker(ast.NodeVisitor):
             ast.NodeVisitor.generic_visit(self, node)
 
     def _split_string_allow(self, s, add_to='attributes', fn_module=None):
-        """split a string and add items to allowed lists
+        """Split a string and add items to allowed lists
 
         Adds items to self.allowed_attributes or self.allowed_functions
 
         Parameters
         ----------
         s : str
-            string containing items to allow
-        add_to: ['attributes', 'functions']
-            if add_to='attributes' items will be added to
-            self.allowed_attributes.  If add_to='functions' the  items will be
+            String containing items to allow.
+        add_to : ['attributes', 'functions']
+            If add_to='attributes' items will be added to
+            self.allowed_attributes.  If add_to='functions' the items will be
             added to self.allowed_functions.
-        fn_module: module
-            module where functions are stored.  Only used when
-            add_to='functions'
+        fn_module : module
+            Module where functions are stored.  Only used when
+            add_to='functions'.
 
         """
 
@@ -461,34 +456,35 @@ class SyntaxChecker(ast.NodeVisitor):
         self.allowed_functions['PolyLine']=PolyLine
 
         s=textwrap.dedent("""
-            x y  xy x1 x2 y1 y2 x1_x2_y1_y2
+            x y xy x1 x2 y1 y2 x1_x2_y1_y2
             """)
         self._split_string_allow(s, add_to='attributes')
         return
 
 
 def object_members(obj, info='function', join=True):
-    """get list of object members
+    """Get a list of object members.
 
     Parameters
     ----------
-    obj: object
-        object to get members of
-    info: string, optional
-        type of members to gather.  Members will be gathered according to
+    obj : object
+        Object to get members of.
+    info : string, optional
+        Type of members to gather.  Members will be gathered according to
         inspect.is<member_type>. e.g. info='function' will check in object for
-        inspect.isfunction. default = 'function'. e.g. 'method' 'function'
-        'routine' etc. NOTE that it is safer tos use 'routine' when getting
-        functions.
-    join: bool, optional
-        if join==True then list will be joined together into one large
+        inspect.isfunction. Other values include 'method' 'function'
+        'routine'. Default info='function'. NOTE that it is safer to use
+        'routine' when getting functions.
+    join : bool, optional
+        If join==True then list will be joined together into one large
         space separated string.
 
     Returns
     -------
-    members: list of str, or str
-        list of member names of specified types, or space separated names
-        i single string
+    members : list of str, or str
+        List of member names of specified types, or space separated names
+        i single string.
+
 
     """
     #useful resources
@@ -512,26 +508,26 @@ def object_members(obj, info='function', join=True):
 
 
 def make_module_from_text(reader, syntax_checker=None):
-    """make a module from file, StringIO, text etc
+    """Make a module from file, StringIO, text etc.
 
     Parameters
     ----------
-    reader: file_like object
-        object to get text from
-    syntax_checker: SyntaxChecker object, optional
-        specifies what syntax is allowed when executing the text
+    reader : file_like object
+        Object to get text from.
+    syntax_checker : SyntaxChecker object, optional
+        Specifies what syntax is allowed when executing the text
         within `reader`.  Default = None, which means that text will be
         executed with the all powerful all dangerous exec function.  Only use
         this option if you trust the input.
 
     Returns
     -------
-    m: module
+    m : module
         text as module
 
     See also
     --------
-    SyntaxChecker: allow certain syntax
+    SyntaxChecker : allow certain syntax
 
     Notes
     -----
@@ -599,36 +595,37 @@ class print_all_nodes(ast.NodeVisitor):#http://stackoverflow.com/a/1515403/25300
 
 
 def fcode_one_large_expr(expr, prepend=None, **settings):
-    """fortran friendly printing of sympy expression ignoring any loops/indexed
+    """Fortran friendly printing of sympy expression ignoring any loops/indexed
 
     The normal FcodePrinter.doprint method will try to figure out what fortran
     loops you need by looking for indexed expressions.  Sometimes you just want
     to change square brackets [] to parenteses () and wrap/indent the code for
-    fortran with appropriate line continuations. `fcode_one_large_expr`
+    Fortran with appropriate line continuations. `fcode_one_large_expr`
     can do that for you. You will have to write your own fortran do loops.
 
     Parameters
     ----------
-    expr: sympy expression
-        a single large sympy expression
-    prepend : string
-        a string to prepend to your fortran code.  Assuming you age
+    expr : sympy expression
+        A single large sympy expression.
+    prepend : string, optional
+        A string to prepend to your fortran code.  Assuming you are
         going to cut and paste into a fortran routine `prepend` should be
         correct fortran format.  (note you do not need an initial indent
         for your prepend it will be put in for you). e.g.
-        prepend = 'a(i, i) = a(i, i) + '.
-    settings:
-        see `sympy.printing.fcode` docs, specifically FCodePrinter.__init__ .
-        Note that 'assign_to will not work'
+        prepend = 'a(i, i) = a(i, i) + '. Defualt prepend=None i.e. nothing
+        prepended.
+    settings : keyword arguments
+        See `sympy.printing.fcode` docs, specifically FCodePrinter.__init__ .
+        Note that 'assign_to will not work'.
 
     Returns
     -------
     out : str
-        fortran ready code that can be copy and pasted into a fortran routine
+        Fortran ready code that can be copy and pasted into a Fortran routine.
 
     See also
     --------
-    sympy.printing.fcode : contains all the functionality
+    sympy.printing.fcode : contains all the functionality.
 
     """
 
@@ -647,27 +644,31 @@ def fcode_one_large_expr(expr, prepend=None, **settings):
     return printer.indent_code(expr)
 
 
-def copy_attributes_between_objects(from_object, to_object, attributes=[], defaults = dict(),  not_found_value = None):
-    """Transfer object attributes between objects
+def copy_attributes_between_objects(from_object,
+                                    to_object,
+                                    attributes=[],
+                                    defaults=dict(),
+                                    not_found_value=None):
+    """Copy attributes from one object to another
 
-    looks up `attributes` in `from_obj` and copies them to `to_object`.  If
+    Looks up `attributes` in `from_obj` and copies them to `to_object`.  If
     not present in `from_object` the corresponding attribute in `to_object`
     will be set to `defaults` or `not_found_value` if not in `defaults`.
 
     Parameters
     ----------
-    from_object: object or module
-        object to copy attributes from
-    to_object: object or module
-        object to copy attributes to
-    attributes: list of strings
-        a list of attribute names to copy from `from_object` to `object_to`
-    defaults: dict of string-value pairs
-        dictionary specifying the default value of each attribute that is not
+    from_object : object or module
+        Object to copy attributes from.
+    to_object : object or module
+        Object to copy attributes to.
+    attributes : list of strings
+        A list of attribute names to copy from `from_object` to `object_to`.
+    defaults : dict of string-value pairs
+        Dictionary specifying the default value of each attribute that is not
         found in `from_object`.
-    not_found_value: optional
-        default value to set attribute to if not found in `from_object` or in
-        `defaults`.  default = ``None``
+    not_found_value : optional
+        Default value to set attribute to if not found in `from_object` or in
+        `defaults`.  Default not_found_value=None.
 
     Returns
     -------
@@ -682,18 +683,26 @@ def copy_attributes_between_objects(from_object, to_object, attributes=[], defau
     return
 
 def copy_attributes_from_text_to_object(reader, *args, **kwargs):
-    """wrapper for `copy_attributes_between_objects` where `from_object` is fileobject, StringIO, text
+    """Wrapper for `copy_attributes_between_objects` where `from_object`
+    is fileobject, StringIO, text
 
     Parameters
     ----------
     reader : fileobject, StringIO, text
         text to turn into a module and pass as from_object
-
+    *args :
+        Positional arguments that will be passed to
+        `copy_attributes_between_objects`.
+    **kwargs :
+        Keyword arguments that will be passed to
+        `copy_attributes_between_objects`. You can use a SyntaxChecker
+        object to interpret the `reader` by using the keyword argument
+        'syntax_checker'=<some SyntaxChecker object>.
 
     See also
     --------
-    copy_attributes_between_objects : see for args and kwargs input
-    SyntaxChecker
+    copy_attributes_between_objects : See for args and kwargs input.
+    SyntaxChecker : Restrict the allowable syntax in the `reader`.
 
     Notes
     -----
@@ -709,21 +718,21 @@ def copy_attributes_from_text_to_object(reader, *args, **kwargs):
 
 
 def check_attribute_is_list(obj, attributes=[], force_list=False):
-    """check if objects attributes are lists
+    """Check if attributes of an object are lists
 
-    if attribute is not a list and `force_list`=True then attribute will be
+    If attribute is not a list and `force_list`=True then attribute will be
     placed in list.  e.g. say obj.a = 6, 6 is not a list so obj.a will be
-    changed to obj.a = [6].
+    changed to obj.a = [6].  An error is raised if attribute is not a list.
 
     Parameters
     ----------
-    obj: object
-        object with attributes to check
-    attributes: list of strings
-        a list of attribute names to check
+    obj : object
+        Object with attributes to check.
+    attributes : list of strings
+        A list of attribute names to check.
     force_list : bool, optional
         If True not-list attributes will be put in a list. If False then
-        non-list attributes will raise an error. Default=False
+        non-list attributes will raise an error. Default force_list=False.
 
     Returns
     -------
@@ -743,20 +752,21 @@ def check_attribute_is_list(obj, attributes=[], force_list=False):
 
 
 def check_attribute_PolyLines_have_same_x_limits(obj, attributes=[]):
-    """check if objects attributes that are PolyLine have the same x values
+    """Check if attributes of object that are PolyLine have the same x values
 
-    Each attribute can be a single instance of PolyLine or a list of PolyLines
+    Each attribute can be a single instance of PolyLine or a list of PolyLines.
+    An error is raised if x-values are different.
 
     Parameters
     ----------
-    obj: object
-        object with attributes to check
-    attributes: list of list of strings
-        each sublist is a list of attribute names to check
+    obj : object
+        Object with attributes to check.
+    attributes : list of list of strings
+        Each sublist is a list of attribute names to check.
 
-    Returns
-    -------
-    None
+    See Also
+    --------
+    geotecha.piecewise.piecewise_linear_1d.PolyLine : PolyLine class
 
     """
 
@@ -790,22 +800,18 @@ def check_attribute_PolyLines_have_same_x_limits(obj, attributes=[]):
 
 
 def check_attribute_pairs_have_equal_length(obj, attributes=[]):
-    """check if attribute pairs ahave the same length
+    """Check if attribute pairs have the same length
 
     Compares pairs only if both pairs are not None.  Raises error if pair items
-    have unequal lenghth
+    have unequal lenghth.
 
     Parameters
     ----------
-    obj: object
-        object with attributes to check
-    attributes: list of list of two string
-        list of attribute names to check. each sub list should have two
+    obj : object
+        Object with attributes to check.
+    attributes : list of list of two string
+        List of attribute names to check. Each sub-list should have two
         elements.
-
-    Returns
-    -------
-    None
 
     """
 
@@ -832,20 +838,20 @@ def check_attribute_pairs_have_equal_length(obj, attributes=[]):
 
 
 def check_attribute_combinations(obj, zero_or_all=[], at_least_one=[], one_implies_others=[]):
-    """check for incomplete combinations of attributes
+    """Check for incomplete combinations of attributes
 
-    Raises ValueError if any combination fails
+    Raises ValueError if any combination fails.
 
     Parameters
     ----------
     zero_or_all : list of list of string
-        each element of `zero_or_all` is a list of attribute names that should
-        either allbe None or all be not None.
+        Each element of `zero_or_all` is a list of attribute names that should
+        either all be None or all be not None.
     at_least_one : list of list of string
-        each element of `at_least_one` is a list of attribute names of which at
+        Each element of `at_least_one` is a list of attribute names of which at
         least one should not be None.
-    one_implies_others: list of list of string
-        each element of `one_implies_others` is a list of attribute names.  If
+    one_implies_others : list of list of string
+        Each element of `one_implies_others` is a list of attribute names.  If
         the first attribute in the list is not None then all other members of
         the list should also not be None.
 
@@ -880,23 +886,24 @@ def check_attribute_combinations(obj, zero_or_all=[], at_least_one=[], one_impli
 
 
 def force_attribute_same_len_if_none(obj, same_len_attributes=[], value=None):
-    """make list of None with len the same as an exisiting attribute
+    """Make list of None with len the same as an existing attribute
 
-    if attributes after the first are None then make those attributes a list
-    of len(first_attribute) filled with value.
+    If attributes after the first are None then make those attributes a list
+    of len(first_attribute) filled with value.  This is useful when you want
+    to zip each member of two attributes. If the second attribute is None,
+    then any zipping is impossible.  However, if the second attribute
+    is set to a list of None then zipping is possible.
 
     Parameters
     ----------
     obj : object
-        object that has the attributes
-
+        Object that has the attributes.
     same_len_attributes : list of list of string
-        for each group of attribute names, if attributes after the first are
+        For each group of attribute names, if attributes after the first are
         None then those attributes will be made a list of len(first_attribute)
         filled with `value`.
     value : obj, optional
-        value to fill each list.  Default = None.
-
+        Value to fill each list.  Default value=None.
 
 
     """
@@ -910,28 +917,29 @@ def force_attribute_same_len_if_none(obj, same_len_attributes=[], value=None):
 
 
 
-def initialize_objects_attributes(obj, attributes=[], defaults = dict(),  not_found_value = None):
-    """initialize an objects attributes
+def initialize_objects_attributes(obj,
+                                  attributes=[],
+                                  defaults=dict(),
+                                  not_found_value=None):
+    """Initialize an objects attributes
 
-    for each attribute set it to the value found in `defaults` dictionary
-    or , if not found, set it to `not_found_value`.
+    For each attribute, set it to the value found in `defaults` dictionary
+    or, if the attribute is not found, set it to `not_found_value`.
 
     Parameters
     ----------
-    obj: object
-        object to set attributes in
+    obj : object
+        Object to set attributes in.
+    attributes : list of strings
+        A list of attribute names to set.
+    defaults : dict of string-value pairs, optional
+        Dictionary specifying the default value of each attribute.
+        Default defautls=dict() i.e. no explicit default value.
+    not_found_value : optional
+        Default value to set attribute to if not found in `defaults` dict.
+        Default not_found_value=None.
 
-    attributes: list of strings
-        a list of attribute names to set
-    defaults: dict of string-value pairs
-        dictionary specifying the default value of each attribute
-    not_found_value: optional
-        default value to set attribute to if not found in `defaults`.
-        default = ``None``
 
-    Returns
-    -------
-    None
 
     Notes
     -----
@@ -945,9 +953,9 @@ def initialize_objects_attributes(obj, attributes=[], defaults = dict(),  not_fo
 
     See also
     --------
-    code_for_explicit_attribute_initialization: use for temporary explicit
+    code_for_explicit_attribute_initialization : Use for temporary explicit
         attribute initialization to facilitate auto-complete, then comment
-        out when done
+        out when done.
 
     """
 
@@ -955,40 +963,40 @@ def initialize_objects_attributes(obj, attributes=[], defaults = dict(),  not_fo
         obj.__setattr__(v, defaults.get(v, not_found_value))
     return
 
-def code_for_explicit_attribute_initialization(
-        attributes=[],
-        defaults={},
-        defaults_name = '_attribute_defaults',
-        object_name = 'self',
-        not_found_value = None):
-    """generate code to initialize an objects attributes
+def code_for_explicit_attribute_initialization(attributes=[],
+                                               defaults={},
+                                               defaults_name='_attribute_defaults',
+                                               object_name='self',
+                                               not_found_value=None):
+    """Generate code to initialize an objects attributes
 
     Parameters
     ----------
-    object_name: string , optional
-        name of object to set attributes. default='self'
-    attributes: list of strings
-        a list of attribute names to set
-    defaults: dict of string-value pairs
-        dictionary specifying the default value of each attribute
-    defaults_name: string, optional
+    object_name : string , optional
+        Name of object to set attributes. default='self'.
+    attributes : list of strings
+        A list of attribute names to set.
+    defaults : dict of string-value pairs
+        Dictionary specifying the default value of each attribute.
+    defaults_name : string, optional
         If ``None`` then the actual values in `defaults` will be used
         to set attributes.  If not ``None`` then those attributes with
         defaults will be initialized by pointing to a dictionary called
-        `defaults_name`.  default = '_attribute_defaults',
-    not_found_value: optional
-        default value to set attribute to if not found in `defaults`.
-        default = ``None``
+        `defaults_name`.  Default defaults_name='_attribute_defaults',
+    not_found_value : optional
+        Default value to set attribute to if not found in `defaults`.
+        default not_found_value=``None``
 
     Returns
     -------
-    out: string
-        code that can be pasted into an object for initialization of
-        attributes
+    out : string
+        Code that can be pasted into an object (usually in the __init__
+        methos) to explicitly initialize attributes, so the attributes appear
+        in autocomplete.
 
     See also
     --------
-    initialize_objects_attributes: similar functionality with no copy paste
+    initialize_objects_attributes : Similar functionality with no copy paste.
 
     """
 
@@ -1019,7 +1027,7 @@ def code_for_explicit_attribute_initialization(
 
 
 class InputFileLoaderCheckerSaver(object):
-    """A class for accepting an input file, running checks on attributes etc.
+    """A class for accepting an input file, running checks, saveing data/plots.
 
     Options to:
 
@@ -1028,65 +1036,145 @@ class InputFileLoaderCheckerSaver(object):
        the input file will be result in self.b=34)
      - Run checks on the attributes.
      - Save data to file
-     - Save figures to file
+     - Save figures to file.
+     - Common attributes along with their defaults are available to all
+       classes that sub-class InputFileLoaderCheckerSaver.
+
+
+    Parameters
+    ----------
+    reader : file_like object
+        Object to get text from. file, StringIO, text etc.
+    pkg_for_version : string, optional
+        The version attribute will be determined by the version number of
+        the `pkg_for_version` package.  Default pkg_for_version='geotecha'.
+        If for some reason pkg_for_version has not been set, or the package
+        cannot be found, then version will be 'unknown'.
+
 
     Attributes
     ----------
-    _attribute_defaults
-    _attributes
-    _attributes_that_should_be_lists
-    _attributes_that_should_have_same_x_limits
-    _attributes_that_should_have_same_len_pairs
-    _zero_or_all
-    _at_least_one
-    _one_implies_others
-
+    _attributes : list of string
+        User defined list of attributes. Must be defined in the sub-class.
+        A number of common attributes will be added to the user defined list.
+        See the Notes section for the common attributes and their default
+        values.
+    _attribute_defaults : dict, optional
+        User defined dict of attribute defaults. May be defined in the
+        sub-class. Defaults for the common attributes will will be added
+        to the user defined list.
+        When no default value is given , None will be used.
+        Default _attribute_defaults=dict() i.e. all user defaults are None.
+        See the Notes section for the common attributes and their default
+        values.
+    _attributes_that_should_be_lists : list of string, optional
+        list of attributes that should be of type ``list``. Those attributes
+        that are not None and not lists will be put in a list.
+        May be defined in the sub-class.
+    _attributes_that_should_have_same_x_limits : list of list of str, optional
+        Each sublist is a list of attribute names to check.
+        May be defined in the sub-class.
+    _attributes_that_should_have_same_len_pairs : list of list of two string
+        List of attribute names to check. Each sub-list should have two
+        elements.
+        May be defined in the sub-class.
+    _zero_or_all : list of list of string
+        Each element of `zero_or_all` is a list of attribute names that should
+        either all be None or all be not None.
+        May be defined in the sub-class.
+    _at_least_one : list of list of string
+        Each element of `at_least_one` is a list of attribute names of which at
+        least one should not be None.
+        May be defined in the sub-class.
+    _one_implies_others : list of list of string
+        Each element of `one_implies_others` is a list of attribute names.  If
+        the first attribute in the list is not None then all other members of
+        the list should also not be None.
+        May be defined in the sub-class.
     _input_text : string
         str of the input file.  Will be None if no reader is passed to the
         __init__ method
     _debug : True/False
-        for use with debugging. Default = False
-
-
+        For use with debugging. Default _debug=False
     _figures : list of matplotlib figures
-        each figure should have a label which will be used to save figures
-
+        Define in sub-class. Each figure should have a label which
+        will be used to save figures.
     _grid_data_dicts : list of dict
-        for saving grid_data to file using `save_grid_data_to_file`.
-
-
-    save_figures_to_file: True/False
-        If True then figures will be saved to file.  default=False
-
-    save_data_to_file: True/False, optional
-        If True data will be saved to file.  Default=False
-    directory : string, optional
-        path to directory where files should be stored.  Default = None which
-        will use the current working directory
-    overwrite : True/False, optional
-        If True then exisitng files will be overwritten. default=False.
-    prefix : string, optional
-         filename prefix for all output files default = 'out'
+        Define in sub-class. For saving grid_data to file
+        using `save_grid_data_to_file`.
     _file_stem: string
         path including file name prefix with number for all output files.
         default='out_000'.  If
         create_directory=True then files will be put in a folder named
         `file_stem`
-    create_directory: True/Fase, optional
-        If True a new sub-folder named `file_stem` will contain the output
-        files. default=True
-    data_ext: string, optional
-        file extension for data files. default = '.csv'
-    input_ext: string, optional
-        file extension for original and parsed input files default = ".py"
-    figure_ext: string, optional
-        file extension for figures, default = ".eps".  can be any valid
-        matplotlib option for savefig.
+
+
+    Notes
+    -----
+    For the _attributes and _attribute_defaults  attribute the common
+    attributes and their defualts are:
+
+    =========================== ========================================
+    attribute name              description
+    =========================== ========================================
+    plot_properties             dict of dict.  Each subdict will be
+                                used to pass propeties to plotting
+                                routines.  Contents plot_properties
+                                should be defined in each sub-class
+                                Default = dict().
+    save_data_to_file           True/False. If True data will be
+                                saved to file.
+                                Need to write routines to save data
+                                Default = False.
+    save_figures_to_file        True/False. If True then figures will
+                                be saved to file.  Need to write
+                                routine to plot figures.
+                                Default = False.
+    show_figures'              True/False. If True the after
+                                calculation figures will be shown
+                                on screen. Need plt.show somewhere in
+                                routines.
+                                Default = False.
+    prefix                      string. Filename prefix for all
+                                output files. Default = 'out'.
+    directory                   string. Path to directory where files
+                                should be stored.
+                                Default directory=None which
+                                will use the current working directory.
+                                Note if you keep getting
+                                directory does not exist errors then
+                                try putting an r before the string
+                                definition. i.e.
+                                directory = r'C:\\Users\\...'.
+    overwrite                   True/False. If True then existing
+                                files will be overwritten.
+                                Default = False.
+    create_directory            True/Fase. If True a new sub-folder
+                                with name based on  `prefix` and an
+                                incremented number will contain the
+                                output. Default = True.
+    data_ext                    string. File extension for data files.
+                                Default = '.csv'.
+    input_ext                   string. File extension for original and
+                                parsed input files. Default = '.py'.
+    figure_ext                  string. File extension for figures.
+                                Can be any valid matplotlib option for
+                                savefig. Default = ".eps". Others
+                                include 'pdf', 'png'.
+    author                      string. Author of analysis.
+                                Default = 'unknown'
+    title                       string. A title for the input file.
+                                This will appear at the top of data
+                                files. Default = None, i.e. no title.
+    version                     Default = version number from
+                                `pkg_for_version paramter`
+    =========================== ========================================
+
 
 
     """
 
-    def __init__(self, reader = None):
+    def __init__(self, reader = None, pkg_for_version='geotecha'):
 
         self._debug = False
         self._setup()
@@ -1107,11 +1195,14 @@ class InputFileLoaderCheckerSaver(object):
 
 
     def _transfer_attributes_from_inputfile(self):
-        """transfer attributes from input file using restricted syntax.
+        """Transfer attributes from input file using restricted syntax.
 
         For safety reasons the inputfile syntax is restricted.  If you wish
         to remove these restrictions then overwrite this method with
-        syn_checker=None
+        syn_checker=None.  You will then have to do explicit imports.
+        Existing input files used when syntax_checker was not None may not
+        work because some modules (e.g. Numpy) were implicitly imported,
+        'import' commands are often banned in default syntax_checker.
 
         """
 
@@ -1133,7 +1224,7 @@ class InputFileLoaderCheckerSaver(object):
     def _initialize_attributes(self):
         """Initialize attributes
 
-        relies on presence of self._attributes
+        Relies on presence of self._attributes
         """
 
         if not hasattr(self, '_attributes'):
@@ -1147,6 +1238,11 @@ class InputFileLoaderCheckerSaver(object):
             'version '
             'title').split()
 
+        try:
+            version_str = pkg_resources.require(self.pkg_for_version)[0].version
+        except (pkg_resources.DistributionNotFound, AttributeError):
+            version_str = 'unknown'
+
         common_attribute_defaults = {
             'plot_properties': dict(),
             'save_data_to_file': False,
@@ -1159,7 +1255,7 @@ class InputFileLoaderCheckerSaver(object):
             'input_ext': '.py',
             'figure_ext': '.eps',
             'author': 'unknown',
-            'version': pkg_resources.require("geotecha")[0].version}
+            'version': version_str}
 
         attribute_defaults = getattr(self, '_attribute_defaults', dict())
 
@@ -1206,8 +1302,10 @@ class InputFileLoaderCheckerSaver(object):
     def _save_figures(self):
         """
         You need the following defined:
-         - self._figures: a list of figures to save.  Each figure should have a label
-         -
+
+         - self._figures: a list of figures to save.  Each figure should
+           have a label
+
 
         """
         if not getattr(self, 'save_figures_to_file', False):
@@ -1279,7 +1377,7 @@ class InputFileLoaderCheckerSaver(object):
 
 
     def _setup(self):
-        """set up attributes for checking and initializing
+        """Set up attributes for checking and initializing
 
         To be overridden in subclasses
 
@@ -1305,7 +1403,7 @@ class InputFileLoaderCheckerSaver(object):
         return
 
     def check_input_attributes(self):
-        """perform checks on attributes
+        """Perform checks on attributes
 
         Notes
         -----
@@ -1363,15 +1461,15 @@ def string_of_object_attributes(obj, attributes=[], none_at_bottom=True,
     """Put repr of objects attributes into one string
 
     The repr of each attribute will be put in a line within the output string.
-    If the attribute is not found then None will be given
+    If the attribute is not found then None will be given.
 
     Parameters
     ----------
     obj : object
-        object containing attributes
+        Object containing attributes.
     attributes : list of string, optional
-        list of attribute names.
-    none_at_bottom: True/False
+        List of attribute names.
+    none_at_bottom : True/False
         If True then any attribute that is None will be placed at the end
         of the output string.
     numpy_array_prefix : string, optional
@@ -1382,7 +1480,7 @@ def string_of_object_attributes(obj, attributes=[], none_at_bottom=True,
     Returns
     -------
     out : str
-        string
+        String
 
     """
 
@@ -1435,7 +1533,7 @@ class PrefixNumpyArrayString(object):
     Attributes
     ----------
     prefix : string, optional
-        strin gto prefix with. default = 'np.'
+        string to prefix with. Default prefix='np.'.
 
 
     Examples
@@ -1458,21 +1556,21 @@ class PrefixNumpyArrayString(object):
         self.prefix = prefix
 
     def _pprint(self, arr):
-        """function to pass to np.set_string_function"""
+        """Function to pass to np.set_string_function"""
         return '{}{}'.format(self.prefix, repr(arr))
 
     def turn_on(self):
-        """turn_on printing numpy array with prefix"""
+        """Turn_on printing numpy array with prefix"""
         np.set_string_function(self._pprint, False)
 
     def turn_off(self):
-        """turn_on printing numpy array with prefix"""
+        """Turn_on printing numpy array with prefix"""
         np.set_string_function(None, False)
 
 
 def next_output_stem(prefix, path=None, start=1, inc=1, zfill=3,
                      overwrite=False):
-    """find next unique prefix-number in sequence of numbered files/folders
+    """Find next unique prefix-number in sequence of numbered files/folders
 
     Looks in folder of `path` for files/folders with prefix-number combos
     of the form 'prefixdddxyz.ext'.  If found
@@ -1483,27 +1581,27 @@ def next_output_stem(prefix, path=None, start=1, inc=1, zfill=3,
     Parameters
     ----------
     prefix : string
-        start of file/folder name to search for
+        Start of file/folder name to search for.
     path : string, optional
-        folder to seach in.  Default= None i.e. search in current working
+        Folder to seach in.  Default path=None i.e. search in current working
         directory.
     start : int, optional
         If no existing files/folders match the numbering will start at `start`.
-        Default = 1.
+        Default start=1.
     inc : int, optional
         If matching files/folders are found then the number will increment
-        by inc. default inc=1
+        by inc. Default inc=1.
     zfill : int, optional
-        fill number with zeros to the left. eg. if `zfill` is 3 and the number
-        is 8, then the number will be output as '008'
-    overwrite: True/False
-        when True the prefix-number combo will not be incremented and the
+        Fill number with zeros to the left. eg. if `zfill` is 3 and the number
+        is 8, then the number will be output as '008'.
+    overwrite : True/False
+        When True the prefix-number combo will not be incremented and the
         highest exisiting prefix-number combo will be returned.
 
     Returns
     -------
     stem : string
-        next output stem.
+        Next output stem.
 
     """
 
@@ -1538,24 +1636,25 @@ def make_array_into_dataframe(data, column_labels=None, row_labels=None,
                                 row_labels_label='item'):
     """Make an array into a pandas dataframe
 
-    The data frame will have no index. use df.set_index()
+    The data frame will have no index. Use df.set_index().
 
     Parameters
     ----------
     data : 2d array
-        data to be put int (can be )
+        Data to be put int
     column_labels :  list or 1d array, optional
-        Column lables for data. default=None which will give column numbers
-        0,1,2, etc
+        Column lables for data. Default column_labels=None which will give
+        column numbers 0,1,2, etc.
     row_labels : list or 1d array, optional
-        default = None which will use row numbers, 0,1,2,etc.
+        Default row_labels=None which will use row numbers, 0,1,2,etc.
     row_labels_label : string, optional
-        column label for the row_labels column.  default = 'item'
+        Column label for the row_labels column.  Default
+        row_labels_label='item'.
 
     Returns
     -------
     df : pandas dataframe
-        dataframe of data. with column and row labels added
+        dDtaframe of data with column and row labels added
 
 
     """
@@ -1583,7 +1682,7 @@ def save_grid_data_to_file(data_dicts, directory=None, file_stem='out_000',
     """Save grid data to files using a common filename stem
 
     Saves grid data in `directory`.  Each data filename will begin with
-    `file_stem`.
+    `file_stem`.  Grid data is basically 2d data with rows and columns.
 
 
     Parameters
@@ -1598,36 +1697,39 @@ def save_grid_data_to_file(data_dicts, directory=None, file_stem='out_000',
         data_dict key       description
         ==================  ============================================
         name                String to be added to end of stem to create
-                            file_name
+                            file_name.
         data                array of data to save to file.  If data
                             is a pandas dataframe then row_labels and
                             column labels will be ignored (i.e. it will
                             be assumed that the dataframe already has
-                            row labels and column labels)
+                            row labels and column labels).
         row_labels          List of row labels for data. default = None
                             which will give no row labels.
-        row_labels_label    if there are row_labels then the column
-                            label for the row_label column. default=None
-                            which will give 'item'.
-        column_labels       Column lables for data. default=None which will
-                            give nothing
-        header              String to appear before data. Default=None
+        row_labels_label    If there are row_labels then the column
+                            label for the row_label column.
+                            Default = None which will give 'item'.
+        column_labels       Column lables for data.
+                            Default = None which will give nothing.
+        header              String to appear before data.
+                            Default = None.
         df_kwargs           dict of kwargs to pass to
-                            pandas.DataFrame.to_csv(). Default ={}
+                            pandas.DataFrame.to_csv(). Default ={}.
         ==================  ============================================
     directory : string, optional
-        path of directory to save data in.  default=None which will save
-        to the current working directory
+        Path of directory to save data in.  Default directory=None which will
+        save to the current working directory.
     file_stem : string, optional
-        beginning of file name, default = 'out_000'. Filename will be made
-        from `file_stem` + [`data_dict`['name']] + `ext`
+        beginning of file name, Default file_stem='out_000'. Filename will be
+        made from `file_stem` + [`data_dict`['name']] + `ext`.
     ext : string, optional
-        file extension.  default = ".csv"
+        File extension.  Default ext=".csv".
     create_directory : True/False, optional
         If True, all data files will be placed in a directory named file_stem.
-        So you might get files path_to_directory\out_000\out_000_cow.csv etc.
+        So you might get files
+        path_to_directory\\out_000\\out_000_cow.csv etc.
         If False, all data files will be placed in `directory`.  So you would
-        get files path_to_directory\out_000_cow.csv etc.
+        get files path_to_directory\\out_000_cow.csv etc. Default
+        create_directory=True.
 
 
     """
@@ -1685,12 +1787,12 @@ def hms_string(sec_elapsed):
 
     Parameters
     ----------
-    sec_elapsed: float
-        elapsed seconds
+    sec_elapsed : float
+        Elapsed seconds
 
     References
     ----------
-    copied verbatim from http://arcpy.wordpress.com/2012/04/20/146/
+    Copied verbatim from http://arcpy.wordpress.com/2012/04/20/146/
 
     """
 
@@ -1701,7 +1803,7 @@ def hms_string(sec_elapsed):
 
 
 class GenericInputFileArgParser(object):
-    """Pass input files to a class/function , then call methods on the object
+    """Pass input files to a class/function, then call methods on the object
 
     see self.main for use in scripts.
 
@@ -1713,38 +1815,42 @@ class GenericInputFileArgParser(object):
     Parameters
     ----------
     obj : object/callable
-        object to call with input file as argument
+        Object to call with input file as argument.
     methods : sequence of 3 element tuples, optional
-        Each element of methods is a 3 elemetn tuple (method_name, args,
+        Each element of methods is a 3 element tuple (method_name, args,
         kwargs). After `obj` has been initialized the obj's method called
         'method_name' will be called with unpacked args and kwargs. i.e.
-        obj(filename).method_name(*args, **kwargs). defult = []
-    sequence of string, optional
-        names of obj.method to call after initialization.  default=[]
-    pass_open_file: True/False, optional
-        if True then input files will be passed to obj as open file objects.
-         If False then paths of the input files will be passed to obj.
-        default = True
+        obj(filename).method_name(*args, **kwargs). Default methods=[] i.e.
+        no methods called.
+    pass_open_file : True/False, optional
+        If True then input files will be passed to obj as open file objects.
+        If False then paths of the input files will be passed to obj.
+        Default pass_open_file=True
     prog : string, optional
-        part of usage method for argparse. default = None which uses sys.argv[0]
+        Part of usage method for argparse, the name of the program.
+        Default prog=None which uses sys.argv[0] i.e. the first command line
+        paramter.
     description : string, optional
-        part of usage method for argparse. default = "Process some input files"
+        Part of usage method for argparse.
+        Default description="Process some input files".
     epilog : string, optional
-        part of usage method for argparse. default = 'If no options are
+        Part of usage method for argparse. Default epilog='If no options are
         specifyied then the user will be prompted to select files.'
 
 
 
     Notes
     -----
-    For basic usage, in a file to be used as a script put:
+    For basic usage, in a file to be used as a script put::
 
-    ::
+        if __name__=='__main__':
+            a = GenericInputFileArgParser(obj_to_call)
+            a.main()
 
-    if __name__=='__main__':
-        a = GenericInputFileArgParser(obj_to_call)
-        a.main()
 
+    See Also
+    --------
+    argparse : better description of some of the variables.
 
     """
 
@@ -1765,7 +1871,7 @@ class GenericInputFileArgParser(object):
         self._epilog = epilog
 
     def process(self, path):
-        """process the input file path
+        """Process the input file path
 
         The default behaviour of self.process depends on `self.pass_open_file`.
         If True then `path` will be opened and then self.obj will be called
@@ -1774,14 +1880,15 @@ class GenericInputFileArgParser(object):
 
         If you need more complicated behaviour to process your input file
         (e.g. initalize self.obj with a path and then call one of it's methods)
-        then over wr
+        then over write this method.
 
         Parameters
         ----------
         path : string
-            absolute path to input file
+            Absolute path to input file.
 
         """
+
         if self.pass_open_file:
             with open(path,'r') as f:
                 a = self.obj(f)
@@ -1799,20 +1906,20 @@ class GenericInputFileArgParser(object):
 
         1. If no options are specifyied a dialog box will open for the user
         to select files.
-        2. A list of file paths can be specified with the --filenmame option
+        2. A list of file paths can be specified with the --filename option
         3. The --directory and --pattern options can be used together to
         search a particular directory for files matching a certain pattern.
         If no actual directory is specified then the current working directory
         will be used.  The default pattern to look for is "*.py".  The
-        script file itself will not be processed if  it matches the pattern
+        script file itself will not be processed if it matches the pattern
         itself.
 
         Parameters
         ----------
         argv : list of str, optional
-            list of command line arguments. default = None which will grab
-            argumnets from sys.argv.  Used mainly for testing or bypassing
-            script  based command line arguments.
+            List of command line arguments. Default argv=None which will grab
+            arguments from sys.argv.  Used mainly for testing or bypassing
+            script based command line arguments.
 
 
         """
@@ -1934,12 +2041,12 @@ class GenericInputFileArgParser(object):
 
 @contextmanager
 def working_directory(path):
-    """change working directory for duration of with statement
+    """Change working directory for duration of with statement
 
     Parameters
     ----------
     path : str
-        path to new current working directory
+        Path to new current working directory
 
     Notes
     -----
@@ -1963,18 +2070,19 @@ def working_directory(path):
 def get_filepaths(wildcard=""):
     """wx dialog box to select files
 
-    opens a dialog box from which the user can select files
+    Opens a dialog box from which the user can select files
 
     Parameters
     ----------
     wildcard : string, optional
-        only show file types of this kind. Default = "" which means no file
-        type filtering.  e.g. "BMP files (*.bmp)|*.bmp|GIF files (*.gif)|*.gif"
+        Only show file types of this kind. Default wildcard="" which means
+        no file type filtering.
+        e.g. "BMP files (*.bmp)|*.bmp|GIF files (*.gif)|*.gif"
 
     Returns
     -------
     filepaths: list of paths
-        list of user selected file paths.  Will return None if the cancel
+        List of user selected file paths.  Will return None if the cancel
         button was selected.
 
     """
@@ -1992,20 +2100,20 @@ def get_filepaths(wildcard=""):
 
 
 def modules_in_package(package_name, exclude=['test']):
-    """list of modules in a package
+    """List of modules in a package
 
     Parameters
     ----------
     package_name : string
-        name of package to import and get modules from
+        Name of package to import and get modules from.
     exclude : list of string, optional
-        module names to exclude.  Default = ['test']
+        Module names to exclude.  Default exclude=['test']
 
     Returns
     -------
     module_list : lsit of string
-        list of modules in package_name ommiting any names in the
-        exclude list
+        List of modules in package_name ommiting any names in the
+        exclude list.
 
     """
 
