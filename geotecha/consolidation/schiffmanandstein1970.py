@@ -104,7 +104,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         Each member of `plot_properties` will correspond to one of the plots.
 
         ==================  ============================================
-        plot_properties    description
+        plot_properties     description
         ==================  ============================================
         por                 dict of prop to pass to pore pressure plot.
         avp                 dict of prop to pass to average pore
