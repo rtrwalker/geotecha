@@ -150,7 +150,7 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
 
         """
 
-        npts = kwargs.get('n', 100)
+        npts = kwargs.get('npts', 100)
         xmin, xmax = kwargs.get('xmin', 1.0), kwargs.get('xmax', 100)
 
         x = np.linspace(xmin, xmax, npts)
@@ -227,7 +227,7 @@ class ConstantPermeabilityModel(PermeabilityVoidRatioRelationship):
 
         """
 
-        npts = kwargs.get('n', 100)
+        npts = kwargs.get('npts', 100)
         xmin, xmax = kwargs.get('xmin', 1.0), kwargs.get('xmax', 100)
 
         x = np.linspace(xmin, xmax, npts)
@@ -470,7 +470,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
 
         """
 
-        npts = kwargs.get('n', 100)
+        npts = kwargs.get('npts', 100)
         xmin, xmax = np.min(self.ka), np.max(self.ka)
 
         x = np.linspace(xmin, xmax, npts)

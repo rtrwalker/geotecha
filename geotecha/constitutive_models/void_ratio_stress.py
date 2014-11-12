@@ -150,7 +150,7 @@ class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         """
 
-        npts = kwargs.get('n', 100)
+        npts = kwargs.get('npts', 100)
         xmin, xmax = kwargs.get('xmin', 1.0), kwargs.get('xmax', 100)
 
         x = np.linspace(xmin, xmax, npts)
@@ -337,7 +337,7 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         """
 
-        npts = kwargs.get('n', 100)
+        npts = kwargs.get('npts', 100)
         xmin, xmax = kwargs.get('xmin', 1.0), kwargs.get('xmax', 100)
 
         x = np.linspace(xmin, xmax, npts)
@@ -810,7 +810,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         """
 
-        npts = kwargs.get('n', 100)
+        npts = kwargs.get('npts', 100)
         xmin, xmax = np.min(self.siga), np.max(self.siga)
 
         x = np.linspace(xmin, xmax, npts)
