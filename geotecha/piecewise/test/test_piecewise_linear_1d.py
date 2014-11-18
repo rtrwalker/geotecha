@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-module for piecewise 1d linear relationships
+Testing rotines for piecewise_linear_1d module.
 
 """
 from __future__ import division, print_function
