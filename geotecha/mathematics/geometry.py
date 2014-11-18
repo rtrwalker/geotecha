@@ -1,30 +1,46 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Sep 16 09:44:51 2013
+# geotecha - A software suite for geotechncial engineering
+# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+"""Some routines loosely related to geometry."""
 
-@author: Rohan Walker
-"""
+
 from __future__ import division, print_function
-
-import sympy
-import matplotlib.pylab as plt
 import numpy as np
+import sympy
+import matplotlib
+import matplotlib.pyplot as plt
+
 from mpl_toolkits.mplot3d import Axes3D
 
+
 def xyz_from_pts(pts, close_polygon = False):
-    """ extract separate x coords, ycoords, z coords from an x,y,z coords
+    """Extract x, y and z values from an (n, 3) or (n, 2) shaped array
 
     Parameters
     ----------
     pts : array_like
-        array of x, y or x, y, z points
-    close_polygon : boolean
-        if True then 1st point will be repeated i.e. to close the polygon
+        Array of x, y or x, y, z points.
+    close_polygon : boolean, optional
+        If True then 1st point will be repeated i.e. to close the polygon.
+        Default close_polygon=False.
+
 
     Returns
     -------
-    x,y,z : 1d ndarrays
-        1d array of x coords, y coords, z coords
+    x, y, z : 1d ndarrays
+        1d array of x coords, y coords, z coords.
 
     """
 
@@ -55,31 +71,32 @@ def xyz_from_pts(pts, close_polygon = False):
 
     return x, y, z
 
+
 def eqn_of_plane(pts):
     """Equation of plane defined by polygon points
 
-    a,b,c,d from a*x+b*y+c*z+d = 0
-    looking at the plane, counter-clockwise (CCW) points the positive normal
+    a, b, c, d from a*x+b*y+c*z+d = 0
+    Looking at the plane, counter-clockwise (CCW) points the positive normal
     is towards you.  For clockwise points (CW) the positive normal is away
     from you.
 
     Parameters
     ----------
     pts : array_like
-        array of x, y or x, y, z points
+        aAray of x, y or x, y, z points.
 
 
     Returns
     -------
-    [a,b,c] : ndarray with 3 elemetns
-        direction cosines of normal to plane
+    [a, b, c] : ndarray with 3 elements
+        Direction cosines of normal to plane.
     d : float
-        constant in plane equation
+        Constant in plane equation.
 
     """
 
     pts = np.asarray(pts)
-    x, y, z = xyz_from_pts(pts,True)
+    x, y, z = xyz_from_pts(pts, True)
     a = np.sum((y[:-1] - y[1:]) * (z[:-1] + z[1:]))
     b = np.sum((z[:-1] - z[1:]) * (x[:-1] + x[1:]))
     c = np.sum((x[:-1] - x[1:]) * (y[:-1] + y[1:]))
@@ -91,16 +108,16 @@ def eqn_of_plane(pts):
     return n, d
 
 
-def replace_x0_and_x1_to_vect(s,xyz = ['x','y','z']):
-    """replaces strings x0 with x[:-1],  x1 with x[1:], y0 with y[:-1] ...
+def replace_x0_and_x1_with_vect(s,xyz = ['x','y','z']):
+    """Replaces strings x0 with x[:-1],  x1 with x[1:], y0 with y[:-1] ...
 
     Parameters
     ----------
     s : string, or sympy_expression
-        expression to make replacements on
-    xyz: list of strings
-        replacements will be made for each element of xyz.
-        default = ['x','y','z']
+        Expression to make replacements on
+    xyz : list of strings
+        Replacements will be made for each element of xyz.
+        default xyz=['x','y','z'].
 
     Returns
     -------
@@ -117,52 +134,53 @@ def replace_x0_and_x1_to_vect(s,xyz = ['x','y','z']):
     return s
 
 def integrate_f_over_polygon_code(f):
-    """generate code that will integrate a function over a polygon
+    """Generate code that will integrate a function over a polygon
 
     Parameters
     ----------
     f : sympy expression
-        expression to be integrated over the polygon
+        Expression to be integrated over the polygon.
 
     Returns
     -------
     out : str
-        multiline string of function code
+        Multiline string of function code
 
     """
-    x,y,z=sympy.symbols('x,y,z')
-    x0,x1,y0,y1,z0,z1=sympy.symbols('x0,x1,y0,y1,z0,z1')
+
+    x, y, z=sympy.symbols('x,y,z')
+    x0, x1, y0, y1, z0, z1=sympy.symbols('x0,x1,y0,y1,z0,z1')
     t = sympy.symbols('t')
-    s2 = [(x,x0+t*(x1-x0)),(y,y0+t*(y1-y0)),(z,z0+t*(z1-z0))]
+    s2 = [(x, x0+t*(x1-x0)), (y, y0+t*(y1-y0)), (z, z0+t*(z1-z0))]
 
     ff = sympy.integrate(f,x)
     ff = ff.subs(s2)
     ff = sympy.integrate(ff, (t,0,1))
     ff *= (y1 - y0) #if integrating in y direction 1st then *-(x1-x0)
 
-    ff = replace_x0_and_x1_to_vect(ff)
+    ff = replace_x0_and_x1_with_vect(ff)
 
     template ="""def ifxy(pts):
     "Integrate f = {} over polygon"
 
-    x, y, z = xyz_from_pts(pts,True)
+    x, y, z = xyz_from_pts(pts, True)
 
     return np.sum({})"""
 
     return template.format(str(f), ff)
 
 def integrate_f_over_polyhedra_code(f):
-    """generate code that will integrate a function over a polyhedra
+    """Generate code that will integrate a function over a polyhedra
 
     Parameters
     ----------
     f : sympy expression
-        expression to be integrated over the polyhedron
+        Expression to be integrated over the polyhedron.
 
     Returns
     -------
     out : str
-        multiline string of funciton code
+        Multiline string of funciton code.
 
     """
     x,y,z=sympy.symbols('x,y,z')
@@ -182,7 +200,7 @@ def integrate_f_over_polyhedra_code(f):
     ff = sympy.integrate(ff, (t,0,1))
     ff *= z1 - z0
 
-    ff = replace_x0_and_x1_to_vect(ff)
+    ff = replace_x0_and_x1_with_vect(ff)
 
     template ="""def ifxyz(faces):
     "Integrate f = {} over polyhedron"
@@ -199,18 +217,18 @@ def integrate_f_over_polyhedra_code(f):
 
     return template.format(str(f), ff)
 
-def polygon_area(pts)    :
-    """ area of polygon defined by points
+def polygon_area(pts):
+    """Area of polygon defined by points
 
     Parameters
     ----------
     pts : array_like
-        array of x, y or x, y, z points
+        Array of x, y or x, y, z points.
 
     Returns
     -------
     a : float
-        area of polygon
+        Area of polygon.
 
     """
 
@@ -233,17 +251,17 @@ def polygon_area(pts)    :
 
 
 def polygon_centroid(pts):
-    """ centroid of polygon defined by points
+    """Centroid of polygon defined by points
 
     Parameters
     ----------
     pts : array_like
-        array of x, y or x, y, z points
+        Array of x, y or x, y, z points.
 
     Returns
     -------
-    [xc,yc,zc] : ndarray of float
-        coordinates of centroid
+    [xc, yc, zc] : ndarray of float
+        Coordinates of centroid.
 
     """
 
@@ -297,22 +315,22 @@ def polygon_centroid(pts):
 
 
 def polygon_2nd_moment_of_area(pts):
-    """ 2nd moment of area of polygon defined by points
+    """2nd moment of area of polygon defined by points
 
     Parameters
     ----------
     pts : array_like
-        array of x, y or x, y, z points
+        Array of x, y or x, y, z points.
 
     Returns
     -------
-    [Ixx,Iyy,Izz] : ndarray of float
-        2nd moment of area about centroidal x, y, and z axes
+    [Ixx, Iyy, Izz] : ndarray of float
+        2nd moment of area about centroidal x, y, and z axes.
 
     """
 
     def ifx2dxdy(x,y,xc):
-        """integrate f = (x - xc)**2 over polygon of x,y points"""
+        """Integrate f = (x - xc)**2 over polygon of x,y points"""
         #generate code using integrate_f_over_polygon_code((x-xc)**2)
         return np.sum((-y[:-1] + y[1:])*(x[:-1]**3/12 + x[:-1]**2*x[1:]/12 -
             x[:-1]**2*xc/3 + x[:-1]*x[1:]**2/12 - x[:-1]*x[1:]*xc/3 +
@@ -333,13 +351,13 @@ def polygon_2nd_moment_of_area(pts):
     n, d = eqn_of_plane(pts)
     a = polygon_area(pts)
 
-    xc,yc,zc =polygon_centroid(pts)
+    xc,yc,zc = polygon_centroid(pts)
 
     ixx=0.0
     iyy=0.0
     izz=0.0
 
-    calcd = [False,False,False]
+    calcd = [False, False, False]
 
 
     if n[0]!=0:#project on yz plane
@@ -367,23 +385,23 @@ def polygon_2nd_moment_of_area(pts):
     return np.array([ixx, iyy, izz])
 
 def polyhedron_volume(faces):
-    """volume of polyhedron defined by faces defined py pts
+    """Volume of polyhedron defined by faces defined py pts
 
     Parameters
     ----------
     faces : list
-        a list of pts arrays defining x,y,z coords of face vertices
+        A list of pts arrays defining x,y,z coords of face vertices.
 
 
     Returns
     -------
     v : float
-        volume of polyhedron
+        Volume of polyhedron.
 
     Notes
     -----
-    I think points on a face have to be defined in anti clockwise order to
-    give a positive volume.
+    I think points on a face have to be defined in anti clockwise (CCW) order
+    to give a positive volume.  No checks are done to check the order.
 
 
     """
@@ -414,13 +432,13 @@ def make_hexahedron(coords):
     Parameters
     ----------
     coords : 8 by 3 ndarray
-        x,y,z coords of 8 corner nodes of hexahedron.  node numbering is as
+        x, y, z coords of 8 corner nodes of hexahedron.  node numbering is as
         per Smith and Grifiths.
 
     Returns
     -------
     faces : list of pts arrays
-        list of pts arrays.  Each list defines vertices of a face
+        List of pts arrays.  Each list defines vertices of a face.
 
     Notes
     -----

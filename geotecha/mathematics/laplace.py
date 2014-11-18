@@ -14,36 +14,65 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""this module implements numerical inverse laplace transform"""
+"""Numerical inverse Laplace transform"""
+
 
 from __future__ import print_function, division
 
 import numpy as np
 
 def cot(phi):
+    """Reciprocal of tan function.
+
+    Parameters
+    ----------
+    phi : float of 1d array of float
+        Point to evaluate at.
+
+    Returns
+    -------
+    out : float or 1d array of float
+        cot(phi)
+
+    """
+
     return 1/np.tan(phi)
 
 def csc(phi):
+    """Reciprocal of sin function.
+
+    Parameters
+    ----------
+    phi : float of 1d array of float
+        Point to evaluate at.
+
+    Returns
+    -------
+    out : float or 1d array of float
+        csc(phi)
+
+    """
+
     return 1.0/np.sin(phi)
 
 class Talbot(object):
-    """numerical inverse laplace transform using mpmath
+    """Numerical inverse Laplace transform, Talbot method
 
-    Attributes
+    Parameters
     ----------
     f : function or method
-        function to perform inverse Laplace transform on. Function should be
+        Function to perform inverse Laplace transform on. Function should be
         vectorised (but doesn't have to be).
     n : even int, optional
-        number of integration points. if n is even it will be rounded up to
-        nearest even number default n = 24
+        Number of integration points. Nf n is even it will be rounded up to
+        nearest even number.  Default n=24.
     shift : float, optional
         Shift contour to the right in case there is a pole on the positive
-        real axis. default shift=0.0
+        real axis. Default shift=0.0.
     vectorized : True/False, optional
         If True then `f` accepts vector inputs and numpy broadcasting will be
         used.  Otherwise function evaluation will occur in loops.
-        default = True
+        Default vectorized=True.
 
     Notes
     -----
@@ -53,11 +82,11 @@ class Talbot(object):
     on such a contour. In such situations the trapezoidal rule converge
     extraordinarily rapidly.
 
-    Shift contour to the right in case there is a pole on the positive real axis : Note the contour will
-    not be optimal since it was originally devoloped for function with
-    singularities on the negative real axis
-    For example take F(s) = 1/(s-1), it has a pole at s = 1, the contour needs to be shifted with one
-    unit, i.e shift  = 1.
+    Shift contour to the right in case there is a pole on the positive real
+    axis : Note the contour will not be optimal since it was originally
+    devoloped for function with singularities on the negative real axis
+    For example take F(s) = 1/(s-1), it has a pole at s = 1, the contour
+    needs to be shifted with one unit, i.e shift  = 1.
 
     References
     ----------
@@ -75,7 +104,7 @@ class Talbot(object):
     See also
     --------
     geotecha.mathematics.mp_laplace.Talbot : higher precision numerical inverse
-        laplace
+        Laplace transform.
 
     """
 
@@ -92,14 +121,14 @@ class Talbot(object):
         Parameters
         ----------
         t : single value or np.array of float
-            time values to evaluate inverse laplace at
+            Time values to evaluate inverse laplace at.
         args : tuple, optional
-            additional arguments to pass to F. default args=()
+            Additional arguments to pass to F. Default args=()
 
         Returns
         -------
         inv_laplace : float or 1d array of float
-            numerical inverse laplace transform at time t
+            Numerical inverse Laplace transform at time t.
 
         """
 

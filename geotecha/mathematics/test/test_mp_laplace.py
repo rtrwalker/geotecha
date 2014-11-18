@@ -13,9 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""Some test routines for the mp_laplace module
-
-"""
+"""Testing routines for the mp_laplace module."""
 from __future__ import division, print_function
 
 from nose import with_setup
@@ -150,7 +148,7 @@ def  test_talbot_with_shift():
     ok_(mpallclose(a(1), mpmath.exp(mpmath.mpf('1.0'))))
 
 @with_setup(setup_dps, teardown_dps)
-def  test_talbot_with_more_complecated():
+def  test_talbot_with_more_complicated():
     """test for Talbot numerical inverse Laplace with sin"""
 
     a = Talbot(f=f4, n=24, shift=0, dps=None)

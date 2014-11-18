@@ -31,34 +31,33 @@ demonstrate how to use timeout as a decorator.  They don't seem to work for
 me as the functions must be defined in __main__ to be pickled.  you get the
 idea though.
 
-#TODO: make this a literal block that doesnt get discovered with nosetests.
-#    ::
-#
-#    >>> @timeout(.5)
-#    ... def sleep(x):
-#    ...     print "ABOUT TO SLEEP {0} SECONDS".format(x)
-#    ...     time.sleep(x)
-#    ...     return x
-#
-#    >>> sleep(1)
-#    Traceback (most recent call last):
-#       ...
-#    TimeoutException: timed out after 0 seconds
-#
-#    >>> sleep(.2)
-#    0.2
-#
-#    >>> @timeout(.5)
-#    ... def exc():
-#    ...     raise Exception('Houston we have problems!')
-#
-#    >>> exc()
-#    Traceback (most recent call last):
-#       ...
-#    Exception: Houston we have problems!
 
 
-This is the end!
+.. code-block:: python
+
+    @timeout(.5)
+    def sleep(x):
+        print "ABOUT TO SLEEP {0} SECONDS".format(x)
+        time.sleep(x)
+        return x
+
+    sleep(1)
+    Traceback (most recent call last):
+       ...
+    TimeoutException: timed out after 0 seconds
+
+    sleep(.2)
+    0.2
+
+    @timeout(.5)
+    def exc():
+        raise Exception('Houston we have problems!')
+
+    exc()
+    Traceback (most recent call last):
+       ...
+    Exception: Houston we have problems!
+
 
 """
 #Someuseful stuff

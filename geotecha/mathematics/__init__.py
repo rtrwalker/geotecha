@@ -17,6 +17,6 @@
 """Mathematical operations/functions
 
 The `mathematics` sub-package implements some fundamental mathematical
-algorithms.
+algorithms and others that loosely fall under the banner of maths.
 
 """

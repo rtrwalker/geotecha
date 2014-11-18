@@ -517,7 +517,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         Run after an analysis to check if roots are reasonable.
 
 
-        Paramters
+        Parameters
         ---------
         npts : int
             Number of points to plot.  Default npts=400.

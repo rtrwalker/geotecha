@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""some routines related multi dimensional integral transforms"""
+"""Some routines related multi dimensional integral transforms"""
 
 
 from __future__ import division, print_function
@@ -35,7 +35,7 @@ from geotecha.mathematics.fourier import FourierTransform
 
 def ntransform(func, transforms, transvars, args=None, opts=None):
     """
-    Multi_dimensional integral transforms over multiple variables.
+    Multi-dimensional integral transforms over multiple variables.
 
     General idea and organisation of code is from scipy.integrate.nquad
 
@@ -51,7 +51,7 @@ def ntransform(func, transforms, transvars, args=None, opts=None):
         innermost integral/transform, and ``xn`` is the outermost.
     transform : iterable object of string
         Each elmement of transforms is a string corresponding to one of the
-        available transforms.  current options are:
+        available transforms.  Current options are:
 
         - Hankel
         - Hankel_inverse
@@ -60,13 +60,13 @@ def ntransform(func, transforms, transvars, args=None, opts=None):
         - Laplace_inverse
 
     transvars : iterable
-        transformation variable for each transformation
+        Transformation variable for each transformation.
     args : iterable object, optional
         Additional arguments ``t0, ..., tn``, required by `func`.
     opts : iterable object or dict, optional
         Options to be passed to each transform. May be empty, a dict, or
-        a sequence of dicts or functions that return a dict. If empty, the
-        default options of each transform are used used. If a dict, the same
+        a sequence of dicts, or functions that return a dict. If empty, the
+        default options of each transform are used. If a dict, the same
         options are used for all levels of integration. If a sequence, then each
         element of the sequence corresponds to a particular integration/
         transform. e.g.
@@ -83,9 +83,10 @@ def ntransform(func, transforms, transvars, args=None, opts=None):
 
     See Also
     --------
-    FourierTransform : fourier transform
-    HankelTransform : hankel transform
-    Talbot : inverse laplace transform
+    geotecha.mathematics.laplace.Talbot : numerical inverse Laplace
+    geotecha.mathematics.hankel.HankelTransform : Hankel transform
+    geotecha.mathematics.fourier.FourierTransform : Fourier transform
+
 
     Notes
     -----
@@ -112,7 +113,7 @@ def ntransform(func, transforms, transvars, args=None, opts=None):
        If `f` is not vectorised then the first inverse Laplace transform must
        also have {'vectorised': False}
      - Because the Hankel transform uses numpy broadcasting, it must always
-       be theinner most integral, i.e. first in the `transform` list. If also
+       be the inner most integral, i.e. first in the `transform` list. If also
        doing an inverse laplace transform, then 'Laplace_inverse` must be
        second in the `transform` list with {'vectorised': False} in the
        corresponding `opts` dict.
@@ -154,6 +155,22 @@ def ntransform(func, transforms, transvars, args=None, opts=None):
 
 
 class _OptFunc(object):
+    """When called the object will return the variable used to initialize it
+
+    Helper function for the ntransform function.  Useful when you are using a
+    function that only accepts callable objects.  Say your function expects
+    a callable object that returns a two element list.  If you always want
+    to provide a known two element list then you could hard code a
+    function to return your list, or you could pass _OptFunc(my_list) and
+    avoid all the code snippets.
+
+    Parameters
+    ----------
+    opt : anything
+        The variable that will be returned when the object is called with
+        any positional arguments.
+
+    """
     def __init__(self, opt):
         self.opt = opt
 
@@ -161,17 +178,15 @@ class _OptFunc(object):
         """Return stored dict."""
         return self.opt
 
-#class ppp(object):
-#    """This is the doc string"""
-#    def __init__(self, a):
-#        """this is the init"""
-#        pass
-#    def __call__(self, x):
-#        """ tis is the call"""
-#        pass
-#a=ppp(5)
-
 class _NTransform(object):
+    """Recursively perform integral transforms
+
+    Engine room of the ntransform function.
+
+
+
+    """
+
     def __init__(self, func, transforms, transvars, opts):
         self.abserr = 0
         self.func = func
@@ -206,6 +221,8 @@ class _NTransform(object):
         return val, 0.0
 
     def integral_transform(self, *args, **kwargs):
+        """Perform the transforms"""
+
         depth = kwargs.pop('depth', 0)
         if kwargs:
             raise ValueError('unexpected kwargs')

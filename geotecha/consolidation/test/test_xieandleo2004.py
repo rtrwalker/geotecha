@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""Some test routines for the smear_zones module
+"""Some test routines for the xieandleo2004 module.
 
 """
 from __future__ import division, print_function

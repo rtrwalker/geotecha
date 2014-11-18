@@ -13,9 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""Some test routines for the multi_transform module
-
-"""
+"""Testing routines for the multi_transform module."""
 from __future__ import division, print_function
 
 from nose import with_setup

@@ -14,10 +14,8 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""
-module for testing geotecha.mathematics.geometry
+"""Testing routines for the geometry module"""
 
-"""
 from __future__ import division, print_function
 
 from nose import with_setup
@@ -34,7 +32,7 @@ import unittest
 
 from geotecha.mathematics.geometry import xyz_from_pts
 from geotecha.mathematics.geometry import eqn_of_plane
-from geotecha.mathematics.geometry import replace_x0_and_x1_to_vect
+from geotecha.mathematics.geometry import replace_x0_and_x1_with_vect
 from geotecha.mathematics.geometry import polygon_area
 from geotecha.mathematics.geometry import polygon_centroid
 from geotecha.mathematics.geometry import integrate_f_over_polygon_code
@@ -43,12 +41,12 @@ from geotecha.mathematics.geometry import make_hexahedron
 from geotecha.mathematics.geometry import polyhedron_volume
 from geotecha.mathematics.geometry import polygon_2nd_moment_of_area
 
-def test_replace_x0_and_x1_to_vect():
-    """test for replace_x0_and_x1_to_vect"""
+def test_replace_x0_and_x1_with_vect():
+    """test for replace_x0_and_x1_with_vect"""
 
-    assert_equal(replace_x0_and_x1_to_vect('x0'),'x[:-1]')
-    assert_equal(replace_x0_and_x1_to_vect('x0 + x1 + y0'),'x[:-1] + x[1:] + y[:-1]')
-    assert_equal(replace_x0_and_x1_to_vect('f0', ['f']), 'f[:-1]')
+    assert_equal(replace_x0_and_x1_with_vect('x0'),'x[:-1]')
+    assert_equal(replace_x0_and_x1_with_vect('x0 + x1 + y0'),'x[:-1] + x[1:] + y[:-1]')
+    assert_equal(replace_x0_and_x1_with_vect('f0', ['f']), 'f[:-1]')
 
 
 class test_geometry(object):
@@ -125,7 +123,7 @@ class test_integrate_f_over_polygon_code(unittest.TestCase):
 
         assert_equal(integrate_f_over_polygon_code(1).splitlines(),
                      'def ifxy(pts):\n    "Integrate f = 1 over '
-                     'polygon"\n\n    x, y, z = xyz_from_pts(pts,True)'
+                     'polygon"\n\n    x, y, z = xyz_from_pts(pts, True)'
                      '\n\n    return np.sum((x[:-1]/2 + x[1:]/2)*(-y[:-1] '
                      '+ y[1:]))'.splitlines())
 

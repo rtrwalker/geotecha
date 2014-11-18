@@ -13,9 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""Some test routines for the laplace module
-
-"""
+"""Test routines for the fourier module."""
 from __future__ import division, print_function
 
 from nose import with_setup
@@ -34,8 +32,8 @@ from geotecha.mathematics.fourier import func_mirror_for_even_weight
 from geotecha.mathematics.fourier import func_mirror_for_odd_weight
 from geotecha.mathematics.fourier import cosine_transform
 from geotecha.mathematics.fourier import sine_transform
-
-
+from geotecha.mathematics.fourier import vcosine_transform
+from geotecha.mathematics.fourier import v2dcosine_transform
 
 
 #fro fourier transform pairs see
@@ -282,6 +280,74 @@ class test_func_mirror_for_odd_weight(unittest.TestCase):
         assert_allclose(func_mirror_for_odd_weight(np.array([2,4]),
                                                     self.x_plus_a, 8),
                                                     [-6, -4])
+
+
+# for cosine transform pairs see
+# http://www.efunda.com/math/Fourier_transform/table.cfm?TransName=Fc
+
+def cosine1(x, a):
+    """exp(- a * x"""
+    return np.exp(-a * x)
+def cosine1_(x, a):
+    """a / (a**2 + x**2)"""
+    return  a / (a**2 + x**2)
+
+def cosine2(x, a):
+    """x**(-0.5)"""
+    return x**(-0.5)
+def cosine2_(x, a):
+    """np.sqrt(np.pi/(2*x))"""
+    return  np.sqrt(np.pi / (2*x))
+
+def cosine3(x, y, a, b):
+    return np.exp(-a * x) * np.exp(-b * y)
+def cosine3_(x, y, a, b):
+    return a / (a**2 + x**2) * b / (b**2 + y**2)
+
+
+class test_vcosine_transform(unittest.TestCase):
+    """tests for vcosine_transform"""
+
+    def test_cosine1(self):
+        s = np.array([0.5, 1, 1.6])
+        args=(1.2,)
+
+        shanks_ind=-5
+        assert_allclose(vcosine_transform(cosine1, s, args,
+                                          shanks_ind=shanks_ind),
+                        cosine1_(s, *args), atol=1e-8)
+
+#    def test_cosine2(self):
+#
+#        # This shows the difficulty of doing the cosine transform when there
+#        # are singulatities.  The test fails for atol=1e-8.
+#        s = np.array([0.5, 1, 1.6])
+#        args=(1.2,)
+#
+#        shanks_ind=-5
+#        assert_allclose(vcosine_transform(cosine2, s, args, m=44, ng=100,
+#                                          shanks_ind=shanks_ind),
+#                        cosine2_(s, *args), atol=1e-8)
+#
+
+class test_v2dcosine_transform(unittest.TestCase):
+    """tests for vcosine_transform"""
+
+    def test_cosine3(self):
+        s1 = np.array([0.5, 1, 1.6])
+        s2 = np.array([0.6,1,2])
+        args=(1.2, 1.4)
+
+        shanks_ind=-5#None
+        assert_allclose(v2dcosine_transform(cosine3, s1, s2, args,
+                                          shanks_ind=shanks_ind),
+                        cosine3_(s1[:, np.newaxis], s2[np.newaxis,:], *args), atol=1e-8)
+
+
+
+
+
+
 
 if __name__ == '__main__':
     import nose

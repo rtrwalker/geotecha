@@ -13,7 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""routines related to hankel_transforms"""
+"""Hankel transforms."""
 
 
 from __future__ import division, print_function
@@ -45,41 +45,42 @@ class HankelTransform(object):
     Parameters
     ----------
     func : function or method
-        function to apply hankel trasnform to.  `func` is called with
-        func(r, *args). func should be vectorised in r.
+        Function to apply hankel trasnform to.  `func` is called with
+        func(r, *args). `func` should be vectorised in r.
     args : tuple, optional
-        arguments to pass to f
+        Arguments to pass to f.  Default args=().
     order : integer, optional
-        order of hankel transform, default=0
+        Order of Hankel transform. Default order=0.
     m : int, optional
-        number of segments to break the integration interval into.  Each
+        Number of segments to break the integration interval into.  Each
         segment will be between the zeros of the bessel function or order=
-        `order' divide by r, default=20
+        `order' divide by r Default ,=20.
     points : list/array of float, optional
-        points in addition to those defined by m at which to split the
+        Points in addition to those defined by m at which to split the
         integral.  Use this if `f` itself oscillates or there are
         discontinuities.  Points will only be included that are less than
-        the `m` zeros mentined above. default = None i.e. no extra points.
-        Basically the function is never evaluated at any the points, rather
-        they form the boundary four qauss quadrature.
+        the `m` zeros mentined above. Default points=None i.e. no extra points.
+        Basically the function is never evaluated at any ofthe points, rather
+        they form the boundary four gauss quadrature.
     ng : [7,10,15,20,25,30], optional
-        number of gauss points to use in integration after first zero.
-        default=10. Number of Kronrod points will automatically by 2 * ng + 1
+        Number of gauss points to use in integration after first zero.
+        Default ng=10. Number of Kronrod points will automatically
+        by 2 * ng + 1.
     ng0 : [7,10,15,20,25,30], optional
-        number of gauss points to use in integrating between 0 and first zero
-        default=20
+        Number of gauss points to use in integrating between 0 and first zero.
+        Default ng0=20.
     shanks_ind : int, optional
         Start position of intervals (not including the first interval) from
-        which to begin shanks transformationdefault=None i.e. no extrapolation
-        The first interval will never be included.
+        which to begin shanks transformation.  Default shanks_ind=None
+        i.e. no extrapolation.  The first interval will never be included.
         Be careful when using shanks extrapolation; make sure you only begin
-        to use it after the intgrand is well behaved.  use the plot_integrand
+        to use it after the intgrand is well behaved.  Use the plot_integrand
         method to check your integrand.
 
     Returns
     -------
     f : float
-        value of transform at r
+        Value of transform at r.
 
     Notes
     -----
@@ -88,7 +89,7 @@ class HankelTransform(object):
     .. math:: F_\\nu(s)=\mathcal{H}_\\nu\\{f(r)\\} =
                 \\int_0^{\\infty}rf(r)J_\\nu(sr)\\,\\mathrm{d}r
 
-    provided :math:`\\nu\\gt1/2` the inverse hankel transform is the same as
+    Provided :math:`\\nu\\gt1/2` the inverse hankel transform is the same as
     the normal transform:
 
     .. math:: f(r)=\mathcal{H}_{\\nu}^{-1}\\{F_{\\nu}(s)\\} =
@@ -122,7 +123,7 @@ class HankelTransform(object):
         self.zeros_of_jn()
 
     def zeros_of_jn(self):
-        """Roots of Jn for determining integration intervals (0 prepended"""
+        """Roots of Jn for determining integration intervals (0 prepended)"""
 
         self.jn_0s = np.zeros(self.m + 1, dtype=float)
         self.jn_0s[1:] = jn_zeros(self.order, self.m)
@@ -156,12 +157,12 @@ class HankelTransform(object):
         Returns
         -------
         F : float
-            transformed functin evaluated at s
+            Transformed functin evaluated at s.
         err_est : float
-            error estimate.  For each interval (i.e. between bessel zeros
+            Error estimate.  For each interval (i.e. between bessel zeros
             and any specified points) sum up 200*abs(G-K)**1.5.  The error is
             calculated before any shanks extrapolation so the error is just a
-            measure of the difference between the coarse gauss quadrature and
+            measure of the difference between the coarse Gauss quadrature and
             the finer Kronrod quadrature.
 
 
@@ -204,23 +205,23 @@ class HankelTransform(object):
 
 
     def plot_integrand(self, s, npts = 1000):
-        """plot the integrand
+        """Plot the integrand
 
         Parameters
         ----------
         s : float
-            transform variable, i.e. point to evaluate transform at
+            Transform variable, i.e. point to evaluate transform at
         npts : int, optional
-            number of points to plot. default= 1000
+            Number of points to plot. Default npts=1000.
 
         Returns
         -------
         fig : matplotlib.Figure
-            use plt.show to plot
+            Use plt.show to plot
 
         Notes
         -----
-        use this to check if your parameters are appropriate
+        Use this to check if your parameters are appropriate.
 
         """
 
@@ -252,32 +253,35 @@ class HankelTransform(object):
 def vhankel_transform(f, r, args=(), order=0, m=20, ng=20, shanks_ind=None):
     """Hankel transform of f(r)
 
+    This is a vectorised Hankel transform
+
     Parameters
     ----------
     f : function or method
-        function to apply hankel trasnform to.  f is called with
-        f(s, *args)
+        Function to apply hankel trasnform to.  f is called with
+        f(s, *args).
     r : 1d array
-        coordinate(s) to evaluate transform at
+        Coordinate(s) to evaluate transform at.
     args : tuple, optional
-        arguments to pass to f
+        Arguments to pass to f, default args=().
     order : integer, optional
-        order of hankel transform, default=0
+        Order of hankel transform. Default order=0.
     m : int, optional
-        number of segments to break the integration interval into.  Each
-        segment will be between the zeros of the bessel function, default=20
+        Number of segments to break the integration interval into.  Each
+        segment will be between the zeros of the bessel function.
+        Default m=20.
     ng : [2-20, 32, 64, 100], optional
-        number of gauss points to use in integration.
+        Number of gauss points to use in integration. Default ng=20.
     shanks_ind : int, optional
-        Start position of intervals to start shanks extrapolatoin.
-        default=None i.e. no extrapolation.
+        Start position of intervals to start shanks extrapolation.
+        Default shanks_ind=None i.e. no extrapolation.
         Be careful when using shanks extrapolation; make sure you only begin
         to use it after the intgrand is well behaved.
 
     Returns
     -------
     f : 1d array of float
-        value of transform at r
+        Value of transform at r.
 
     Notes
     -----
@@ -286,7 +290,7 @@ def vhankel_transform(f, r, args=(), order=0, m=20, ng=20, shanks_ind=None):
     .. math:: F_\\nu(s)=\mathcal{H}_\\nu\\{f(r)\\} =
                 \\int_0^{\\infty}rf(r)J_\\nu(sr)\\,\\mathrm{d}r
 
-    provided :math:`\\nu\\gt1/2` the inverse hankel transform is the same as
+    Provided :math:`\\nu\\gt1/2` the inverse hankel transform is the same as
     the normal transform:
 
     .. math:: f(r)=\mathcal{H}_{\\nu}^{-1}\\{F_{\\nu}(s)\\} =
@@ -296,8 +300,13 @@ def vhankel_transform(f, r, args=(), order=0, m=20, ng=20, shanks_ind=None):
     Note that because this implementation does not allow for input of
     extra point to break up the integration inteval, there is no way to
     account for singularities and other oscillations.  If you need this control
-    then see the HankelTransorm class which is not vectorized but provides a
+    then see the HankelTransform class which is not vectorized but provides a
     few more options.
+
+
+    See Also
+    --------
+    HankelTransform : Non vectorised Hankel transform.
 
 
     References
@@ -357,49 +366,49 @@ def vhankel_transform(f, r, args=(), order=0, m=20, ng=20, shanks_ind=None):
         return shanks(igral, shanks_ind)
 
 
-#Hankel transform pairs
-#zero order
-def hankel1(s, a):
-    """a/(s**2 + a**2)**1.5"""
-    #H(hankel1)=exp(-a* r)
-    return a/(s**2 + a**2)**1.5
-def hankel1_(r, a):
-    """exp(-a*r)"""
-    return np.exp(-a*r)
-
-def hankel2(s, *args):
-    "1/s"
-    #H(hankel2)=1/r
-    return 1/s
-def hankel2_(r, *args):
-    "1/r"
-    return 1/r
-
-def hankel3(s,a):
-    "1/s*jn(0,a/s)"
-    #H(hankel3)=1/rJ0(2*(a*r)**0.5)
-    return 1/s*jn(0,a/s)
-def hankel3_(r, a):
-    "1/rJ0(2*(a*r)**0.5)"
-    return 1/r*jn(0,(2*(a*r)**0.5))
-
-#integer order
-def hankel4(s, a, v=0):
-    """(sqrt(s**2+a**2)-a)**v/(s**v*sqrt(s**2+a**2))"""
-    #H(hankel4)=exp(-a*r)/r
-    return (np.sqrt(s**2 + a**2) - a)**v/(s**v*np.sqrt(s**2+a**2))
-
-def hankel4_(r, a, *args):
-    """exp(-a*r)/r"""
-    return np.exp(-a*r)/r
-
-def hankel5(s, a, v=0):
-    """s**v/(2*a**2)**(v+1)*exp(-s**2/(4*a**2))"""
-    #H(hankel5)=exp(-a**2*r**2)*r**v
-    return s**v/(2*a**2)**(v+1)*np.exp(-s**2/(4*a**2))
-def hankel5_(r, a, v=0):
-    """exp(-a**2*r**2)*r**v"""
-    return np.exp(-a**2*r**2)*r**v
+##Hankel transform pairs
+##zero order
+#def hankel1(s, a):
+#    """a/(s**2 + a**2)**1.5"""
+#    #H(hankel1)=exp(-a* r)
+#    return a/(s**2 + a**2)**1.5
+#def hankel1_(r, a):
+#    """exp(-a*r)"""
+#    return np.exp(-a*r)
+#
+#def hankel2(s, *args):
+#    "1/s"
+#    #H(hankel2)=1/r
+#    return 1/s
+#def hankel2_(r, *args):
+#    "1/r"
+#    return 1/r
+#
+#def hankel3(s,a):
+#    "1/s*jn(0,a/s)"
+#    #H(hankel3)=1/rJ0(2*(a*r)**0.5)
+#    return 1/s*jn(0,a/s)
+#def hankel3_(r, a):
+#    "1/rJ0(2*(a*r)**0.5)"
+#    return 1/r*jn(0,(2*(a*r)**0.5))
+#
+##integer order
+#def hankel4(s, a, v=0):
+#    """(sqrt(s**2+a**2)-a)**v/(s**v*sqrt(s**2+a**2))"""
+#    #H(hankel4)=exp(-a*r)/r
+#    return (np.sqrt(s**2 + a**2) - a)**v/(s**v*np.sqrt(s**2+a**2))
+#
+#def hankel4_(r, a, *args):
+#    """exp(-a*r)/r"""
+#    return np.exp(-a*r)/r
+#
+#def hankel5(s, a, v=0):
+#    """s**v/(2*a**2)**(v+1)*exp(-s**2/(4*a**2))"""
+#    #H(hankel5)=exp(-a**2*r**2)*r**v
+#    return s**v/(2*a**2)**(v+1)*np.exp(-s**2/(4*a**2))
+#def hankel5_(r, a, v=0):
+#    """exp(-a**2*r**2)*r**v"""
+#    return np.exp(-a**2*r**2)*r**v
 
 
 

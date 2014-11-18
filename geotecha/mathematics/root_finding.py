@@ -14,10 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""
-module for rootfinding
-
-"""
+"""Routines for finding zeros/roots of equations."""
 
 from __future__ import print_function, division
 
@@ -28,7 +25,7 @@ import scipy.optimize
 
 def find_n_roots(func, args=(), n=1, x0=0.001, dx=0.001, p=1.0, max_iter=2000,
                  atol=1e-8, rtol=1e-5, debug=False, fsolve_kwargs={}):
-    """find the first n roots of a function
+    """Find the first n zeros/roots of a function
 
     Root/zero finding can be tempramental.  Small `dx`, `p`=1,  and large
     `max_iter` will probably find the roots/zeros but it may take some time.
@@ -36,40 +33,39 @@ def find_n_roots(func, args=(), n=1, x0=0.001, dx=0.001, p=1.0, max_iter=2000,
     Parameters
     ----------
     func : callable f(x, *args)
-        A function that takes at least one argument
+        A function that takes at least one argument.
     args : tuple, optional
-        any extra arguments to `func`
+        Any extra arguments to `func`. Default args=().
     n : float, optional
-        number of roots to find, default n=1
+        Number of roots to find, Default n=1.
     x0 : float, optional
         An x value less than the first root. This is NOT the initial guess of
-        fsolve! default x0 = 0.001
+        fsolve! Default x0=0.001.
     dx : float, optional
-        initial interval lenght to check for root in. default dx = 0.001
+        Initial interval length to check for root in. Default dx=0.001.
     p : float, optional
-        factor to increase dx by up untill first root is found. default p=1.0
-    max_iter: int, optional
-        maximum iterations when searching for an interval containing a root.
-        .default = 2000.  Note this is not the same as fsolve maxfev keword
-        argument.
-    atol, rtol: float, optional
+        Factor to increase dx by up untill first root is found. Default p=1.0.
+    max_iter : int, optional
+        Maximum iterations when searching for an interval containing a root.
+        Default max_iter=2000.  Note this is not the same as fsolve
+        maxfev keword argument.
+    atol, rtol : float, optional
         numpy.allclose parameters.  Used for checking if found the
-        same root. default atol = 1e-8, rtol=1e-5
-    debug: True/False, optional
-        print calculations to stdout. default=False
-    fsolve_kwargs: dict, optional
+        same root. Default atol=1e-8, rtol=1e-5.
+    debug : True/False, optional
+        Print calculations to stdout. Default debug=False
+    fsolve_kwargs : dict, optional
         dict of kwargs to pass to scipy.optimize.fsolve.
-        Default fsolve_kwargs={}
+        Default fsolve_kwargs={}.
 
 
     Returns
     -------
-    roots: 1d ndarray
-        array of len n containing the first n roots of `func`.
+    roots : 1d ndarray
+        Array of len n containing the first n roots of `func`.
 
     Notes
     -----
-
     Here is approximately what happens:
 
      - `func` is evaluated with `x0` and `args` to give y0
@@ -85,7 +81,7 @@ def find_n_roots(func, args=(), n=1, x0=0.001, dx=0.001, p=1.0, max_iter=2000,
        for fsolve is the x-axis intercept of the straight line joining
        (x0, y0) and (x1, y1).
      - Once a root is found, the search begins for the next root which starts
-       between the root and the current x1at the current x1 or 0.1. The
+       between the root and the current x1. The
        current dx value, the one that contained the root is reduced by a fifth
        and off we go again.
 
@@ -100,7 +96,6 @@ def find_n_roots(func, args=(), n=1, x0=0.001, dx=0.001, p=1.0, max_iter=2000,
        along with the current dx will be reduced and the search will continue.
        If the same root is found five times then the root finding parameters
        are inappropriate and an error message will be raised.
-
 
 
     """

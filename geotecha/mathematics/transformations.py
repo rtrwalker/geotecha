@@ -14,30 +14,30 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""this module implements some transformations"""
+"""Rotines to perform transformations"""
 
 from __future__ import print_function, division
 import numpy as np
 
 def depth_to_reduced_level(z, H = 1.0, rlzero=None):
-    """convert normalised depth to rl, or simply actual depth
+    """Convert normalised depth to reduced level, or non-normalised depth
 
 
     Parameters
     ----------
     z : float, or ndarray
-        normalised depth
+        Normalised depth. Usually between 0 and 1.
     H : float, optional
-        height of soil layer.  Default `H` = 1.0
+        Height of soil layer.  Default H=1.0.
     rlzero : float, optional
-        reduced level of soil surface. default = None.  If rlzero=None then
+        Reduced level of soil surface. Default rlzero=None.  If rlzero=None then
         function will return non normalised depth H*z, otherwise it will
-        return rl=rlzero - H * z
+        return rl = rlzero - H * z
 
     Returns
     -------
-    out: float or ndarray
-        actual depth or reduced level
+    out : float or ndarray
+        Actual depth or reduced level.
 
     """
 

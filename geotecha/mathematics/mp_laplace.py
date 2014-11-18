@@ -34,27 +34,25 @@ sin = np.frompyfunc(mpmath.sin, 1, 1)
 exp = np.frompyfunc(mpmath.exp, 1, 1)
 
 class Talbot(object):
-    """numerical inverse laplace transform using mpmath for high precision
+    """Numerical inverse Laplace transform using mpmath for high precision
 
-    Attributes
+    Parameters
     ----------
     f : function or method
-        function to perform inverse Laplace transform on. Function should be
+        Function to perform inverse Laplace transform on. Function should be
         vectorised.
     n : even int, optional
-        number of integration points. if n is even it will be rounded up to
-        nearest even number default n = 24
+        Number of integration points. if n is even it will be rounded up to
+        nearest even number Default n=24.
     shift : float
         Shift contour to the right in case there is a pole on the positive
-        real axis. default shift=0.0
+        real axis. Default shift=0.0.
     dps : int, optional
-        mpmath.mp.dps.  default dps=None i.e. use what exists usually 15.
-        note  that this changes the global dps value
+        mpmath.mp.dps.  Default dps=None i.e. use what exists usually 15.
+        note that this changes the global dps value
 
     Notes
     -----
-    laplace.py with mpmath
-        appropriate for high precision
 
     Talbot suggested that the Bromwich line be deformed into a contour that
     begins and ends in the left half plane, i.e., z infinity at both ends.
@@ -83,8 +81,8 @@ class Talbot(object):
 
     See Also
     --------
-    geotecha.mathematics.laplace.Talbot : numerical inverse laplace without mpmath;
-        less precision
+    geotecha.mathematics.laplace.Talbot : numerical inverse laplace without
+        mpmath; less precision (though still adequate) but faster.
 
     """
     def __init__(self, f, n=24, shift=0.0, dps = None):
@@ -106,14 +104,14 @@ class Talbot(object):
         Parameters
         ----------
         t : single value or np.array of float
-            time values to evaluate inverse laplace at
+            Time values to evaluate inverse Laplace at.
         args : tuple, optional
-            additional arguments to pass to F. default args=()
+            Additional arguments to pass to F. Default args=().
 
         Returns
         -------
         inv_laplace : mpmath.mpf or np.array of mpmath.mpf
-            numerical inverse laplace transform at time t
+            Numerical inverse laplace transform at time t
 
         """
 

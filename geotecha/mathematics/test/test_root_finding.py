@@ -13,9 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""Some test routines for the speccon_1d_vert_radial_boundary module
+"""Testing routines for the root_finding module."""
 
-"""
+
 from __future__ import division, print_function
 
 from nose import with_setup
