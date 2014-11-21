@@ -14,8 +14,9 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
-"""some one dimesional plottig stuff
-one d data is basically x-y data .
+"""Routines to produce some matplotlib plots for one dimesional data.
+
+One dimensional data is basically x-y data. (i.e. no contour plot needed)
 
 """
 
@@ -33,26 +34,30 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import geotecha.piecewise.piecewise_linear_1d as pwise
 import warnings
 
+
 def rgb_shade(rgb, factor=1, scaled=True):
-    """apply shade (darken) to an rgb triplet
+    """Apply shade (darken) to a red, green, blue (rgb) triplet
 
     If rgba tuple is given the 'a' value is not altered.
 
     Parameters
     ----------
-    rgb: tuple
-        triplet of rgb values.  Note can be an rgba value
-    factor: float
-        between 0 and 1.
-        factor by which to shade.  Default=1
-    scaled: bool
-        if True then assumes RGB values aare scaled between 0, 1. If False
-        rgb values are between 0 and 255.  default = True.
+    rgb : tuple
+        Triplet of rgb values.  Note can be an rgba value.
+    factor : float
+        Between 0 and 1. Factor by which to shade.  Default factor=1.
+    scaled : bool
+        If True then assumes RGB values aare scaled between 0, 1. If False
+        rgb values are between 0 and 255.  Default scaled=True.
 
     Returns
     -------
-    rgb_new: tuple
-        new tuple of rgb (or rgba)
+    rgb_new : tuple
+        New tuple of rgb (or rgba) values.
+
+    See Also
+    --------
+    rgb_tint : Lighten an rgb triplet.
 
     Examples
     --------
@@ -66,7 +71,8 @@ def rgb_shade(rgb, factor=1, scaled=True):
 
     #calc from http://stackoverflow.com/a/6615053/2530083
     if factor<0 or factor>1:
-        raise ValueError('factor must be between 0 and 1.  You have {:g}'.format(factor))
+        raise ValueError('factor must be between 0 and 1.  '
+                         'You have {:g}'.format(factor))
 
     rgb_new = [v * factor for v in rgb[:3]]
     if len(rgb)==4:
@@ -74,26 +80,30 @@ def rgb_shade(rgb, factor=1, scaled=True):
 
     return tuple(rgb_new)
 
+
 def rgb_tint(rgb, factor=0, scaled=True):
-    """apply tint (lighten) to an rgb triplet
+    """Apply tint (lighten) to a red, green, blue (rgb) triplet
 
     If rgba tuple is given the 'a' value is not altered.
 
     Parameters
     ----------
-    rgb: tuple
-        triplet of rgb values.  Note can be an rgba value
-    factor: float
-        between 0 and 1.
-        factor by which to tint. default=0
-    scaled: bool
-        if True then assumes RGB values aare scaled between 0, 1. If False
-        rgb values are between 0 and 255.  default = True.
+    rgb : tuple
+        Triplet of rgb values.  Note can be an rgba value.
+    factor : float
+        Between 0 and 1. Factor by which to tint. Default factor=0.
+    scaled : bool
+        If True then assumes RGB values aare scaled between 0, 1. If False
+        rgb values are between 0 and 255.  Default scaled=True.
 
     Returns
     -------
-    rgb_new: tuple
-        new tuple of rgb ( or rgba)
+    rgb_new : tuple
+        New tuple of rgb ( or rgba).
+
+    See Also
+    --------
+    rgb_shade : Darken an rgb triplet.
 
     Examples
     --------
@@ -126,20 +136,20 @@ def rgb_tint(rgb, factor=0, scaled=True):
 
 def copy_dict(source_dict, diffs):
     """Returns a copy of source_dict, updated with the new key-value
-       pairs in diffs.
+       pairs in diffs dict.
 
 
     Parameters
     ----------
-    source_dict: dict
-        source dictionary
-    diffs: dict
-        dictionary with which to update `source_dict`
+    source_dict : dict
+        Source dictionary.
+    diffs : dict
+        Dictionary with which to update `source_dict`.
 
     Returns
     -------
-    out: dict
-        shallow copy of `source_dict` updated with `diffs` dict.
+    out : dict
+        Shallow copy of `source_dict` updated with `diffs` dict.
 
     References
     ----------
@@ -165,7 +175,7 @@ class MarkersDashesColors(object):
     """Nice looking markers, dashed lines, and colors for matplotlib line plots
 
     Use this object to create a list of style dictionaries.  Each style dict
-    can be unpacked when passed to the matplotlib.plot command.  each dict
+    can be unpacked when passed to the matplotlib.plot command.  Each dict
     contains the appropriate keywords to set the marker, dashes, and color
     properties.  You can turn the list into a cycle using itertools.cycle
     To see the marker, dashes, and color options run the `demo_options' method.
@@ -175,35 +185,49 @@ class MarkersDashesColors(object):
 
     Parameters
     ----------
-    kwargs:
+    **kwargs : keyword arguments
         key value pairs to override the default_marker. e.g. color=(1.0,0,0)
         would change the default line and marker color to red. markersize=8
-        would dchange all marker sizes to 8. Most likely value to change are:
-        color, markersize, alpha.
+        would change all marker sizes to 8. Most likely value to change are
+        color, markersize, alpha.  Defult values of the default_marker are:
+
+        ================= ===========================================
+        key               value
+        ================= ===========================================
+        markersize        5
+        markeredgecolor   `almost_black`, '#262626'
+        markeredgewidth   1
+        markerfacecolor   `almost_black`, '#262626'
+        alpha             0.9
+        color             `almost_black`, '#262626'
+        ================= ===========================================
+
 
     Attributes
     ----------
-    almost_black: str
-        hex string representing the default color, almost black '#262626'
-    color: matplotlib color
-        default color of markers and lines.  Default = almost_black
-    dashes: list of tuples
-        list of on, off tuples for use with matplotlib dashes.
+    almost_black : str
+        hex string representing the default color, almost black '#262626'.
+    color : matplotlib color
+        Default color of markers and lines.  Default color=`almost_black`.
+    dashes : list of tuples
+        List of on, off tuples for use with matplotlib dashes.
         See `construct_dashes` method.
-    colors: list of tuples
-        list of rgb tuples describing colors.  see `construct_dashes`
-    markers: list of dict
-        list of dict describing marker properties to pass to matplotlib.plot
-        command.  see `construct_markers` method.
-    default_marker: dict
-        default properties for markers.  These defaults will be overridden by
-        the values in `markers`
+    colors : list of tuples
+        List of rgb tuples describing colors.  See `construct_dashes`.
+    markers : list of dict
+        List of dict describing marker properties to pass to matplotlib.plot
+        command.  See `construct_markers` method.
+    default_marker : dict
+        Default properties for markers.  These defaults will be overridden by
+        the values in `markers`. Before initialization `default_marker` has
+        the following keys.
+
 
     """
 
     almost_black = '#262626'
     def __init__(self, **kwargs):
-        """initialization of MarkersDashesColors object"""
+        """Initialization of MarkersDashesColors object"""
 
         self.color = kwargs.get('color', self.almost_black)
         self.default_marker={#'marker':'o',
@@ -229,7 +253,7 @@ class MarkersDashesColors(object):
                  dashes=None,
                  marker_colors=None,
                  line_colors=None):
-        """list of styles to unpack in matplotlib.plot for pleasing markers
+        """List of styles to unpack in matplotlib.plot for pleasing lines/markers
 
         If `markers`, `dashes`, `marker_colors`, and `line_colors` are all
         ``None`` then styles will be a cycle through combos of markers, colors,
@@ -238,18 +262,19 @@ class MarkersDashesColors(object):
 
         Parameters
         ----------
-        markers: sequence
-            list of ``int`` specifying  index of self.markers.  Default=None
-            i.e. no markers
-        dashes: sequence
-            list of ``int`` specifying index of self.dashes.  Default=None i.e.
-            no line.
-        marker_colors: sequence
-            list of ``int`` specifying index of self.colors to apply to
-            each marker. Default=None i.e. use self.color for all markers.
-        line_colors: sequence
-            list of ``int`` specifying index of self.colors.  Default=None i.e.
-            use self.color for lines.
+        markers : sequence
+            List of ``int`` specifying  index of self.markers.
+            Default markers=None, i.e. no markers.
+        dashes : sequence
+            List of ``int`` specifying index of self.dashes.
+            Default dashes=None i.e. no line.
+        marker_colors : sequence
+            List of ``int`` specifying index of self.colors to apply to
+            each marker. Default marker_colors=None i.e. use self.color
+            for all markers.
+        line_colors : sequence
+            List of ``int`` specifying index of self.colors.
+            Default line_colors=None i.e. use self.color for lines.
 
 
         """
@@ -322,11 +347,12 @@ class MarkersDashesColors(object):
 
 
     def merge_default_markers(self):
-        """merge self.default_marker dict with each dict in self.markers"""
+        """Merge self.default_marker dict with each dict in self.markers"""
         self.markers=[copy_dict(self.default_marker, d) for d in self.markers]
         return
+
     def construct_dashes(self):
-        """list of on, off tuples for use with matplotlib dashes"""
+        """List of on, off tuples for use with matplotlib dashes"""
 
         self.dashes=[(None, None),
                      (10,3),
@@ -336,18 +362,21 @@ class MarkersDashesColors(object):
                      (10,10),
                     ]#, (7,3,7,3,7,3,2,3),(20,20) ,(5,5)]
         return
+
     def tint_colors(self, factor=1):
         "Lighten all colors by factor"
 
         self.colors = [rgb_tint(v, factor) for v in self.colors]
         return
+
     def shade_colors(self, factor=1):
         "Darken all colors by factor"
 
         self.colors = [rgb_shade(v, factor) for v in self.colors]
         return
+
     def construct_colors(self):
-        """populate self.colors: a list of rgb colors"""
+        """Populate self.colors: a list of rgb colors"""
 
 
         # These are from brewer2mpl.get_map('Set2', 'qualitative', 8).mpl_colors
@@ -364,7 +393,7 @@ class MarkersDashesColors(object):
         self.shade_colors(0.8)
 
     def construct_markers(self):
-        """populate self.markers: a list of dict that define a matplotlib marker
+        """Populate self.markers: a list of dict that define a matplotlib marker
 
         run `self.merge_default_markers` after running
         `self.construct_markers` so that default properties are applied
@@ -630,8 +659,9 @@ class MarkersDashesColors(object):
         self.styles = self(markers, dashes, marker_colors, line_colors)
 
         return
+
     def demo_styles(self):
-        """show a figure of all the styles in self.styles"""
+        """Show a figure of all the styles in self.styles"""
 
         fig = plt.figure(figsize=(10,10))
         ax = fig.add_subplot(111, frame_on=True)
@@ -639,7 +669,7 @@ class MarkersDashesColors(object):
         ax.get_yaxis().set_ticks([])
 
         if len(self.styles)==0:
-            ax.set_title("no styles set.  Use the 'construct_styles' method")
+            ax.set_title("No styles set.  Use the 'construct_styles' method.")
         else:
             for i, style in enumerate(self.styles):
                 x = (i % 5)*2
@@ -657,7 +687,7 @@ class MarkersDashesColors(object):
         return
 
     def demo_options(self):
-        """show a figure with all the marker, dashes, color options available"""
+        """Show a figure with all the marker, dashes, color options available"""
 
         #markers
         gs = gridspec.GridSpec(3,1)
@@ -722,13 +752,13 @@ class MarkersDashesColors(object):
 
 
 def pleasing_defaults():
-    """alter some matplotlib rcparams defaults to be visually more appealing
+    """Alter some matplotlib rcparams defaults to be visually more appealing
 
 
     References
     ----------
     Many of the ideas/defaults/code come from Olga Botvinnik [1]_, and her
-    prettyplot package [2]_.
+    `prettyplot` package [2]_.
 
     .. [1] http://blog.olgabotvinnik.com/post/58941062205/prettyplotlib-painlessly-create-beautiful-matplotlib
     .. [2] http://olgabot.github.io/prettyplotlib/
@@ -792,122 +822,28 @@ def pleasing_defaults():
     mpl.rcParams['text.color'] = almost_black
 
 
-#def plot_common_x(x_y_for_each_plot,
-#
-#          x_axis_label='x', y_axis_labels=None, legend_labels=None,
-#          hspace=0.1, height_ratios=None,
-#          plot_type='plot',
-#          kwargs_figure={}):
-#    """
-#    Create a column of subplots with a common x-axis.
-#
-#    plots are 'numbered' upward from zero (at bottom)
-#
-#    Parameters
-#    ----------
-#    x_y_for_each_plot: list
-#        tuple of x,y data for each plot. Data may be nested
-#        e.g. x_y_for_each_plot=[([x0,y0]), ([x1,y1]), ([x2_1, y2_1], [x_2_2, y2_2]))
-#    x_axis_label: str, optional
-#        x-axis label. Default='x'
-#    y_axis_labels: sequence of str, optional
-#        y-axis labels.  Default=None i.e no y axis labels.  Use None in the
-#        sequence to turn off a particular label
-#        e.g. y_axis_labels=('y0','y1','y2')
-#    legend_labels: sequence of sequence of str, optional
-#        legend labels for each line in plot. default=None i.e. no line labels
-#        e.g. legend_labels=(['a1'], ['b1'], ['c1','c2'])
-#    line_labels: sequence of sequece of str, optional
-#        label to annotate each line in plot.
-#    hspace: float, optional
-#        vertical space between each subplot. default=0.1
-#    height_ratios: list, optional
-#        height ratios of plots. default=None i.e. all subplots have the same
-#        height.
-#    plot_type: str, optional
-#        matplotlib.pyplot method to use.  default='plot' i.e. x-y plot.  e.g.
-#        plot_type='scatter' gives a scatter plot.
-#    kwargs_figure: dict, optional
-#        dictionary of keyword arguments that wll be passed to the plt.figure
-#        e.g. kwars_figure=dict(figsize=(8, 6), dpi=80, facecolor='w',
-#        edgecolor='k')
-#
-#
-#    """
-#
-#    n = len(x_y_for_each_plot)
-#
-#    fig = plt.figure(**kwargs_figure)
-#
-#    if height_ratios is None:
-#        height_ratios = [1 for i in range(n)]
-#
-#    gs=gridspec.GridSpec(n,1,
-#                height_ratios=height_ratios[::-1])
-#    ax=[]
-#    line_objects=[]
-#    for i, x_y in enumerate(x_y_for_each_plot):
-#        if i==0:
-#            ax.append(fig.add_subplot(gs[n-1-i]))
-#
-#            if not x_axis_label is None:
-#                ax[i].set_xlabel(x_axis_label)
-#        else:
-#            ax.append(fig.add_subplot(gs[n-1-i], sharex=ax[0]))
-#            plt.setp(ax[i].get_xticklabels(), visible=False)
-#
-#        if not y_axis_labels is None:
-#            if not y_axis_labels[i] is None:
-#                ax[i].set_ylabel(y_axis_labels[i])
-#
-#        for j, (x,y) in enumerate(x_y):
-#            ax[i].plot
-#            #line_objects[i].append(getattr(ax[i], plot_type)(x,y)) #http://stackoverflow.com/a/3071/2530083
-#            line_objects.append(getattr(ax[i], plot_type)(x,y)) #http://stackoverflow.com/a/3071/2530083
-#
-#    if not legend_labels is None:
-#        for i, lines in enumerate(line_objects):
-#            if not legend_labels[i] is None:
-#                for j, line in enumerate(lines):
-#                    if not legend_labels[i][j] is None:
-#                        line.set_label(legend_labels[i][j]) #consider using '{0:.3g}' for numbers
-#
-#    legends=[v.legend() for v in ax]
-#    [leg.draggable(True) for leg in legends] #http://stackoverflow.com/questions/2539477/how-to-draggable-legend-in-matplotlib
-#
-#    return fig
-
-
-
-
-
-
-
-
-
-
 def iterable_method_call(iterable, method, unpack, *args):
-    """call a method on each element of an iterable
+    """Call a method on each element of an iterable
 
 
     iterable[i].method(arg)
 
     Parameters
     ----------
-    iterable: sequence etc.
-        iterable whos members will have thier attribute changed
-    method: string
-        method to call
-    unpack: bool
-        if True then each member of args will be unpacked before passing to
+    iterable : sequence etc.
+        Iterable whos members will have thier attribute changed.
+    method : string
+        Method to call.
+    unpack : bool
+        If True then each member of `*args` will be unpacked before passing to
         method.
-    args: value or sequence of values
-        if a single value then all members of `iterable` will have there
-        method called with the same arguments.  If a sequence of arguments
-        then each
-        member[0].method will be called with args[0],
-        member[1].method will be set to args[1] etc.
-        skip elements by having corresponding value of args=None
+    *args : positional arguments
+        If a single positional argument then all members of `iterable`
+        will have their method called with the same single argument.
+        If more that one positional argument then
+        iterable[0].method will be called with args[0],
+        iterable[1].method will be set to args[1] etc.
+        Skip elements by having corresponding value of *args=None.
 
     """
 
@@ -938,23 +874,22 @@ def iterable_method_call(iterable, method, unpack, *args):
 
 
 def xylabel_subplots(fig, y_axis_labels=None, x_axis_labels=None):
-    """set x-axis label and y-axis label for each sub plot in figure
+    """Set x-axis label and y-axis label for each sub plot in figure
 
-    Note: labels axes in the order they were created, which is not always the
-    way they appear in the figure.
+    Note: labels are applied to axes in the order they were created, which
+    is not always the way they appear in the figure.
 
     Parameters
     ----------
-    fig: matplotlib.Figure
-        figure to apply labels to
-    y_axis_labels: sequence
-        label to place on y-axis of each subplot.  Use None to skip a subplot
-    x_axis_labels: sequence
-        label to place on x-axis of each subplot.  Use None to skip a subplot
+    fig : matplotlib.Figure
+        Figure to apply labels to.
+    y_axis_labels : sequence
+        Label to place on y-axis of each subplot.  Use None to skip a subplot.
+        Default y_axis_label=None
+    x_axis_labels : sequence
+        Label to place on x-axis of each subplot.  Use None to skip a subplot.
+        Default x_axis_label=None.
 
-    Returns
-    -------
-    None
 
     """
 
@@ -970,100 +905,8 @@ def xylabel_subplots(fig, y_axis_labels=None, x_axis_labels=None):
     return
 
 
-
-
-#def plot_common_x(x_y_for_each_plot,
-#
-#          x_axis_label='x', y_axis_labels=None, legend_labels=None,
-#          hspace=0.1, height_ratios=None,
-#          plot_type='plot',
-#          kwargs_figure={}):
-#    """
-#    Create a column of subplots with a common x-axis.
-#
-#    plots are 'numbered' upward from zero (at bottom)
-#
-#    Parameters
-#    ----------
-#    x_y_for_each_plot: list
-#        tuple of x,y data for each plot. Data may be nested
-#        e.g. x_y_for_each_plot=[([x0,y0]), ([x1,y1]), ([x2_1, y2_1], [x_2_2, y2_2]))
-#    x_axis_label: str, optional
-#        x-axis label. Default='x'
-#    y_axis_labels: sequence of str, optional
-#        y-axis labels.  Default=None i.e no y axis labels.  Use None in the
-#        sequence to turn off a particular label
-#        e.g. y_axis_labels=('y0','y1','y2')
-#    legend_labels: sequence of sequence of str, optional
-#        legend labels for each line in plot. default=None i.e. no line labels
-#        e.g. legend_labels=(['a1'], ['b1'], ['c1','c2'])
-#    line_labels: sequence of sequece of str, optional
-#        label to annotate each line in plot.
-#    hspace: float, optional
-#        vertical space between each subplot. default=0.1
-#    height_ratios: list, optional
-#        height ratios of plots. default=None i.e. all subplots have the same
-#        height.
-#    plot_type: str, optional
-#        matplotlib.pyplot method to use.  default='plot' i.e. x-y plot.  e.g.
-#        plot_type='scatter' gives a scatter plot.
-#    kwargs_figure: dict, optional
-#        dictionary of keyword arguments that wll be passed to the plt.figure
-#        e.g. kwars_figure=dict(figsize=(8, 6), dpi=80, facecolor='w',
-#        edgecolor='k')
-#
-#
-#    """
-#
-#    n = len(x_y_for_each_plot)
-#
-#    fig = plt.figure(**kwargs_figure)
-#
-#    if height_ratios is None:
-#        height_ratios = [1 for i in range(n)]
-#
-#    gs=gridspec.GridSpec(n,1,
-#                height_ratios=height_ratios[::-1])
-#    ax=[]
-#    line_objects=[]
-#    for i, x_y in enumerate(x_y_for_each_plot):
-#        if i==0:
-#            ax.append(fig.add_subplot(gs[n-1-i]))
-#
-#            if not x_axis_label is None:
-#                ax[i].set_xlabel(x_axis_label)
-#        else:
-#            ax.append(fig.add_subplot(gs[n-1-i], sharex=ax[0]))
-#            plt.setp(ax[i].get_xticklabels(), visible=False)
-#
-#        if not y_axis_labels is None:
-#            if not y_axis_labels[i] is None:
-#                ax[i].set_ylabel(y_axis_labels[i])
-#
-#        for j, (x,y) in enumerate(x_y):
-#            ax[i].plot
-#            #line_objects[i].append(getattr(ax[i], plot_type)(x,y)) #http://stackoverflow.com/a/3071/2530083
-#            line_objects.append(getattr(ax[i], plot_type)(x,y)) #http://stackoverflow.com/a/3071/2530083
-#
-#    if not legend_labels is None:
-#        for i, lines in enumerate(line_objects):
-#            if not legend_labels[i] is None:
-#                for j, line in enumerate(lines):
-#                    if not legend_labels[i][j] is None:
-#                        line.set_label(legend_labels[i][j]) #consider using '{0:.3g}' for numbers
-#
-#    legends=[v.legend() for v in ax]
-#    [leg.draggable(True) for leg in legends] #http://stackoverflow.com/questions/2539477/how-to-draggable-legend-in-matplotlib
-#
-#    return fig
-
-
-
-
-
-
 def row_major_order_reverse_map(shape, index_steps=None, transpose=False):
-    """map an index to a position in a row-major ordered array by reversing dims
+    """Map an index to a position in a row-major ordered array by reversing dims
 
     ::
 
@@ -1074,21 +917,31 @@ def row_major_order_reverse_map(shape, index_steps=None, transpose=False):
          need 0-->2, 1-->1, 2-->0. i.e. [2 1 0 5 4 3 8 7 6].
          Use row_major_order_reverse_map((3,3), (1,-1))
 
+
+    Use this to essentially change the subplot ordering in a matplotlib figure.
+    Say I wanted sub_plot ordering as in the left arrangement of the above
+    example. use mymap = row_major_order_reverse_map((3,3), (1,-1)).  If I
+    wanted to plot in my position 5 I would pass mymap[5] to the figure.
+
+
+
     Parameters
     ----------
-    shape: tuple
-        shape of array, e.g. (rows, columns)
-    index_steps: list of 1 or -1, optional
-        travese each array dimension in steps f `index_steps`. Default=None
-        i.e. all dims traversed in normal order. e.g. for 3 d array,
-        index_steps=(1,-1, 1) would mean 2nd dimension would be reversed.
-    transpose: bppl, optional
-        when True, transposes indexes (final operation). Default=False
+    shape : tuple
+        Shape of array, e.g. (rows, columns)
+    index_steps : list of 1 or -1, optional
+        Traverse each array dimension in steps f `index_steps`.
+        Default index_steps=None i.e. all dims traversed in normal
+        order. e.g. for 3 d array, index_steps=(1,-1, 1) would mean
+        2nd dimension would be reversed.
+    transpose : True/False, optional
+        When True, transposes indexes (final operation).
+        Default transpose=False.
 
     Returns
     -------
     pos : 1d ndarray
-        array that maps index to position in row-major ordered array
+        Array that maps index to position in row-major ordered array
 
     Notes
     -----
@@ -1098,16 +951,12 @@ def row_major_order_reverse_map(shape, index_steps=None, transpose=False):
     --------
     >>> row_major_order_reverse_map(shape=(3, 3), index_steps=None, transpose=False)
     array([0, 1, 2, 3, 4, 5, 6, 7, 8])
-
     >>> row_major_order_reverse_map(shape=(3, 3), index_steps=(-1, 1), transpose=False)
     array([6, 7, 8, 3, 4, 5, 0, 1, 2])
-
     >>> row_major_order_reverse_map(shape=(3, 3), index_steps=(1, -1), transpose=False)
     array([2, 1, 0, 5, 4, 3, 8, 7, 6])
-
     >>> row_major_order_reverse_map(shape=(3, 3), index_steps=(-1, -1), transpose=False)
     array([8, 7, 6, 5, 4, 3, 2, 1, 0])
-
     >>> row_major_order_reverse_map(shape=(3, 3), index_steps=None, transpose=True)
     array([0, 3, 6, 1, 4, 7, 2, 5, 8])
 
@@ -1126,14 +975,6 @@ def row_major_order_reverse_map(shape, index_steps=None, transpose=False):
     else:
         return pos.flatten()
 
-#shape=(3,3)
-#index_steps=(1,-1)
-#transpose_axes=(0)
-#print(row_major_order_reverse_map(shape=shape, index_steps=None, transpose=False))
-#print(row_major_order_reverse_map(shape=shape, index_steps=(-1,1), transpose=False))
-#print(row_major_order_reverse_map(shape=shape, index_steps=(1,-1), transpose=False))
-#print(row_major_order_reverse_map(shape=shape, index_steps=(-1,-1), transpose=False))
-#print(row_major_order_reverse_map(shape=shape, index_steps=None, transpose=False))
 
     return
 
@@ -1143,20 +984,20 @@ def split_sequence_into_dict_and_nondicts(*args):
     """Separate dict and non-dict items. Merge dicts and merge non-dicts
 
     Elements are combined in the order that they appear.  i.e. non-dict items
-    will be appended to a combined list as they are encounterd.  repeated dict
+    will be appended to a combined list as they are encounterd.  Repeated dict
     keys will be overridded by the latest value.
 
     Parameters
     ----------
-    args: one or more items
-        mixture of dict and non-dict
+    *args : one or more positional items
+        Mixture of dict and non-dict.
 
     Returns
     -------
-    merged_non_dict: list
-        list of non dictionary items
-    merged_dict: dict
-        merged dictionary
+    merged_non_dict : list
+        List of non dictionary items.
+    merged_dict : dict
+        Merged dictionary.
 
     """
 
@@ -1172,26 +1013,20 @@ def split_sequence_into_dict_and_nondicts(*args):
     return merged_non_dict, merged_dict
 
 
-
-
-
-
-
-
 def plot_data_in_grid(fig, data, gs,
                        gs_index=None,
                        sharex=None, sharey=None):
-    """make a subplot for each set of data
+    """Make a subplot for each set of data
 
     Parameters
     ----------
     fig : matplotlib.Figure
-        figure to create subplots in
-    data: sequence of sequence of 2 element sequence
+        Figure to create subplots in.
+    data : sequence of sequence of 2 element sequence
         data[i] = Data for the ith subplot.
         data[i][j] = jth (x, y) data set for the ith subplot.
-        Each set of (x,y) data will be plotted using matplotlib.plot fn
-        e.g. data=[([x0,y0],), ([x1,y1],), ([x2a, y2a], [x2b, x2b])]
+        Each set of (x, y) data will be plotted using matplotlib.plot fn
+        e.g. data=[([x0, y0],), ([x1, y1],), ([x2a, y2a], [x2b, x2b])]
         Note that data[i][j] will be split into list of all the non-dict items
         and a merged dict of all the dict items.  Both the list and the merged
         dict will be unpacked and passed to the `plot_type` function.  This
@@ -1202,10 +1037,10 @@ def plot_data_in_grid(fig, data, gs,
         be used. Be careful when using () to group data if there is only
         one item in the (item) then they are just parentheses and you are
         just saying 'item'; put a comma after the item to make it a tuple
-        which is usually what you want when specifying data in this function
-    gs: matplotlib.gridspec.GridSpec instance
-        defines the grid in which subplots will be created
-    gs_index: list of int or list of slice, optional
+        which is usually what you want when specifying data in this function.
+    gs : matplotlib.gridspec.GridSpec instance
+        Defines the grid in which subplots will be created.
+    gs_index : List of int or list of slice, optional
         Specifies the position within gs that each data set will be plotted
         Positions can be specified by 1) an integer which will correspond to
         row-major ordering in the grid (e.g. for a 3x3 grid, index 3 will be
@@ -1213,15 +1048,17 @@ def plot_data_in_grid(fig, data, gs,
         (e.g. index of np.s_[:1,:1] will span from first row, first column to
         second row, second column).  Another slice method is slice(3,7) which
         will span from position 3 to position 7.
-        Default=None subplots are added in row-major ordering
-    sharex: sequence of int
-        subplot index to share x-axis with. Default=None i.e. no sharing.
+        Default gs_index=None subplots are added in row-major ordering.
+    sharex : sequence of int
+        Subplot index to share x-axis with.
+        Default sharex=None i.e. no sharing.
         To skip a  subplot put None as the corresponding element of sharex.
         If only one value is given and ther is more than one data set then
         all subplots will share the given axis.  Note that the axis to share
         must already have been created.
-    sharey: sequence of int
-        subplot index to share y-axis with. Default=None i.e. no sharing.
+    sharey : sequence of int
+        Subplot index to share y-axis with.
+        Default sharey=None i.e. no sharing.
         To skip a  subplot put None as the corresponding element of sharey.
         If only one value is given and ther is more than one data set then
         all subplots will share the given axis.  Note that the axis to share
@@ -1230,12 +1067,14 @@ def plot_data_in_grid(fig, data, gs,
 
     Returns
     -------
-    ax: list of :class:`matplotlib.pyplot.Axes` instances.
+    ax : List of :class:`matplotlib.pyplot.Axes` instances. Don't be
+        confused with normal meaning of 'ax', this `ax` is a list of Axes, not
+        just one.
 
     Notes
     -----
-    You may be wondering how to apply axes labels and such.  do something like
-     [a.set_xlabel(v) for a, v in zip(fig.get_axes(), [xlabel1, xlabel2, ...])]
+    You may be wondering how to apply axes labels and such.  Do something like
+    [a.set_xlabel(v) for a, v in zip(fig.get_axes(), [xlabel1, xlabel2, ...])]
 
 
     """
@@ -1315,7 +1154,7 @@ def plot_data_in_grid(fig, data, gs,
     return ax
 
 def apply_dict_to_object(obj, dic):
-    """apply a dict of properties to a matplotlib object.
+    """Apply a dict of properties to a matplotlib object.
 
     Note the object must support set_<property_name> methods
     If obj and d are lists then the each `dic` will be applied to the
@@ -1323,15 +1162,15 @@ def apply_dict_to_object(obj, dic):
 
     Parameters
     ----------
-    obj: matplotlib object or list of
-        object to set properties in.  Typically a matplotlib.lines.Line2D
-        instance
-    dic: dict or list of dict
-        a dictionary or properties to apply to the object. e.g for a
+    obj : matplotlib object or list of
+        Object to set properties in.  Typically a matplotlib.lines.Line2D
+        instance.
+    dic : dict or list of dict
+        A dictionary or properties to apply to the object. e.g for a
         matplotlib.lines.Line2D dict keys might be 'marker', or
         'linestyle' etc.  i.e any kwarg you would pass to plt.plot.
         Note that if a key in dic does not correspond to a obj.set_key
-        method then it will be ignored
+        method then it will be ignored.
 
 
     """
@@ -1389,48 +1228,50 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
     load_names : list of string
         string to prepend to legend entries for each load
     ylabels : list of string, optional
-        ylabels for each of the axes, Default = None i.e. y0, y1, y2 etc
+        y labels for each of the axes, Default ylabels=None
+        i.e. y0, y1, y2 etc.
     trange : 2 element tuple, optional
-        (tmin, tmax) max and min times to plot loads for. default = None
-        i.e. t limits will be worked out from data
+        (tmin, tmax) max and min times to plot loads for. Default trange=None
+        i.e. t limits will be worked out from data.
     H : float, optional
-        height of soil profile.  Default H=1.0.  Used to transform
-        normalised depth to actual depth
+        Height of soil profile.  Default H=1.0.  Used to transform
+        normalised depth to actual depth.
     RLzero : float, optional
-        reduced level of the top of the soil layer.  If RLzero is not None
+        Reduced level of the top of the soil layer.  If RLzero is not None
         then all depths (in plots and results) will be transformed to an
         RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
-        then all depths will be reported  z*H (i.e. positive numbers).
+        then all actual depths will be reported z*H (i.e. positive numbers).
     prop_dict : dict of dict, optional
-        dictionary containing certain properties used to set various plot
+        Dictionary containing certain properties used to set various plot
         options.
+
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
         fig_prop            dict of prop to pass to plt.figure.
-                            defaults include:
+                            Defaults include:
                             figsize=(7.05, 1.57 * no.of.loads)
         styles              List of dict.  Each dict is for one line.
-                            Each dict contains kwargs for plt.plot
-                            See
-                            MarkersDashesColors
-                            defaults give black and white markersize 5
-        time_axis_label     label for x axis in load_vs_time plots.
-                            default = 'Time'
-        depth_axis_label    label for y axis in load_vs_depth plot
-                            default = "Depth, z" or "RL" depending on
+                            Each dict contains kwargs for plt.plot.
+                            SeeMarkersDashesColors. Defaults give black
+                            and white markersize 5.
+        time_axis_label     Label for x axis in load_vs_time plots.
+                            Default='Time'
+        depth_axis_label    Label for y axis in load_vs_depth plot
+                            Default="Depth, z" or "RL" depending on
                             RLzero.
-        has_legend          True or False. default is True
-        legend_prop         dict of prop to pass to ax.legend
-                            defaults include:
+        has_legend          True or False. Default = True.
+        legend_prop         dict of prop to pass to ax.legend.
+                            Defaults include:
                             title='Load'
                             fontsize=9
         ==================  ============================================
 
+
     Returns
     -------
     fig : matplolib.Figure
-        figure wil plot in it.
+        Figure with plots.
 
 
     """
@@ -1611,6 +1452,7 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
         fig.tight_layout()
     return fig
 
+
 def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     """Plot y vs t with some options
 
@@ -1618,6 +1460,7 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     vs time.
 
     ::
+
         y
         ^
         |           .......
@@ -1630,30 +1473,31 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     Parameters
     ----------
     t : np.array
-        time values
+        Time values.
     y :  one or two dimensional ndarray
-        y values to plot.  basically plt.plot(t,y) will be used
+        y values to plot.  basically plt.plot(t,y) will be used.
     line_labels : list of string, optional
-        label for each line in y.  Default=None, i.e. no labels
+        Label for each line in y.  Defaultline_labels=None, i.e. no labels.
     prop_dict : dict of dict, optional
-        dictionary containing certain properties used to set various plot
+        Dictionary containing certain properties used to set various plot
         options.
+
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
         fig_prop            dict of prop to pass to plt.figure.
-                            defaults include:
+                            Defaults include:
                             figsize=(7.05, 4.4)
         styles              List of dict.  Each dict is for one line.
                             Each dict contains kwargs for plt.plot
                             See
                             MarkersDashesColors
                             defaults give black and white markersize 5
-        xlabel              x-axis label. default='Time
-        ylabel              y-axis label. default = 'y'
-        has_legend          True or False. default is True
+        xlabel              x-axis label. default='Time'.
+        ylabel              y-axis label. default = 'y'.
+        has_legend          True or False. default = True.
         legend_prop         dict of prop to pass to ax.legend
-                            defaults include:
+                            Defaults include:
                             title='Depth interval'
                             fontsize=9
         ==================  ============================================
@@ -1661,7 +1505,7 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     Returns
     -------
     fig : matplolib.Figure
-        figure wil plot in it.
+        Figure with plots.
 
 
     """
@@ -1735,40 +1579,42 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
         plt.setp(leg.get_title(),fontsize=legend_prop['fontsize'])
     return fig
 
+
 def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
                     prop_dict={}):
-    """plot side by side property vs depth graphs
+    """Plot side by side property vs depth graphs
 
     ::
 
-           x1            x2           x3
-        ----------------------------------------
+        x1           x2           x3
+        -----------> -----------> ------------>
         |     .      |   .        |   .        |
         |     .      |    .       |  .         |
         |     .      |     .      |  .         |
         |    .       |      .     |    .       |
         |   .        |      .     |      .     |
         |  .         |      .     |        .   |
-        v            v            v            v
+        v            v            v
         depth
 
     Parameters
     ----------
     z_x : list of PolyLine
-        list of value_vs_depth PolyLines.
-    xlabels: list of string
-        list of x-axis labels
+        List of value_vs_depth PolyLines.
+    xlabels : list of string
+        List of x-axis labels.
     H : float, optional
-        height of soil profile.  Default H=1.0.  Used to transform
-        normalised depth to actual depth
+        Height of soil profile.  Default H=1.0.  Used to transform
+        normalised depth to actual depth.
     RLzero : float, optional
-        reduced level of the top of the soil layer.  If RLzero is not None
+        Reduced level of the top of the soil layer.  If RLzero is not None
         then all depths (in plots and results) will be transformed to an
         RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
         then all depths will be reported  z*H (i.e. positive numbers).
     prop_dict : dict of dict, optional
-        dictionary containing certain properties used to set various plot
-        options.
+        Dictionary containing certain properties used to set various plot
+        options:
+
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
@@ -1780,10 +1626,11 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
                             See
                             MarkersDashesColors
                             defaults give black and white markersize 5
-        xlabel              x-axis label. default='Time
+        xlabel              x-axis label. default = 'Time'
         ylabel              y-axis label. default = 'Depth, z' or 'RL'
                             depending on RLzero.
         ==================  ============================================
+
 
     """
 
@@ -1885,23 +1732,24 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
 
 def apply_markevery_to_sequence_of_lines(lines, markevery=None ,
                                          random_start=True, seed=None):
-    """apply_markevery to sequence of lines
+    """Apply `markevery` property to sequence of matplotlib lines
 
     Allows for a random start so that marker on different lines do not
-    line up
+    line up.
 
     Parameters
     ----------
-    lines: sequence of matplotlib lines
-        lines to apply markevery to
+    lines : sequence of matplotlib lines
+        Lines to apply markevery to.
     markevery : int or float, optional
-        value of markevery property. default = None, i.e. markevery will be
-        turned off and all points will have markers.
+        Value of markevery property. Default markevery=None, i.e.
+        markevery will be turned off and all points will have markers.
     random_start : True/False
-        if True then first marker shown will be random between start marker
-        and the markevery property, default=True
+        If True then first marker shown will be random between start marker
+        and the markevery property. Default random_start=True.
     seed : int, optional
-        random seed.  Default = None which does not specify the random seed
+        Random seed.  Default seed=None which does not specify the random seed.
+
 
     """
     import random
@@ -1956,7 +1804,7 @@ def apply_markevery_to_sequence_of_lines(lines, markevery=None ,
 
 def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
                    prop_dict={}):
-    """plot z vs x for various t values
+    """Plot z vs x for various t values
 
     Originally used for plotting things like excess pore pressure vs depth
 
@@ -1977,22 +1825,24 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
     Parameters
     ----------
     x :  one or two dimensional ndarray
-        y values to plot.  basically plt.plot(t,y) will be used
+        y values to plot.  Basically plt.plot(t, y) will be used
     z : one d array of float
-        depth values
+        Depth values.
     line_labels : list of string, optional
-        label for each line in y.  Default=None, i.e. no line labels
+        Label for each line in y.  Default line_labels=None, i.e. no
+        line labels.
     H : float, optional
-        height of soil profile.  Default H=1.0.  Used to transform
-        normalised depth to actual depth
+        Height of soil profile.  Default H=1.0.  Used to transform
+        normalised depth to actual depth.
     RLzero : float, optional
-        reduced level of the top of the soil layer.  If RLzero is not None
+        Reduced level of the top of the soil layer.  If RLzero is not None
         then all depths (in plots and results) will be transformed to an
         RL by RL = RLzero - z*H.  If RLzero is None (i.e. the default)
-        then all depths will be reported  z*H (i.e. positive numbers).
+        then actual depths will be reported  z*H (i.e. positive numbers).
     prop_dict : dict of dict, optional
-        dictionary containing certain properties used to set various plot
+        Dictionary containing certain properties used to set various plot
         options.
+
         ==================  ============================================
         prop_dict option    description
         ==================  ============================================
@@ -2004,8 +1854,8 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
                             See
                             MarkersDashesColors
                             defaults give black and white markersize 5
-        xlabel              x-axis label. default='Time
-        ylabel              y-axis label. default = 'Depth, z' or 'RL'
+        xlabel              x-axis label. Default = 'x'.
+        ylabel              y-axis label. Default = 'Depth, z' or 'RL'.
                             depending on RLzero.
         has_legend          True or False. default is True
         legend_prop         dict of prop to pass to ax.legend
@@ -2017,8 +1867,7 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
     Returns
     -------
     fig : matplolib.Figure
-        figure wil plot in it.
-
+        Figure with plots.
 
     """
 

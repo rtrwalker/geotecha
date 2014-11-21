@@ -425,7 +425,7 @@ def segment_containing_xi(x, xi, subset=None, choose_max=False):
 
     Returns
     -------
-    A: list of single element lists
+    A : list of single element lists
         Each sub-list is the start index of the segment that contains xi.
         Returning each value in a list allows "for i in A[0]" type constructs
         which for an empty list will do nothing.
@@ -508,7 +508,7 @@ def segments_less_than_xi(x, xi, subset=None, or_equal_to=False):
 
     Returns
     -------
-    out: list of 1d numpy.ndarray
+    out : list of 1d numpy.ndarray
         List contains len(xi) 1d numpy.ndarray corresponding to xi.
 
     """
@@ -601,7 +601,7 @@ def segment_containing_also_segments_less_than_xi(x, y, xi,
         `segments_less_than_xi` for steps.
     ramps_containing_xi : ndarray
         Start index of ramp segment containing xi.
-    constants_containing_xi :
+    constants_containing_xi : ndarray
         Start index of constant segment containing xi.
 
 
@@ -672,7 +672,7 @@ def segment_containing_xi_also_containing_xj(x, xi, xj, subset=None):
 
     Returns
     -------
-    seg_xi, seg_xj: list of single element lists
+    seg_xi, seg_xj : list of single element lists
         Each sub-list is the start index of the segement that contains
         xi or xj.
 
@@ -921,7 +921,7 @@ def convert_x_y_to_x1_x2_y1_y2(x, y):
         e.g. x = [0.0, 0.3, 0.3, 0.7, 0.7, 1.0]
              y = [1.0, 3.0, 1.0, 1.0, 2.0, 4.0]
 
-    x1_x2_y1_y2 type data
+        x1_x2_y1_y2 type data
         y                                              y2[2]
         ^                                             /|
         |                                            / |
@@ -1085,7 +1085,7 @@ def pinterp_x_y(a, xi, **kwargs):
 
 
 def interp_x_y(x,y,xi, choose_max = False):
-    """Linear interpolation of x, y data
+    """Linear interpolation of x_y data
 
 
     If xi is beyond bounds of x then the first or last value of y will be
@@ -1122,7 +1122,7 @@ def interp_x_y(x,y,xi, choose_max = False):
 #        xi = np.array([xi])
 #    xi = np.asarray(xi)
 
-    segs = segment_containing_xi(x, xi, subset = None, choose_max = choose_max)
+    segs = segment_containing_xi(x, xi, subset=None, choose_max=choose_max)
 
 
     A = np.empty(len(segs))
@@ -1207,8 +1207,11 @@ def remove_superfluous_from_x_y(x, y, atol=1e-08):
 
 
 def pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(a, b, xai, xbi, **kwargs):
-    """Bi-linear interpolation for f=PolyLine*PolyLine;
-    wrapper for interp_xa_ya_multipy_x1b_x2b_y1b_y2b.
+    """Interpolate a composite function made of two PolyLines; wrapper for
+    interp_xa_ya_multipy_x1b_x2b_y1b_y2b.
+
+    Evaluate f(xai)*g(xbi) where f(xa) and f(xb) are defined by PolyLine
+    objects.
 
 
     Parameters
@@ -1247,8 +1250,11 @@ def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya,
                                          xai, xbi,
                                          achoose_max=False,
                                          bchoose_max=True):
-    """Interpolate where f(a, b) defined as g(a)*h(b) where g(a) is defined
-    with x_y data and h(b) is defined by x1_x2_y1_y2 data.
+    """Interpolate a composite function made of x_y and x1b_x2b_y1b_y2b
+    piecewise-linear representations.
+
+    Evaluate f(xai)*g(xbi) where f(xa) is defined
+    with x_y data and g(xb) is defined by x1_x2_y1_y2 data.
 
     Does little calculation, mostly calls other functions.
     Calculates array A[len(xbi),len(xai)]
@@ -1288,11 +1294,26 @@ def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya,
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
 def pavg_x_y_between_xi_xj(a, xi, xj, **kwargs):
-    """wrapper for avg_x_y_between_xi_xj to allow polyline inputs
+    """Average between xi and xj for PolyLine data; wrapper for
+    avg_x_y_between_xi_xj.
+
+
+    Parameters
+    ----------
+    a : PolyLine object
+        PolyLine containing data for averaging.
+    xi, xj : array_like, float
+        x values to interpolate between.
+
+    Returns
+    -------
+    A : 1d array of float
+        Interpolated values. len(A)=len(xi)
+
 
     See also
     --------
-    avg_x_y_between_xi_xj
+    avg_x_y_between_xi_xj : Wrapped function.
 
 
     """
@@ -1301,21 +1322,27 @@ def pavg_x_y_between_xi_xj(a, xi, xj, **kwargs):
 
 
 def avg_x_y_between_xi_xj(x, y, xi, xj):
-    """find average between xi and xj of x_y
+    """Average between xi and xj piecewise-linear x_y data
 
 
-    calculates array A[len(xi)]
     Parameters
     ----------
     x, y : 1d array_like, float
-        x and y values of x_y part of interpolation function
+        x and y values of x_y part of interpolation function.
 
     xi, xj : array_like, float
-        x values to interpolate between
+        x values to interpolate between.
+
+    Returns
+    -------
+    A : 1d array of float
+        Interpolated values. len(A)=len(xi)
+
 
     See also
     --------
-    integrate_x_y_between_xi_xj : integration is intemediate step in average calculation
+    integrate_x_y_between_xi_xj : Integration is intemediate step in
+        average calculation.
 
     """
 
@@ -1324,12 +1351,27 @@ def avg_x_y_between_xi_xj(x, y, xi, xj):
 
     return integrate_x_y_between_xi_xj(x, y, xi, xj) / (xj - xi)
 
+
 def pintegrate_x_y_between_xi_xj(a, xi, xj, **kwargs):
-    """wrapper for integrate_x_y_between_xi_xj to allow PolyLine inputs
+    """Integrate PolyLine data between xi and xj; wrapper for
+    integrate_x_y_between_xi_xj.
+
+    Parameters
+    ----------
+    a : PolyLine object
+        PolyLine containing data for integrating.
+    xi, xj : array_like, float
+        x values to interpolate between.
+
+    Returns
+    -------
+    A : 1d array of float
+        Interpolated values. len(A) == len(xi).
+
 
     See also
     --------
-    integrate_x_y_between_xi_xj
+    integrate_x_y_between_xi_xj : Wrapped function.
 
     """
 
@@ -1337,22 +1379,27 @@ def pintegrate_x_y_between_xi_xj(a, xi, xj, **kwargs):
 
 
 def integrate_x_y_between_xi_xj(x, y, xi, xj):
-    """integrate x_y data between xi and xj"
+    """Integrate piecewise-linear x_y data between xi and xj
 
-
-    calculates array A[len(xi)]
     Parameters
     ----------
     x, y : 1d array_like, float
-        x and y values of x_y part of interpolation function
-
+        x and y values for piecewise linear integration.
     xi, xj : array_like, float
-        x values to integrate between
+        x values to interpolate between.
+
+    Returns
+    -------
+    A : 1d array of float
+        Interpolated values. len(A) == len(xi)
+
 
     See also
     --------
-    interp_x_y : interpolate the x_y part
-    segments_between_xi_and_xj : segments between xi and xj
+    interp_x_y : Interpolate the x_y part.
+    segments_between_xi_and_xj : Line segments between xi and xj.
+
+
     """
 
     x = np.asarray(x)
@@ -1379,11 +1426,24 @@ def integrate_x_y_between_xi_xj(x, y, xi, xj):
 
 
 def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
-    """wrapper for integrate_x1_x2_y1_y2_between_xi_xj to allow PolyLine inputs
+    """Integrate PolyLine data between xi and xj; wrapper for
+    integrate_x1_x2_y1_y2_between_xi_xj.
+
+     Parameters
+    ----------
+    a : PolyLine object
+        PolyLine containing data for integrating.
+    xi, xj : array_like, float
+        x values to integrate between.
+
+    Returns
+    -------
+    A : 1d array of float
+        Results of integrations. len(A) == len(xi).
 
     See also
     --------
-    integrate_x1_x2_y1_y2_between_xi_xj
+    integrate_x1_x2_y1_y2_between_xi_xj : Wrapped function.
 
     """
 
@@ -1391,21 +1451,26 @@ def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
 
 
 def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
-    """integrate x1_x2_y1_y2 data between xi and xj"
+    """Integrate layered x1_x2_y1_y2 data between xi and xj
 
-
-    calculates array A[len(xi)]
     Parameters
     ----------
     x1, y1 : array_like, float
-        x and y values at start of each segment
+        x and y values at start of each segment.
     x2, y2 : array_like, float
-        x and y values at end of each segment (note x1[1:]==x2[:-1])
+        x and y values at end of each segment (note x1[1:]==x2[:-1]).
     xi, xj : array_like, float
-        x values to integrate between
+        x values to integrate between.
+
+    Returns
+    -------
+    A : 1d array of float
+        Results of integrations. len(A) == len(xi).
 
     See also
     --------
+    interp_x1_x2_y1_y2 : Interpolation of x1_x2_y1_y2 data.
+    segments_between_xi_and_xj : Line segments between xi and xj.
 
 
     """
@@ -1440,12 +1505,26 @@ def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
             A[i] += (y1[layer] + yj[i]) * 0.5 * (xj[i] - x1[layer])
     return A
 
+
 def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
-    """wrapper for avg_x1_x2_y1_y2_between_xi_xj to use PolyLine inputs
+    """Average of PolyLine data between xi and xj; wrapper for
+    avg_x1_x2_y1_y2_between_xi_xj.
+
+    Parameters
+    ----------
+    a : PolyLine object
+        PolyLine containing data for integrating.
+    xi, xj : array_like, float
+        x values to integrate between.
+
+    Returns
+    -------
+    A : 1d array of float
+        Average for each xi, xj pair. len(A) == len(xi).
 
     See also
     --------
-    avg_x1_x2_y1_y2_between_xi_xj
+    avg_x1_x2_y1_y2_between_xi_xj : Wrapped function.
 
     """
 
@@ -1453,10 +1532,7 @@ def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
 
 
 def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
-    """average of x1_x2_y1_y2 data between xi and xj"
-
-
-    calculates array A[len(xi)]
+    """Average of x1_x2_y1_y2 data between xi and xj
 
     Parameters
     ----------
@@ -1467,9 +1543,15 @@ def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     xi, xj : array_like, float
         x values to integrate between
 
+    Returns
+    -------
+    A : 1d array of float
+        Average for each xi, xj pair. len(A) == len(xi).
+
     See also
     --------
-    integrate_x1_x2_y1_y2_between_xi_xj : integration is intermediate step for average calculation
+    integrate_x1_x2_y1_y2_between_xi_xj : Integration is intermediate
+        step for average calculation.
 
     """
 
@@ -1480,12 +1562,39 @@ def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     return integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj) / (xj - xi)
 
 
-def pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a,b, xai, xbi, xbj, **kwargs):
-    """wrapper for xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between to have PolyLine inputs
+def pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a, b,
+                                               xai, xbi, xbj,
+                                               **kwargs):
+    """Respectively interpolate at one point, and average between two points,
+    the a composiute function of two PolyLine objects.
+
+    Evaluate f(xai) * integrate[g(xb), (xbi, xbj)] / (xbi - xbj),
+    where f(xa) and g(xb) are PolyLine objects; wrapper
+    for xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between.
+
+
+    Parameters
+    ----------
+    a, b : PolyLine object
+        PolyLine object s containing data.  The `b` Polyline will be averaged
+        between xbi, and xbj; the `a` PolyLine will be interpolated at xai.
+    xai : array_like, float
+        x values to interpolate at for x_y part.
+    xbi, xbj : array_like, float
+        x values to average between for the x1_x2_y1_y2 part.
+    achoose_max : ``boolean``, optional
+        If False (default), when xai falls on boundary of segments choose the
+        minimum segment to interpolate within.
+
+    Returns
+    -------
+    A : 2d array of float
+        Result of averageing and interpolating.
+        shape(A) == (len(xbi), len(xai)).
 
     See also
     --------
-    xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between
+    xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between : Wrapped function.
 
     """
 
@@ -1493,34 +1602,46 @@ def pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a,b, xai, xbi, xbj, **kwargs):
 
 
 
-def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, xbi, xbj, achoose_max=False):
-    """average the x1_x2_y1_y2 part between xbi, and xbj of f(a, b) which is defined as g(a)*h(b) where g(a) is defined with x_y data and h(b) is defined by x1_x2_y1_y2 data
+def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya,
+                                              x1b, x2b, y1b, y2b,
+                                              xai, xbi, xbj,
+                                              achoose_max=False):
+    """Respectively interpolate at one point, and average between two points,
+    the x_y and x1_x2_y1_y2 portions of a composite function of
+    piecewise-linear representations.
 
-    Does little calculation, mostly calls other functions
-    calculates array A[len(xbi), len(xai)]
+    Evaluate f(xai) * integrate[g(xb), (xbi, xbj)] / (xbi - xbj),
+    where f(xa) is defined with x_y data and g(xb) is defined with
+    x1_x2_y1_y2 data.
 
     Parameters
     ----------
     xa, ya : 1d array_like, float
-        x and y values of x_y part of interpolation function
+        x and y values of x_y part of function.
     x1b, y1b : array_like, float
         x and y values at start of each segment for x1_x2_y1_y2 part of
-        interpolation function
+        function.
     x2b, y2b : array_like, float
         x and y values at end of each segment for x1_x2_y1_y2 part of
-        interpolation function  (note x1[1:]==x2[:-1])
+        function  (note x1[1:]==x2[:-1])
     xai : array_like, float
-        x values to interpolate at for x_y part
+        x values to interpolate at for x_y part.
     xbi, xbj : array_like, float
-        x values to average between for the x1_x2_y1_y2 part
+        x values to average between for the x1_x2_y1_y2 part.
     achoose_max : ``boolean``, optional
-        if False (default), if xai falls on boundary of segments choose the
+        If False (default), when xai falls on boundary of segments choose the
         minimum segment to interpolate within.
+
+    Returns
+    -------
+    A : 2d array of float
+        Result. shape(A) == (len(xbi), len(xai)), i.e. rows represent
 
     See also
     --------
-    interp_x_y : interpolate the x_y part
-    avg_x1_x2_y1_y2_between_xi_xj : average the x1_x2_y1_y2 part between xbi, xbj
+    interp_x_y : Interpolate the x_y part.
+    avg_x1_x2_y1_y2_between_xi_xj : Average the x1_x2_y1_y2 part between
+        xbi, xbj.
 
 
     """
@@ -1529,12 +1650,41 @@ def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya, x1b, x2b, y1b, y2b, xai, x
     ybi = avg_x1_x2_y1_y2_between_xi_xj(x1b, x2b, y1b, y2b, xbi, xbj)
     return ybi[:, np.newaxis] * yai[np.newaxis,:]
 
-def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a,b,xi,xj, **kwargs):
-    """wrapper for integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between to allow PolyLine inputs
+
+def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a, b,
+                                                                xi, xj,
+                                                                **kwargs):
+    """Integrate between two points a composite function made of two
+    PolyLine objects; wrapper for
+    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between.
+
+
+    Evaluate integrate[f(x)*g(x), (xi, xj)]
+    where f(x) and g(x) are defined by PolyLine objects.
+
+    The two PolyLines must have the same x values, i.e. the layers must
+    match up, x1a==x1b, x2a==x2b.
+
+    Parameters
+    ----------
+    a, b : PolyLine object
+        PolyLine objects multiplied together to define the composite function.
+        x and y values at start of each segment for first x1_x2_y1_y2 part of
+        composite function.
+    xi, xj : array_like, float
+        x values to integrate between.
+
+    Returns
+    -------
+    A : len(xi) 1d array of float
+        Integrations for each xi, xj pair.
 
     See also
     --------
-    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between
+    integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between : Wrapped
+        function.
+    polyline_make_x_common : Ensure PolyLine object have same x values.
+
 
     """
 
@@ -1543,32 +1693,43 @@ def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a,b,xi,xj, **kwa
 
 
 
-def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a, y1a,y2a,x1b,x2b,y1b,y2b,xi,xj):
-    """integrate between xi, xj the multiplication of two x1_x2_y1_y2 funcitons
+def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a,
+                                                               y1a, y2a,
+                                                               x1b, x2b,
+                                                               y1b, y2b,
+                                                               xi,xj):
+    """Integrate between two points a composite function made of two
+    x1_x2_y1_y2 piecewise-linear data representations.
 
-    calculates array A[len(xi)]
-    currently works only for x1a==x1b, x2a==x2b
+    Evaluate integrate[f(x)*g(x), (xi, xj)]
+    where f(x) and g(x) are defined by x1_x2_y1_y2 data.
+
+
+    The two data sets must have the same x values, i.e. the layers must
+    match up, x1a==x1b, x2a==x2b.
+
     Parameters
     ----------
     x1a, y1a : array_like, float
-        x and y values at start of each segment 2nd x1_x2_y1_y2 part of
-        function
+        x and y values at start of each segment for first x1_x2_y1_y2 part of
+        composite function.
     x2a, y2a : array_like, float
-        x and y values at end of each segment for 2nd x1_x2_y1_y2 part of
-        function  (note x1[1:]==x2[:-1])
+        x and y values at end of each segment for first x1_x2_y1_y2 part of
+        composite function  (note x1[1:]==x2[:-1]).
     x1b, y1b : array_like, float
-        x and y values at start of each segment 2nd x1_x2_y1_y2 part of
-        function
+        x and y values at start of each segment for second x1_x2_y1_y2 part of
+        composite function.
     x2b, y2b : array_like, float
-        x and y values at end of each segment for 2nd x1_x2_y1_y2 part of
-        function  (note x1[1:]==x2[:-1])
+        x and y values at end of each segment for second x1_x2_y1_y2 part of
+        composite function  (note x1[1:]==x2[:-1]).
     xi, xj : array_like, float
-        x values to average between
+        x values to integrate between.
 
+    Returns
+    -------
+    A : len(xi) 1d array of float
+        Results of integrations.
 
-    Notes
-    -----
-    TODO: I think this only works if the two distributions have the same z values?? not sure
     """
 
     x1a = np.asarray(x1a)
@@ -1613,17 +1774,49 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a, y1a,y2a
 
 
 def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(a,b,c, xai,xbi,xbj, **kwargs):
-    """wrapper for xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input.
+    """Superpose results of respectively interpolate at one point, and
+    integrate between two points, the first PolyLine and the multiplied second
+    and third PolyLine portions of a composite function of piecewise-linear
+    representations.
 
-    Notes
-    -----
-    `a` and `b` can be lists that will be superposed.  This is not available in
-    the original function
+    For each f(xa), g(xb) pair sum f(xai) * integrate[g(xb) * h(xb), (xbi, xbj)],
+    where f(xa), g(xb), and h(xb) are defined with PolyLine objects.
+
+    The function is a bit specialised in that `a` and `b` can be lists of
+    PolyLine objects.  The contribution of each composite function
+    (a[0], b[0], c), (a[1], b[1], c), ... will be summed.
+
+    The `b` and `c` PolyLine objects do NOT need to have the same x values,
+    they will be forced to do so using `polyline_make_x_common`.
+
+    Parameters
+    ----------
+    a, b, c : PolyLine object, or list of PolyLine objects
+        PolyLine obects making up the composite function. `a` and `b` can be
+        lists of equal length.
+    xai : array_like, float
+        x values to interpolate the `a` part of the composite function.
+    xbi, xbj : array_like, float
+        x values to integrate the b * c  part of the composite function.
+    achoose_max : ``boolean``, optional
+        If False (default), when xai falls on boundary of segments choose the
+        minimum segment to interpolate within.
+
+
+    Returns
+    -------
+    A : (len(xbi), len(xai)) 2d array
+        Results for each xbi, xbj pair and xai value.
+
 
     See also
     --------
-    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
-    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : similar polyline wrapper but no superposition
+    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Wrapped function.
+    pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super :
+        Same function with additional cosine term.
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Similar function without superposition.
 
     """
 
@@ -1634,6 +1827,7 @@ def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_s
         a = [a]
     if not isinstance(b, list):
         b = [b]
+
     if len(a)!=len(b):
         raise ValueError("a and b must be lengths of equal length. len(a) = {0}, len(b) = {1}".format(len(a), len(b)))
 
@@ -1643,12 +1837,45 @@ def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_s
         out += xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(aa.x,aa.y,bb.x1,bb.x2,bb.y1,bb.y2, cc.x1, cc.x2, cc.y1, cc.y2, xai,xbi,xbj, **kwargs)
     return out
 
-def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a,b,c, xai,xbi,xbj, **kwargs):
-    """wrapper for xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input
+def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a, b, c, xai,xbi,xbj, **kwargs):
+    """Respectively interpolate at one point, and integrate between two
+    points, the first PolyLine and the multiplied second and third PolyLine
+    portions of a composite function of piecewise-linear representations.
+
+    Evaluate f(xai) * integrate[g(xb) * h(xb), (xbi, xbj)],
+    where f(xa), g(xb), and h(xb) are defined with PolyLine objects.
+
+    The `b` and `c` PolyLine objects do NOT need to have the same x values,
+    they will be forced to do so using `polyline_make_x_common`.
+
+    Parameters
+    ----------
+    a, b, c : PolyLine object
+        PolyLine obects making up the composite function.
+    xai : array_like, float
+        x values to interpolate the `a` part of the composite function.
+    xbi, xbj : array_like, float
+        x values to integrate the b * c  part of the composite function.
+        between.
+    achoose_max : ``boolean``, optional
+        If False (default), when xai falls on boundary of segments choose the
+        minimum segment to interpolate within.
+
+
+    Returns
+    -------
+    A : (len(xbi), len(xai)) 2d array
+        Results for each xbi, xbj pair and xai value.
+
 
     See also
     --------
-    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : Wrapped
+        Function.
+    pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : Similar
+        function with additional cosine term.
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super : Same
+        function with superposition.
 
     """
 
@@ -1658,37 +1885,53 @@ def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a
 
 
 def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa,ya,x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False):
-    """interpolate the xa_ya part at xai, and integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between xbi, and xbj of f(a, b, c) which is defined as g(a)*h(b)*h(c) where g(a) is defined with x_y data and h(b) and h(c) is defined by x1_x2_y1_y2 data
+    """Respectively interpolate at one point, and integrate between two
+    points, the x_y and two multipled x1_x2_y1_y2 portions of a composite
+    function of piecewise-linear representations.
 
-    Does little calculation, mostly calls other functions
-    calculates array A[len(xbi), len(xai)]
+    Evaluate f(xai) * integrate[g(xb) * h(xb), (xbi, xbj)],
+    where f(xa) is defined with x_y data and g(xb) and h(xb) are defined with
+    x1_x2_y1_y2 data.
+
     Parameters
     ----------
     xa, ya : 1d array_like, float
-        x and y values of x_y part of interpolation function
+        x and y values of x_y part of the composite function.
     x1b, y1b : array_like, float
-        x and y values at start of each segment 1st x1_x2_y1_y2 part of
-        function
+        x and y values at start of each segment for the first x1_x2_y1_y2
+        part of the composite function.
     x2b, y2b : array_like, float
-        x and y values at end of each segment for 1st x1_x2_y1_y2 part of
-        function  (note x1[1:]==x2[:-1])
+        x and y values at end of each segment for the first x1_x2_y1_y2 part of
+        the composite function (note x1[1:]==x2[:-1]).
     x1c, y1c : array_like, float
-        x and y values at start of each segment 2nd x1_x2_y1_y2 part of
-        function
+        x and y values at start of each segment for the secondx1_x2_y1_y2
+        part of the composite function.
     x2c, y2c : array_like, float
-        x and y values at end of each segment for 2nd x1_x2_y1_y2 part of
-        function  (note x1[1:]==x2[:-1])
-    xai, array_like, float
-        x values to interpolate the xc_yc part at
+        x and y values at end of each segment for the second x1_x2_y1_y2
+        part of the composite function  (note x1[1:]==x2[:-1]).
+    xai : array_like, float
+        x values to interpolate the x_y part at.
     xbi, xbj : array_like, float
-        x values to integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between
+        x values to integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part
+        between.
     achoose_max : ``boolean``, optional
-        if False (default), if xai falls on boundary of segments choose the
+        If False (default), when xai falls on boundary of segments choose the
         minimum segment to interpolate within.
 
-    See also
-    --------
 
+    Returns
+    -------
+    A : (len(xbi), len(xai)) 2d array
+        Results for each xbi, xbj pair and xai value.
+
+    See Also
+    --------
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Same function with PolyLine inputs.
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super :
+        PolyLine inputs and superposition.
+    xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Similar function with additional cosine term.
 
     """
 
@@ -1737,22 +1980,56 @@ def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa
 #    return out
 
 def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super(a,b,c, xai, xbi, xbj, omega_phase=None, **kwargs):
-    """wrapper for xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input.
+    """Superpose results of  respectively interpolate at one point, and
+    integrate between two points, the cosine multiplied by PolyLine, and two
+    multipled PolyLine portions of a composite function of piecewise-linear
+    representations.
+
+    For each f(xa), g(xb) pair sum
+    f(xai) * cos(omega*xai + phase) * integrate[g(xb) * h(xb), (xbi, xbj)],
+    where f(xa), g(xb), and h(xb) are PolyLine objects.
+
+    The function is a bit specialised in that `a` and `b` and `omega_phase`
+    can be lists of PolyLine objects.  The contribution of each composite function
+    (a[0], omega_phase[0], b[0], c), (a[1], b[1], omega_phase[1], c), ...
+    will be summed.
+
+    The `b` and `c` PolyLine objects do NOT need to have the same x values,
+    they will be forced to do so using `polyline_make_x_common`.
+
 
     Parameters
     ----------
-    omega_phase: 2 element tuple
-        (omega, phase) for use in cos(omega * t + phase)
+    a, b, c : PolyLine object
+        PolyLine obects making up the composite function.
+    xai :  array_like, float
+        x values to interpolate the `a` part of the composite function.
+    xbi, xbj : array_like, float
+        x values to integrate the b * c  part of the composite function.
+        between.
+    omega_phase : 2 element tuple, optional
+        (omega, phase) for use in cos(omega * t + phase), Default
+        omega_phase=None i.e. no cosine term.
+    achoose_max : ``boolean``, optional
+        If False (default), when xai falls on boundary of segments choose the
+        minimum segment to interpolate within.
 
-    Notes
-    -----
-    `a` and `b` `omega_phase` can be lists that will be superposed.  This is not available in
-    the original function
+
+    Returns
+    -------
+    A : (len(xbi), len(xai)) 2d array
+        Results for each xbi, xbj pair and xai value.
+
 
     See also
     --------
-    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
-    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : similar polyline wrapper but no superposition
+    xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Wrapped function
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super :
+        Same function without cosine term.
+    pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Similar function without superposition.
+
 
     """
 
@@ -1783,11 +2060,47 @@ def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_betwe
     return out
 
 def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a, omega, phase, b, c, xai,xbi,xbj, **kwargs):
-    """wrapper for xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between to allow PolyLine input
+    """Respectively interpolate at one point, and integrate between two
+    points, the cosine multiplied by PolyLine, and two multipled PolyLine
+    portions of a composite function of piecewise-linear representations.
+
+    Evaluate f(xai) * cos(omega*xai + phase) * integrate[g(xb) * h(xb), (xbi, xbj)],
+    where f(xa), g(xb), and h(xb) are PolyLine objects.
+
+    The `b` and `c` PolyLine objects do NOT need to have the same x values,
+    they will be forced to do so using `polyline_make_x_common`.
+
+    Parameters
+    ----------
+    a, b, c : PolyLine object
+        PolyLine obects making up the composite function.
+    omega, phase : float
+        Values for defining cos(omega * t + phase).
+    xai : array_like, float
+        x values to interpolate the `a` part of the composite function.
+    xbi, xbj : array_like, float
+        x values to integrate the b * c  part of the composite function.
+        between.
+    achoose_max : ``boolean``, optional
+        If False (default), when xai falls on boundary of segments choose the
+        minimum segment to interpolate within.
+
+
+    Returns
+    -------
+    A : (len(xbi), len(xai)) 2d array
+        Results for each xbi, xbj pair and xai value.
 
     See also
     --------
-    xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
+    xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : Wrapped
+        Function.
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : Same
+        function without the cosine part.
+    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super : Same
+        function with superposition.
+
+
 
     """
 
@@ -1795,39 +2108,56 @@ def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_betwe
     return xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a.x,a.y,omega, phase, b.x1,b.x2,b.y1,b.y2, c.x1, c.x2, c.y1, c.y2, xai,xbi,xbj, **kwargs)
 
 def xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa, ya, omega, phase, x1b,x2b,y1b,y2b, x1c, x2c, y1c, y2c, xai,xbi,xbj, achoose_max=False):
-    """interpolate the xa_ya * cos(omega*t + phase) part at xai, and integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between xbi, and xbj of f(a, b, c) which is defined as g(a)*h(b)*h(c) where g(a) is defined with x_y data and h(b) and h(c) is defined by x1_x2_y1_y2 data
+    """Respectively interpolate at one point, and integrate between two
+    points, the cosine multiplied by x_y, and two multipled x1_x2_y1_y2
+    portions of a composite function of piecewise-linear representations.
 
-    Does little calculation, mostly calls other functions
-    calculates array A[len(xbi), len(xai)]
+    Evaluate f(xai) * cos(omega*xai + phase) * integrate[g(xb) * h(xb), (xbi, xbj)],
+    where f(xa) is defined with x_y data and g(xb) and h(xb) are defined with
+    x1_x2_y1_y2 data.
+
     Parameters
     ----------
     xa, ya : 1d array_like, float
-        x and y values of x_y part of interpolation function
-    omega, phase:
-        values for defining cos(omega * t + phase)
+        x and y values of x_y part of interpolation function.
+    omega, phase : float
+        Values for defining cos(omega * t + phase).
     x1b, y1b : array_like, float
-        x and y values at start of each segment 1st x1_x2_y1_y2 part of
-        function
+        x and y values at start of each segment for the first 1st x1_x2_y1_y2
+        part of the composite function.
     x2b, y2b : array_like, float
-        x and y values at end of each segment for 1st x1_x2_y1_y2 part of
-        function  (note x1[1:]==x2[:-1])
+        x and y values at end of each segment for the first 1st x1_x2_y1_y2
+        part of the composite function  (note x1[1:]==x2[:-1])
     x1c, y1c : array_like, float
-        x and y values at start of each segment 2nd x1_x2_y1_y2 part of
-        function
+        x and y values at start of each segment for the second x1_x2_y1_y2
+        part of the composite function.
     x2c, y2c : array_like, float
-        x and y values at end of each segment for 2nd x1_x2_y1_y2 part of
-        function  (note x1[1:]==x2[:-1])
-    xai, array_like, float
-        x values to interpolate the xc_yc part at
+        x and y values at end of each segment for the second x1_x2_y1_y2
+        part of the composite function  (note x1[1:]==x2[:-1]).
+    xai : array_like, float
+        x values to interpolate the xc_yc part at and evaluate the
+        cos(omega*xai + phase) part.
     xbi, xbj : array_like, float
-        x values to integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part between
+        x values to integrate the x1b_x2b_y1b_y2b * x1c_x2c_y1c_y2c part
+        between.
     achoose_max : ``boolean``, optional
-        if False (default), if xai falls on boundary of segments choose the
+        If False (default), when xai falls on boundary of segments choose the
         minimum segment to interpolate within.
 
-    See also
-    --------
 
+    Returns
+    -------
+    A : (len(xbi), len(xai)) 2d array
+        Results for each xbi, xbj pair and xai value.
+
+    See Also
+    --------
+    pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Same function with PolyLine inputs.
+    pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_super :
+        PolyLine inputs and superposition.
+    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
+        Similar function without cosine term.
 
     """
 
@@ -1848,24 +2178,41 @@ class PolyLine(object):
 
     - PolyLines can be intialized in different ways e.g. use a single array
       of x-y points; use separate x-arrays and y-arrays; use x values at the
-      start and end of each interval and yvalues at the start and end of each
+      start and end of each interval and y values at the start and end of each
       interval.  This can be useful if you want to work with layer/interval
       data but to plot those intervals you want x-y points.
-    - Multiply a PolyLine by a scalar and only the y values will be changed
+    - Multiply a PolyLine by a scalar and only the y values will be changed.
     - Add to/from a PolyLine with a scalar and only the y values will be
       changed.
     - PolyLines can be added together to create a new PolyLine; the x values
       of each PolyLine will be maintained.  Any x values that are not common
       to both PolyLines will have their y values interpolated and then added.
 
+    Parameters
+    ----------
+    *args : array like
+        A PolyLine object can be initialized with 1, 2, or 4 positional
+        arguments (a different number of arguments will raise an error):
+
+         - A single n-by-2 two-dimensional array of n (x, y) points.  i.e.
+           first column is x values, second column is y values.
+         - Two one-dimensional arrays of equal length.  The first array is the
+           x values.  The second array is the corresponding y values.
+         - Four one-dimensional arrays of equal length. First array x1 is x
+           values at the start of a interval.  The second array x2 is x values
+           at the end of a interval (note x1[1:] must equal x2[0:-1]).  The
+           third array y1 is the y values at the start of each interval.  The
+           fourth array y2 is the y values at the end of each interval.
+
+
     Attributes
-    ---------
+    ----------
     xy : 2d numpy array
         n by 2 array containing x and y values for each of the n points i.e.
-        [[x0, y0], [x1, y1], ..., [xn, yn]]
+        [[x0, y0], [x1, y1], ..., [xn, yn]].
     x, y : 1d numpy array
-        arrays containing all the x values  and all the y values in the
-        PolyLine
+        Arrays containing all the x values and all the y values in the
+        PolyLine.
     x1, x2, y1, y2 : 1d numpy array
         When you want the start and end values of each of the intervals/layers
         in the PolyLine.  x1 is the x values at the start of each interval,
@@ -1879,9 +2226,9 @@ class PolyLine(object):
         PolyLines using x1_x2_y1_y2 values, any initial or final vertical
         section  cannot be defined.
     x1_x2_y1_y2 : tuple of 4 1d arrays
-        the x1, x2, y1, y2 arrays returned in a tuple.
+        The x1, x2, y1, y2 arrays returned in a tuple.
     atol, rtol : float
-        absolute and relative tolerance when comparing equality of points in a
+        Absolute and relative tolerance when comparing equality of points in a
         PolyLine using numpy.allclose
     _prefix_for_numpy_array_repr : string
         When using the repr function on Numpy arrays the default output will
@@ -2017,27 +2364,27 @@ class PolyLine(object):
         return "PolyLine({})".format(str(self.xy))
 
 #    def __repr__(self):
-#        """A string repr of the PolyLine that will recreate the Ployline"""
+#        """A string repr of the PolyLine that will recreate the PolyLine"""
 #        return "PolyLine({}{})".format(self._prefix_for_numpy_array_repr,
 #                                    repr(self.xy))
     def __repr__(self):
-        """A string repr of the PolyLine that will recreate the Ployline"""
+        """A string repr of the PolyLine that will recreate the PolyLine"""
         return "PolyLine({})".format(repr(self.xy))
 
     def __add__(self, other):
-        return self._add_substract(other, op = operator.add)
+        return self._add_substract(other, op=operator.add)
     def __radd__(self, other):
-        return self._add_substract(other, op = operator.add)
+        return self._add_substract(other, op=operator.add)
 
     def __sub__(self, other):
-        return self._add_substract(other, op = operator.sub)
+        return self._add_substract(other, op=operator.sub)
     def __rsub__(self, other):
-        return self._add_substract(other, op = operator.sub).__mul__(-1)
+        return self._add_substract(other, op=operator.sub).__mul__(-1)
 
     def __mul__(self, other):
         if isinstance(other, PolyLine):
-            raise TypeError('cannot multiply two PolyLines together.  '
-                'You will get a quadratic that I cannot handle')
+            raise TypeError('Cannot multiply two PolyLines together.  '
+                'You will get a quadratic that I cannot handle.')
             sys.exit(0)
         try:
             return PolyLine(self.x, self.y * other)
@@ -2054,7 +2401,7 @@ class PolyLine(object):
 
     def __truediv__(self, other):
         if isinstance(other, PolyLine):
-            raise TypeError('cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
+            raise TypeError('Cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
             sys.exit(0)
         try:
             return PolyLine(self.x, self.y / other)
@@ -2062,13 +2409,13 @@ class PolyLine(object):
 #            a.xy #ensure xy has been initialized
 #            a._xy[:,1] /= other
         except TypeError:
-            print("unsupported operand type(s) for /: 'PolyLine' and "
+            print("Unsupported operand type(s) for /: 'PolyLine' and "
                 "'{}'".format(other.__class__.__name__))
             sys.exit(0)
 #        return a
     def __rtruediv__(self, other):
         if isinstance(other, PolyLine):
-            raise TypeError('cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
+            raise TypeError('Cannot divide two PolyLines together.  You will get a quadratic that I cannot handle')
             sys.exit(0)
         try:
             return PolyLine(self.x, other / self.y)
@@ -2090,7 +2437,7 @@ class PolyLine(object):
         return not self.__eq__(other)
 
     def _add_substract(self, other, op = operator.add):
-        """addition or subtraction"""
+        """Addition or subtraction of PolyLine objects"""
 
         mp = {operator.add: operator.iadd, operator.sub: operator.isub}
         iop = mp[op]
@@ -2183,31 +2530,30 @@ class PolyLine(object):
 #            a.xy #ensure xy has been initialized
 #            iop(a._xy[:,1], other)
         except TypeError:
-            print("unsupported operand type(s) for +: 'PolyLine' and "
+            print("Unsupported operand type(s) for +: 'PolyLine' and "
                 "'{}'".format(other.__class__.__name__))
 #            sys.exit(0)
         return a
 
 
-
-
 def polyline_make_x_common(*p_lines):
-    """add points to multiple PolyLine's so that each have matching x1_x2 intevals
+    """Add appropriate points to multiple PolyLine objetcs so that each has
+    matching x1_x2 intevals.
 
     Parameters
     ----------
-    p_lines: PloyLine
-        one or more instances of PolyLine
+    p_lines : PolyLine
+        One or more instances of PolyLine.
 
     Returns
     -------
     out : tuple of PolyLine
-        same number of Polyline's as p_lines
+        Same number of Polyline's as `p_lines`.
 
     """
 
-    xa=[]
-    ya=[]
+    xa = []
+    ya = []
 
     for i, line in enumerate(p_lines):
         if not isinstance(line, PolyLine):
@@ -2276,54 +2622,62 @@ def polyline_make_x_common(*p_lines):
 def subdivide_x_y_into_segments(x, y, dx=None, min_segments = 2,
         just_before = None, logx=False, logy=False, logxzero=0.1,
         logyzero=0.1, rtol=1e-5, atol=1e-8):
-    """subdivide each line segment into subsegments
+    """Subdivide piecewise-linear line segment x, y data by interpolation
 
-    subsegements are evenly spaced in linear or log space
+    Subsegments are evenly spaced in linear or log space.
 
     Parameters
     ----------
     x : 1d array-like
-        list of xvalues to subdivide
+        List of x values to subdivide.
     y : 1d array-like
-        list of y values to subdivide (based on x values)
-        no y values
+        List of y values to subdivide (y subdivision is based on
+        interpolation at the new x values).
     dx : float, optional
-        approxmate log10(length) of subsegment.  Say segment is from 1-10 units
-        and dx=0.2 then int((log(10)-log(1))/0.2)=5 subsegments
-        (i.e. 5 extra points will be inserted in thh segement) will be
-        created at log(1+0.2), log(1+0.4), log(1+0.6) etc.
-        default = None i.e. no dx check use min_segments.
+        Approximate length or log10(length) of subsegment.  Say logx is True,
+        segment x values are (1, 10), and x=0.2 then
+        int((log(10)-log(1))/0.2)=5 subsegments will be created
+        (i.e. 5 extra points will be inserted in the segment).  The new x
+        values will be will be 10**(log(1)+0.2), 10**(log(1)+0.4),
+        10**(log(1)+0.6) etc. Default dx=None i.e. no dx check and
+        `min_segments` will be used.
     min_segments : int, optional
-        minuimum number of subsegments per inteval. this will be used if
-        int(segment_lenght/dx)<min_segments. default = 2
+        Minuimum number of subsegments per inteval. This will be used if
+        int(segment_lenght/dx)<min_segments. Default min_segments=2.
     just_before : float, optional
-        If just_before is not None then in terms of subdividing each
+        If `just_before` is not None then in terms of subdividing, each
         segment will be treated as if it begins at its starting value but
         ends a distance of `just_before` multiplied by the interval length
         before its end value. This
         means that an extra point will be added just before all of the
-        original points. default = None i.e dont use just before point.
-        Use a small number e.g. 1e-6.
+        original points. Default just_before=None i.e dont use just before
+        point.  Use a small number e.g. 1e-6.
         `just_before` can be useful for example when getting
-        times to evaluate pore pressure at in a soil consoliation
+        times to evaluate pore pressure during a soil consoliation
         analysis.  Say you have a PolyLine representing load_vs_time. If
         there are step changes in your load then there will be step
         changes in your pore pressure.  To capture the step change in your
         output you need an output time just before and just after the step
         change in your load.  Using `just_before` can achieve this.
-    logx, logy: True/False, optional
-        use log scale on x and y axes.  default = False
-    logxzero, logyzero: float, optional
-        if log scale is used force zero value to be given number.
-        Useful when 1st point iszero but you really want to start from close
-        to zero. default = 0.01
-    rtol, atol: float, optional
-        for determining equal to zero when using log scale with numpy.
-        default atol = 1e-8 , rtol = 1e-5
+    logx, logy : True/False, optional
+        Use log scale on x and y axes.  Default logx=logy=False.
+    logxzero, logyzero : float, optional
+        If log scale is used, force zero value to be given number.
+        Useful when 1st point is zero but you really want to start from close
+        to zero. Default logxzero=logyzero=0.01.
+    rtol, atol : float, optional
+        For determining equal to zero when using log scale with numpy.
+        Default atol=1e-8, rtol = 1e-5.
+
+
     Returns
     -------
     xnew, ynew : 1d array
-        new x and y coordinates
+        New x and y coordinates.
+
+    See Also
+    --------
+    subdivide_x_into_segments : Subdivide only x data.
 
     """
 
@@ -2388,54 +2742,64 @@ def subdivide_x_y_into_segments(x, y, dx=None, min_segments = 2,
 
     return (xnew, ynew)
 
-def subdivide_x_into_segments(x, dx=None, min_segments = 2,
+
+def subdivide_x_into_segments(x, dx=None, min_segments=2,
         just_before = None, logx=False, logxzero=0.1,
         rtol=1e-5, atol=1e-8):
-    """subdivide each inteval into subsegments
+    """Subdivide sequential x values into subsegments.
 
     Intervals are evenly spaced in linear or log space
 
     Parameters
     ----------
     x : 1d array-like
-        list of xvalues to subdivide
+        List of x values to subdivide.
     dx : float, optional
-        approxmate log10(length) of subsegment.  Say segment is from 1-10 units
-        and dx=0.2 then int((log(10)-log(1))/0.2)=5 subsegments
-        (i.e. 5 extra points will be inserted in thh segement) will be
-        created at log(1+0.2), log(1+0.4), log(1+0.6) etc.
-        default = None i.e. no dx check use min_segments.
+        Approximate length or log10(length) of subsegment.  Say logx is True,
+        segment x values are (1, 10), and x=0.2 then
+        int((log(10)-log(1))/0.2)=5 subsegments will be created
+        (i.e. 5 extra points will be inserted in the segment).  The new x
+        values will be will be 10**(log(1)+0.2), 10**(log(1)+0.4),
+        10**(log(1)+0.6) etc. Default dx=None i.e. no dx check and
+        `min_segments` will be used.
     min_segments : int, optional
-        minuimum number of subsegments per inteval. this will be used if
-        int(segment_lenght/dx)<min_segments. default = 2
+        Minuimum number of subsegments per inteval. This will be used if
+        int(segment_lenght/dx)<min_segments. Default min_segments=2.
     just_before : float, optional
-        If just_before is not None then in terms of subdividing each
+        If `just_before` is not None then in terms of subdividing, each
         segment will be treated as if it begins at its starting value but
         ends a distance of `just_before` multiplied by the interval length
         before its end value. This
         means that an extra point will be added just before all of the
-        original points. default = None i.e dont use just before point.
-        Use a small number e.g. 1e-6.
+        original points. Default just_before=None i.e dont use just before
+        point.  Use a small number e.g. 1e-6.
         `just_before` can be useful for example when getting
-        times to evaluate pore pressure at in a soil consoliation
+        times to evaluate pore pressure during a soil consoliation
         analysis.  Say you have a PolyLine representing load_vs_time. If
         there are step changes in your load then there will be step
         changes in your pore pressure.  To capture the step change in your
         output you need an output time just before and just after the step
         change in your load.  Using `just_before` can achieve this.
-    logx: True/False, optional
-        use log scale on x axis.  default = False
-    logxzero: float, optional
-        if log scale is used force zero value to be given number.
-        Useful when 1st point iszero but you really want to start from close
-        to zero. default = 0.01
-    rtol, atol: float, optional
-        for determining equal to zero when using log scale with numpy.
-        default atol = 1e-8 , rtol = 1e-5
+    logx : True/False, optional
+        Use log scale on x data.  Default logx=False.
+    logxzero : float, optional
+        If log scale is used, force zero value to be given number.
+        Useful when 1st point is zero but you really want to start from close
+        to zero. Default logxzero=0.01.
+    rtol, atol : float, optional
+        For determining equal to zero when using log scale with numpy.
+        Default atol=1e-8, rtol = 1e-5.
+
     Returns
     -------
-    xnew: 1d array
+    xnew : 1d array
         new x values
+
+    See Also
+    --------
+    subdivide_x_y_into_segments : Subdivide both x and y data, y data is
+        interpolated from the new x values.
+
 
     """
 
@@ -2481,24 +2845,29 @@ def subdivide_x_into_segments(x, dx=None, min_segments = 2,
 
     return xnew
 
+
 def layer_coords(h, segs, min_segs=1):
-    """Calculate depth coordinates from from layer heights
+    """Divide layer heights into segments and calculate offset from start
 
     Subdivide each layer. Calculate offset.
+
+    Useful when you are interested in the end points of each layer as well as
+    some intermediate points.
 
     Parameters
     ----------
     h : list/array
-        1d array of layer heights
+        1d array of layer heights.
     segs : int
-        approximate number of segments to subdivide the whole profile into
+        Approximate number of segments to subdivide the whole profile into.
     min_segs : int, optional
-        Minimum number of segments to subdivide a layer into. Default nmin=2
+        Minimum number of segments to subdivide a layer into. Default
+        min_segs=2.
 
     Returns
     -------
     z : 1d array
-        depths
+        Depths.
 
 
     Examples
@@ -2532,33 +2901,35 @@ def layer_coords(h, segs, min_segs=1):
 
 
 def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
-    """subdivide a length into elments are a multiple times the last element
+    """Subdivide a length into elements where sizes are proportional to
+    adjacent elements.
 
 
-    element_0 = x * p**0
-    element_1 = x * p**1
-    element_2 = x * p**2
-    etc.
+     - element_0 = x * p**0
+     - element_1 = x * p**1
+     - element_2 = x * p**2
+     - etc.
 
-    x is such that sum of elements equals `h`.
+    x is such that sum of `n` elements equals `h`.
 
     Parameters
     ----------
     n : int, optional
-        number of elements to subdivide into. default n=2
+        Number of elements to subdivide into. Default n=2.
     h : float, optional
-        length to subdivide.  Default h=1
+        Length to subdivide.  Default h=1.
     p : float, optional
-        ratio of subsequent elements.  If p<1 then succesive elements
+        Ratio of subsequent elements.  If p<1 then succesive elements
         will reduce in length.  If p>1 then successive elements
-        will increase in lenght. default p=1
+        will increase in lenght. Default p=1
     symmetry : True/False, optional
-        if True then elements will be symmetrical abount middle
+        If True then elements will be symmetrical abount middle.  Default
+        symmetry=True.
 
     Returns
     -------
     out : array of float
-        length of each element. should sum to h
+        Length of each element. Should sum to `h`.
 
     See also
     --------
@@ -2590,6 +2961,7 @@ def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
     array([ 0.5,  1. ,  2. ])
     >>> sum(subdivide_into_elements(n=20, h=3.5, p=1.05, symmetry=False))
     3.5
+
     """
 
     if p<=0:
