@@ -1629,7 +1629,7 @@ def dim1sin_af_linear_implementations_old():
 
     return fn, fn2
 
-def dim1sin_abf_linear_implementations():
+def dim1sin_abf_linear_implementations_old():
     """Generate code to calculate spectral method integrations
 
     Performs integrations of `sin(mi * z) * a(z) *b(z) * sin(mj * z)`
@@ -3792,10 +3792,6 @@ def dim1sin_af_linear_implementations():
     v = SympyVarsFor1DSpectralDerivation('z')
     integ_kwargs = dict(risch=False, conds='none')
 
-    ############################
-#    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a'])
-#    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a'])
-
     phi_i = sympy.sin(v.mi * v.z)
     phi_j = sympy.sin(v.mj * v.z)
 
@@ -3889,9 +3885,11 @@ def dim1sin_af_linear_implementations():
         REAL(DP), intent(in), dimension(0:nlayers-1) :: zb
         REAL(DP), intent(out), dimension(0:neig-1, 0:neig-1) :: a
         INTEGER :: i , j, layer
+        REAL(DP) :: a_slope
+
         a=0.0D0
         DO layer = 0, nlayers-1
-          a_slope = (ab(layer) - at(layer) / (zb(layer) - zt(layer))
+          a_slope = (ab(layer) - at(layer)) / (zb(layer) - zt(layer))
           DO j = 0, neig-1
               i=j
 {0}
@@ -3920,6 +3918,190 @@ def dim1sin_af_linear_implementations():
     return fn, fn2
 
 
+def dim1sin_abf_linear_implementations():
+    """Generate code to calculate spectral method integrations
+
+    Performs integrations of `sin(mi * z) * a(z) *b(z) * sin(mj * z)`
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.
+    Code is generated that will produce a square array with the appropriate
+    integrals at each location
+
+    Paste the resulting code (at least the loops) into `dim1sin_abf_linear`.
+
+    Creates 3 implementations:
+     - 'scalar', python loops (slowest)
+     - 'vectorized', numpy (much faster than scalar)
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+
+    Returns
+    -------
+    fn : string
+        Python code. with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2 : string
+        Fortran code.  needs to be compiled with f2py
+
+    Notes
+    -----
+    The `dim1sin_abf_linear` matrix, :math:`A` is given by:
+
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\phi_i\\phi_j\\,dz}
+
+    where the basis function :math:`\\phi_i` is given by:
+
+    .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
+    each layer respectively.
+
+    """
+
+    v = SympyVarsFor1DSpectralDerivation('z')
+    integ_kwargs = dict(risch=False, conds='none')
+
+    phi_i = sympy.sin(v.mi * v.z)
+    phi_j = sympy.sin(v.mj * v.z)
+
+#    fdiag = sympy.integrate(p['a'] * p['b'] * phi_i * phi_i, z)
+    fdiag = sympy.integrate(v.a * v.b * phi_i * phi_i, v.z, **integ_kwargs)
+    fdiag_loops = fdiag.subs(v.z, v.zbot) - fdiag.subs(v.z, v.ztop)
+    fdiag_loops = fdiag_loops.subs(v.map_to_add_index)
+    fdiag_vector = fdiag.subs(v.z, v.zbot) - fdiag.subs(v.z, v.ztop)
+    fdiag_vector = fdiag_vector.subs(v.map_top_to_t_bot_to_b)
+
+#    foff = sympy.integrate(p['a'] * p['b'] * phi_j * phi_i, z)
+    foff = sympy.integrate(v.a * v.b * phi_j * phi_i, v.z, **integ_kwargs)
+    foff_loops = foff.subs(v.z, v.zbot) - foff.subs(v.z, v.ztop)
+    foff_loops = foff_loops.subs(v.map_to_add_index)
+    foff_vector = foff.subs(v.z, v.zbot) - foff.subs(v.z, v.ztop)
+    foff_vector = foff_vector.subs(v.map_top_to_t_bot_to_b)
+
+    text_python = """def dim1sin_abf_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectorized'):
+
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    bt = np.asarray(bt)
+    bb = np.asarray(bb)
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        A = np.zeros([neig, neig], float)
+        nlayers = len(zt)
+        for layer in range(nlayers):
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            b_slope = (bb[layer] - bt[layer]) / (zb[layer] - zt[layer])
+            for i in range(neig):
+                A[i, i] += ({0})
+            for i in range(neig-1):
+                for j in range(i + 1, neig):
+                    A[i, j] += ({1})
+
+        #A is symmetric
+        for i in range(neig - 1):
+            for j in range(i + 1, neig):
+                A[j, i] = A[i, j]
+
+    elif implementation == 'fortran':
+        try:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb)
+        except ImportError:
+            A = dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
+
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros([neig, neig], float)
+
+        diag =  np.diag_indices(neig)
+        triu = np.triu_indices(neig, k = 1)
+        tril = (triu[1], triu[0])
+
+        a_slope = (ab - at) / (zb - zt)
+        b_slope = (bb - bt) / (zb - zt)
+
+        mi = m[:, np.newaxis]
+        A[diag] = np.sum({2}, axis=1)
+
+        mi = m[triu[0]][:, np.newaxis]
+        mj = m[triu[1]][:, np.newaxis]
+        A[triu] = np.sum({3}, axis=1)
+        #A is symmetric
+        A[tril] = A[triu]
+
+    return A"""
+
+
+#    note the the i=j part in the fortran loop  below is because
+#      I changed the loop order from layer, i,j to layer, j,i which is
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """\
+      SUBROUTINE dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb, a, &
+                                    neig, nlayers)
+        USE types
+        IMPLICIT NONE
+
+        INTEGER, intent(in) :: neig
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,zt,zb
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: at
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: ab
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: bt
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: bb
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: zt
+!        REAL(DP), intent(in), dimension(0:nlayers-1) :: zb
+        REAL(DP), intent(out), dimension(0:neig-1, 0:neig-1) :: a
+        INTEGER :: i , j, layer
+        REAL(DP) :: a_slope, b_slope
+
+
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          a_slope = (ab(layer) - at(layer)) / (zb(layer) - zt(layer))
+          b_slope = (bb(layer) - bt(layer)) / (zb(layer) - zt(layer))
+          DO j = 0, neig-1
+              i=j
+{0}
+            DO i = j+1, neig-1
+{1}
+            END DO
+          END DO
+        END DO
+
+        DO j = 0, neig -2
+          DO i = j + 1, neig-1
+            a(j,i) = a(i, j)
+          END DO
+        END DO
+
+      END SUBROUTINE"""
+
+
+
+
+
+    fn = text_python.format(tw(fdiag_loops,5), tw(foff_loops,6), tw(fdiag_vector,3), tw(foff_vector,3))
+    fn2 = text_fortran.format(fcode_one_large_expr(fdiag_loops, prepend='a(i, i) = a(i, i) + '),
+                 fcode_one_large_expr(foff_loops, prepend='a(i, j) = a(i, j) + '))
+
+    return fn, fn2
 
 if __name__ == '__main__':
     pass
@@ -3954,4 +4136,5 @@ if __name__ == '__main__':
 #    fn, fn2=EDload_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=Eload_coslinear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=EDload_coslinear_implementations();print(fn);print('#'*40); print(fn2)
-    fn, fn2=dim1sin_af_linear_implementations();print(fn);print('#'*40); print(fn2)
+#    fn, fn2=dim1sin_af_linear_implementations();print(fn);print('#'*40); print(fn2)
+    fn, fn2=dim1sin_abf_linear_implementations();print(fn);print('#'*40); print(fn2)
