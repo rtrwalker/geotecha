@@ -22,7 +22,7 @@ in soil consolidation problems.
 
 See Also
 --------
-geotecha.consolidation : other implementations of soil consolidation problems.
+geotecha.consolidation : Other implementations of soil consolidation problems.
 
 
 """

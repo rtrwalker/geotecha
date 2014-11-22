@@ -1462,7 +1462,7 @@ def dim1sin_af_linear_fortran():
     return fn
 
 
-def dim1sin_af_linear_implementations():
+def dim1sin_af_linear_implementations_old():
     """Generate code to calculate spectral method integrations
 
     Generate scalar and vectorized python code and fortran loops
@@ -2495,22 +2495,24 @@ def dim1sin_D_aDb_linear_implementations():
     return fn, fn2
 
 
-def tw(text, indents=3, width=100, break_long_words=False):
-    """rough text wrapper for long sympy expressions
 
-    1st line will not be indented
+def tw(text, indents=3, width=100, break_long_words=False):
+    """Rough text wrapper for long sympy expressions
+
+    1st line will not be indented.
+
+
     Parameters
     ----------
-    text: str
-        text to wrap
-    width :
-        rough width of warpping
-        default = 100
-    indents:
-        multiple of 4 spaces that will be used to indent each line
-        default = 3
-    break_long_words: bool
-        default = False
+    text : str
+        Text to wrap
+    width : int optional
+        Rough width of warpping. Default width=100.
+    indents : int, optional
+        Multiple of 4 spaces that will be used to indent each line.
+        Default indents=3.
+    break_long_words : True/False, optional
+        Default break_long_words=False.
 
     """
     subsequent_indent = " "*4*indents
@@ -3529,6 +3531,396 @@ def EDload_coslinear(loadtim, loadmag, omega, phase,eigs, tvals, dT=1.0, impleme
 
     return fn, fn2
 
+
+
+
+
+
+
+class SympyVarsFor1DSpectralDerivation(object):
+    """Container for sympy vars, z, zt, zb, at, etc piecewise linear
+    Spectral Galerkin integrations.
+
+
+    Parameters
+    ----------
+    linear_var : ['z', 'x', 'y'], optional
+        Independent variable for the linear function specification.
+        f(linear_var) = at+a_slope * (linear_var-linear_vart).
+        Default linear_var='z'.
+    slope : True/False, optional
+        If True (default), then the linear functions will be defined with a
+        lumped slope term, e.g. a = atop + a_slope * (z - ztop) compared to
+        if slope=False, where a = atop + (abot-atop)/(zbot-ztop)*(z-ztop).
+        You will have to define a_slope in your code template, e.g.
+        Python loops: a_slope = (ab[layer]-at[layer])/(zb[layer]-zt[layer]).
+        Fortran loops: a_slope = (ab(layer)-at(layer)/(zb(layer)-zt(layer)).
+        Vectorised: a_slope = (ab-at)/(zb-zt).
+
+
+    Attributes
+    ----------
+    x, y, z : sympy.Symbol
+        Independent variables.
+    xtop, xbot, ytop, ybot, ztop, zbot : sympy.Symbol
+        Symbols used in expressions to be integrated with sympy.integrate.
+        After the integration these variables are usually replaced with
+        the relevant xt, xb, yt etc. or xt[layer], yb[layer] etc.  These
+        substitutions can be made using `map_to_add_index' or
+        `map_top_to_t_bot_to_b`.
+    i, j, k , layer : sympy.tensor.Idx
+        Index variables.
+    xt, xb, yt, yb, zt, zb : sympy.tensor.IndexedBase
+        Variables for values at top and bottom of layer.  Used to define
+        linear relationships.  These variable usually replace xtop, xbot
+        after integrations.  The reason they are not used before integration
+        is thatsympy doesn't seem to like the sympy.tensor.IndexedBase for
+        integrations. Substitutions can be made using `map_to_add_index' or
+        `map_top_to_t_bot_to_b`.
+    at, ab, a, a_slope: sympy.Symbol and sympy.Expr
+        Variables to define linear relationships.
+        If `slope`=True, a = atop + a_slope * (z - ztop)
+        If `slope`=False, a = atop + (abot - atop)/(zbot - ztop) * (z - ztop).
+        Where z and ztop may change according to `linear_var`.
+    bt, bb, b, b_slope: sympy.Symbol and sympy.Expr
+        Variables to define linear relationships.
+        If `slope`=True, b = atop + b_slope * (z - ztop)
+        If `slope`=False, b = btop + (bbot - btop)/(zbot - ztop) * (z - ztop).
+        Where z and ztop may change according to `linear_var`.
+    ct, cb, c, c_slope: sympy.Symbol and sympy.Expr
+        Variables to define linear relationships.
+        If `slope`=True, c = ctop + c_slope * (z - ztop)
+        If `slope`=False, c = ctop + (cbot - ctop)/(zbot - ztop) * (z - ztop).
+        Where z and ztop may change according to `linear_var`.
+    map_to_add_index : list of 2 element tuples
+        A list to be used with the subs method of sympy expressions to
+        add a index variables to the variables. A typical entries in
+        `map_to_add_index` would be [(mi, m[i]), (mj, m[j]), (atop, at[layer]),
+        (ztop, zt[layer]), ...].  Use this to after an integration invoving
+        ztop, atop etc. to format the expression for use in function with
+        loops.
+    map_top_to_t_bot_to_b : list of 2 element tuples
+        A list to be used with the subs method of sympy expressions to
+        add change 'ztop' to 'zt', 'abot' to 'at' etc. Typical entries in
+        `map_top_to_t_bot_to_b` would be [(atop, at), (ztop, zt), ...].
+        Use this to after an integration invoving ztop, atop etc. to format
+        the expression for use in a vectorised function.
+    mi, mj : sympy.Symbol
+        Variable for row and column eigs.
+    m : sympy.tensor.IndexedBase
+        IndexedBaseVariable of eigs.  used for m[i], and m[j].
+
+
+    Examples
+    --------
+    >>> v = SympyVarsFor1DSpectralDerivation()
+    >>> v.a
+    a_slope*(z - ztop) + atop
+    >>> v.b
+    b_slope*(z - ztop) + btop
+    >>> v.c
+    c_slope*(z - ztop) + ctop
+    >>> v.map_to_add_index
+    [(atop, at[layer]), (abot, ab[layer]), (btop, bt[layer]), (bbot, bb[layer]), (ctop, ct[layer]), (cbot, cb[layer]), (ztop, zt[layer]), (zbot, zb[layer]), (mi, m[i]), (mj, m[j])]
+    >>> v.a.subs(v.map_to_add_index)
+    a_slope*(z - zt[layer]) + at[layer]
+    >>> v.b.subs(v.map_top_to_t_bot_to_b)
+    b_slope*(z - zt) + bt
+    >>> v.mi
+    mi
+    >>> v.mi.subs(v.map_to_add_index)
+    m[i]
+    >>> v.mi.subs(v.map_top_to_t_bot_to_b)
+    mi
+
+
+    >>> v = SympyVarsFor1DSpectralDerivation(linear_var='x', slope=False)
+    >>> v.a
+    atop + (abot - atop)*(x - xtop)/(xbot - xtop)
+
+
+    """
+
+    def __init__(self, linear_var='z', slope=True):
+
+        import sympy
+
+
+        #integration variables
+        self.x, self.y, self.z = sympy.symbols('x,y,z')
+        self.xtop, self.xbot = sympy.symbols('xtop,xbot', nonzero=True)
+        self.ytop, self.ybot = sympy.symbols('ytop,ybot', nonzero=True)
+        self.ztop, self.zbot = sympy.symbols('ztop,zbot', nonzero=True)
+        self.atop, self.abot = sympy.symbols('atop,abot', nonzero=True)
+        self.btop, self.bbot = sympy.symbols('btop,bbot', nonzero=True)
+        self.ctop, self.cbot = sympy.symbols('ctop,cbot', nonzero=True)
+
+        # indexes
+        self.i = sympy.tensor.Idx('i')
+        self.j = sympy.tensor.Idx('j')
+        self.k = sympy.tensor.Idx('k')
+        self.layer = sympy.tensor.Idx('layer')
+
+        self.xt = sympy.tensor.IndexedBase('xt')
+        self.xb = sympy.tensor.IndexedBase('xb')
+        self.yt = sympy.tensor.IndexedBase('yt')
+        self.yb = sympy.tensor.IndexedBase('yb')
+        self.zt = sympy.tensor.IndexedBase('zt')
+        self.zb = sympy.tensor.IndexedBase('zb')
+
+        self.m = sympy.tensor.IndexedBase('m')
+        self.mi, self.mj = sympy.symbols('mi,mj', nonzero=True)
+        mmap_to_add_index = [(self.mi, self.m[self.i]),
+                             (self.mj, self.m[self.j])]
+
+
+        #linear f(linear_var)
+        self.linear_var = linear_var
+        _x = getattr(self, linear_var)
+        _xtop = getattr(self, linear_var + 'top')
+        _xbot = getattr(self, linear_var + 'bot')
+        _xt = getattr(self, linear_var + 't')
+        _xb = getattr(self, linear_var + 'b')
+        _xmap_to_add_index = [(_xtop, _xt[self.layer]),
+                              (_xbot, _xb[self.layer])]
+        _xmap_top_to_t_bot_to_b = [(_xtop, _xt),
+                                   (_xbot, _xb)]
+
+
+        self.at = sympy.tensor.IndexedBase('at')
+        self.ab = sympy.tensor.IndexedBase('ab')
+        self.a_slope = sympy.symbols('a_slope')
+        if slope:
+            self.a = (self.atop + self.a_slope * (_x - _xtop))
+        else:
+            self.a = (self.atop +
+                      (self.abot - self.atop) / (_xbot - _xtop) * (_x - _xtop))
+
+        amap_to_add_index = [(self.atop, self.at[self.layer]),
+                             (self.abot, self.ab[self.layer])]
+        amap_top_to_t_bot_to_b = [(self.atop, self.at),
+                                   (self.abot, self.ab)]
+
+        self.bt = sympy.tensor.IndexedBase('bt')
+        self.bb = sympy.tensor.IndexedBase('bb')
+        self.b_slope = sympy.symbols('b_slope')
+        if slope:
+            self.b = (self.btop + self.b_slope * (_x - _xtop))
+        else:
+            self.b = (self.btop +
+                      (self.bbot - self.btop) / (_xbot - _xtop) * (_x - _xtop))
+
+        bmap_to_add_index = [(self.btop, self.bt[self.layer]),
+                             (self.bbot, self.bb[self.layer])]
+        bmap_top_to_t_bot_to_b = [(self.btop, self.bt),
+                                   (self.bbot, self.bb)]
+
+        self.ct = sympy.tensor.IndexedBase('ct')
+        self.cb = sympy.tensor.IndexedBase('cb')
+        self.c_slope = sympy.symbols('c_slope')
+        if slope:
+            self.c = (self.ctop + self.c_slope * (_x - _xtop))
+        else:
+            self.c = (self.ctop +
+                      (self.cbot - self.ctop) / (_xbot - _xtop) * (_x - _xtop))
+
+        cmap_to_add_index = [(self.ctop, self.ct[self.layer]),
+                             (self.cbot, self.cb[self.layer])]
+        cmap_top_to_t_bot_to_b = [(self.atop, self.at),
+                                   (self.abot, self.ab)]
+
+        self.map_to_add_index = (amap_to_add_index +
+                                 bmap_to_add_index +
+                                 cmap_to_add_index +
+                                 _xmap_to_add_index +
+                                 mmap_to_add_index)
+
+        self.map_top_to_t_bot_to_b = (amap_top_to_t_bot_to_b +
+                                      bmap_top_to_t_bot_to_b +
+                                      cmap_top_to_t_bot_to_b +
+                                     _xmap_top_to_t_bot_to_b)
+
+
+def dim1sin_af_linear_implementations():
+    """Generate code to calculate spectral method integrations
+
+    Generate scalar and vectorized python code and fortran loops
+
+    Performs integrations of `sin(mi * z) * a(z) * sin(mj * z)` between [0, 1]
+    where a(z) is a piecewise linear function of z.  Code is generated that
+    will produce a square array with the appropriate integrals at each location
+
+    Paste the resulting code (at least the loops) into `dim1sin_af_linear`.
+
+    Creates 3 implementations:
+     - 'scalar', python loops (slowest)
+     - 'vectorized', numpy (much faster than scalar)
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+
+
+    Returns
+    -------
+    fn : string
+        Python code. with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2 : string
+        Fortran code.  needs to be compiled with f2py
+
+    Notes
+    -----
+    The `dim1sin_af_linear` matrix, :math:`A` is given by:
+
+    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{{a\\left(z\\right)}\\phi_i\\phi_j\\,dz}
+
+    where the basis function :math:`\\phi_i` is given by:
+
+    .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+
+    and :math:`a\\left(z\\right)` is a piecewise linear function
+    w.r.t. :math:`z`, that within a layer are defined by:
+
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
+    each layer respectively.
+
+    """
+
+
+
+    v = SympyVarsFor1DSpectralDerivation('z')
+    integ_kwargs = dict(risch=False, conds='none')
+
+    ############################
+#    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a'])
+#    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a'])
+
+    phi_i = sympy.sin(v.mi * v.z)
+    phi_j = sympy.sin(v.mj * v.z)
+
+    fdiag = sympy.integrate(v.a * phi_i * phi_i, v.z, **integ_kwargs)
+    fdiag_loops = fdiag.subs(v.z, v.zbot) - fdiag.subs(v.z, v.ztop)
+    fdiag_loops = fdiag_loops.subs(v.map_to_add_index)
+    fdiag_vector = fdiag.subs(v.z, v.zbot) - fdiag.subs(v.z, v.ztop)
+    fdiag_vector = fdiag_vector.subs(v.map_top_to_t_bot_to_b)
+
+    foff = sympy.integrate(v.a * phi_j * phi_i, v.z, **integ_kwargs)
+    foff_loops = foff.subs(v.z, v.zbot) - foff.subs(v.z, v.ztop)
+    foff_loops = foff_loops.subs(v.map_to_add_index)
+    foff_vector = foff.subs(v.z, v.zbot) - foff.subs(v.z, v.ztop)
+    foff_vector = foff_vector.subs(v.map_top_to_t_bot_to_b)
+
+    text_python = """def dim1sin_af_linear(m, at, ab, zt, zb, implementation='vectorized'):
+
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        A = np.zeros([neig, neig], float)
+        nlayers = len(zt)
+        for layer in range(nlayers):
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            for i in range(neig):
+                A[i, i] += ({0})
+            for i in range(neig-1):
+                for j in range(i + 1, neig):
+                    A[i, j] += ({1})
+
+        #A is symmetric
+        for i in range(neig - 1):
+            for j in range(i + 1, neig):
+                A[j, i] = A[i, j]
+
+    elif implementation == 'fortran':
+        try:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_af_linear(m, at, ab, zt, zb)
+        except ImportError:
+            A = dim1sin_af_linear(m, at, ab, zt, zb, implementation='vectorized')
+
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros([neig, neig], float)
+
+        diag =  np.diag_indices(neig)
+        triu = np.triu_indices(neig, k = 1)
+        tril = (triu[1], triu[0])
+
+        a_slope = (ab - at) / (zb - zt)
+
+        mi = m[:, np.newaxis]
+        A[diag] = np.sum({2}, axis=1)
+
+        mi = m[triu[0]][:, np.newaxis]
+        mj = m[triu[1]][:, np.newaxis]
+        A[triu] = np.sum({3}, axis=1)
+        #A is symmetric
+        A[tril] = A[triu]
+
+    return A"""
+
+
+#    note the the i=j part in the fortran loop  below is because
+#      I changed the loop order from layer, i,j to layer, j,i which is
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """      SUBROUTINE dim1sin_af_linear(m, at, ab, zt, zb, a, neig, nlayers)
+        USE types
+        IMPLICIT NONE
+
+        INTEGER, intent(in) :: neig
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: ab
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: zt
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: zb
+        REAL(DP), intent(out), dimension(0:neig-1, 0:neig-1) :: a
+        INTEGER :: i , j, layer
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          a_slope = (ab(layer) - at(layer) / (zb(layer) - zt(layer))
+          DO j = 0, neig-1
+              i=j
+{0}
+            DO i = j+1, neig-1
+{1}
+            END DO
+          END DO
+        END DO
+
+        DO j = 0, neig -2
+          DO i = j + 1, neig-1
+            a(j,i) = a(i, j)
+          END DO
+        END DO
+
+      END SUBROUTINE"""
+
+
+
+
+
+    fn = text_python.format(tw(fdiag_loops,5), tw(foff_loops,6), tw(fdiag_vector,3), tw(foff_vector,3))
+    fn2 = text_fortran.format(fcode_one_large_expr(fdiag_loops, prepend='a(i, i) = a(i, i) + '),
+                 fcode_one_large_expr(foff_loops, prepend='a(i, j) = a(i, j) + '))
+
+    return fn, fn2
+
+
+
 if __name__ == '__main__':
     pass
 #    import nose
@@ -3561,4 +3953,5 @@ if __name__ == '__main__':
 #    fn, fn2=Eload_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=EDload_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=Eload_coslinear_implementations();print(fn);print('#'*40); print(fn2)
-    fn, fn2=EDload_coslinear_implementations();print(fn);print('#'*40); print(fn2)
+#    fn, fn2=EDload_coslinear_implementations();print(fn);print('#'*40); print(fn2)
+    fn, fn2=dim1sin_af_linear_implementations();print(fn);print('#'*40); print(fn2)
