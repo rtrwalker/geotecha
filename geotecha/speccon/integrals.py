@@ -5996,7 +5996,7 @@ def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb, implementation='vector
         normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
     zb : ``list`` of ``float``
         normalised depth or z-coordinate at bottom of each layer. `zt[-1]` = 1
-    implementation: str, optional
+    implementation : str, optional
         functional implementation: 'scalar' = python loops (slow),
         'fortran' = fortran code (fastest), 'vectorized' = numpy(fast).
         default = 'vectorized'.  If fortran extention module cannot be imported
@@ -6026,13 +6026,13 @@ def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb, implementation='vector
 
     where the basis function :math:`\\phi_i` is given by:
 
-    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
 
     and :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)`, and
     :math:`c\\left(z\\right)` are piecewise linear functions
     w.r.t. :math:`z`, that within a layer are defined by:
 
-    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
     with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
     each layer respectively.
@@ -6047,6 +6047,8 @@ def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb, implementation='vector
     ab = np.asarray(ab)
     bt = np.asarray(bt)
     bb = np.asarray(bb)
+    ct = np.asarray(ct)
+    cb = np.asarray(cb)
     zt = np.asarray(zt)
     zb = np.asarray(zb)
 
@@ -6058,782 +6060,108 @@ def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb, implementation='vector
         A = np.zeros(neig, float)
         nlayers = len(zt)
         for layer in range(nlayers):
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            b_slope = (bb[layer] - bt[layer]) / (zb[layer] - zt[layer])
+            c_slope = (cb[layer] - ct[layer]) / (zb[layer] - zt[layer])
             for i in range(neig):
-                A[i] += (-6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*sin(m[i]*zb[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*sin(m[i]*zt[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*sin(m[i]*zb[layer]) -
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*sin(m[i]*zt[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*sin(m[i]*zb[layer]) -
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*sin(m[i]*zt[layer]) -
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*sin(m[i]*zb[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*sin(m[i]*zt[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*sin(m[i]*zb[layer]) -
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*sin(m[i]*zt[layer]) -
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*sin(m[i]*zb[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*sin(m[i]*zt[layer]) -
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*sin(m[i]*zb[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*sin(m[i]*zt[layer]) +
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*sin(m[i]*zb[layer]) -
-                    6*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*sin(m[i]*zt[layer]) +
-                    6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 6*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    - 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zb[layer]**2*sin(m[i]*zb[layer])
-                    + 3*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zt[layer]**2*sin(m[i]*zt[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    + m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zb[layer]**3*cos(m[i]*zb[layer])
-                    - m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zt[layer]**3*cos(m[i]*zt[layer])
-                    + 2*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*cos(m[i]*zb[layer]) -
-                    2*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*cos(m[i]*zt[layer]) +
-                    2*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*cos(m[i]*zb[layer]) -
-                    2*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*cos(m[i]*zt[layer]) -
-                    4*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*cos(m[i]*zb[layer]) +
-                    4*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*cos(m[i]*zt[layer]) +
-                    2*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*cos(m[i]*zb[layer]) -
-                    2*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*cos(m[i]*zt[layer]) -
-                    4*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*cos(m[i]*zb[layer]) +
-                    4*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*cos(m[i]*zt[layer]) -
-                    4*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*cos(m[i]*zb[layer]) +
-                    4*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*cos(m[i]*zt[layer]) +
-                    6*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*cos(m[i]*zb[layer]) -
-                    6*zb[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*cos(m[i]*zt[layer]) +
-                    2*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    - 2*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    + 2*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    - 2*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    - 4*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    + 4*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    + 2*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    - 2*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    - 4*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    + 4*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    - 4*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    + 4*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    + 6*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    - 6*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    - zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    + zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    - zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    + zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    + 2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    - 2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    - zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    + zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    + 2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    - 2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    + 2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    - 2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    - 3*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    + 3*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    + zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*sin(m[i]*zb[layer]) -
-                    zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*sin(m[i]*zt[layer]) +
-                    zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*sin(m[i]*zb[layer]) -
-                    zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*sin(m[i]*zt[layer]) +
-                    zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*sin(m[i]*zb[layer]) -
-                    zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*sin(m[i]*zt[layer]) -
-                    3*zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*sin(m[i]*zb[layer]) +
-                    3*zb[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*sin(m[i]*zt[layer]) -
-                    zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + 3*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 3*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - zb[layer]**3*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*cos(m[i]*zb[layer]) +
-                    zb[layer]**3*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*at[layer]*cos(m[i]*zt[layer]) -
-                    6*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*cos(m[i]*zb[layer]) +
-                    6*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*cos(m[i]*zt[layer]) +
-                    4*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*cos(m[i]*zb[layer]) -
-                    4*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*cos(m[i]*zt[layer]) +
-                    4*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*cos(m[i]*zb[layer]) -
-                    4*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*cos(m[i]*zt[layer]) -
-                    2*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*cos(m[i]*zb[layer]) +
-                    2*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*cos(m[i]*zt[layer]) +
-                    4*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*cos(m[i]*zb[layer]) -
-                    4*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*cos(m[i]*zt[layer]) -
-                    2*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*cos(m[i]*zb[layer]) +
-                    2*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*cos(m[i]*zt[layer]) -
-                    2*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*cos(m[i]*zb[layer]) +
-                    2*zt[layer]*m[i]*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*cos(m[i]*zt[layer]) -
-                    6*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    + 6*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    + 4*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    - 4*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    + 4*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    - 4*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    - 2*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    + 2*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    + 4*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    - 4*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    - 2*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    + 2*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    - 2*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]*sin(m[i]*zb[layer])
-                    + 2*zt[layer]*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]*sin(m[i]*zt[layer])
-                    + 3*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    - 3*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    - 2*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    + 2*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    - 2*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    + 2*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    + zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    - zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    - 2*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    + 2*zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    + zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    - zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    + zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]**2*cos(m[i]*zb[layer])
-                    - zt[layer]*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]**2*cos(m[i]*zt[layer])
-                    - 2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*sin(m[i]*zb[layer]) +
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*sin(m[i]*zt[layer]) -
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*sin(m[i]*zb[layer]) +
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*sin(m[i]*zt[layer]) +
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*sin(m[i]*zb[layer]) -
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*sin(m[i]*zt[layer]) -
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*sin(m[i]*zb[layer]) +
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*sin(m[i]*zt[layer]) +
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*sin(m[i]*zb[layer]) -
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*sin(m[i]*zt[layer]) +
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*sin(m[i]*zb[layer]) -
-                    2*zt[layer]*zb[layer]*m[i]**2*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*sin(m[i]*zt[layer]) +
-                    2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 2*zt[layer]*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + zt[layer]*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*cos(m[i]*zb[layer]) -
-                    zt[layer]*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*at[layer]*cos(m[i]*zt[layer]) +
-                    zt[layer]*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*cos(m[i]*zb[layer]) -
-                    zt[layer]*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*at[layer]*cos(m[i]*zt[layer]) +
-                    zt[layer]*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*cos(m[i]*zb[layer]) -
-                    zt[layer]*zb[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bt[layer]*ab[layer]*cos(m[i]*zt[layer]) +
-                    3*zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*sin(m[i]*zb[layer]) -
-                    3*zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*sin(m[i]*zt[layer]) -
-                    zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*sin(m[i]*zb[layer]) +
-                    zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*sin(m[i]*zt[layer]) -
-                    zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*sin(m[i]*zb[layer]) +
-                    zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*sin(m[i]*zt[layer]) -
-                    zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*sin(m[i]*zb[layer]) +
-                    zt[layer]**2*m[i]**2*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*sin(m[i]*zt[layer]) -
-                    3*zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    + 3*zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    + zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zb[layer]*cos(m[i]*zb[layer])
-                    - zt[layer]**2*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4
-                    + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*zt[layer]*cos(m[i]*zt[layer])
-                    - zt[layer]**2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*cos(m[i]*zb[layer]) +
-                    zt[layer]**2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*at[layer]*cos(m[i]*zt[layer]) -
-                    zt[layer]**2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*cos(m[i]*zb[layer]) +
-                    zt[layer]**2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bt[layer]*ab[layer]*cos(m[i]*zt[layer]) -
-                    zt[layer]**2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*cos(m[i]*zb[layer]) +
-                    zt[layer]**2*zb[layer]*m[i]**3*(zb[layer]**3*m[i]**4 -
-                    3*zt[layer]*zb[layer]**2*m[i]**4 + 3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*ct[layer]*bb[layer]*ab[layer]*cos(m[i]*zt[layer]) +
-                    zt[layer]**3*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*cos(m[i]*zb[layer]) -
-                    zt[layer]**3*m[i]**3*(zb[layer]**3*m[i]**4 - 3*zt[layer]*zb[layer]**2*m[i]**4 +
-                    3*zt[layer]**2*zb[layer]*m[i]**4 -
-                    zt[layer]**3*m[i]**4)**(-1)*cb[layer]*bb[layer]*ab[layer]*cos(m[i]*zt[layer]))
+                A[i] += (-6*a_slope*b_slope*c_slope*m[i]**(-4)*sin(m[i]*zb[layer]) +
+                    6*a_slope*b_slope*c_slope*m[i]**(-4)*sin(m[i]*zt[layer]) -
+                    6*a_slope*b_slope*c_slope*m[i]**(-3)*cos(m[i]*zb[layer])*zt[layer] +
+                    6*a_slope*b_slope*c_slope*m[i]**(-3)*zb[layer]*cos(m[i]*zb[layer]) +
+                    3*a_slope*b_slope*c_slope*m[i]**(-2)*sin(m[i]*zb[layer])*zt[layer]**2 -
+                    6*a_slope*b_slope*c_slope*m[i]**(-2)*zb[layer]*sin(m[i]*zb[layer])*zt[layer] +
+                    3*a_slope*b_slope*c_slope*m[i]**(-2)*zb[layer]**2*sin(m[i]*zb[layer]) +
+                    a_slope*b_slope*c_slope*m[i]**(-1)*cos(m[i]*zb[layer])*zt[layer]**3 -
+                    3*a_slope*b_slope*c_slope*m[i]**(-1)*zb[layer]*cos(m[i]*zb[layer])*zt[layer]**2
+                    +
+                    3*a_slope*b_slope*c_slope*m[i]**(-1)*zb[layer]**2*cos(m[i]*zb[layer])*zt[layer]
+                    - a_slope*b_slope*c_slope*m[i]**(-1)*zb[layer]**3*cos(m[i]*zb[layer]) +
+                    2*a_slope*b_slope*m[i]**(-3)*cos(m[i]*zb[layer])*ct[layer] -
+                    2*a_slope*b_slope*m[i]**(-3)*cos(m[i]*zt[layer])*ct[layer] -
+                    2*a_slope*b_slope*m[i]**(-2)*sin(m[i]*zb[layer])*zt[layer]*ct[layer] +
+                    2*a_slope*b_slope*m[i]**(-2)*zb[layer]*sin(m[i]*zb[layer])*ct[layer] -
+                    a_slope*b_slope*m[i]**(-1)*cos(m[i]*zb[layer])*zt[layer]**2*ct[layer] +
+                    2*a_slope*b_slope*m[i]**(-1)*zb[layer]*cos(m[i]*zb[layer])*zt[layer]*ct[layer] -
+                    a_slope*b_slope*m[i]**(-1)*zb[layer]**2*cos(m[i]*zb[layer])*ct[layer] +
+                    2*a_slope*c_slope*m[i]**(-3)*cos(m[i]*zb[layer])*bt[layer] -
+                    2*a_slope*c_slope*m[i]**(-3)*cos(m[i]*zt[layer])*bt[layer] -
+                    2*a_slope*c_slope*m[i]**(-2)*sin(m[i]*zb[layer])*zt[layer]*bt[layer] +
+                    2*a_slope*c_slope*m[i]**(-2)*zb[layer]*sin(m[i]*zb[layer])*bt[layer] -
+                    a_slope*c_slope*m[i]**(-1)*cos(m[i]*zb[layer])*zt[layer]**2*bt[layer] +
+                    2*a_slope*c_slope*m[i]**(-1)*zb[layer]*cos(m[i]*zb[layer])*zt[layer]*bt[layer] -
+                    a_slope*c_slope*m[i]**(-1)*zb[layer]**2*cos(m[i]*zb[layer])*bt[layer] +
+                    a_slope*m[i]**(-2)*sin(m[i]*zb[layer])*ct[layer]*bt[layer] -
+                    a_slope*m[i]**(-2)*sin(m[i]*zt[layer])*ct[layer]*bt[layer] +
+                    a_slope*m[i]**(-1)*cos(m[i]*zb[layer])*zt[layer]*ct[layer]*bt[layer] -
+                    a_slope*m[i]**(-1)*zb[layer]*cos(m[i]*zb[layer])*ct[layer]*bt[layer] +
+                    2*b_slope*c_slope*m[i]**(-3)*cos(m[i]*zb[layer])*at[layer] -
+                    2*b_slope*c_slope*m[i]**(-3)*cos(m[i]*zt[layer])*at[layer] -
+                    2*b_slope*c_slope*m[i]**(-2)*sin(m[i]*zb[layer])*zt[layer]*at[layer] +
+                    2*b_slope*c_slope*m[i]**(-2)*zb[layer]*sin(m[i]*zb[layer])*at[layer] -
+                    b_slope*c_slope*m[i]**(-1)*cos(m[i]*zb[layer])*zt[layer]**2*at[layer] +
+                    2*b_slope*c_slope*m[i]**(-1)*zb[layer]*cos(m[i]*zb[layer])*zt[layer]*at[layer] -
+                    b_slope*c_slope*m[i]**(-1)*zb[layer]**2*cos(m[i]*zb[layer])*at[layer] +
+                    b_slope*m[i]**(-2)*sin(m[i]*zb[layer])*ct[layer]*at[layer] -
+                    b_slope*m[i]**(-2)*sin(m[i]*zt[layer])*ct[layer]*at[layer] +
+                    b_slope*m[i]**(-1)*cos(m[i]*zb[layer])*zt[layer]*ct[layer]*at[layer] -
+                    b_slope*m[i]**(-1)*zb[layer]*cos(m[i]*zb[layer])*ct[layer]*at[layer] +
+                    c_slope*m[i]**(-2)*sin(m[i]*zb[layer])*bt[layer]*at[layer] -
+                    c_slope*m[i]**(-2)*sin(m[i]*zt[layer])*bt[layer]*at[layer] +
+                    c_slope*m[i]**(-1)*cos(m[i]*zb[layer])*zt[layer]*bt[layer]*at[layer] -
+                    c_slope*m[i]**(-1)*zb[layer]*cos(m[i]*zb[layer])*bt[layer]*at[layer] -
+                    m[i]**(-1)*cos(m[i]*zb[layer])*ct[layer]*bt[layer]*at[layer] +
+                    m[i]**(-1)*cos(m[i]*zt[layer])*ct[layer]*bt[layer]*at[layer])
 
     elif implementation == 'fortran':
-#        import geotecha.speccon.ext_integrals as ext_integ
-#        A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb)
-        try:
-            import geotecha.speccon.ext_integrals as ext_integ
-            A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb)
-        except ImportError:
-            A = dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb, implementation='vectorized')
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb)
+#        try:
+#            import geotecha.speccon.ext_integrals as ext_integ
+#            A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb)
+#        except ImportError:
+#            A = dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb, implementation='vectorized')
 
     else:#default is 'vectorized' using numpy
         sin = np.sin
         cos = np.cos
         A = np.zeros(neig, float)
 
+
+        a_slope = (ab - at) / (zb - zt)
+        b_slope = (bb - bt) / (zb - zt)
+        c_slope = (cb - ct) / (zb - zt)
+
         mi = m[:, np.newaxis]
-        A[:] = np.sum(-ab*bb*cb*mi**3*zb**3*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            3*ab*bb*cb*mi**3*zb**2*zt*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2
-            - mi**4*zt**3) - 3*ab*bb*cb*mi**3*zb*zt**2*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + ab*bb*cb*mi**3*zt**3*cos(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            3*ab*bb*cb*mi**2*zb**2*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 6*ab*bb*cb*mi**2*zb*zt*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + 3*ab*bb*cb*mi**2*zt**2*sin(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            6*ab*bb*cb*mi*zb*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 6*ab*bb*cb*mi*zt*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - 6*ab*bb*cb*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt
-            + 3*mi**4*zb*zt**2 - mi**4*zt**3) + 6*ab*bb*cb*sin(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            ab*bb*ct*mi**2*zb**2*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 2*ab*bb*ct*mi**2*zb*zt*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - ab*bb*ct*mi**2*zt**2*sin(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            4*ab*bb*ct*mi*zb*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 2*ab*bb*ct*mi*zb*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + 4*ab*bb*ct*mi*zt*cos(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            2*ab*bb*ct*mi*zt*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 6*ab*bb*ct*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2
-            - mi**4*zt**3) - 6*ab*bb*ct*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - ab*bt*cb*mi**2*zb**2*sin(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            2*ab*bt*cb*mi**2*zb*zt*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - ab*bt*cb*mi**2*zt**2*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - 4*ab*bt*cb*mi*zb*cos(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            2*ab*bt*cb*mi*zb*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 4*ab*bt*cb*mi*zt*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + 2*ab*bt*cb*mi*zt*cos(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) + 6*ab*bt*cb*sin(mi*zb)/(mi**4*zb**3
-            - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            6*ab*bt*cb*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3)
-            - ab*bt*ct*mi**2*zb**2*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 2*ab*bt*ct*mi**2*zb*zt*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - ab*bt*ct*mi**2*zt**2*sin(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            2*ab*bt*ct*mi*zb*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 4*ab*bt*ct*mi*zb*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - 2*ab*bt*ct*mi*zt*cos(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            4*ab*bt*ct*mi*zt*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 6*ab*bt*ct*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2
-            - mi**4*zt**3) + 6*ab*bt*ct*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - at*bb*cb*mi**2*zb**2*sin(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            2*at*bb*cb*mi**2*zb*zt*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - at*bb*cb*mi**2*zt**2*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - 4*at*bb*cb*mi*zb*cos(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            2*at*bb*cb*mi*zb*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 4*at*bb*cb*mi*zt*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + 2*at*bb*cb*mi*zt*cos(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) + 6*at*bb*cb*sin(mi*zb)/(mi**4*zb**3
-            - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            6*at*bb*cb*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3)
-            - at*bb*ct*mi**2*zb**2*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 2*at*bb*ct*mi**2*zb*zt*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - at*bb*ct*mi**2*zt**2*sin(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            2*at*bb*ct*mi*zb*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 4*at*bb*ct*mi*zb*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - 2*at*bb*ct*mi*zt*cos(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            4*at*bb*ct*mi*zt*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 6*at*bb*ct*sin(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2
-            - mi**4*zt**3) + 6*at*bb*ct*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - at*bt*cb*mi**2*zb**2*sin(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            2*at*bt*cb*mi**2*zb*zt*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - at*bt*cb*mi**2*zt**2*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + 2*at*bt*cb*mi*zb*cos(mi*zb)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            4*at*bt*cb*mi*zb*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 2*at*bt*cb*mi*zt*cos(mi*zb)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - 4*at*bt*cb*mi*zt*cos(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) - 6*at*bt*cb*sin(mi*zb)/(mi**4*zb**3
-            - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            6*at*bt*cb*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3)
-            + at*bt*ct*mi**3*zb**3*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 3*at*bt*ct*mi**3*zb**2*zt*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + 3*at*bt*ct*mi**3*zb*zt**2*cos(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            at*bt*ct*mi**3*zt**3*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) + 3*at*bt*ct*mi**2*zb**2*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) - 6*at*bt*ct*mi**2*zb*zt*sin(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) +
-            3*at*bt*ct*mi**2*zt**2*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 -
-            mi**4*zt**3) - 6*at*bt*ct*mi*zb*cos(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt +
-            3*mi**4*zb*zt**2 - mi**4*zt**3) + 6*at*bt*ct*mi*zt*cos(mi*zt)/(mi**4*zb**3 -
-            3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) + 6*at*bt*ct*sin(mi*zb)/(mi**4*zb**3
-            - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3) -
-            6*at*bt*ct*sin(mi*zt)/(mi**4*zb**3 - 3*mi**4*zb**2*zt + 3*mi**4*zb*zt**2 - mi**4*zt**3), axis=1)
+        A[:] = np.sum(a_slope*b_slope*c_slope*cos(mi*zb)*zt**3/mi - 3*a_slope*b_slope*c_slope*zb*cos(mi*zb)*zt**2/mi +
+            3*a_slope*b_slope*c_slope*zb**2*cos(mi*zb)*zt/mi -
+            a_slope*b_slope*c_slope*zb**3*cos(mi*zb)/mi +
+            3*a_slope*b_slope*c_slope*sin(mi*zb)*zt**2/mi**2 -
+            6*a_slope*b_slope*c_slope*zb*sin(mi*zb)*zt/mi**2 +
+            3*a_slope*b_slope*c_slope*zb**2*sin(mi*zb)/mi**2 -
+            6*a_slope*b_slope*c_slope*cos(mi*zb)*zt/mi**3 +
+            6*a_slope*b_slope*c_slope*zb*cos(mi*zb)/mi**3 -
+            6*a_slope*b_slope*c_slope*sin(mi*zb)/mi**4 + 6*a_slope*b_slope*c_slope*sin(mi*zt)/mi**4
+            - a_slope*b_slope*cos(mi*zb)*zt**2*ct/mi + 2*a_slope*b_slope*zb*cos(mi*zb)*zt*ct/mi -
+            a_slope*b_slope*zb**2*cos(mi*zb)*ct/mi - 2*a_slope*b_slope*sin(mi*zb)*zt*ct/mi**2 +
+            2*a_slope*b_slope*zb*sin(mi*zb)*ct/mi**2 + 2*a_slope*b_slope*cos(mi*zb)*ct/mi**3 -
+            2*a_slope*b_slope*cos(mi*zt)*ct/mi**3 - a_slope*c_slope*cos(mi*zb)*zt**2*bt/mi +
+            2*a_slope*c_slope*zb*cos(mi*zb)*zt*bt/mi - a_slope*c_slope*zb**2*cos(mi*zb)*bt/mi -
+            2*a_slope*c_slope*sin(mi*zb)*zt*bt/mi**2 + 2*a_slope*c_slope*zb*sin(mi*zb)*bt/mi**2 +
+            2*a_slope*c_slope*cos(mi*zb)*bt/mi**3 - 2*a_slope*c_slope*cos(mi*zt)*bt/mi**3 +
+            a_slope*cos(mi*zb)*zt*ct*bt/mi - a_slope*zb*cos(mi*zb)*ct*bt/mi +
+            a_slope*sin(mi*zb)*ct*bt/mi**2 - a_slope*sin(mi*zt)*ct*bt/mi**2 -
+            b_slope*c_slope*cos(mi*zb)*zt**2*at/mi + 2*b_slope*c_slope*zb*cos(mi*zb)*zt*at/mi -
+            b_slope*c_slope*zb**2*cos(mi*zb)*at/mi - 2*b_slope*c_slope*sin(mi*zb)*zt*at/mi**2 +
+            2*b_slope*c_slope*zb*sin(mi*zb)*at/mi**2 + 2*b_slope*c_slope*cos(mi*zb)*at/mi**3 -
+            2*b_slope*c_slope*cos(mi*zt)*at/mi**3 + b_slope*cos(mi*zb)*zt*ct*at/mi -
+            b_slope*zb*cos(mi*zb)*ct*at/mi + b_slope*sin(mi*zb)*ct*at/mi**2 -
+            b_slope*sin(mi*zt)*ct*at/mi**2 + c_slope*cos(mi*zb)*zt*bt*at/mi -
+            c_slope*zb*cos(mi*zb)*bt*at/mi + c_slope*sin(mi*zb)*bt*at/mi**2 -
+            c_slope*sin(mi*zt)*bt*at/mi**2 - cos(mi*zb)*ct*bt*at/mi + cos(mi*zt)*ct*bt*at/mi, axis=1)
 
 
     return A
+
 
 def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized'):
     """Create matrix of spectral integrations
