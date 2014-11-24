@@ -2048,7 +2048,7 @@ def dim1sin_D_aDf_linear_implementations_old():
 
     return fn, fn2
 
-def dim1sin_ab_linear_implementations():
+def dim1sin_ab_linear_implementations_old():
     """Generate code to calculate spectral method integrations
 
     Performs integrations of `sin(mi * z) * a(z) * b(z)`
@@ -4305,6 +4305,150 @@ def dim1sin_D_aDf_linear_implementations():
     return fn, fn2
 
 
+def dim1sin_ab_linear_implementations():
+    """Generate code to calculate spectral method integrations
+
+    Performs integrations of `sin(mi * z) * a(z) * b(z)`
+    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.
+    Code is generated that will produce a 1d array with the appropriate
+    integrals at each location.
+
+    Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
+
+    Notes
+    -----
+    The `dim1sin_ab_linear` which should be treated as a column vector,
+    :math:`A` is given by:
+
+    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\phi_i\\,dz}
+
+    where the basis function :math:`\\phi_i` is given by:
+
+    .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+
+    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
+    each layer respectively.
+
+    """
+
+    v = SympyVarsFor1DSpectralDerivation('z')
+    integ_kwargs = dict(risch=False, conds='none')
+
+    phi_i = sympy.sin(v.mi * v.z)
+#    phi_j = sympy.sin(v.mj * v.z)
+
+    fcol = sympy.integrate(v.a * v.b * phi_i, v.z, **integ_kwargs)
+    fcol_loops = fcol.subs(v.z, v.zbot) - fcol.subs(v.z, v.ztop)
+    fcol_loops = fcol_loops.subs(v.map_to_add_index)
+    fcol_vector = fcol.subs(v.z, v.zbot) - fcol.subs(v.z, v.ztop)
+    fcol_vector = fcol_vector.subs(v.map_top_to_t_bot_to_b)
+
+
+
+#    mpv, p = create_layer_sympy_var_and_maps_vectorized(layer_prop=['z','a', 'b'])
+#    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z','a','b'])
+#
+#    phi_i = sympy.sin(mi * z)
+
+
+#    fcol = sympy.integrate(p['a'] * p['b'] * phi_i, z)
+#    fcol_loops = fcol.subs(z, mp['zbot']) - fcol.subs(z, mp['ztop'])
+#    fcol_loops = fcol_loops.subs(mp)
+#    fcol_vector = fcol.subs(z, mpv['zbot']) - fcol.subs(z, mpv['ztop'])
+#    fcol_vector = fcol_vector.subs(mpv)
+
+    text_python = """def dim1sin_ab_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectorized'):
+
+    #import numpy as np #import this at module level
+    #import math #import this at module level
+
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    bt = np.asarray(bt)
+    bb = np.asarray(bb)
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    neig = len(m)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        A = np.zeros(neig, float)
+
+        nlayers = len(zt)
+        for layer in range(nlayers):
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            b_slope = (bb[layer] - bt[layer]) / (zb[layer] - zt[layer])
+            for i in range(neig):
+                A[i] += ({0})
+
+    elif implementation == 'fortran':
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)
+#        try:
+#            import geotecha.speccon.ext_integrals as ext_integ
+#            A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)
+#        except ImportError:
+#            A = dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
+
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        A = np.zeros(neig, float)
+
+        a_slope = (ab - at) / (zb - zt)
+        b_slope = (bb - bt) / (zb - zt)
+        mi = m[:, np.newaxis]
+        A[:] = np.sum({1}, axis=1)
+
+
+    return A"""
+
+
+#    note the the i=j part in the fortran loop  below is because
+#      I changed the loop order from layer, i,j to layer, j,i which is
+#      i think faster as first index of a fortran array loops faster
+#      my sympy code is mased on m[i], hence the need for i=j.
+    text_fortran = """\
+      SUBROUTINE dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, &
+                                   a, neig, nlayers)
+        USE types
+        IMPLICIT NONE
+
+        INTEGER, intent(in) :: neig
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,zt,zb
+        REAL(DP), intent(out), dimension(0:neig-1) :: a
+        INTEGER :: i, layer
+        REAL(DP) :: a_slope, b_slope
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          a_slope = (ab(layer) - at(layer)) / (zb(layer) - zt(layer))
+          b_slope = (bb(layer) - bt(layer)) / (zb(layer) - zt(layer))
+          DO i = 0, neig-1
+{0}
+          END DO
+        END DO
+
+      END SUBROUTINE"""
+
+
+
+
+
+    fn = text_python.format(tw(fcol_loops,5), tw(fcol_vector,3))
+    fn2 = text_fortran.format(fcode_one_large_expr(fcol_loops, prepend='a(i) = a(i) + '))
+
+    return fn, fn2
+
 if __name__ == '__main__':
     pass
 #    import nose
@@ -4340,4 +4484,5 @@ if __name__ == '__main__':
 #    fn, fn2=EDload_coslinear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_af_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_abf_linear_implementations();print(fn);print('#'*40); print(fn2)
-    fn, fn2=dim1sin_D_aDf_linear_implementations();print(fn);print('#'*40); print(fn2)
+#    fn, fn2=dim1sin_D_aDf_linear_implementations();print(fn);print('#'*40); print(fn2)
+    fn, fn2=dim1sin_ab_linear_implementations();print(fn);print('#'*40); print(fn2)
