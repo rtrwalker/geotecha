@@ -584,42 +584,40 @@
       END SUBROUTINE
      
      
-
-      SUBROUTINE dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, a, &
-                                      neig, nlayers) 
+      SUBROUTINE dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, &
+                                      a, neig, nlayers)
         USE types
-        IMPLICIT NONE     
-        
-        INTEGER, intent(in) :: neig        
+        IMPLICIT NONE
+
+        INTEGER, intent(in) :: neig
         INTEGER, intent(in) :: nlayers
         REAL(DP), intent(in), dimension(0:neig-1) ::m
-        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,&
-                                                        zt,zb
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,zt,zb
         REAL(DP), intent(out), dimension(0:neig-1) :: a
         INTEGER :: i, layer
+        REAL(DP) :: a_slope, b_slope
         a=0.0D0
         DO layer = 0, nlayers-1
+          a_slope = (ab(layer) - at(layer)) / (zb(layer) - zt(layer))
+          b_slope = (bb(layer) - bt(layer)) / (zb(layer) - zt(layer))
           DO i = 0, neig-1
-      a(i) = a(i) + (-(zb(layer) - zt(layer))**(-2)*1.0/m(i)*(bb(layer)&
-      - bt(layer))*(ab(layer) - at(layer))*cos(m(i)*zb(layer)) + (zb(&
-      layer) - zt(layer))**(-2)*1.0/m(i)*(bb(layer) - bt(layer))*(ab(&
-      layer) - at(layer))*cos(m(i)*zt(layer)) - 1.0/(zb(layer) - zt(&
-      layer))*(bb(layer) - bt(layer))*(1.0/(zb(layer) - zt(layer))*(ab(&
-      layer) - at(layer))*(zb(layer) - zt(layer)) + at(layer))*sin(m(i)&
-      *zb(layer)) + 1.0/(zb(layer) - zt(layer))*(bb(layer) - bt(layer))&
-      *at(layer)*sin(m(i)*zt(layer)))
-          END DO         
-        END DO    
-        
+      a(i) = a(i) + (b_slope*m(i)*(a_slope*m(i)**(-2)*cos(zt(layer)*m(i&
+      )) + at(layer)*1.0/m(i)*sin(zt(layer)*m(i))) - b_slope*m(i)*(&
+      a_slope*m(i)**(-2)*cos(zb(layer)*m(i)) + a_slope*zb(layer)*1.0/m(&
+      i)*sin(zb(layer)*m(i)) - a_slope*zt(layer)*1.0/m(i)*sin(zb(layer)&
+      *m(i)) + at(layer)*1.0/m(i)*sin(zb(layer)*m(i))))
+          END DO
+        END DO
+
         DO i = 0, neig-1
-      a(i) = a(i) + (-1.0/(zb(0) - zt(0))*(bb(0) - bt(0))*at(0)*sin(m(i)&
-      *zt(0)) + 1.0/(zb(nlayers - 1) - zt(nlayers - 1))*(bb(nlayers - 1&
-      ) - bt(nlayers - 1))*(1.0/(zb(nlayers - 1) - zt(nlayers - 1))*(ab&
-      (nlayers - 1) - at(nlayers - 1))*(zb(nlayers - 1) - zt(nlayers -&
-      1)) + at(nlayers - 1))*sin(m(i)*zb(nlayers - 1)))
-        END DO         
-                    
+      a(i) = a(i) + (-1.0/(zb(0) - zt(0))*(bb(0) - bt(0))*at(0)*sin(zt(0&
+      )*m(i)) + 1.0/(zb(nlayers - 1) - zt(nlayers - 1))*(bb(nlayers - 1&
+      ) - bt(nlayers - 1))*ab(nlayers - 1)*sin(zb(nlayers - 1)*m(i)))
+        END DO
+
       END SUBROUTINE
+
+
 
       SUBROUTINE eload_linear(loadtim, loadmag, eigs, tvals,&
                               dT, a, neig, nload, nt)

@@ -6167,9 +6167,17 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
     """Create matrix of spectral integrations
 
     Performs integrations of `sin(mi * z) * D[a(z) * D[b(z), z], z]`
-    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.
+    between [0, 1] where a(z) is a piecewise linear functions of z,
+    and b(z) si acontinuous linear function of z.
     Calulation of integrals is performed at each element of a 1d array
     (size depends on size of `m`)
+
+    .. warning::
+        `dim1sin_D_aDb_linear` accepts the b(z) input as
+        piecewise linear, i.e. zt, zb, bt, bb etc. It is up to the user to
+        ensure that the bt and bb are such that they define a continuous
+        linear function. eg. to define b(z)=z+1 then use
+        zt=[0,0.4], zb=[0.4, 1], bt=[1,1.4], bb=[1.4,2]. i.e. bb[:-1]==bt[1:].
 
     Parameters
     ----------
@@ -6182,7 +6190,8 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
     bt : ``list`` of ``float``
         2nd property at top of each layer
     bb : ``list`` of ``float``
-        2nd property at bottom of each layer
+        2nd property at bottom of each layer. To ensure a contiuous b(z),
+        bb[:-1]==bt[1:].
     zt : ``list`` of ``float``
         normalised depth or z-coordinate at top of each layer. `zt[0]` = 0
     zb : ``list`` of ``float``
@@ -6206,19 +6215,44 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
     The `dim1sin_D_aDb_linear` which should be treated as a column vector,
     :math:`A` is given by:
 
-    .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d}{dz}{b\\left(z\\right)}\\right)\\phi_i\\,dz}
+    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{\\frac{d}{dz}\\left({a\\left(z\\right)}\\frac{d}{dz}{b\\left(z\\right)}\\right)\\phi_i\\,dz}
 
     where the basis function :math:`\\phi_i` is given by:
 
-    ..math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
 
-    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
-    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+    and :math:`a\\left(z\\right)` is a piecewise
+    linear functions w.r.t. :math:`z`, that within a layer is defined by:
 
-    ..math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
     with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
     each layer respectively.
+
+    :math:`b\\left(z\\right)` is a linear function of :math:`z` defined by
+
+    .. math:: b\\left(z\\right) = b_t+\\left({b_b-b_t}\\right)z
+
+    with :math:`t` and :math:`b` subscripts now representing 'top' and
+    'bottom' of the profile respectively.
+
+    Using the product rule for differentiation the above integral can be split
+    into:
+
+    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{\\frac{da\\left(z\\right)}{dz}\\frac{db\\left(z\\right)}{dz}\\phi_i\\,dz} +
+                              \\int_{0}^1{a\\left(z\\right)\\frac{d^2b\\left(z\\right)}{dz^2}\\phi_i\\,dz}
+
+    The right hand term is zero because :math:`b\\left(z\\right)` is a
+    continuous linear function so it's second derivative is zero.  The
+    first derivative of :math:`b\\left(z\\right)` is a constant so the
+    left term can be integrated by parts to give:
+
+    .. math:: \\mathbf{A}_{i}=\\frac{db\\left(z\\right)}{dz}\\left(
+                \\left.\\phi_i{a\\left(z\\right)}\\right|_{z=0}^{z=1} -
+                -\\int_{0}^1{{a\\left(z\\right)}\\frac{d\\phi_i}{dz}\\,dz}
+                \\right)
+
+
 
     """
 
@@ -6242,19 +6276,19 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
         A = np.zeros(neig, float)
         nlayers = len(zt)
         for layer in range(nlayers):
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            b_slope = (bb[layer] - bt[layer]) / (zb[layer] - zt[layer])
             for i in range(neig):
-                A[i] += (-(zb[layer] - zt[layer])**(-2)*m[i]**(-1)*(bb[layer] - bt[layer])*(ab[layer] -
-                    at[layer])*cos(m[i]*zb[layer]) + (zb[layer] -
-                    zt[layer])**(-2)*m[i]**(-1)*(bb[layer] - bt[layer])*(ab[layer] -
-                    at[layer])*cos(m[i]*zt[layer]) - (zb[layer] - zt[layer])**(-1)*(bb[layer] -
-                    bt[layer])*((zb[layer] - zt[layer])**(-1)*(ab[layer] - at[layer])*(zb[layer] -
-                    zt[layer]) + at[layer])*sin(m[i]*zb[layer]) + (zb[layer] -
-                    zt[layer])**(-1)*(bb[layer] - bt[layer])*at[layer]*sin(m[i]*zt[layer]))
+                A[i] += (b_slope*m[i]*(a_slope*m[i]**(-2)*cos(zt[layer]*m[i]) + at[layer]*m[i]**(-1)*sin(zt[layer]*m[i])) -
+                    b_slope*m[i]*(a_slope*m[i]**(-2)*cos(zb[layer]*m[i]) +
+                    a_slope*zb[layer]*m[i]**(-1)*sin(zb[layer]*m[i]) -
+                    a_slope*zt[layer]*m[i]**(-1)*sin(zb[layer]*m[i]) +
+                    at[layer]*m[i]**(-1)*sin(zb[layer]*m[i])))
 
         for i in range(neig):
-            A[i] += ((zb[-1] - zt[-1])**(-1)*(bb[-1] - bt[-1])*((zb[-1] - zt[-1])**(-1)*(ab[-1] - at[-1])*(zb[-1] -
-                zt[-1]) + at[-1])*sin(m[i]*zb[-1]) - (zb[0] - zt[0])**(-1)*(bb[0] -
-                bt[0])*at[0]*sin(m[i]*zt[0]))
+            A[i] += (-(zb[0] - zt[0])**(-1)*(bb[0] - bt[0])*at[0]*sin(zt[0]*m[i]) + (zb[nlayers - 1] - zt[nlayers -
+                1])**(-1)*(bb[nlayers - 1] - bt[nlayers - 1])*ab[nlayers - 1]*sin(zb[nlayers -
+                1]*m[i]))
     elif implementation == 'fortran':
         import geotecha.speccon.ext_integrals as ext_integ
         A = ext_integ.dim1sin_d_adb_linear(m, at, ab, bt, bb, zt, zb)
@@ -6269,14 +6303,16 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
         cos = np.cos
         A = np.zeros(neig, float)
 
+        a_slope = (ab - at) / (zb - zt)
+        b_slope = (bb - bt) / (zb - zt)
         mi = m[:, np.newaxis]
-        A[:] = np.sum(-ab*(bb - bt)*sin(mi*zb)/(zb - zt) + at*(bb - bt)*sin(mi*zt)/(zb - zt) - (ab - at)*(bb -
-            bt)*cos(mi*zb)/(mi*(zb - zt)**2) + (ab - at)*(bb - bt)*cos(mi*zt)/(mi*(zb - zt)**2), axis=1)
+        A[:] = np.sum(b_slope*mi*(a_slope*cos(mi*zt)/mi**2 + sin(mi*zt)*at/mi) - b_slope*mi*(-a_slope*sin(mi*zb)*zt/mi +
+            a_slope*zb*sin(mi*zb)/mi + a_slope*cos(mi*zb)/mi**2 + sin(mi*zb)*at/mi), axis=1)
         mi = m
-        A[:]+= ((zb[-1] - zt[-1])**(-1)*(bb[-1] - bt[-1])*((zb[-1] - zt[-1])**(-1)*(ab[-1] - at[-1])*(zb[-1] -
-            zt[-1]) + at[-1])*sin(mi*zb[-1]) - (zb[0] - zt[0])**(-1)*(bb[0] -
-            bt[0])*at[0]*sin(mi*zt[0]))
+        A[:]+= (-(zb[0] - zt[0])**(-1)*sin(mi*zt[0])*(bb[0] - bt[0])*at[0] + sin(mi*zb[-1])*(zb[-1] -
+            zt[-1])**(-1)*(bb[-1] - bt[-1])*ab[-1])
     return A
+
 
 def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectorized'):
 
