@@ -1697,7 +1697,7 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a,
                                                                y1a, y2a,
                                                                x1b, x2b,
                                                                y1b, y2b,
-                                                               xi,xj):
+                                                               xi, xj):
     """Integrate between two points a composite function made of two
     x1_x2_y1_y2 piecewise-linear data representations.
 
@@ -1753,22 +1753,51 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a,
     x_for_interp[-1] = x2a[-1]
 
 
-    (segment_both, segment_xi_only, segment_xj_only, segments_between) = segments_between_xi_and_xj(x_for_interp, xi, xj)
-
-#    yi = interp_x1_x2_y1_y2(x1,x2,y1,y2,xi, choose_max = True)
-#    yj = interp_x1_x2_y1_y2(x1,x2,y1,y2,xj, choose_max = False)
+    (segment_both,
+     segment_xi_only,
+     segment_xj_only,
+     segments_between) = segments_between_xi_and_xj(x_for_interp, xi, xj)
 
 
     A = np.zeros(len(xi))
     for i in range(len(xi)):
         for seg in segment_both[i]:
-            A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xi[i]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xj[i]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xi[i]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xj[i]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xi[i] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xj[i]
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += (-a_slope*b_slope*xi[i]**3/3 + a_slope*b_slope*xj[i]**3/3 - (-a_slope*b_slope*x1a[seg] +
+                a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2)*xi[i]**2 + (-a_slope*b_slope*x1a[seg] +
+                a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2)*xj[i]**2 - (a_slope*b_slope*x1a[seg]**2 -
+                a_slope*x1a[seg]*y1b[seg] - b_slope*x1a[seg]*y1a[seg] + y1b[seg]*y1a[seg])*xi[i] +
+                (a_slope*b_slope*x1a[seg]**2 - a_slope*x1a[seg]*y1b[seg] - b_slope*x1a[seg]*y1a[seg]
+                + y1b[seg]*y1a[seg])*xj[i])
         for seg in segment_xi_only[i]:
-            A[i] += (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x2a[seg]**3 - (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xi[i]**3 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x2a[seg]**2 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xi[i]**2 + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x2a[seg] - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xi[i]
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += (a_slope*b_slope*x2a[seg]**3/3 - a_slope*b_slope*xi[i]**3/3 - (-a_slope*b_slope*x1a[seg] +
+                a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2)*xi[i]**2 - (a_slope*b_slope*x1a[seg]**2 -
+                a_slope*x1a[seg]*y1b[seg] - b_slope*x1a[seg]*y1a[seg] + y1b[seg]*y1a[seg])*xi[i] +
+                x2a[seg]*(a_slope*b_slope*x1a[seg]**2 - a_slope*x1a[seg]*y1b[seg] -
+                b_slope*x1a[seg]*y1a[seg] + y1b[seg]*y1a[seg]) +
+                x2a[seg]**2*(-a_slope*b_slope*x1a[seg] + a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2))
         for seg in segments_between[i]:
-            A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x1a[seg]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x2a[seg]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x1a[seg]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x2a[seg]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x1a[seg] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x2a[seg]
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += (-a_slope*b_slope*x1a[seg]**3/3 + a_slope*b_slope*x2a[seg]**3/3 -
+                x1a[seg]*(a_slope*b_slope*x1a[seg]**2 - a_slope*x1a[seg]*y1b[seg] -
+                b_slope*x1a[seg]*y1a[seg] + y1b[seg]*y1a[seg]) -
+                x1a[seg]**2*(-a_slope*b_slope*x1a[seg] + a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2) +
+                x2a[seg]*(a_slope*b_slope*x1a[seg]**2 - a_slope*x1a[seg]*y1b[seg] -
+                b_slope*x1a[seg]*y1a[seg] + y1b[seg]*y1a[seg]) +
+                x2a[seg]**2*(-a_slope*b_slope*x1a[seg] + a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2))
         for seg in segment_xj_only[i]:
-            A[i] += -(-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*x1a[seg]**3 + (-6*x1a[seg]*x2a[seg] + 3*x1a[seg]**2 + 3*x2a[seg]**2)**(-1)*(y1b[seg]*y1a[seg] - y1b[seg]*y2a[seg] - y2b[seg]*y1a[seg] + y2b[seg]*y2a[seg])*xj[i]**3 - (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*x1a[seg]**2 + (-4*x1a[seg]*x2a[seg] + 2*x1a[seg]**2 + 2*x2a[seg]**2)**(-1)*(x1a[seg]*y1b[seg]*y2a[seg] + x1a[seg]*y2b[seg]*y1a[seg] - 2*x1a[seg]*y2b[seg]*y2a[seg] - 2*x2a[seg]*y1b[seg]*y1a[seg] + x2a[seg]*y1b[seg]*y2a[seg] + x2a[seg]*y2b[seg]*y1a[seg])*xj[i]**2 - (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*x1a[seg] + (-2*x1a[seg]*x2a[seg] + x1a[seg]**2 + x2a[seg]**2)**(-1)*(-x1a[seg]*x2a[seg]*y1b[seg]*y2a[seg] - x1a[seg]*x2a[seg]*y2b[seg]*y1a[seg] + x1a[seg]**2*y2b[seg]*y2a[seg] + x2a[seg]**2*y1b[seg]*y1a[seg])*xj[i]
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += (-a_slope*b_slope*x1a[seg]**3/3 + a_slope*b_slope*xj[i]**3/3 + (-a_slope*b_slope*x1a[seg] +
+                a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2)*xj[i]**2 + (a_slope*b_slope*x1a[seg]**2 -
+                a_slope*x1a[seg]*y1b[seg] - b_slope*x1a[seg]*y1a[seg] + y1b[seg]*y1a[seg])*xj[i] -
+                x1a[seg]*(a_slope*b_slope*x1a[seg]**2 - a_slope*x1a[seg]*y1b[seg] -
+                b_slope*x1a[seg]*y1a[seg] + y1b[seg]*y1a[seg]) -
+                x1a[seg]**2*(-a_slope*b_slope*x1a[seg] + a_slope*y1b[seg]/2 + b_slope*y1a[seg]/2))
 
     return A
 

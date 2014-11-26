@@ -1063,7 +1063,7 @@ def dim1sin_a_linear_between_old():
 
     return fn
 
-def dim1_ab_linear_between():
+def dim1_ab_linear_between_old():
     """Generate code to calculate spectral method integrations
 
     Performs integrations of `a(z) * b(z)`
@@ -1089,8 +1089,14 @@ def dim1_ab_linear_between():
     """
 
 
-#    Because this integration goes into piecewise_linear_1d rather than speccon.integrals I have had to use a separate map funciton to massage the variable names into a naming convention consistent with piecewise_linear_1d (this is m2 below).
-#    As such don't base anything off this funciton unless you know what you are doing
+    # Because this integration goes into
+    # geotecha.piecewise.piecewise_linear_1d rather than
+    # speccon.integrals I have had to use a separate map function to massage
+    # the variable names into a naming convention consistent with
+    # piecewise_linear_1d (this is m2 below).
+    # As such don't base anything off this funciton unless you know what
+    # you are doing.
+
     mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
     sympy.var('z1, z2')
 
@@ -4868,32 +4874,6 @@ def dim1sin_a_linear_between():
     z2_only = z2_only.subs(v.map_to_add_index)
 
 
-#    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
-#    sympy.var('z1, z2')
-#
-#    z1 = sympy.tensor.IndexedBase('z1')
-#    z2 = sympy.tensor.IndexedBase('z2')
-#    i = sympy.tensor.Idx('i')
-#    j = sympy.tensor.Idx('j')
-#
-#
-#
-#    phi_j = sympy.sin(mj * z)
-#
-#    f = sympy.integrate(p['a'] * phi_j, z)
-#
-#    both = f.subs(z, z2[i]) - f.subs(z, z1[i])
-#    both = both.subs(mp)
-#
-#    between = f.subs(z, mp['zbot']) - f.subs(z, mp['ztop'])
-#    between = between.subs(mp)
-#
-#    z1_only = f.subs(z, mp['zbot']) - f.subs(z, z1[i])
-#    z1_only = z1_only.subs(mp)
-#
-#    z2_only = f.subs(z, z2[i]) - f.subs(z, mp['ztop'])
-#    z2_only = z2_only.subs(mp)
-
     text = """dim1sin_a_linear_between(m, at, ab, zt, zb, z):
     #import numpy as np #import this globally
     #import math #import this globally
@@ -4949,6 +4929,208 @@ def dim1sin_a_linear_between():
 
     return fn
 
+#dim1_ab_linear_between()
+def dim1_ab_linear_between():
+    """Generate code to calculate spectral method integrations
+
+    Performs integrations of `a(z) * b(z)`
+    between [z1, z2] where a(z) is a piecewise linear functions of z.
+    calculates array A[len(z)]
+
+    Paste the resulting code (at least the loops) into
+    `piecewise_linear_1d.integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between`.
+
+    Notes
+    -----
+    The `dim1sin_ab_linear_between`, :math:`A`, is given by:
+
+    .. math:: \\mathbf{A}_{i}=\\int_{z_1}^{z_2}{{a\\left(z\\right)}{b\\left(z\\right)}\\,dz}
+
+    where :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
+    each layer respectively.
+
+    """
+
+
+    # Because this integration goes into
+    # geotecha.piecewise.piecewise_linear_1d rather than
+    # speccon.integrals I have had to use a separate map function to massage
+    # the variable names into a naming convention consistent with
+    # piecewise_linear_1d (this is m2 below).
+    # As such don't base anything off this funciton unless you know what
+    # you are doing.
+
+
+    v = SympyVarsFor1DSpectralDerivation('z', slope=True)
+    integ_kwargs = dict(risch=False, conds='none')
+    v.z1 = sympy.tensor.IndexedBase('z1')
+    v.z2 = sympy.tensor.IndexedBase('z2')
+
+    seg = sympy.tensor.Idx('seg')
+    x1a = sympy.tensor.IndexedBase('x1a')
+    x2a = sympy.tensor.IndexedBase('x2a')
+    y1a = sympy.tensor.IndexedBase('y1a')
+    y2a = sympy.tensor.IndexedBase('y2a')
+    y1b = sympy.tensor.IndexedBase('y1b')
+    y2b = sympy.tensor.IndexedBase('y2b')
+    xi = sympy.tensor.IndexedBase('xi')
+    xj = sympy.tensor.IndexedBase('xj')
+    mp2 = [(v.zb[v.layer], x2a[seg]),
+           (v.zt[v.layer], x1a[seg]),
+           (v.ab[v.layer], y2a[seg]),
+           (v.at[v.layer], y1a[seg]),
+           (v.bb[v.layer], y2b[seg]),
+           (v.bt[v.layer], y1b[seg]),
+           (v.z1[v.i], xi[v.i]),
+           (v.z2[v.i], xj[v.i])]
+
+
+    f = sympy.integrate(v.a * v.b, v.z, **integ_kwargs)
+
+    both = f.subs(v.z, v.z2[v.i]) - f.subs(v.z, v.z1[v.i])
+    both = both.subs(v.map_to_add_index).subs(mp2)
+
+    between = f.subs(v.z, v.zbot) - f.subs(v.z, v.ztop)
+    between = between.subs(v.map_to_add_index).subs(mp2)
+
+    z1_only = f.subs(v.z, v.zbot) - f.subs(v.z, v.z1[v.i])
+    z1_only = z1_only.subs(v.map_to_add_index).subs(mp2)
+
+    z2_only = f.subs(v.z, v.z2[v.i]) - f.subs(v.z, v.ztop)
+    z2_only = z2_only.subs(v.map_to_add_index).subs(mp2)
+
+
+    ######################
+
+
+
+
+
+
+
+#    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
+#    sympy.var('z1, z2')
+#
+#    z1 = sympy.tensor.IndexedBase('z1')
+#    z2 = sympy.tensor.IndexedBase('z2')
+#    i = sympy.tensor.Idx('i')
+#    j = sympy.tensor.Idx('j')
+#
+#
+#    sympy.var('x1a, x2a, y1a, y2a, x1b, x2b, y1b, y2b')
+#    seg = sympy.tensor.Idx('seg')
+#    x1a = sympy.tensor.IndexedBase('x1a')
+#    x2a = sympy.tensor.IndexedBase('x2a')
+#    y1a = sympy.tensor.IndexedBase('y1a')
+#    y2a = sympy.tensor.IndexedBase('y2a')
+#    y1b = sympy.tensor.IndexedBase('y1b')
+#    y2b = sympy.tensor.IndexedBase('y2b')
+#    xi = sympy.tensor.IndexedBase('xi')
+#    xj = sympy.tensor.IndexedBase('xj')
+#    #mp2 = {'zb[layer]': x2a[seg]}
+#    mp2 = [(mp['zbot'], x2a[seg]),
+#           (mp['ztop'], x1a[seg]),
+#           (mp['abot'], y2a[seg]),
+#           (mp['atop'], y1a[seg]),
+#           (mp['bbot'], y2b[seg]),
+#           (mp['btop'], y1b[seg]),
+#           (z1[i], xi[i]),
+#           (z2[i], xj[i])]
+#    #phi_j = sympy.sin(mj * z)
+#
+#    f = sympy.integrate(p['a'] * p['b'], z)
+#
+#    both = f.subs(z, z2[i]) - f.subs(z, z1[i])
+#    both = both.subs(mp).subs(mp2)
+#
+#    between = f.subs(z, mp['zbot']) - f.subs(z, mp['ztop'])
+#    between = between.subs(mp).subs(mp2)
+#
+#    z1_only = f.subs(z, mp['zbot']) - f.subs(z, z1[i])
+#    z1_only = z1_only.subs(mp).subs(mp2)
+#
+#    z2_only = f.subs(z, z2[i]) - f.subs(z, mp['ztop'])
+#    z2_only = z2_only.subs(mp).subs(mp2)
+
+#    text = """A = np.zeros(len(xi))
+#    for i in range(len(xi)):
+#        for seg in segment_both[i]:
+#            A[i] += {}
+#        for seg in segment_xi_only[i]:
+#            A[i] += {}
+#        for seg in segments_between[i]:
+#            A[i] += {}
+#        for seg in segment_xj_only[i]:
+#            A[i] += {}
+#
+#    return A"""
+
+
+    text = """integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a,
+                                                               y1a, y2a,
+                                                               x1b, x2b,
+                                                               y1b, y2b,
+                                                               xi, xj):
+
+    x1a = np.asarray(x1a)
+    x2a = np.asarray(x2a)
+    y1a = np.asarray(y1a)
+    y2a = np.asarray(y2a)
+    x1b = np.asarray(x1b)
+    x2b = np.asarray(x2b)
+    y1b = np.asarray(y1b)
+    y2b = np.asarray(y2b)
+
+    if (not np.allclose(x1a, x1b)) or (not np.allclose(x2a, x2b)): #they may be different sizes
+        raise ValueError ("x values are different; they must be the same: \\nx1a = {{0}}\\nx1b = {{1}}\\nx2a = {{2}}\\nx2b = {{3}}".format(x1a,x1b, x2a, x2b))
+        #sys.exit(0)
+
+    xi = np.atleast_1d(xi)
+    xj = np.atleast_1d(xj)
+
+    x_for_interp = np.zeros(len(x1a)+1)
+    x_for_interp[:-1] = x1a[:]
+    x_for_interp[-1] = x2a[-1]
+
+
+    (segment_both,
+     segment_xi_only,
+     segment_xj_only,
+     segments_between) = segments_between_xi_and_xj(x_for_interp, xi, xj)
+
+
+    A = np.zeros(len(xi))
+    for i in range(len(xi)):
+        for seg in segment_both[i]:
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += ({0})
+        for seg in segment_xi_only[i]:
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += ({1})
+        for seg in segments_between[i]:
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += ({2})
+        for seg in segment_xj_only[i]:
+            a_slope = (y2a[seg] - y1a[seg]) / (x2a[seg] - x1a[seg])
+            b_slope = (y2b[seg] - y1b[seg]) / (x2b[seg] - x1b[seg])
+            A[i] += ({3})
+
+    return A
+    """
+
+    fn = text.format(tw(both,4), tw(z1_only,4), tw(between,4), tw(z2_only,4))
+
+    return fn
+
+
 if __name__ == '__main__':
     pass
 #    import nose
@@ -4988,4 +5170,5 @@ if __name__ == '__main__':
 #    fn, fn2=dim1sin_ab_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_abc_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_D_aDb_linear_implementations();print(fn);print('#'*40); print(fn2)
-    print(dim1sin_a_linear_between())
+#    print(dim1sin_a_linear_between())
+    print(dim1_ab_linear_between())
