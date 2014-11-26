@@ -971,7 +971,7 @@ def EDload_coslinear():
     return fn
 
 
-def dim1sin_a_linear_between():
+def dim1sin_a_linear_between_old():
     """Generate code to calculate spectral method integrations
 
     Performs integrations of `sin(mi * z) * a(z)`
@@ -4809,6 +4809,146 @@ def dim1sin_D_aDb_linear_implementations():
     return fn, fn2
 
 
+def dim1sin_a_linear_between():
+    """Generate code to calculate spectral method integrations
+
+    Performs integrations of `sin(mi * z) * a(z)`
+    between [z1, z2] where a(z) is a piecewise linear functions of z.
+
+    Calculates array A[len(z), len(m)].
+
+    Paste the resulting code into `dim1sin_a_linear_between`.
+
+    Returns
+    -------
+    fn : string
+        Python code with scalar (loops) implementation
+
+    Notes
+    -----
+    The `dim1sin_a_linear_between`, :math:`A`, is given by:
+
+    .. math:: \\mathbf{A}_{i,j}=
+                \\int_{z_1}^{z_2}{{a\\left(z\\right)}\\phi_j\\,dz}
+
+    where the basis function :math:`\\phi_j` is given by:
+
+    .. math:: \\phi_j\\left(z\\right)=\\sin\\left({m_j}z\\right)
+
+    and :math:`a\\left(z\\right)` is a piecewise
+    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+
+    .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
+
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
+    each layer respectively.
+
+    """
+
+    v = SympyVarsFor1DSpectralDerivation('z', slope=True)
+    integ_kwargs = dict(risch=False, conds='none')
+    v.z1 = sympy.tensor.IndexedBase('z1')
+    v.z2 = sympy.tensor.IndexedBase('z2')
+
+
+    phi_j = sympy.sin(v.mj * v.z)
+
+    f = sympy.integrate(v.a * phi_j, v.z, **integ_kwargs)
+
+    both = f.subs(v.z, v.z2[v.i]) - f.subs(v.z, v.z1[v.i])
+    both = both.subs(v.map_to_add_index)
+
+    between = f.subs(v.z, v.zbot) - f.subs(v.z, v.ztop)
+    between = between.subs(v.map_to_add_index)
+
+    z1_only = f.subs(v.z, v.zbot) - f.subs(v.z, v.z1[v.i])
+    z1_only = z1_only.subs(v.map_to_add_index)
+
+    z2_only = f.subs(v.z, v.z2[v.i]) - f.subs(v.z, v.ztop)
+    z2_only = z2_only.subs(v.map_to_add_index)
+
+
+#    mp, p = create_layer_sympy_var_and_maps(layer_prop=['z', 'a', 'b'])
+#    sympy.var('z1, z2')
+#
+#    z1 = sympy.tensor.IndexedBase('z1')
+#    z2 = sympy.tensor.IndexedBase('z2')
+#    i = sympy.tensor.Idx('i')
+#    j = sympy.tensor.Idx('j')
+#
+#
+#
+#    phi_j = sympy.sin(mj * z)
+#
+#    f = sympy.integrate(p['a'] * phi_j, z)
+#
+#    both = f.subs(z, z2[i]) - f.subs(z, z1[i])
+#    both = both.subs(mp)
+#
+#    between = f.subs(z, mp['zbot']) - f.subs(z, mp['ztop'])
+#    between = between.subs(mp)
+#
+#    z1_only = f.subs(z, mp['zbot']) - f.subs(z, z1[i])
+#    z1_only = z1_only.subs(mp)
+#
+#    z2_only = f.subs(z, z2[i]) - f.subs(z, mp['ztop'])
+#    z2_only = z2_only.subs(mp)
+
+    text = """dim1sin_a_linear_between(m, at, ab, zt, zb, z):
+    #import numpy as np #import this globally
+    #import math #import this globally
+
+    sin=math.sin
+    cos=math.cos
+    m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
+
+    z = np.atleast_2d(z)
+
+    z1 = z[:,0]
+    z2 = z[:,1]
+
+    z_for_interp = np.zeros(len(zt)+1)
+    z_for_interp[:-1] = zt[:]
+    z_for_interp[-1]=zb[-1]
+
+
+    (segment_both,
+     segment_z1_only,
+     segment_z2_only,
+     segments_between) = segments_between_xi_and_xj(z_for_interp, z1, z2)
+
+    nz = len(z)
+    neig = len(m)
+
+    A = np.zeros((nz,neig), dtype=float)
+    for i in range(nz):
+        for layer in segment_both[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            for j in range(neig):
+                A[i,j] += ({0})
+        for layer in segment_z1_only[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            for j in range(neig):
+                A[i,j] += ({1})
+        for layer in segments_between[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            for j in range(neig):
+                A[i,j] += ({2})
+        for layer in segment_z2_only[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
+            for j in range(neig):
+                A[i,j] += ({3})
+    return A"""
+
+
+    fn = text.format(tw(both,5), tw(z1_only,5), tw(between,5), tw(z2_only,5))
+
+    return fn
+
 if __name__ == '__main__':
     pass
 #    import nose
@@ -4847,4 +4987,5 @@ if __name__ == '__main__':
 #    fn, fn2=dim1sin_D_aDf_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_ab_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_abc_linear_implementations();print(fn);print('#'*40); print(fn2)
-    fn, fn2=dim1sin_D_aDb_linear_implementations();print(fn);print('#'*40); print(fn2)
+#    fn, fn2=dim1sin_D_aDb_linear_implementations();print(fn);print('#'*40); print(fn2)
+    print(dim1sin_a_linear_between())

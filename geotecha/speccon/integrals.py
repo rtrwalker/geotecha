@@ -4854,8 +4854,16 @@ def dim1sin_a_linear_between(m, at, ab, zt, zb, z):
     """
 
 
-    from math import sin, cos
+    #import numpy as np #import this globally
+    #import math #import this globally
+
+    sin=math.sin
+    cos=math.cos
     m = np.asarray(m)
+    at = np.asarray(at)
+    ab = np.asarray(ab)
+    zt = np.asarray(zt)
+    zb = np.asarray(zb)
 
     z = np.atleast_2d(z)
 
@@ -4867,70 +4875,51 @@ def dim1sin_a_linear_between(m, at, ab, zt, zb, z):
     z_for_interp[-1]=zb[-1]
 
 
-    (segment_both, segment_z1_only, segment_z2_only, segments_between) = segments_between_xi_and_xj(z_for_interp,z1,z2)
+    (segment_both,
+     segment_z1_only,
+     segment_z2_only,
+     segments_between) = segments_between_xi_and_xj(z_for_interp, z1, z2)
 
     nz = len(z)
     neig = len(m)
 
-    A = np.zeros([nz,neig])
+    A = np.zeros((nz,neig), dtype=float)
     for i in range(nz):
         for layer in segment_both[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
             for j in range(neig):
-                A[i,j] += (-(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z1[i]) + (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z2[i]) + (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z1[i]) - (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z2[i]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*z1[i]*cos(m[j]*z1[i]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*z2[i]*cos(m[j]*z2[i]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*z1[i]*cos(m[j]*z1[i]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*z2[i]*cos(m[j]*z2[i]) + zb[layer]*m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z1[i]) - zb[layer]*m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z2[i]) - zt[layer]*m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z1[i]) + zt[layer]*m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z2[i]))
+                A[i,j] += (-a_slope*m[j]**(-2)*sin(m[j]*z1[i]) + a_slope*m[j]**(-2)*sin(m[j]*z2[i]) +
+                    a_slope*m[j]**(-1)*z1[i]*cos(m[j]*z1[i]) -
+                    a_slope*m[j]**(-1)*z2[i]*cos(m[j]*z2[i]) -
+                    a_slope*zt[layer]*m[j]**(-1)*cos(m[j]*z1[i]) +
+                    a_slope*zt[layer]*m[j]**(-1)*cos(m[j]*z2[i]) +
+                    at[layer]*m[j]**(-1)*cos(m[j]*z1[i]) - at[layer]*m[j]**(-1)*cos(m[j]*z2[i]))
         for layer in segment_z1_only[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
             for j in range(neig):
-                A[i,j] += (-(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z1[i]) + (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zb[layer]) + (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z1[i]) - (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zb[layer]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*z1[i]*cos(m[j]*z1[i]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*zb[layer]*cos(m[j]*zb[layer]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*z1[i]*cos(m[j]*z1[i]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*zb[layer]*cos(m[j]*zb[layer]) +
-                    zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z1[i]) -
-                    zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zb[layer]) -
-                    zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z1[i]) +
-                    zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zb[layer]))
+                A[i,j] += (-a_slope*m[j]**(-2)*sin(m[j]*z1[i]) + a_slope*m[j]**(-2)*sin(zb[layer]*m[j]) +
+                    a_slope*m[j]**(-1)*z1[i]*cos(m[j]*z1[i]) -
+                    a_slope*zb[layer]*m[j]**(-1)*cos(zb[layer]*m[j]) -
+                    a_slope*zt[layer]*m[j]**(-1)*cos(m[j]*z1[i]) +
+                    a_slope*zt[layer]*m[j]**(-1)*cos(zb[layer]*m[j]) +
+                    at[layer]*m[j]**(-1)*cos(m[j]*z1[i]) - at[layer]*m[j]**(-1)*cos(zb[layer]*m[j]))
         for layer in segments_between[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
             for j in range(neig):
-                A[i,j] += ((zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zb[layer]) - (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zt[layer]) - (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zb[layer]) + (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zt[layer]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*zb[layer]*cos(m[j]*zb[layer]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*zt[layer]*cos(m[j]*zt[layer]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*zb[layer]*cos(m[j]*zb[layer]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*zt[layer]*cos(m[j]*zt[layer]) -
-                    zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zb[layer]) +
-                    zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zt[layer]) +
-                    zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zb[layer]) -
-                    zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zt[layer]))
+                A[i,j] += (a_slope*m[j]**(-2)*sin(zb[layer]*m[j]) - a_slope*m[j]**(-2)*sin(zt[layer]*m[j]) -
+                    a_slope*zb[layer]*m[j]**(-1)*cos(zb[layer]*m[j]) +
+                    a_slope*zt[layer]*m[j]**(-1)*cos(zb[layer]*m[j]) -
+                    at[layer]*m[j]**(-1)*cos(zb[layer]*m[j]) +
+                    at[layer]*m[j]**(-1)*cos(zt[layer]*m[j]))
         for layer in segment_z2_only[i]:
+            a_slope = (ab[layer] - at[layer]) / (zb[layer] - zt[layer])
             for j in range(neig):
-                A[i,j] += ((zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*z2[i]) - (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*sin(m[j]*zt[layer]) - (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*z2[i]) + (zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*sin(m[j]*zt[layer]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*z2[i]*cos(m[j]*z2[i]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*ab[layer]*zt[layer]*cos(m[j]*zt[layer]) + m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*z2[i]*cos(m[j]*z2[i]) - m[j]*(zb[layer]*m[j]**2 -
-                    zt[layer]*m[j]**2)**(-1)*at[layer]*zt[layer]*cos(m[j]*zt[layer]) -
-                    zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*z2[i]) +
-                    zb[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*at[layer]*cos(m[j]*zt[layer]) +
-                    zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*z2[i]) -
-                    zt[layer]*m[j]*(zb[layer]*m[j]**2 - zt[layer]*m[j]**2)**(-1)*ab[layer]*cos(m[j]*zt[layer]))
+                A[i,j] += (a_slope*m[j]**(-2)*sin(m[j]*z2[i]) - a_slope*m[j]**(-2)*sin(zt[layer]*m[j]) -
+                    a_slope*m[j]**(-1)*z2[i]*cos(m[j]*z2[i]) +
+                    a_slope*zt[layer]*m[j]**(-1)*cos(m[j]*z2[i]) -
+                    at[layer]*m[j]**(-1)*cos(m[j]*z2[i]) + at[layer]*m[j]**(-1)*cos(zt[layer]*m[j]))
     return A
+
 
 def dim1sin_af_linear(m, at, ab, zt, zb, implementation='vectorized'):
     """Create matrix of spectral integrations
@@ -5879,16 +5868,16 @@ def dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized'):
 
     Notes
     -----
-    The `dim1sin_ab_linear` which should be treated as a column vector,
-    :math:`A` is given by:
+    The `dim1sin_a_linear_between`, :math:`A`, is given by:
 
-    .. math:: \\mathbf{A}_{i}=\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\phi_i\\,dz}
+    .. math:: \\mathbf{A}_{i,j}=
+                \\int_{z_1}^{z_2}{{a\\left(z\\right)}\\phi_j\\,dz}
 
-    where the basis function :math:`\\phi_i` is given by:
+    where the basis function :math:`\\phi_j` is given by:
 
-    .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
+    .. math:: \\phi_j\\left(z\\right)=\\sin\\left({m_j}z\\right)
 
-    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
+    and :math:`a\\left(z\\right)` is a piecewise
     linear functions w.r.t. :math:`z`, that within a layer are defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
