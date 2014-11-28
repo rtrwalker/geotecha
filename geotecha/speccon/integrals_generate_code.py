@@ -42,7 +42,13 @@ def tw(text, indents=3, width=100, break_long_words=False):
     break_long_words : True/False, optional
         Default break_long_words=False.
 
+    Returns
+    -------
+    out : str
+        Multi-line string.
+
     """
+
     subsequent_indent = " "*4*indents
 
     wrapper = textwrap.TextWrapper(width=width,
@@ -57,26 +63,95 @@ def tw(text, indents=3, width=100, break_long_words=False):
 
 
 def Eload_linear_implementations():
-    """Generate code to perform time integration for spectral methods
+    """Code generation for Integration of load(tau) * exp(dT * eig * (t-tau))
+    between [0, t], where load(tau) is piecewise linear.
 
-    Perform time integrations of a piecewise linear load vs time
+    Performs integrations involving a piecewise linear load.  A 2d array of
+    dimensions A[len(tvals), len(eigs)]
+    is produced where the 'i'th row of A contains the diagonal elements of the
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
+
 
     Paste the resulting code (at least the loops) into `Eload_linear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
 
     Returns
     -------
-    fn: string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+    fn : string
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
-    fn2: string
-        Fortran code.  needs to be compiled with f2py
+    fn2 : string
+        Fortran code.  Needs to be compiled with f2py.
 
+
+    Notes
+    -----
+
+    Assuming the load are formulated as the product of separate time and depth
+    dependant functions:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    The matrix :math:`E` is a time dependent diagonal matrix due to time
+    dependant loadings.  The version of :math:`E` calculated here in
+    `Eload_linear` is from loading terms in the governing equation that are NOT
+    differentiated wrt :math:`t`.
+    The diagonal elements of :math:`E` are given by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{{\\sigma\\left(\\tau\\right)}{\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
+     :math:`dT` is a time factor for numerical convienience,
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is
+    piecewise in time. The contribution of each load segment is found by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{{\\sigma\\left(\\tau\\right)}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+
+    where
+
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`Eload_linear`, rather than use :math:`t_s` and
+    :math:`t_f`,
+    explicitly finds increments that the current time falls in, falls after,
+    and falls before and treates each case on it's own.)
+
+    Each :math:`t` value of interest requires a separate diagonal matrix
+    :math:`E`.  To use space more efficiently and to facilitate numpy
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of
+    array :math:`A` returned by `Eload_linear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+
+    See Also
+    --------
+    geotecha.speccon.integrals.Eload_linear : Resulting function.
+    geotecha.speccon.integrals.pEload_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.eload_linear : Resulting fortran function.
+    Eload_coslinear_implementations : Similar function with
+        additional cosine term.
+    EDload_linear_implementations : Similar function but the time dependent
+        loading function is differentiated with respect to time.
 
     """
 
@@ -305,26 +380,93 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
 
 
 def EDload_linear_implementations():
-    """Generate code to perform time integration for spectral methods
+    """Code generation for Integration of D[load(tau), tau] * exp(dT * eig * (t-tau)) between
+    [0, t], where load(tau) is piecewise linear.
 
-    Perform time integrations of a piecewise linear load vs time
+    Performs integrations involving a piecewise linear load.  A 2d array of
+    dimensions A[len(tvals), len(eigs)]
+    is produced where the 'i'th row of A contains the diagonal elements of the
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
 
     Paste the resulting code (at least the loops) into `EDload_linear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
 
     Returns
     -------
-    fn: string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+    fn : string
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
-    fn2: string
+    fn2 : string
         Fortran code.  needs to be compiled with f2py
 
+    Notes
+    -----
+    Assuming the load are formulated as the product of separate time and depth
+    dependant functions:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    The matrix :math:`E` is a time dependent diagonal matrix due to time
+    dependant loadings.  The version of :math:`E` calculated here in
+    `EDload_linear` is from loading terms in the governing equation that are NOT
+    differentiated wrt :math:`t`.
+    The diagonal elements of :math:`E` are given by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{\\frac{d{\\sigma\\left(\\tau\\right)}}{d\\tau}{\\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
+     :math:`dT` is a time factor for numerical convienience,
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is
+    piecewise in time. The contribution of each load segment is found by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{{\\sigma\\left(\\tau\\right)}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+
+    where
+
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`EDload_linear`, rather than use :math:`t_s` and
+    :math:`t_f`,
+    explicitly finds increments that the current time falls in, falls after,
+    and falls before and treates each case on it's own.)
+
+    Each :math:`t` value of interest requires a separate diagonal matrix
+    :math:`E`.  To use space more efficiently and to facilitate numpy
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of
+    array :math:`A` returned by `EDload_linear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+
+
+    See Also
+    --------
+    geotecha.speccon.integrals.EDload_linear : Resulting function.
+    geotecha.speccon.integrals.pEDload_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.edload_linear : Resulting fortran function.
+    EDload_coslinear_implementations : Similar function with
+        additional cosine term.
+    Eload_linear_implementations : Similar function but the time dependent
+        loading function is not differentiated with respect to time.
 
     """
 
@@ -532,26 +674,94 @@ def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectori
 
 
 def Eload_coslinear_implementations():
-    """Generate code to perform time integration for spectral methods
+    """Code generation for Integration of cos(omega*tau+phase)*load(tau) * exp(dT * eig * (t-tau))
+    between [0, t], where load(tau) is piecewise linear.
 
-    Perform time integrations of a piecewise linear load vs time
+    Performs integrations involving a piecewise linear load.  A 2d array of
+    dimensions A[len(tvals), len(eigs)]
+    is produced where the 'i'th row of A contains the diagonal elements of the
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
 
-    Paste the resulting code (at least the loops) into `Eload_coslinear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Paste the resulting code (at least the loops) into `Eload_linear`.
+
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
 
     Returns
     -------
-    fn: string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+    fn : string
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
-    fn2: string
+    fn2 : string
         Fortran code.  needs to be compiled with f2py
 
+
+    Notes
+    -----
+    Assuming the load are formulated as the product of separate time and depth
+    dependant functions:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    The matrix :math:`E` is a time dependent diagonal matrix due to time
+    dependant loadings.  The version of :math:`E` calculated here in
+    `Eload_coslinear` is from loading terms in the governing equation that are NOT
+    differentiated wrt :math:`t`.
+    The diagonal elements of :math:`E` are given by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{{\\cos\\left(\\omega\\tau+\\textrm{phase}\\right)}{\\sigma\\left(\\tau\\right)}{\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
+     :math:`dT` is a time factor for numerical convienience,
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is
+    piecewise in time. The contribution of each load segment is found by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{{\\cos\\left(\\omega\\tau+\\textrm{phase}\\right)}{\\sigma\\left(\\tau\\right)}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+
+    where
+
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`Eload_coslinear`, rather than use :math:`t_s` and
+    :math:`t_f`,
+    explicitly finds increments that the current time falls in, falls after,
+    and falls before and treates each case on it's own.)
+
+    Each :math:`t` value of interest requires a separate diagonal matrix
+    :math:`E`.  To use space more efficiently and to facilitate numpy
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of
+    array :math:`A` returned by `Eload_coslinear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+
+    See Also
+    --------
+    geotecha.speccon.integrals.Eload_coslinear : Resulting function.
+    geotecha.speccon.integrals.pEload_coslinear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.eload_coslinear : Resulting fortran function.
+    Eload_linear_implementations : Similar function with no
+        cosine term.
+    EDload_coslinear_implementations : Similar function but the time dependent
+        loading function is differentiated with respect to time.
 
     """
 
@@ -787,25 +997,93 @@ def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
     return fn, fn2
 
 def EDload_coslinear_implementations():
-    """Generate code to perform time integration for spectral methods
+    """Code generation for Integration of D[cos(omega*tau+phase)*load(tau), tau] * exp(dT * eig * (t-tau)) between [0, t], where
+    load(tau) is piecewise linear.
 
-    Perform time integrations of a piecewise linear load vs time
+    Performs integrations involving a piecewise linear load.  A 2d array of
+    dimensions A[len(tvals), len(eigs)]
+    is produced where the 'i'th row of A contains the diagonal elements of the
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
 
     Paste the resulting code (at least the loops) into `EDload_coslinear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
 
     Returns
     -------
-    fn: string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+    fn : string
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
-    fn2: string
-        Fortran code.  needs to be compiled with f2py
+    fn2 : string
+        Fortran code.  Needs to be compiled with f2py.
+
+        Notes
+    -----
+    Assuming the load are formulated as the product of separate time and depth
+    dependant functions:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    The matrix :math:`E` is a time dependent diagonal matrix due to time
+    dependant loadings.  The version of :math:`E` calculated here in
+    `EDload_coslinear` is from loading terms in the governing equation that are NOT
+    differentiated wrt :math:`t`.
+    The diagonal elements of :math:`E` are given by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{\\frac{d{{\\cos\\left(\\omega\\tau+\\textrm{phase}\\right)}\\sigma\\left(\\tau\\right)}}{d\\tau}{\\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
+     :math:`dT` is a time factor for numerical convienience,
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is
+    piecewise in time. The contribution of each load segment is found by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{\\frac{d{{\\cos\\left(\\omega\\tau+\\textrm{phase}\\right)}\\sigma\\left(\\tau\\right)}}{d\\tau}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+
+    where
+
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`EDload_coslinear`, rather than use :math:`t_s` and
+    :math:`t_f`,
+    explicitly finds increments that the current time falls in, falls after,
+    and falls before and treates each case on it's own.)
+
+    Each :math:`t` value of interest requires a separate diagonal matrix
+    :math:`E`.  To use space more efficiently and to facilitate numpy
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of
+    array :math:`A` returned by `EDload_coslinear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+
+    See Also
+    --------
+    geotecha.speccon.integrals.EDload_coslinear : Resulting function.
+    geotecha.speccon.integrals.pEDload_coslinear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.edload_coslinear : Resulting fortran function.
+    EDload_linear_implementations : Similar function with no
+        cosine term.
+    Eload_coslinear_implementations : Similar function but the time dependent
+        loading function is not differentiated w.r.t. time.
+
 
 
     """
@@ -1271,30 +1549,28 @@ class SympyVarsFor1DSpectralDerivation(object):
 
 
 def dim1sin_af_linear_implementations():
-    """Generate code to calculate spectral method integrations
+    """Code generation for Integration of sin(mi * z) * a(z) * sin(mj * z)
+    between ztop and zbot where a(z) is piecewise linear.
 
-    Generate scalar and vectorized python code and fortran loops
-
-    Performs integrations of `sin(mi * z) * a(z) * sin(mj * z)` between [0, 1]
-    where a(z) is a piecewise linear function of z.  Code is generated that
-    will produce a square array with the appropriate integrals at each location
+    Code is generated that will produce a square array with the
+    appropriate integrals at each location.
 
     Paste the resulting code (at least the loops) into `dim1sin_af_linear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
-
 
     Returns
     -------
     fn : string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
     fn2 : string
-        Fortran code.  needs to be compiled with f2py
+        Fortran code.  Needs to be compiled with f2py.
 
     Notes
     -----
@@ -1307,12 +1583,20 @@ def dim1sin_af_linear_implementations():
     .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
 
     and :math:`a\\left(z\\right)` is a piecewise linear function
-    w.r.t. :math:`z`, that within a layer are defined by:
+    with respect to :math:`z`, that within a layer are defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
     with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
     each layer respectively.
+
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_af_linear : Resulting function.
+    geotecha.speccon.integrals.pdim1sin_af_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.dim1sin_af_linear : Resulting fortran function.
+
 
     """
 
@@ -1448,28 +1732,28 @@ def dim1sin_af_linear_implementations():
 
 
 def dim1sin_abf_linear_implementations():
-    """Generate code to calculate spectral method integrations
+    """Code generation for Integration of sin(mi * z) * a(z) * a(z) * sin(mj * z)
+    between ztop and zbot where a(z) is piecewise linear.
 
-    Performs integrations of `sin(mi * z) * a(z) *b(z) * sin(mj * z)`
-    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.
-    Code is generated that will produce a square array with the appropriate
-    integrals at each location
+    Code is generated that will produce a square array with the
+    appropriate integrals at each location.
 
     Paste the resulting code (at least the loops) into `dim1sin_abf_linear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
 
     Returns
     -------
     fn : string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
     fn2 : string
-        Fortran code.  needs to be compiled with f2py
+        Fortran code.  Needs to be compiled with f2py.
 
     Notes
     -----
@@ -1482,12 +1766,20 @@ def dim1sin_abf_linear_implementations():
     .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
 
     and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
-    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+    linear functions with respect to :math:`z`, that within a layer are defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
     with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
     each layer respectively.
+
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_abf_linear : Resulting function.
+    geotecha.speccon.integrals.pdim1sin_abf_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.dim1sin_abf_linear : Resulting fortran function.
+
 
     """
 
@@ -1634,28 +1926,36 @@ def dim1sin_abf_linear_implementations():
 
 
 def dim1sin_D_aDf_linear_implementations():
-    """Generate code to calculate spectral method integrations
+    """Code generation for Integration of sin(mi * z) * D[a(z) * D[sin(mj * z),z],z]
+    between ztop and zbot where a(z) is piecewise linear functions of z.
 
-    Performs integrations of `sin(mi * z) * D[a(z) * D[sin(mj * z),z],z]`
-    between [0, 1] where a(z) i piecewise linear functions of z.
-    Code is generated that will produce a square array with the appropriate
-    integrals at each location
 
-    Paste the resulting code (at least the loops) into `dim1sin_D_aDf_linear`.
+    Code is generated that will produce a square array with the
+    appropriate integrals at each location.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Paste the resulting code (at least the loops) into `dim1sin_abf_linear`.
+
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
 
     Returns
     -------
     fn : string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
     fn2 : string
-        Fortran code.  needs to be compiled with f2py
+        Fortran code.  Needs to be compiled with f2py.
+
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_D_aDf_linear : Resulting function.
+    geotecha.speccon.integrals.pdim1sin_D_aDf_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.dim1sin_d_adf_linear : Resulting fortran function.
 
     Notes
     -----
@@ -1667,15 +1967,15 @@ def dim1sin_D_aDf_linear_implementations():
 
     .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
 
-    and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
-    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+    and :math:`a\\left(z\\right)` is a piecewise
+    linear functions with respect to :math:`z`, that within a layer is defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
     with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
     each layer respectively.
 
-    To make the above integratin simpler we integate by parts to get:
+    To make the above integration simpler we integate by parts to get:
 
     .. math:: \\mathbf{A}_{i,j}= \\left.\\phi_i{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\right|_{z=0}^{z=1} -\\int_{0}^1{{a\\left(z\\right)}\\frac{d\\phi_j}{dz}\\frac{d\\phi_i}{dz}\\,dz}
 
@@ -1835,14 +2135,37 @@ def dim1sin_D_aDf_linear_implementations():
 
 
 def dim1sin_ab_linear_implementations():
-    """Generate code to calculate spectral method integrations
+    """Code generation for Integration of sin(mi * z) * a(z) * b(z)
+    between ztop and zbot where a(z) and b(z) are piecewise linear functions of z.
 
-    Performs integrations of `sin(mi * z) * a(z) * b(z)`
-    between [0, 1] where a(z) and b(z) are piecewise linear functions of z.
-    Code is generated that will produce a 1d array with the appropriate
-    integrals at each location.
+
+    Code is generated that will produce a square array with the
+    appropriate integrals at each location.
 
     Paste the resulting code (at least the loops) into `dim1sin_ab_linear`.
+
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+
+    Returns
+    -------
+    fn : string
+        Python code with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2 : string
+        Fortran code.  Needs to be compiled with f2py.
+
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_ab_linear : Resulting function.
+    geotecha.speccon.integrals.pdim1sin_ab_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.dim1sin_ab_linear : Resulting fortran function.
+
 
     Notes
     -----
@@ -1856,7 +2179,7 @@ def dim1sin_ab_linear_implementations():
     .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
 
     and :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
-    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+    linear functions with respect to :math:`z`, that within a layer are defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
@@ -1980,28 +2303,36 @@ def dim1sin_ab_linear_implementations():
 
 
 def dim1sin_abc_linear_implementations():
-    """Generate code to calculate spectral method integrations
+    """Code generation for Integrations of sin(mi * z) * a(z) * b(z) * c(z)
+    between ztop and zbot where a(z), b(z), c(z) are piecewise linear functions of z.
 
-    Performs integrations of `sin(mi * z) * a(z) * b(z) * c(z)`
-    between [0, 1] where a(z), b(z), c(z) are piecewise linear functions of z.
     Code is generated that will produce a 1d array with the appropriate
     integrals at each location.
 
     Paste the resulting code (at least the loops) into `dim1sin_abc_linear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
 
     Returns
     -------
-    fn: string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+    fn : string
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
-    fn2: string
-        Fortran code.  needs to be compiled with f2py
+    fn2 : string
+        Fortran code.  Needs to be compiled with f2py.
+
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_abc_linear : Resulting function.
+    geotecha.speccon.integrals.pdim1sin_abc_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.dim1sin_abc_linear : Resulting fortran function.
+
 
     Notes
     -----
@@ -2016,7 +2347,7 @@ def dim1sin_abc_linear_implementations():
 
     and :math:`a\\left(z\\right)`, :math:`b\\left(z\\right)`, and
     :math:`c\\left(z\\right)` are piecewise linear functions
-    w.r.t. :math:`z`, that within a layer are defined by:
+    with respect to :math:`z`, that within a layer are defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
@@ -2133,21 +2464,22 @@ def dim1sin_abc_linear_implementations():
 
 
 def dim1sin_D_aDb_linear_implementations():
-    """Generate code to calculate spectral method integrations
-
-    Performs integrations of `sin(mi * z) * D[a(z) * D[b(z), z], z]`
-    between [0, 1] where a(z) is a piecewisepiecewise linear function of z,
+    """Code generation for Integrations of `sin(mi * z) * D[a(z) * D[b(z), z], z]`
+    between ztop and zbot where a(z) is a piecewisepiecewise linear function of z,
     and b(z) is a linear function of z.
+
     Code is generated that will produce a 1d array with the appropriate
     integrals at each location.
 
     Paste the resulting code (at least the loops) into `dim1sin_D_aDb_linear`.
 
-    Creates 3 implementations:
-     - 'scalar', python loops (slowest)
-     - 'vectorized', numpy (much faster than scalar)
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
      - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
        with f2py.
+
 
     .. warning::
         The functions produced are set up to accept the b(z) input as
@@ -2160,10 +2492,18 @@ def dim1sin_D_aDb_linear_implementations():
     Returns
     -------
     fn : string
-        Python code. with scalar (loops) and vectorized (numpy) implementations
+        Python code with scalar (loops) and vectorized (numpy) implementations
         also calls the fortran version.
     fn2 : string
-        Fortran code.  needs to be compiled with f2py
+        Fortran code.  Needs to be compiled with f2py.
+
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_D_aDb_linear : Resulting function.
+    geotecha.speccon.integrals.pdim1sin_D_aDb_linear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.dim1sin_D_aDb_linear : Resulting fortran function.
+
 
     Notes
     -----
@@ -2177,7 +2517,7 @@ def dim1sin_D_aDb_linear_implementations():
     .. math:: \\phi_i\\left(z\\right)=\\sin\\left({m_i}z\\right)
 
     and :math:`a\\left(z\\right)` is a piecewise
-    linear functions w.r.t. :math:`z`, that within a layer is defined by:
+    linear functions with respect to :math:`z`, that within a layer is defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
@@ -2338,9 +2678,7 @@ def dim1sin_D_aDb_linear_implementations():
 
 
 def dim1sin_a_linear_between():
-    """Generate code to calculate spectral method integrations
-
-    Performs integrations of `sin(mi * z) * a(z)`
+    """Code generation for Integrations of `sin(mi * z) * a(z)`
     between [z1, z2] where a(z) is a piecewise linear functions of z.
 
     Calculates array A[len(z), len(m)].
@@ -2350,7 +2688,14 @@ def dim1sin_a_linear_between():
     Returns
     -------
     fn : string
-        Python code with scalar (loops) implementation
+        Python code with scalar (loops) implementation.
+
+    See Also
+    --------
+    geotecha.speccon.integrals.dim1sin_a_linear_between : Resulting function.
+    geotecha.speccon.integrals.pdim1sin_a_linear_between : Resulting function with PolyLine
+        inputs.
+
 
     Notes
     -----
@@ -2364,7 +2709,7 @@ def dim1sin_a_linear_between():
     .. math:: \\phi_j\\left(z\\right)=\\sin\\left({m_j}z\\right)
 
     and :math:`a\\left(z\\right)` is a piecewise
-    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+    linear functions with respect to :math:`z`, that within a layer are defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 
@@ -2451,16 +2796,26 @@ def dim1sin_a_linear_between():
 
     return fn
 
-#dim1_ab_linear_between()
-def dim1_ab_linear_between():
-    """Generate code to calculate spectral method integrations
 
-    Performs integrations of `a(z) * b(z)`
+def dim1_ab_linear_between():
+    """Code generation for Integrations of `a(z) * b(z)`
     between [z1, z2] where a(z) is a piecewise linear functions of z.
-    calculates array A[len(z)]
+
+
+    Calculates array A[len(z)]
 
     Paste the resulting code (at least the loops) into
     `piecewise_linear_1d.integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between`.
+
+    Returns
+    -------
+    fn : string
+        Python code with scalar (loops) implementation.
+
+    See Also
+    --------
+    geotecha.piecewise.piecewise_linear_1d.integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between : Resulting function.
+
 
     Notes
     -----
@@ -2469,7 +2824,7 @@ def dim1_ab_linear_between():
     .. math:: \\mathbf{A}_{i}=\\int_{z_1}^{z_2}{{a\\left(z\\right)}{b\\left(z\\right)}\\,dz}
 
     where :math:`a\\left(z\\right)` and :math:`b\\left(z\\right)` are piecewise
-    linear functions w.r.t. :math:`z`, that within a layer are defined by:
+    linear functions with respect to :math:`z`, that within a layer are defined by:
 
     .. math:: a\\left(z\\right) = a_t+\\frac{a_b-a_t}{z_b-z_t}\\left(z-z_t\\right)
 

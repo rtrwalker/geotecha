@@ -13,8 +13,8 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""quick and dirty code to generate some results for testing against
-certain geotecha.speccon.speccon1d functions
+"""Quick and dirty code to generate some results for testing against
+certain geotecha-speccon-speccon1d functions.
 
 
 This module contains some `eval` commands that can be a security threat. Rather
@@ -44,7 +44,7 @@ from geotecha.speccon.speccon1d import dim1sin_E_Igamv_the_deltamag_linear
 SAFE=False
 
 def gen_dim1sin_integrate_af():
-    """test case data generation for speccond1d.dim1sin_integrate_af"""
+    """Test case data generation for dim1sin_integrate_af."""
 
 
 
@@ -110,8 +110,9 @@ def gen_dim1sin_integrate_af():
             print(no_bc + eval(sout))
         print('#'*10+'\n')
 
+
 def gen_dim1sin_E_Igamv_the_BC_abf_linear():
-    """test case generation for dim1sin_E_Igamv_the_BC_abf_linear
+    """Test case generation for dim1sin_E_Igamv_the_BC_abf_linear.
 
     2014-03-22"""
 
@@ -163,8 +164,9 @@ def gen_dim1sin_E_Igamv_the_BC_abf_linear():
         print (dim1sin_E_Igamv_the_BC_abf_linear(**v))
         print('#'*10+'\n')
 
+
 def gen_dim1sin_E_Igamv_the_BC_D_aDf_linear():
-    """test case generation for dim1sin_E_Igamv_the_BC_D_aDf_linear
+    """Test case generation for dim1sin_E_Igamv_the_BC_D_aDf_linear.
 
     2014-03-22"""
 
@@ -219,7 +221,7 @@ def gen_dim1sin_E_Igamv_the_BC_D_aDf_linear():
 
 
 def gen_dim1sin_E_Igamv_the_BC_aDfDt_linear():
-    """test case generation for dim1sin_E_Igamv_the_BC_aDfDt_linear
+    """Test case generation for dim1sin_E_Igamv_the_BC_aDfDt_linear.
 
     2014-03-22"""
 
@@ -271,8 +273,9 @@ def gen_dim1sin_E_Igamv_the_BC_aDfDt_linear():
         print (dim1sin_E_Igamv_the_BC_aDfDt_linear(**v))
         print('#'*10+'\n')
 
+
 def gen_dim1sin_E_Igamv_the_BC_deltaf_linear():
-    """test case generation for dim1sin_E_Igamv_the_BC_deltaf_linear
+    """Test case generation for dim1sin_E_Igamv_the_BC_deltaf_linear.
 
     2014-03-22"""
 
@@ -347,8 +350,9 @@ def gen_dim1sin_E_Igamv_the_BC_deltaf_linear():
         print (dim1sin_E_Igamv_the_BC_deltaf_linear(**v))
         print('#'*10+'\n')
 
+
 def gen_dim1sin_E_Igamv_the_abmag_bilinear():
-    """test case generation for dim1sin_E_Igamv_the_abmag_bilinear
+    """Test case generation for dim1sin_E_Igamv_the_abmag_bilinear.
 
     2014-03-22"""
 
@@ -385,7 +389,7 @@ def gen_dim1sin_E_Igamv_the_abmag_bilinear():
 
 
 def gen_dim1sin_E_Igamv_the_aDmagDt_bilinear():
-    """test case generation for dim1sin_E_Igamv_the_aDmagDt_bilinear
+    """Test case generation for dim1sin_E_Igamv_the_aDmagDt_bilinear
 
     2014-03-22"""
 
@@ -421,7 +425,7 @@ def gen_dim1sin_E_Igamv_the_aDmagDt_bilinear():
         print('#'*10+'\n')
 
 def gen_dim1sin_E_Igamv_the_deltamag_linear():
-    """test case generation for dim1sin_E_Igamv_the_deltamag_linear
+    """Test case generation for dim1sin_E_Igamv_the_deltamag_linear
 
     2014-03-22"""
 
@@ -468,4 +472,4 @@ if __name__=='__main__':
 #    gen_dim1sin_E_Igamv_the_BC_deltaf_linear()
 #    gen_dim1sin_E_Igamv_the_abmag_bilinear()
 #    gen_dim1sin_E_Igamv_the_aDmagDt_bilinear()
-    gen_dim1sin_E_Igamv_the_deltamag_linear()
+#    gen_dim1sin_E_Igamv_the_deltamag_linear()
