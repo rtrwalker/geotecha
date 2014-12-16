@@ -16,297 +16,506 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-Speccon 1d with stone column
- Note there is no pumping or fixed pore pressure functionality.
+Multilayer consolidation with stone columns including vertical and
+radial drainage using the spectral Galerkin method.
 
 """
 from __future__ import division, print_function
-import geotecha.piecewise.piecewise_linear_1d as pwise
-from geotecha.piecewise.piecewise_linear_1d import PolyLine
-import geotecha.speccon.integrals as integ
-import geotecha.mathematics.transformations as transformations
-
-
-import itertools
-
-import geotecha.inputoutput.inputoutput as inputoutput
-
-import geotecha.speccon.speccon1d as speccon1d
 
 import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
 import time
-import sys
-import textwrap
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 
-
+import geotecha.speccon.speccon1d as speccon1d
+import geotecha.piecewise.piecewise_linear_1d as pwise
+from geotecha.piecewise.piecewise_linear_1d import PolyLine
+import geotecha.speccon.integrals as integ
+import geotecha.mathematics.transformations as transformations
 from geotecha.inputoutput.inputoutput import GenericInputFileArgParser
-try:
-    #for python 2 to 3 stuff see http://python3porting.com/stdlib.html
-    #for using BytesIO instead of StringIO see http://stackoverflow.com/a/3423935/2530083
-    from io import BytesIO as StringIO
-except ImportError:
-    from StringIO import StringIO
-
 
 
 class Speccon1dVRC(speccon1d.Speccon1d):
-    """
+    """Multilayer consolidation with stone columns including vertical and
+    radial drainage in the column, using the spectral Galerkin method.
 
-    1d consolidation with:
+    Features:
 
-    - vertical and radial drainage (radial drainage uses the eta method)
-    - material properties that are constant in time but piecewsie linear with
-      depth
+     - Multiple layers.
+     - Vertical and radial drainage in a unit cell.
+       (radial drainage uses the eta method).
+     - Finite vertical and radial permeability in the column.
+     - Material properties that are constant in time but piecewsie linear with
+       depth (including column permeability and stiffness). Soil-column
+       stiffness is modelled using a lumped soil/column volume compressibilty
+       (mv).
+     - Surcharge loading (vacuum loading is via specifying non-zero negative
+       pore pressure at top and bottom of drain.
+     - Non-zero top and bottom pore pressure boundary conditions (top and
+       bottom pore pressures are the same in the column and soil).
+     - Surcharge/Boundary Conditions/vary
+       with time in a piecewise-linear function multiplied by a cosine
+       function of time.
 
-      - vertical permeability
-      - horizontal permeability
-      - lumped drain parameter eta
-      - lumped soil/column volume compressibilty (mv)
+       - Surcharge can also vary piecewise linear with depth.
+         The depth dependence does not vary with time.
+       - Mulitple loads will be combined using superposition.
+     - Subset of Python syntax available in input files/strings allowing
+       basic calculations within input files.
+     - Output:
 
-    - surcharge
+       - Excess pore pressure at depth in soil and column.
+       - Average excess pore pressure between two depths (in soil, column and
+         overall).
+       - Settlement between two depths.
+       - Charts and csv output available.
+     - Program can be run as script or in a python interpreter.
+     - Note there is no pumping or fixed pore pressure functionality.
 
-      - distribution with depth does not change over time
-      - magnitude varies piecewise linear with time
-      - multiple loads can be superposed
 
-    - pore pressure boundary conditions at top and bottom vary piecewise
-      linear with time
-    - calculates
+    .. warning::
+        The 'Parameters' and 'Attributes' sections below require further
+        explanation.  The parameters listed below are not used to explicitly
+        initialize the object.  Rather they are defined in either a
+        multi-line string or a file-like object using python syntax; the
+        file/string is then used to initialize the object using the
+        `reader` parameter. As well as simple assignment statements
+        (H = 1, drn = 0 etc.), the input file/string can contain basic
+        calculations (z = np.linspace(0, H, 20) etc.).  Not all of the
+        listed parameters are needed. The user should pick an appropriate
+        combination of attributes for their analysis (minimal explicit
+        checks on input data will be performed).
+        Each  'parameter' will be turned into an attribute that
+        can be accessed using conventional python dot notation, after the
+        object has been initialised.  The attributes listed below are
+        calculated values (i.e. they could be interpreted as results) which
+        are accessible using dot notation after all calculations are
+        complete.
 
-      - excess pore pressure at depth (in soil and drain and overall)
-      - average excess pore pressure between depths (in soil, column and
-        overall)
-      - settlement between depths
 
     Parameters
     ----------
-    reader : object that can be run with exec to produce a module
-        reader can be for examplestring, fileobject, StringIO.`reader`
-        should contain a statements such as H = 1, drn=0 corresponding to the
-        input attributes listed below.  The user should pick an appropriate
-        combination of attributes for their analysis.  e.g. don't put dTh=,
-        kh=, et=, if you are not modelling radial drainage.  You do not have to
-        initialize with `reader` but you should know what you are doing.
-
-    Attributes
-    ----------
     H : float, optional
-        total height of soil profile. default = 1.0. Note that even though
+        Total height of soil profile. Default H=1.0. Note that even though
         this program deals with normalised depth values it is important to
-        enter the correct H value.  As it is used when plotting, outputing
+        enter the correct H valu, as it is used when plotting, outputing
         data and in normalising gradient boundary conditions (see
-        `bot_vs_time` below) and pumping velocities (see `pumping` below).
+        `bot_vs_time` below).
     mvref : float, optional
-        reference value of volume compressibility mv (used with `H` in
-        settlement calculations). default = 1.0.  Note mvref will be used to
-        normalise pumping velocities (see `pumping` below).
+        Reference value of volume compressibility mv (used with `H` in
+        settlement calculations). Default mvref=1.0.
     kvref : float, optional
-        reference value of vertical permeability kv  in soil (only used for pretty
-        output). default = 1.0
-    kvcref : float, optional
-        reference value of vertical permeability kvc in column (only used for pretty
-        output). default = 1.0
+        Reference value of vertical permeability kv  in soil
+        (only used for pretty output). Default kvref=1.0.
     khref : float, optional
-        reference value of horizontal permeability kh in soil (only used for
-        pretty output). default = 1.0
+        Reference value of horizontal permeability kh in soil (only used for
+        pretty output). Default khref=1.0.
+    kvcref : float, optional
+        Reference value of vertical permeability kvc  in column
+        (only used for pretty output). Default kvcref=1.0.
     khcref : float, optional
-        reference value of horizontal permeability khc in column (only used for
-        pretty output). default = 1.0
+        Reference value of horizontal permeability khc in column (only used for
+        pretty output). Default khcref=1.0.
     etref : float, optional
-        reference value of lumped drain parameter et (only used for pretty
-        output). default = 1.0
+        Reference value of lumped drain parameter et (only used for pretty
+        output). Default etref=1.0.  et = 2 / (mu * re^2) where mu is
+        smear-zone/geometry parameter and re is radius of influence of
+        vertical drain.
     drn : {0, 1}, optional
-        drainage boundary condition. default = 0
-        0 = Pervious top pervious bottom (PTPB)
-        1 = Pervious top impoervious bottom (PTIB)
-    n : float
-        ratio of influence radius to column radius, n=re/rc. (needed for
-        alpha=1/n**2).
+        drainage boundary condition. Default drn=0.
+        0 = Pervious top pervious bottom (PTPB).
+        1 = Pervious top impoervious bottom (PTIB).
     dT : float, optional
-        convienient normaliser for time factor multiplier. default = 1.0
-    neig: int, optional
-        number of series terms to use in solution. default = 2
-    dTv: float, optional
-        vertical reference time factor multiplier.  dTv is calculated with
+        Convienient normaliser for time factor multiplier. Default dT=1.0.
+    neig : int, optional
+        Number of series terms to use in solution. Default neig=2. Don't use
+        neig=1.
+    dTv : float, optional
+        Vertical reference time factor multiplier.  dTv is calculated with
         the chosen reference values of kv and mv: dTv = kv /(mv*gamw) / H ^ 2
-    dTvc: float, optional
-        well reference vertical time factor multiplier.  dTvc is calculated with
+    dTvc : float, optional
+        Well reference time factor multiplier.  dTvc is calculated with
         the chosen reference values of kvc and mv:
-        dTw = kvc /(mv*gamw) / H ^ 2.
+        dTvc = kvc /(mv*gamw) / H ^ 2
     dTh : float, optional
         horizontal reference time factor multiplier.  dTh is calculated with
         the reference values of kh, et, and mv: dTh = kh / (mv * gamw) * et
     dThc : float, optional
-        horizontal reference time factor multiplier.  dTh is calculated with
-        the reference values of khc, and mv: dThc = 8*khc / (mv * gamw) /rc**2
+        Horizontal reference time factor multiplier in column.
+        dThc is calculated with
+        the reference values of khc, and mv: dThc = 8*khc / (mv * gamw) /rc**2.
     mv : PolyLine
-        normalised volume compressibility PolyLine(depth, mv).  The mv here
+        Normalised volume compressibility PolyLine(depth, mv).  The mv here
         is the value of ms / (1 + alp * (Y - 1)) normalised by mvref.  Y is
-        column to soil stiffness ratio ms/mc or Ec/Es
+        column to soil stiffness ratio ms/mc or Ec/Es. alp = 1/n**2 where
+        n is the ratio between influence radius and column radius n=re/rw.
     kh : PolyLine, optional
-        normalised horizontal permeability PolyLine(depth, kh)
-    khc : PolyLine, optional
-        normalised horizontal permeability in column PolyLine(depth, khc)
+        Normalised horizontal permeability in soil PolyLine(depth, kh).
     kv : PolyLine , optional
-        normalised vertical permeability PolyLine(depth, kv)
+        Normalised vertical permeability in soil PolyLine(depth, kv).
+    khc : PolyLine, optional
+        Normalised horizontal permeability in column PolyLine(depth, kh).
     kvc : PolyLine , optional
-        normalised vertical permeability in column PolyLine(depth, kvc)
+        Normalised vertical permeability in column PolyLine(depth, kv).
     et : PolyLine, optional
-        normalised vertical drain parameter PolyLine(depth, et).
+        Normalised vertical drain parameter PolyLine(depth, et).
         et = 2 / (mu * re^2) where mu is smear-zone/geometry parameter and re
-        is radius of influence of vertical drain
+        is radius of influence of vertical drain.
     surcharge_vs_depth : list of Polyline, optional
-        surcharge variation with depth. PolyLine(depth, multiplier)
+        Surcharge variation with depth. PolyLine(depth, multiplier).
     surcharge_vs_time : list of Polyline, optional
-        surcharge magnitude variation with time. PolyLine(time, magnitude)
+        Surcharge magnitude variation with time. PolyLine(time, magnitude).
     surcharge_omega_phase : list of 2 element tuples, optional
-        (omega, phase) to define cyclic variation of surcharve. i.e.
-        mag_vs_time * cos(omega*t + phase). if surcharge_omega_phase is None
-        then cyclic componenet will be ignored.  if surcharge_omega_phase is a
+        (omega, phase) to define cyclic variation of surcharge. i.e.
+        mag_vs_time * cos(omega*t + phase). If surcharge_omega_phase is None
+        then cyclic component will be ignored.  If surcharge_omega_phase is a
         list then if any member is None then cyclic component will not be
         applied for that load combo.
     top_vs_time : list of Polyline, optional
-        top p.press variation with time. Polyline(time, magnitude)
+        Top p.press variation with time. Polyline(time, magnitude).
     top_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of top BC. i.e.
-        mag_vs_time * cos(omega*t + phase). if top_omega_phase is None
-        then cyclic componenet will be ignored.  if top_omega_phase is a
+        mag_vs_time * cos(omega*t + phase). If top_omega_phase is None
+        then cyclic component will be ignored.  If top_omega_phase is a
         list then if any member is None then cyclic component will not be
         applied for that load combo.
     bot_vs_time : list of Polyline, optional
-        bottom p.press variation with time. Polyline(time, magnitude).
+        Bottom p.press variation with time. Polyline(time, magnitude).
         When drn=1, i.e. PTIB, bot_vs_time is equivilent to saying
         D[u(H,t), z] = bot_vs_time. Within the program the actual gradient
         will be normalised with depth by multiplying H.
     bot_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of bot BC. i.e.
-        mag_vs_time * cos(omega*t + phase). if bot_omega_phase is None
-        then cyclic componenet will be ignored.  if bot_omega_phase is a
+        mag_vs_time * cos(omega*t + phase). If bot_omega_phase is None
+        then cyclic component will be ignored.  If bot_omega_phase is a
         list then if any member is None then cyclic component will not be
         applied for that load combo.
     ppress_z : list_like of float, optional
-        normalised z to calc pore pressure at
+        Normalised z to calculate pore pressure at.
     avg_ppress_z_pairs : list of two element list of float, optional
-        nomalised zs to calc average pore pressure between
-        e.g. average of all profile is [[0,1]]
+        Nomalised zs to calculate average pore pressure between
+        e.g. average of all profile is [[0,1]].
     settlement_z_pairs : list of two element list of float, optional
         normalised depths to calculate normalised settlement between.
-        e.g. surface settlement would be [[0, 1]]
+        e.g. surface settlement would be [[0, 1]].
     tvals : list of float
-        times to calculate output at
-    ppress_z_tval_indexes: list/array of int, slice, optional
-        indexes of `tvals` at which to calculate ppress_z. i.e. only calc
-        ppress_z at a subset of the `tvals` values.  default =
-        slice(None, None) i.e. use all the `tvals`.
-    avg_ppress_z_pairs_tval_indexes: list/array of int, slice, optional
-        indexes of `tvals` at which to calculate avg_ppress_z_pairs.
+        Times to calculate output at.
+    ppress_z_tval_indexes : list/array of int, slice, optional
+        Indexes of `tvals` at which to calculate ppress_z. i.e. only calculate
+        ppress_z at a subset of the `tvals` values.
+        Default ppress_z_tval_indexes=slice(None, None) i.e. use all the
+        `tvals`.
+    avg_ppress_z_pairs_tval_indexes : list/array of int, slice, optional
+        Indexes of `tvals` at which to calculate avg_ppress_z_pairs.
         i.e. only calc avg_ppress_z_pairs at a subset of the `tvals` values.
-        default = slice(None, None) i.e. use all the `tvals`.
-    settlement_z_pairs_tval_indexes: list/array of int, slice, optional
-        indexes of `tvals` at which to calculate settlement_z_pairs.
+        Default avg_ppress_z_pairs_tval_indexes=slice(None, None) i.e. use
+        all the `tvals`.
+    settlement_z_pairs_tval_indexes : list/array of int, slice, optional
+        Indexes of `tvals` at which to calculate settlement_z_pairs.
         i.e. only calc settlement_z_pairs at a subset of the `tvals` values.
-        default = slice(None, None) i.e. use all the `tvals`.
-    por, porc, pors : ndarray, only present if ppress_z is input
-        calculated pore pressure at depths correspoinding to `ppress_z` and
-        times corresponding to `tvals`.  This is an output array of
-        size (len(ppress_z), len(tvals[ppress_z_tval_indexes])). porc and
-        pors are pore pressure in column and soil.
-    avp, avpc, avps : ndarray, only present if avg_ppress_z_pairs is input
-        calculated average pore pressure between depths correspoinding to
-        `avg_ppress_z_pairs` and times corresponding to `tvals`.  This is an
-        output array of size
-        (len(avg_ppress_z_pairs), len(tvals[avg_ppress_z_pairs_tval_indexes])).
-        avpc and avps are average pore pressure in
-        column and soil.
-    set : ndarray, only present if settlement_z_pairs is input
-        settlement between depths coreespoinding to `settlement_z_pairs` and
-        times corresponding to `tvals`.  This is an output array of size
-        (len(avg_ppress_z_pairs), len(tvals[settlement_z_pairs_tval_indexes]))
-    implementation: ['vectorized', 'scalar', 'fortran'], optional
+        Default settlement_z_pairs_tval_indexes=slice(None, None) i.e. use
+        all the `tvals`.
+    implementation : ['scalar', 'vectorized','fortran'], optional
         where possible use the `implementation`, implementation.  'scalar'=
         python loops (slowest), 'vectorized' = numpy (fast), 'fortran' =
         fortran extension (fastest).  Note only some functions have multiple
         implementations.
-
-    RLzero: float, optional
+    RLzero : float, optional
         reduced level of the top of the soil layer.  If RLzero is not None
         then all depths (in plots and results) will be transformed to an RL
         by RL = RLzero - z*H.  If RLzero is None (i.e. the default) then all
         depths will be reported  z*H (i.e. positive numbers).
-
     plot_properties : dict of dict, optional
         dictionary that overrides some of the plot properties.
         Each member of `plot_properties` will correspond to one of the plots.
+
         ==================  ============================================
-        plot_properties    description
+        plot_properties     description
         ==================  ============================================
-        por                 dict of prop to pass to pore pressure plot.
-        pors                dict of prop to pass to soil pore pressure plot.
-        porc                dict of prop to pass to column pore pressure plot.
-        avp                 dict of prop to pass to average overall pore
+        por                 dict of prop to pass to overall pore
                             pressure plot.
-        avps                dict of prop to pass to average
-                            soil pore pressure plot.
-        avpc                dict of prop to pass to average
-                            column pore pressure plot.
+        porc                dict of prop to pass to soil pore pressure
+                            plot.
+        pors                dict of prop to pass to average pore
+                            pressure plot.
+        avp                 dict of prop to pass to overall average
+                            pore pressure plot.
+        avps                dict of prop to pass to soil average
+                            pore pressure plot.
+        avpc                dict of prop to pass to c average
+                            pore pressure plot.
         set                 dict of prop to pass to settlement plot.
-        load                dict of prop to pass to pore pressure plot.
+        load                dict of prop to pass to loading plot.
         material            dict of prop to pass to materials plot.
-
         ==================  ============================================
-        see blah blah blah for what options can be specified in each plot dict.
-
-    save_data_to_file: True/False, optional
-        If True data will be saved to file.  Default=False
-    save_figures_to_file: True/False
-        If True then figures will be saved to file.  default=False
-    show_figures: True/False, optional
+        see geotecha.plotting.one_d.plot_vs_depth and
+        geotecha.plotting.one_d.plot_vs_time for options to specify in
+        each plot dict.
+    save_data_to_file : True/False, optional
+        If True data will be saved to file.  Default save_data_to_file=False
+    save_figures_to_file : True/False
+        If True then figures will be saved to file.
+        Default save_figures_to_file=False
+    show_figures : True/False, optional
         If True the after calculation figures will be shown on screen.
+        Default show_figures=False.
     directory : string, optional
-        path to directory where files should be stored.  Default = None which
+        Path to directory where files should be stored.
+        Default directory=None which
         will use the current working directory.  Note if you keep getting
         directory does not exist errors then try putting an r before the
         string definition. i.e. directory = r'C:\\Users\\...'
     overwrite : True/False, optional
-        If True then exisitng files will be overwritten. default=False.
+        If True then existing files will be overwritten.
+        Default overwrite=False.
     prefix : string, optional
-         filename prefix for all output files default = 'out'
-
-    create_directory: True/Fase, optional
-        If True a new sub-folder named `file_stem` will contain the output
-        files. default=True
-    data_ext: string, optional
-        file extension for data files. default = '.csv'
-    input_ext: string, optional
-        file extension for original and parsed input files. default = ".py"
-    figure_ext: string, optional
-        file extension for figures, default = ".eps".  can be any valid
-        matplotlib option for savefig.
-
-    title: str, optional
+         Filename prefix for all output files.  Default prefix= 'out'
+    create_directory : True/Fase, optional
+        If True a new sub-folder with name based on  `prefix` and an
+        incremented number will contain the output
+        files. Default create_directory=True.
+    data_ext : string, optional
+        File extension for data files. Default data_ext='.csv'
+    input_ext : string, optional
+        File extension for original and parsed input files. default = ".py"
+    figure_ext : string, optional
+        File extension for figures.  Can be any valid matplotlib option for
+        savefig. Default figure_ext=".eps". Others include 'pdf', 'png'.
+    title : str, optional
         A title for the input file.  This will appear at the top of data files.
-        Default = None, i.e. no title
-    author: str, optional
-        author of analysis. default= unknown
+        Default title=None, i.e. no title.
+    author : str, optional
+        Author of analysis. Default author='unknown'.
+
+
+    Attributes
+    ----------
+    por, porc, pors : ndarray, only present if ppress_z is input
+        Calculated pore pressure at depths corresponding to `ppress_z` and
+        times corresponding to `tvals`.  This is an output array of
+        size (len(ppress_z), len(tvals[ppress_z_tval_indexes])).
+    avp, avpc, avps : ndarray, only present if avg_ppress_z_pairs is input
+        Calculated average pore pressure between depths corresponding to
+        `avg_ppress_z_pairs` and times corresponding to `tvals`.  This is an
+        output array of size
+        (len(avg_ppress_z_pairs), len(tvals[avg_ppress_z_pairs_tval_indexes])).
+    set : ndarray, only present if settlement_z_pairs is input
+        Settlement between depths corresponding to `settlement_z_pairs` and
+        times corresponding to `tvals`.  This is an output array of size
+        (len(avg_ppress_z_pairs), len(tvals[settlement_z_pairs_tval_indexes]))
+
 
     Notes
     -----
-    #TODO: explain lists of input must have same len.
-    governing equation:
+    **Gotchas**
+
+    All the loading terms e.g. surcharge_vs_time, surcharge_vs_depth,
+    surcharge_omega_phase can be either a single value or a list of values.
+    The corresponding lists that define a load must have the same length
+    e.g. if specifying multiple surcharge loads then surcharge_vs_time and
+    surcharge_vs_depth must be lists of the same length such that
+    surcharge_vs_time[0] can be paired with surcharge_vs_depth[0],
+    surcharge_vs_time[1] can be paired with surcharge_vs_depth[1], etc.
+
+    **Material and geometric properties**
+
+     - :math:`k_v` is vertical soil permeability.
+     - :math:`k_h` is horizontal soilpermeability.
+     - :math:`k_{vc}` is vertical permeability in column.
+     - :math:`k_{hc}` is horizontal permeability in column.
+     - :math:`m_s` is the volume compressibility in the soil.
+     - :math:`m_c` is the volume compressibility in the column.
+     - :math:`m_v` is lumped volume compressibility.
+       :math:`m_v=m_s/(1+\\alpha(Y-1))`.  Stiffness ratio
+       :math:`Y=m_s/m_c=E_c/E_s`. Also :math:`\\alpha=1/n^2`.
+     - :math:`\\eta` is the radial drainage parameter
+       :math:`\\eta = \\frac{2}{r_e^2 \\mu}`.
+     - :math:`r_e` is influence radius of drain.
+     - :math:`r_w` is drain radius.
+     - :math:`n=r_e/r_w` is ratio of influence radius to drain radius.
+     - :math:`\\mu` is any of the smear zone geometry parameters dependent
+       on the distribution of permeabilit in the smear zone (see
+       geotecha.consolidation.smear_zones).
+     - :math:`\\gamma_w` is the unit weight of water.
+     - :math:`Z` is the nomalised depth (:math:`Z=z/H`).
+     - :math:`H` is the total height of the soil profile.
+
+
+    **Governing equation**
+    Radially averaged soil and column pore pressures, :math:`u_s`,
+    :math:`u_c` are related to the overall average pore pressure, :math:`u`
+    by:
+
+    .. math::
+        u=\\left({1-\\alpha}\\right)u_s + \\alpha u_c
+
+    where :math:`\\alpha=1-n^2=1-\\left({r_e/r_w}\\right)`. Equal strain in the
+    soil and column requires:
+
+    .. math::
+        \\frac{\\varepsilon}{m_{vref}}=
+            \\overline{m}_v \\left[{\\sigma
+                                    -\\left({1-\\alpha}\\right)u_s
+                                    -\\alpha u_c}\\right]
+
+    Continuity of flow in the soil, column, and across the soil-column
+    boundary respectively requires:
+
+    .. math::
+        \\frac{\\dot{\\varepsilon}}{m_{vref}}=
+            dT_h\\overline{k}_h\\overline{\\eta}\\left({u_s-\\beta}\\right)
+            - dT_v\\left({\\overline{k}_v u_s,_Z}\\right),_Z
+
+
+    .. math::
+        \\frac{\\dot{\\varepsilon}}{m_{vref}}=
+            dT_{hc}\\overline{k}_{hc}\\left({u_c-\\beta}\\right)
+            - dT_{vc}\\left({\\overline{k}_{vc} u_c,_Z}\\right),_Z
+
+    .. math::
+        \\frac{\\dot{\\varepsilon}}{m_{vref}}=
+            \\left({1 - \\alpha}\\right) dT_v\\left({\\overline{k}_v u,_Z}\\right),_Z
+            - \\alpha dT_{vc}\\left({\\overline{k}_{vc} u_c,_Z}\\right),_Z
+
+    Each pore pressure value is a function of normalised depth
+    :math:`Z` and time :math:`t`.  :math:`\\beta` is the pore pressure at the
+    soil/column interface at a particular depth.
+
+
+    where
+
+    .. math::
+        dT_v = \\frac{k_{v\\textrm{ref}}}
+                     {H^2 m_{v\\textrm{ref}} \\gamma_w}
+    .. math::
+        dT_{vc} = \\frac{k_{vc\\textrm{ref}}}
+                     {H^2 m_{v\\textrm{ref}} \\gamma_w}
+
+    .. math::
+        dT_{hc} = \\frac{8 k_{hc\\textrm{ref}}}
+                     {m_{v\\textrm{ref}} \\gamma_w r_c^2}
+
+    .. math::
+        dT_h = \\frac{k_{h\\textrm{ref}} \\eta_{\\textrm{ref}}}
+                     {m_{v\\textrm{ref}} \\gamma_w}
+
+    .. math:: \\eta = \\frac{2}{r_e^2 \\mu}
+
+
+    :math:`\\mu` is any of the smear zone geometry parameters dependent on
+    the distribution of permeabilit in the smear zone (see
+    geotecha.consolidation.smear_zones).
+
+
+    The overline notation represents a depth dependent property normalised
+    by the relevant reference property. e.g.
+    :math:`\\overline{k}_v = k_v\\left({z}\\right) / k_{v\\textrm{ref}}`.
+
+    A comma followed by a subscript represents differentiation with respect to
+    the subscripted variable e.g.
+    :math:`u,_Z = u\\left({Z,t}\\right) / \\partial Z`.
+
+
+
+    **Non-zero Boundary conditions**
+
+    The following two sorts of boundary conditions (identical in in both the
+    soil and column) can be modelled:
+
+    .. math::
+        \\left.u\\left({Z,t}\\right)\\right|_{Z=0} = u^{\\textrm{top}}\\left({t}\\right)
+        \\textrm{ and }
+        \\left.u\\left({Z,t}\\right)\\right|_{Z=1} = u^{\\textrm{bot}}\\left({t}\\right)
+
+
+    .. math::
+        \\left.u\\left({Z,t}\\right)\\right|_{Z=0} = u^{\\textrm{top}}\\left({t}\\right)
+        \\textrm{ and }
+        \\left.u\\left({Z,t}\\right),_Z\\right|_{Z=1} = u^{\\textrm{bot}}\\left({t}\\right)
+
+
+    The boundary conditions are incorporated by homogenising the governing
+    equation with the following substitution (same process for the column and
+    beta):
+
+    .. math::
+        u\\left({Z,t}\\right)
+        = \\hat{u}\\left({Z,t}\\right) + u_b\\left({Z,t}\\right)
+
+    where for the two types of non zero boundary boundary conditions:
+
+    .. math::
+        u_b\\left({Z,t}\\right)
+        = u^{\\textrm{top}}\\left({t}\\right) \\left({1-Z}\\right)
+        + u^{\\textrm{bot}}\\left({t}\\right) Z
+
+    .. math::
+        u_b\\left({Z,t}\\right)
+        = u^{\\textrm{top}}\\left({t}\\right)
+        + u^{\\textrm{bot}}\\left({t}\\right) Z
+
+    **Time and depth dependence of loads/material properties**
+
+    Soil properties do not vary with time.
+
+
+    Loads are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=
+                \\sigma\\left({Z}\\right)
+                \\sigma\\left({t}\\right)
+                \\cos\\left(\\omega t + \\phi\\right)
+
+    :math:`\\sigma\\left(t\\right)` is a piecewise linear function of time
+    that within the kth loading stage is defined by the load magnitude at
+    the start and end of the stage:
+
+    .. math::
+        \\sigma\\left(t\\right)
+        = \\sigma_k^{\\textrm{start}}
+        + \\frac{\\sigma_k^{\\textrm{end}}
+                 - \\sigma_k^{\\textrm{start}}}
+                {t_k^{\\textrm{end}}
+                 - t_k^{\\textrm{start}}}
+        \\left(t - t_k^{\\textrm{start}}\\right)
+
+    The depth dependence of loads and material property
+    :math:`a\\left(Z\\right)` is a piecewise linear function
+    with respect to :math:`Z`, that within a layer are defined by:
+
+    .. math::
+        a\\left(z\\right)
+        = a_t + \\frac{a_b - a_t}{z_b - z_t}\\left(z - z_t\\right)
+
+    with :math:`t` and :math:`b` subscripts representing 'top' and 'bottom' of
+    each layer respectively.
 
 
 
     References
     ----------
-    Work is extensions of Dr Rohan Walker [1]_, [2]_, [3]_, [4]_
+    The genesis of this work is from research carried out by
+    Dr. Rohan Walker, Prof. Buddhima Indraratna and others
+    at the University of Wollongong, NSW, Austrlia, [1]_, [2]_, [3]_, [4]_.
 
-    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW, Australia: University of Wollongong.
-    .. [2] Walker, R., and B. Indraratna. 2009. 'Consolidation Analysis of a Stratified Soil with Vertical and Horizontal Drainage Using the Spectral Method'. Geotechnique 59 (5) (January): 439-449. doi:10.1680/geot.2007.00019.
-    .. [3] Walker, Rohan, Buddhima Indraratna, and Nagaratnam Sivakugan. 2009. 'Vertical and Radial Consolidation Analysis of Multilayered Soil Using the Spectral Method'. Journal of Geotechnical and Geoenvironmental Engineering 135 (5) (May): 657-663. doi:10.1061/(ASCE)GT.1943-5606.0000075.
-    .. [4] Walker, Rohan T. 2011. Vertical Drain Consolidation Analysis in One, Two and Three Dimensions'. Computers and Geotechnics 38 (8) (December): 1069-1077. doi:10.1016/j.compgeo.2011.07.006.
+    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft
+           Soil Consolidation by Vertical Drains'. PhD Thesis, Wollongong,
+           NSW, Australia: University of Wollongong.
+    .. [2] Walker, R., and B. Indraratna. 2009. 'Consolidation Analysis of
+           a Stratified Soil with Vertical and Horizontal Drainage Using the
+           Spectral Method'. Geotechnique 59 (5) (January): 439-449.
+           doi:10.1680/geot.2007.00019.
+    .. [3] Walker, Rohan, Buddhima Indraratna, and Nagaratnam Sivakugan. 2009.
+           'Vertical and Radial Consolidation Analysis of Multilayered
+           Soil Using the Spectral Method'. Journal of Geotechnical and
+           Geoenvironmental Engineering 135 (5) (May): 657-663.
+           doi:10.1061/(ASCE)GT.1943-5606.0000075.
+    .. [4] Walker, Rohan T. 2011. Vertical Drain Consolidation Analysis
+           in One, Two and Three Dimensions'. Computers and
+           Geotechnics 38 (8) (December): 1069-1077.
+           doi:10.1016/j.compgeo.2011.07.006.
 
     """
 
@@ -322,9 +531,8 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             'ppress_z avg_ppress_z_pairs settlement_z_pairs tvals '
             'implementation ppress_z_tval_indexes '
             'avg_ppress_z_pairs_tval_indexes settlement_z_pairs_tval_indexes '
-            'fixed_ppress surcharge_omega_phase '
-            'fixed_ppress_omega_phase top_omega_phase bot_omega_phase '
-            'pumping pumping_omega_phase '
+            'surcharge_omega_phase '
+            'top_omega_phase bot_omega_phase '
             'RLzero '
             'prefix '
 
@@ -344,9 +552,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         self._attributes_that_should_be_lists= (
             'surcharge_vs_depth surcharge_vs_time surcharge_omega_phase '
             'top_vs_time top_omega_phase '
-            'bot_vs_time bot_omega_phase '
-            'fixed_ppress fixed_ppress_omega_phase '
-            'pumping pumping_omega_phase').split()
+            'bot_vs_time bot_omega_phase ').split()
 
         self._attributes_that_should_have_same_x_limits = [
             'mv kv kh kvc khc et surcharge_vs_depth'.split()]
@@ -355,16 +561,12 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             'surcharge_vs_depth surcharge_vs_time'.split(),
             'surcharge_vs_time surcharge_omega_phase'.split(),
             'top_vs_time top_omega_phase'.split(),
-            'bot_vs_time bot_omega_phase'.split(),
-            'fixed_ppress_omega_phase fixed_ppress'.split(),
-            'pumping pumping_omega_phase'.split()]
+            'bot_vs_time bot_omega_phase'.split()]
 
         self._attributes_to_force_same_len = [
             "surcharge_vs_time surcharge_omega_phase".split(),
-            "fixed_ppress fixed_ppress_omega_phase".split(),
             "top_vs_time top_omega_phase".split(),
-            "bot_vs_time bot_omega_phase".split(),
-            "pumping pumping_omega_phase".split()]
+            "bot_vs_time bot_omega_phase".split()]
 
         self._zero_or_all = [
             'dTv kv'.split(),
@@ -378,17 +580,15 @@ class Speccon1dVRC(speccon1d.Speccon1d):
             ['mv'],
             ['n'],
             ('surcharge_vs_time top_vs_time '
-                'bot_vs_time fixed_ppress pumping').split(),
+                'bot_vs_time').split(),
             ['tvals'],
             'ppress_z avg_ppress_z_pairs settlement_z_pairs'.split()]
 
         self._one_implies_others = [
             ('surcharge_omega_phase surcharge_vs_depth '
                 'surcharge_vs_time').split(),
-            'fixed_ppress_omega_phase fixed_ppress'.split(),
             'top_omega_phase top_vs_time'.split(),
             'bot_omega_phase bot_vs_time'.split(),
-            'pumping_omega_phase pumping'.split(),
             'dTh kh et'.split(),
             'dThc khc'.split(),
             'dTvc kvc et'.split(),
@@ -425,10 +625,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         self.top_omega_phase = None
         self.bot_vs_time = None
         self.bot_omega_phase = None
-        self.fixed_ppress_omega_phase = None
-        self.fixed_ppress = None
-        self.pumping = None
-        self.pumping_omega_phase=None
+
 
         self.ppress_z = None
         self.avg_ppress_z_pairs = None
