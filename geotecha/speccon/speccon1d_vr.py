@@ -43,6 +43,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
 
     Features:
 
+     - Multiple layers.
      - Vertical and radial drainage in a unit cell.
        (radial drainage uses the eta method).
      - Material properties that are constant in time but piecewsie linear with
@@ -143,9 +144,9 @@ class Speccon1dVR(speccon1d.Speccon1d):
     surcharge_vs_time : list of Polyline, optional
         Surcharge magnitude variation with time. PolyLine(time, magnitude).
     surcharge_omega_phase : list of 2 element tuples, optional
-        (omega, phase) to define cyclic variation of surcharve. i.e.
+        (omega, phase) to define cyclic variation of surcharge. i.e.
         mag_vs_time * cos(omega*t + phase). If surcharge_omega_phase is None
-        then cyclic componenet will be ignored.  If surcharge_omega_phase is a
+        then cyclic component will be ignored.  If surcharge_omega_phase is a
         list then if any member is None then cyclic component will not be
         applied for that load combo.
     vacuum_vs_depth : list of Polyline, optinal
@@ -155,7 +156,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
     vacuum_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of vacuum. i.e.
         mag_vs_time * cos(omega*t + phase). If vacuum_omega_phase is None
-        then cyclic componenet will be ignored.  If vacuum_omega_phase is a
+        then cyclic component will be ignored.  If vacuum_omega_phase is a
         list then if any member is None then cyclic component will not be
         applied for that load combo.
     top_vs_time : list of Polyline, optional
@@ -163,7 +164,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
     top_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of top BC. i.e.
         mag_vs_time * cos(omega*t + phase). If top_omega_phase is None
-        then cyclic componenet will be ignored.  If top_omega_phase is a
+        then cyclic component will be ignored.  If top_omega_phase is a
         list then if any member is None then cyclic component will not be
         applied for that load combo.
     bot_vs_time : list of Polyline, optional
@@ -174,10 +175,10 @@ class Speccon1dVR(speccon1d.Speccon1d):
     bot_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of bot BC. i.e.
         mag_vs_time * cos(omega*t + phase). If bot_omega_phase is None
-        then cyclic componenet will be ignored.  If bot_omega_phase is a
+        then cyclic component will be ignored.  If bot_omega_phase is a
         list then if any member is None then cyclic component will not be
         applied for that load combo.
-    fixed_ppress: list of 3 element tuple, optional
+    fixed_ppress : list of 3 element tuple, optional
         (zfixed, pseudo_k, PolyLine(time, magnitude)).  zfixed is the
         normalised z at which pore pressure is fixed. pseudo_k is a
         permeability-like coefficient that controls how quickly the pore
@@ -188,10 +189,10 @@ class Speccon1dVR(speccon1d.Speccon1d):
     fixed_ppress_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of fixed ppress. i.e.
         mag_vs_time * cos(omega*t + phase). If fixed_ppress _omega_phase is
-        None then cyclic componenet will be ignored.  If
+        None then cyclic component will be ignored.  If
         fixed_ppress_omega_phase is a list then if any member is None then
         cyclic component will not be applied for that load combo.
-    pumping: list of 2 element tuple
+    pumping : list of 2 element tuple
         (zpump, mag_vs_time).  `zpump` is the normalised
         z at which pumping takes place. The mag_vs_time polyline should be
         the actual pumping velocity.  Within the program the actual pumping
@@ -201,7 +202,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
     pumping_omega_phase : list of 2 element tuples, optional
         (omega, phase) to define cyclic variation of pumping velocity. i.e.
         mag_vs_time * cos(omega*t + phase). If pumping_omega_phase is
-        None then cyclic componenet will be ignored.  If pumping_omega_phase is
+        None then cyclic component will be ignored.  If pumping_omega_phase is
         a list then if any member is None then cyclic component will not be
         applied for that load combo.
     ppress_z : list_like of float, optional
@@ -214,17 +215,17 @@ class Speccon1dVR(speccon1d.Speccon1d):
         e.g. surface settlement would be [[0, 1]].
     tvals : list of float
         Times to calculate output at.
-    ppress_z_tval_indexes: list/array of int, slice, optional
+    ppress_z_tval_indexes : list/array of int, slice, optional
         Indexes of `tvals` at which to calculate ppress_z. i.e. only calculate
         ppress_z at a subset of the `tvals` values.
         Default ppress_z_tval_indexes=slice(None, None) i.e. use all the
         `tvals`.
-    avg_ppress_z_pairs_tval_indexes: list/array of int, slice, optional
+    avg_ppress_z_pairs_tval_indexes : list/array of int, slice, optional
         Indexes of `tvals` at which to calculate avg_ppress_z_pairs.
         i.e. only calc avg_ppress_z_pairs at a subset of the `tvals` values.
         Default avg_ppress_z_pairs_tval_indexes=slice(None, None) i.e. use
         all the `tvals`.
-    settlement_z_pairs_tval_indexes: list/array of int, slice, optional
+    settlement_z_pairs_tval_indexes : list/array of int, slice, optional
         Indexes of `tvals` at which to calculate settlement_z_pairs.
         i.e. only calc settlement_z_pairs at a subset of the `tvals` values.
         Default settlement_z_pairs_tval_indexes=slice(None, None) i.e. use
@@ -234,7 +235,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
         python loops (slowest), 'vectorized' = numpy (fast), 'fortran' =
         fortran extension (fastest).  Note only some functions have multiple
         implementations.
-    RLzero: float, optional
+    RLzero : float, optional
         reduced level of the top of the soil layer.  If RLzero is not None
         then all depths (in plots and results) will be transformed to an RL
         by RL = RLzero - z*H.  If RLzero is None (i.e. the default) then all
@@ -318,7 +319,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
     surcharge_omega_phase can be either a single value or a list of values.
     The corresponding lists that define a load must have the same length
     e.g. if specifying multiple surcharge loads then surcharge_vs_time and
-    surcharge_vs_depth must be lists of the smae length such that
+    surcharge_vs_depth must be lists of the same length such that
     surcharge_vs_time[0] can be paired with surcharge_vs_depth[0],
     surcharge_vs_time[1] can be paired with surcharge_vs_depth[1], etc.
 
@@ -357,7 +358,7 @@ class Speccon1dVR(speccon1d.Speccon1d):
 
     .. math::
         dT_v = \\frac{k_{v\\textrm{ref}}}
-                     {m_{v\\textrm{ref}} \\gamma_w}
+                     {H^2 m_{v\\textrm{ref}} \\gamma_w}
 
     .. math::
         dT_h = \\frac{k_{h\\textrm{ref}} \\eta_{\\textrm{ref}}}
@@ -462,7 +463,9 @@ class Speccon1dVR(speccon1d.Speccon1d):
 
     References
     ----------
-    All based on work by Dr Rohan Walker [1]_, [2]_, [3]_, [4]_
+    The genesis of this work is from research carried out by
+    Dr. Rohan Walker, Prof. Buddhima Indraratna and others
+    at the University of Wollongong, NSW, Austrlia, [1]_, [2]_, [3]_, [4]_.
 
     .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft
            Soil Consolidation by Vertical Drains'. PhD Thesis, Wollongong,
