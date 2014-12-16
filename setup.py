@@ -160,6 +160,7 @@ ENTRY_POINTS = {
             'speccon1d_vr = geotecha.speccon.speccon1d_vr:main',
             'speccon1d_vrw = geotecha.speccon.speccon1d_vrw:main',
             'speccon1d_vrc = geotecha.speccon.speccon1d_vrc:main',
+            'speccon1d_unsat = geotecha.speccon.speccon1d_unsat:main',
             'nogamiandli2003 = geotecha.consolidation.nogamiandli2003:main',
             'schiffmanandstein1970 = '
                     'geotecha.consolidation.schiffmanandstein1970:main'
