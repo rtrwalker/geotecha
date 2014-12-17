@@ -45,7 +45,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
      - Multiple layers.
      - Vertical and radial drainage in a unit cell.
        (radial drainage uses the eta method).
-     - Finite permeability in the drain i.e. well resistanc
+     - Finite permeability in the drain i.e. well resistance
      - Material properties that are constant in time but piecewsie linear with
        depth (including drain permeability).
      - Surcharge loading (vacuum loading is via specifying non-zero negative
@@ -213,7 +213,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         Nomalised zs to calculate average pore pressure between
         e.g. average of all profile is [[0,1]].
     settlement_z_pairs : list of two element list of float, optional
-        normalised depths to calculate normalised settlement between.
+        Normalised depths to calculate normalised settlement between.
         e.g. surface settlement would be [[0, 1]].
     tvals : list of float
         Times to calculate output at.
@@ -233,17 +233,17 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         Default settlement_z_pairs_tval_indexes=slice(None, None) i.e. use
         all the `tvals`.
     implementation : ['scalar', 'vectorized','fortran'], optional
-        where possible use the `implementation`, implementation.  'scalar'=
+        Where possible use the stated implementation type.  'scalar'=
         python loops (slowest), 'vectorized' = numpy (fast), 'fortran' =
         fortran extension (fastest).  Note only some functions have multiple
         implementations.
     RLzero : float, optional
-        reduced level of the top of the soil layer.  If RLzero is not None
+        Reduced level of the top of the soil layer.  If RLzero is not None
         then all depths (in plots and results) will be transformed to an RL
         by RL = RLzero - z*H.  If RLzero is None (i.e. the default) then all
         depths will be reported  z*H (i.e. positive numbers).
     plot_properties : dict of dict, optional
-        dictionary that overrides some of the plot properties.
+        Dictionary that overrides some of the plot properties.
         Each member of `plot_properties` will correspond to one of the plots.
 
         ==================  ============================================
@@ -1399,6 +1399,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
 
 
 def main():
+    """Run speccon1d_vrw as a script"""
     a = GenericInputFileArgParser(obj=Speccon1dVRW,
                                   methods=[('make_all', [], {})],
                                  pass_open_file=True)
