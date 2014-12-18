@@ -34,5 +34,4 @@ LICENSE_header.txt
 install.record
 
 #symlink docs speccon examples file
-/docs/speccon_examples/
-/dist/
+/docs/speccon_examples
