@@ -133,7 +133,10 @@ DATA_FILES = [(NAME, ['LICENSE.txt','README.rst'])]
 PACKAGES=setuptools.find_packages()
 PACKAGES.remove('tools')
 
-PACKAGE_DATA={'': ['*.f95','*f90'],} #'geotecha.plotting.test': ['geotecha\\plotting\\test\\baseline_images\\test_one_d\\spines_axes_positions.png'] }
+PACKAGE_DATA={
+              '': ['*.f95','*.f90'],
+              'geotecha.speccon': ['examples\\1d_vr\\*.py'],}
+#              '': ['*.txt']} #'geotecha.plotting.test': ['geotecha\\plotting\\test\\baseline_images\\test_one_d\\spines_axes_positions.png'] }
 ext_files = get_package_data(NAME,['.f90', '.f95','.F90', '.F95'])
 ext_module_names = ['.'.join(osp.splitext(v)[0].split(osp.sep)) for v in ext_files]
 EXT_MODULES = [Extension(name=x,sources=[y]) for x, y in zip(ext_module_names, ext_files)]
