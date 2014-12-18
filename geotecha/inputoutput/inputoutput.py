@@ -1179,6 +1179,7 @@ class InputFileLoaderCheckerSaver(object):
         self._debug = False
         self._setup()
 
+        self.pkg_for_version = pkg_for_version
         if hasattr(self, '_attributes'):
             self._initialize_attributes()
 
