@@ -1278,14 +1278,14 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 
 
     fig_prop = copy_dict({'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples))},
-                          prop_dict.pop('fig_prop', {}))
-#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples)) })
+                          prop_dict.get('fig_prop', {}))
+#    fig_prop = prop_dict.get('fig_prop', {'figsize':(18/2.54, (18/1.61/2.54)/ 2.8 *len(load_triples)) })
     legend_prop = copy_dict({'title': 'Load:', 'fontsize': 9},
-                            prop_dict.pop('legend_prop',{}))
-#    legend_prop = prop_dict.pop('legend_prop',
+                            prop_dict.get('legend_prop',{}))
+#    legend_prop = prop_dict.get('legend_prop',
 #                               {'title': 'Load:', 'fontsize': 9})
 
-    styles = prop_dict.pop('styles', None)
+    styles = prop_dict.get('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
@@ -1298,9 +1298,9 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
     else:
         styles = itertools.cycle(styles)
 
-    has_legend = prop_dict.pop('has_legend', True)
-    xlabel1 = prop_dict.pop('time_axis_label', 'Time')
-    xlabel2 = prop_dict.pop('depth_axis_label', 'Load factor')
+    has_legend = prop_dict.get('has_legend', True)
+    xlabel1 = prop_dict.get('time_axis_label', 'Time')
+    xlabel2 = prop_dict.get('depth_axis_label', 'Load factor')
     n = len(load_triples)
 
     gs = mpl.gridspec.GridSpec(n,2, width_ratios=[5,1])
@@ -1441,9 +1441,9 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
 
         if RLzero is None:
             ax2[-1].invert_yaxis()
-            ylabel = prop_dict.pop('depth_axis_label', 'Depth, z')
+            ylabel = prop_dict.get('depth_axis_label', 'Depth, z')
         else:
-            ylabel = prop_dict.pop('depth_axis_label', 'RL')
+            ylabel = prop_dict.get('depth_axis_label', 'RL')
 
         ax2[-1].set_ylabel(ylabel)
         ax2[-1].set_xlim((0,1.01))
@@ -1511,17 +1511,17 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     """
 
     fig_prop = copy_dict({'figsize':(18/2.54, 18/1.61/2.54)},
-                          prop_dict.pop('fig_prop', {}))
+                          prop_dict.get('fig_prop', {}))
 
-#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+#    fig_prop = prop_dict.get('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
 
     legend_prop = copy_dict({'title': 'Depth interval:', 'fontsize': 9},
-                            prop_dict.pop('legend_prop',{}))
+                            prop_dict.get('legend_prop',{}))
 
-#    legend_prop = prop_dict.pop('legend_prop',
+#    legend_prop = prop_dict.get('legend_prop',
 #                               {'title': 'Depth interval:', 'fontsize': 9})
 
-    styles = prop_dict.pop('styles', None)
+    styles = prop_dict.get('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
@@ -1544,9 +1544,9 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
     fig = plt.figure(**fig_prop)
     plt.plot(t, y)
 
-    xlabel = prop_dict.pop('xlabel', 'Time, t')
+    xlabel = prop_dict.get('xlabel', 'Time, t')
     plt.xlabel(xlabel)
-    ylabel = prop_dict.pop('ylabel', 'y')
+    ylabel = prop_dict.get('ylabel', 'y')
     plt.ylabel(ylabel)
 
     #apply style to each line
@@ -1569,7 +1569,7 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
         labels = [{'label': v} for v in line_labels]
         [apply_dict_to_object(line, d)
             for line, d in zip(fig.gca().get_lines(), labels)]
-        has_legend = prop_dict.pop('has_legend', True)
+        has_legend = prop_dict.get('has_legend', True)
     else:
         has_legend=False
 
@@ -1638,11 +1638,11 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
     n = len(z_x)
 
     fig_prop = copy_dict({'figsize':(2 * n, 18/1.61/2.54)},
-                          prop_dict.pop('fig_prop', {}))
+                          prop_dict.get('fig_prop', {}))
 
-#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(2 * n, 18/1.61/2.54)})
+#    fig_prop = prop_dict.get('fig_prop', {'figsize':(2 * n, 18/1.61/2.54)})
 
-    styles = prop_dict.pop('styles', None)
+    styles = prop_dict.get('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
@@ -1720,9 +1720,9 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
 
     if RLzero is None:
         plt.gca().invert_yaxis()
-        ylabel = prop_dict.pop('ylabel', 'Depth, z')
+        ylabel = prop_dict.get('ylabel', 'Depth, z')
     else:
-        ylabel = prop_dict.pop('ylabel', 'RL')
+        ylabel = prop_dict.get('ylabel', 'RL')
     ax1[0].set_ylabel(ylabel)
     #ax1[-1].yaxis.set_ticklabels([])
 
@@ -1872,16 +1872,16 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
     """
 
     fig_prop = copy_dict({'figsize':(18/2.54, 18/1.61/2.54)},
-                          prop_dict.pop('fig_prop', {}))
+                          prop_dict.get('fig_prop', {}))
 
-#    fig_prop = prop_dict.pop('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
+#    fig_prop = prop_dict.get('fig_prop', {'figsize':(18/2.54, 18/1.61/2.54)})
 
     legend_prop = copy_dict({'title': 'time:', 'fontsize': 9},
-                            prop_dict.pop('legend_prop', {}))
-#    legend_prop = prop_dict.pop('legend_prop',
+                            prop_dict.get('legend_prop', {}))
+#    legend_prop = prop_dict.get('legend_prop',
 #                               {'title': 'time:', 'fontsize': 9})
 
-    styles = prop_dict.pop('styles', None)
+    styles = prop_dict.get('styles', None)
     if styles is None:
         mcd = MarkersDashesColors(
             #color = 'black',
@@ -1901,14 +1901,14 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
     fig = plt.figure(**fig_prop)
     plt.plot(x, z)
 
-    xlabel = prop_dict.pop('xlabel', 'x')
+    xlabel = prop_dict.get('xlabel', 'x')
     plt.xlabel(xlabel)
 
     if RLzero is None:
         plt.gca().invert_yaxis()
-        ylabel = prop_dict.pop('ylabel', 'Depth, z')
+        ylabel = prop_dict.get('ylabel', 'Depth, z')
     else:
-        ylabel = prop_dict.pop('ylabel', 'RL')
+        ylabel = prop_dict.get('ylabel', 'RL')
 
     plt.ylabel(ylabel)
 
@@ -1940,14 +1940,14 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
         labels = [{'label': v} for v in line_labels]
         [apply_dict_to_object(line, d)
             for line, d in zip(fig.gca().get_lines(), labels)]
-        has_legend = prop_dict.pop('has_legend', True)
+        has_legend = prop_dict.get('has_legend', True)
     else:
         has_legend=False
 
 #    [apply_dict_to_object(line, d)
 #        for line, d in zip(fig.gca().get_lines(), line_labels)]
 #
-#    has_legend = prop_dict.pop('has_legend', True)
+#    has_legend = prop_dict.get('has_legend', True)
 
     if has_legend:
         leg = fig.gca().legend(**legend_prop)
