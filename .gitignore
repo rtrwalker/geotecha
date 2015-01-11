@@ -33,5 +33,5 @@ LICENSE_header.txt
 # record of installation files
 install.record
 
-#symlink docs speccon examples file
-/docs/speccon_examples
+#symlink docs geotecha_examples file
+/docs/geotecha_examples/

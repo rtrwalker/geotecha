@@ -122,9 +122,10 @@ INSTALL_REQUIRES=[
     "numpy>=1.8",
     "matplotlib>=1.3",
     "scipy>=0.13.3",
-    "sympy>=0.2.7",#note my speccon integrals only work on sympy<=0.2.7.
+    "sympy>=0.2.7",
     "brewer2mpl",
-    "testfixtures"]
+    "testfixtures",
+    "pandas"]
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
@@ -134,8 +135,9 @@ PACKAGES=setuptools.find_packages()
 PACKAGES.remove('tools')
 
 PACKAGE_DATA={
-              '': ['*.f95','*.f90'],
-              'geotecha.speccon': ['examples\\1d_vr\\*.py'],}
+              '': ['*.f95','*.f90'],}
+#              '..\\examples': ['*.py'],}
+#              'geotecha.speccon': ['examples\\1d_vr\\*.py'],}
 #              '': ['*.txt']} #'geotecha.plotting.test': ['geotecha\\plotting\\test\\baseline_images\\test_one_d\\spines_axes_positions.png'] }
 ext_files = get_package_data(NAME,['.f90', '.f95','.F90', '.F95'])
 ext_module_names = ['.'.join(osp.splitext(v)[0].split(osp.sep)) for v in ext_files]

@@ -85,7 +85,7 @@ Create a text file containing the text below.  Locate and run the
 speccon1d_vr.exe file.  Choose the just created input file.  A folder of
 output should be created in the same directory as the input file.
 
-.. literalinclude:: speccon_examples\1d_vr\example_1d_vr_001_schiffmanandstein1970.py
+.. literalinclude:: ..\geotecha_examples\speccon\1d_vr\example_1d_vr_001_schiffmanandstein1970.py
    :language: python
 
 
@@ -101,7 +101,7 @@ Put the following in a .py file and run it with python.  A figure with
 three subplots should appear.
 
 
-.. plot:: speccon\speccon_examples\1d_vr\example_1d_vr_001a_schiffmanandstein1970.py
+.. plot:: geotecha_examples\speccon\1d_vr\example_1d_vr_001a_schiffmanandstein1970.py
    :include-source:
 
 
@@ -112,7 +112,7 @@ Put the following in a .py file and run it with python.  A figure with
 three subplots should appear.
 
 
-.. plot:: speccon\speccon_examples\1d_vr\example_1d_vr_001b_schiffmanandstein1970.py
+.. plot:: geotecha_examples\speccon\1d_vr\example_1d_vr_001b_schiffmanandstein1970.py
    :include-source:
 
 

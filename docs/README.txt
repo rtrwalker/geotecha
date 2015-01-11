@@ -1,6 +1,6 @@
-Note the 'speccon_examples' 'folder' is a symlink that I created using:
+Note the 'geotecha_examples' 'folder' is a symlink that I created using:
 
-mklink /J "C:\Users\Rohan Walker\Documents\GitHub\geotecha\docs\speccon\speccon_examples\" "..\geotecha\speccon\examples\"
+mklink /J "C:\Users\Rohan Walker\Documents\GitHub\geotecha\docs\geotecha_examples\" "..\examples\"
 
 This is similar to matplotlib docs which uses a similar approach when refering to mpl_examples
 
