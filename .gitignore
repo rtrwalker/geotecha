@@ -14,9 +14,8 @@
 LICENSE_header.txt
 
 # docs build folders
-/docs/auto/
 /docs/_build/
-/docs/api/
+#/docs/api/
 
 
 #IPython Notebook files, save them as .py files and they will then be version controlled.
