@@ -1,0 +1,10 @@
+-----------------------------------------------------------------------
+2015-01-14 geotecha-0.1.1 Release.  This is the version that works on
+           Rohan's computer based on pythonxy-2.7.6.1.  I anticipate 
+           some missing requirements in setup.py.  Also I have used
+           'python setup.py build --compiler=mingw32' when building
+           the extensions etc.  I think later versions of pythonxy
+           do not have mingw so I'll adjust accordingly.
+
+-----------------------------------------------------------------------
+2013-05-01 Approximate start of geotecha project. Version 0.1.0.  

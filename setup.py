@@ -92,7 +92,7 @@ def get_folder(name, foldernames):
 
 DOCLINES = __doc__.split("\n")
 CLASSIFIERS = """\
-Development Status :: 1 - Planning
+Development Status :: 4 - Beta
 License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
 Programming Language :: Python :: 2.7
 Topic :: Scientific/Engineering :: Geotechnical Engineering
@@ -114,7 +114,7 @@ AUTHOR_EMAIL = "rtrwalker@gmail.com"
 PLATFORMS = ["Windows"]#, "Linux", "Solaris", "Mac OS-X", "Unix"]
 MAJOR = 0
 MINOR = 1
-MICRO = 0
+MICRO = 1
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -130,9 +130,9 @@ ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
 
-DATA_FILES = [(NAME, ['LICENSE.txt','README.rst'])]
+DATA_FILES = [(NAME, ['LICENSE.txt','README.rst', 'CHANGELOG.txt'])]
 PACKAGES=setuptools.find_packages()
-PACKAGES.remove('tools')
+#PACKAGES.remove('tools')
 
 PACKAGE_DATA={
               '': ['*.f95','*.f90'],}
