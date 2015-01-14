@@ -130,9 +130,9 @@ ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
 
-DATA_FILES = [(NAME, ['LICENSE.txt','README.rst'])]
+DATA_FILES = [(NAME, ['LICENSE.txt','README.rst', 'CHANGELOG.txt'])]
 PACKAGES=setuptools.find_packages()
-PACKAGES.remove('tools')
+#PACKAGES.remove('tools')
 
 PACKAGE_DATA={
               '': ['*.f95','*.f90'],}
