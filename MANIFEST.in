@@ -1,3 +1,0 @@
-include README.rst
-include LICENSE.txt
-global-include *.f95 *.f90 *.F90 *.F95
