@@ -1611,7 +1611,7 @@ def next_output_stem(prefix, path=None, start=1, inc=1, zfill=3,
         cwd = os.curdir
     else:
         if not os.path.isdir(path):
-            raise ValueError('folder does not exist: ' + cwd)
+            raise ValueError('folder does not exist: ' + path)
         cwd = path
 
 
