@@ -95,7 +95,6 @@ CLASSIFIERS = """\
 Development Status :: 4 - Beta
 License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
 Programming Language :: Python :: 2.7
-Topic :: Scientific/Engineering :: Geotechnical Engineering
 Topic :: Scientific/Engineering
 """
 
@@ -125,7 +124,9 @@ INSTALL_REQUIRES=[
     "sympy>=0.2.7",
     "brewer2mpl",
     "testfixtures",
-    "pandas"]
+    "pandas",
+    "pkg_resources",
+    "mpl_toolkits"]
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
