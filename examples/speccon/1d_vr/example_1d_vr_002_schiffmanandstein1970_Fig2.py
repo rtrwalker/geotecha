@@ -1,4 +1,4 @@
-# speccon example
+# speccon1d_vr example
 
 # Vertical consolidation of four soil layers
 # Figure 4 from:
