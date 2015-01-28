@@ -18,14 +18,17 @@ Speccon programs currently avialable in geotecha are:
  - **speccon1d_vr** - Multilayer consolidation with vertical drains.
   - See :class:`geotecha.speccon.speccon1d_vr.Speccon1dVR` for details and 
     input variables.
+
  - **speccon1d_vrw** - Multilayer consolidation with vertical drains
    including well resistance.
   - See :class:`geotecha.speccon.speccon1d_vrw.Speccon1dVRW` for details and 
     input variables.
+
  - **speccon1d_vrc** - Multilayer consolidation with stone columns 
    including vertical and radial drainage in the column.
   - See :class:`geotecha.speccon.speccon1d_vrc.Speccon1dVRC` for details and 
     input variables.
+
  - **speccon1d_unsat** - Multilayer consolidation of unsaturated soil.
   - See :class:`geotecha.speccon.speccon1d_unsat.Speccon1dUnsat` for details and 
     input variables.
