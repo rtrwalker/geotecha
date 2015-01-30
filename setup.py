@@ -125,8 +125,9 @@ INSTALL_REQUIRES=[
     "brewer2mpl",
     "testfixtures",
     "pandas",
-    "pkg_resources",
-    "mpl_toolkits"]
+#    "pkg_resources", #underscore in package name does not play nicely
+#    "mpl_toolkits",
+    ]
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
