@@ -17,6 +17,7 @@ Contents:
 
    api docs <api/geotecha.rst>
    speccon <speccon/speccon.rst>
+   examples <examples/index.rst>
 
 
 Indices and tables

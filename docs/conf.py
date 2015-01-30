@@ -45,7 +45,8 @@ extensions = [
     'ipython_console_highlighting',
 #    'inheritance_diagram',
     'numpydoc',
-    'gen_api_rst_files']
+    'gen_api_rst_files', # these are in sphinxext, but above I added it to path
+    'gen_examples_rst_files']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
