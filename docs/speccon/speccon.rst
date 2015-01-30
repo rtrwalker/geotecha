@@ -18,14 +18,17 @@ Speccon programs currently avialable in geotecha are:
  - **speccon1d_vr** - Multilayer consolidation with vertical drains.
   - See :class:`geotecha.speccon.speccon1d_vr.Speccon1dVR` for details and 
     input variables.
+
  - **speccon1d_vrw** - Multilayer consolidation with vertical drains
    including well resistance.
   - See :class:`geotecha.speccon.speccon1d_vrw.Speccon1dVRW` for details and 
     input variables.
+
  - **speccon1d_vrc** - Multilayer consolidation with stone columns 
    including vertical and radial drainage in the column.
   - See :class:`geotecha.speccon.speccon1d_vrc.Speccon1dVRC` for details and 
     input variables.
+
  - **speccon1d_unsat** - Multilayer consolidation of unsaturated soil.
   - See :class:`geotecha.speccon.speccon1d_unsat.Speccon1dUnsat` for details and 
     input variables.
@@ -76,6 +79,11 @@ of the docs.
 Examples
 --------
 
+Specific Examples can be found in the :ref:`examples-index` section.
+Further examples can be found by digging around in the testing 
+routines in the source code.
+
+
 Using speccon1d_vr below are three different ways to run a speccon 
 analysis.
 
@@ -85,7 +93,7 @@ Create a text file containing the text below.  Locate and run the
 speccon1d_vr.exe file.  Choose the just created input file.  A folder of
 output should be created in the same directory as the input file.
 
-.. literalinclude:: ..\geotecha_examples\speccon\1d_vr\example_1d_vr_001_schiffmanandstein1970.py
+.. literalinclude:: ..\geotecha_examples\speccon\example_1d_vr_001_schiffmanandstein1970.py
    :language: python
 
 
@@ -101,7 +109,7 @@ Put the following in a .py file and run it with python.  A figure with
 three subplots should appear.
 
 
-.. plot:: geotecha_examples\speccon\1d_vr\example_1d_vr_001a_schiffmanandstein1970.py
+.. plot:: geotecha_examples\speccon\example_1d_vr_001a_schiffmanandstein1970.py
    :include-source:
 
 
@@ -112,7 +120,7 @@ Put the following in a .py file and run it with python.  A figure with
 three subplots should appear.
 
 
-.. plot:: geotecha_examples\speccon\1d_vr\example_1d_vr_001b_schiffmanandstein1970.py
+.. plot:: geotecha_examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py
    :include-source:
 
 

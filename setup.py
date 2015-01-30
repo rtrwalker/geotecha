@@ -95,7 +95,6 @@ CLASSIFIERS = """\
 Development Status :: 4 - Beta
 License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
 Programming Language :: Python :: 2.7
-Topic :: Scientific/Engineering :: Geotechnical Engineering
 Topic :: Scientific/Engineering
 """
 
@@ -114,7 +113,7 @@ AUTHOR_EMAIL = "rtrwalker@gmail.com"
 PLATFORMS = ["Windows"]#, "Linux", "Solaris", "Mac OS-X", "Unix"]
 MAJOR = 0
 MINOR = 1
-MICRO = 1
+MICRO = 2
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -125,7 +124,10 @@ INSTALL_REQUIRES=[
     "sympy>=0.2.7",
     "brewer2mpl",
     "testfixtures",
-    "pandas"]
+    "pandas",
+#    "pkg_resources", #underscore in package name does not play nicely
+#    "mpl_toolkits",
+    ]
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'
 TESTS_REQUIRE=['nose', 'testfixtures']
