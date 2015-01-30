@@ -2,6 +2,12 @@
 Welcome to geotecha's documentation!
 ************************************
 
+.. htmlonly::
+
+    :Release: |version|
+    :Date: |today|
+
+
 Written by Dr Rohan Walker
 
 

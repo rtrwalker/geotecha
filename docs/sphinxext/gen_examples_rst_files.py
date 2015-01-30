@@ -13,19 +13,6 @@ import sys
 import shutil
 import sphinx.errors
 
-def create_symlinks():
-    # Create the examples symlink, if it doesn't exist
-    required_symlinks = [
-        ('../geotecha_examples', '../../examples/'),
-        ]
-
-    for link, target in required_symlinks:
-        if not os.path.exists(link):
-            if hasattr(os, 'symlink'):
-                os.symlink(target, link)
-            else:
-                shutil.copytree(os.path.join(link, '..', target), link)
-
 
 exclude_example_sections = ['widgets']
 noplot_regex = re.compile(r"#\s*-\*-\s*noplot\s*-\*-")
@@ -50,7 +37,6 @@ def out_of_date(original, derived):
 def generate_example_rst(app):
     rootdir = os.path.join(app.builder.srcdir, 'geotecha_examples')
     exampledir = os.path.join(app.builder.srcdir, 'examples')
-    create_symlinks()
     if not os.path.exists(exampledir):
         os.makedirs(exampledir)
 

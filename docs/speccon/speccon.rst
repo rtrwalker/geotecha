@@ -79,6 +79,11 @@ of the docs.
 Examples
 --------
 
+Specific Examples can be found in the :ref:`examples-index` section.
+Further examples can be found by digging around in the testing 
+routines in the source code.
+
+
 Using speccon1d_vr below are three different ways to run a speccon 
 analysis.
 
