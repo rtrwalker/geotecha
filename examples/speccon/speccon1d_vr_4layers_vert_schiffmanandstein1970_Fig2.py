@@ -1,7 +1,7 @@
 # speccon1d_vr example
 
 # Vertical consolidation of four soil layers
-# Figure 4 from:
+# Figure 2 from:
 # Schiffman, R. L, and J. R Stein. (1970) 'One-Dimensional Consolidation of
 # Layered Systems'. Journal of the Soil Mechanics and Foundations
 # Division 96, no. 4 (1970): 1499-1504.
