@@ -28,6 +28,20 @@ from geotecha.inputoutput.inputoutput import object_members
 from geotecha.inputoutput.inputoutput import modules_in_package
 
 
+def out_of_date(original, derived):
+    """
+    Copied verbatim from Matplotlib.
+
+    Returns True if derivative is out-of-date wrt original,
+    both of which are full file paths.
+
+    TODO: this check isn't adequate in some cases.  e.g., if we discover
+    a bug when building the examples, the original and derived will be
+    unchanged but we still want to force a rebuild.
+    """
+    return (not os.path.exists(derived) or
+            os.stat(derived).st_mtime < os.stat(original).st_mtime)
+
 def rst_heading(heading_text, underline="=", overline=False):
     """add underline and overline to heading for use in an rst ffile
 
@@ -265,8 +279,10 @@ class document_package(object):
 #        print(fpath)
 #        print(file_list_text)
 
-        with open(fpath,'w') as f:
-            f.write(self.level0_template().format(**d))
+        origpath = inspect.getfile(level0)
+        if out_of_date(origpath, fpath):
+            with open(fpath,'w') as f:
+                f.write(self.level0_template().format(**d))
 
         #sub_package.rst
         for sub_package, heading in zip(member_list_dotted, member_list):
@@ -291,8 +307,10 @@ class document_package(object):
                      )
 #            print(fpath)
 #            print(file_list_text)
-            with open(fpath,'w') as f:
-                f.write(self.level1_template().format(**d))
+            origpath = inspect.getfile(level1)
+            if out_of_date(origpath, fpath):
+                with open(fpath,'w') as f:
+                    f.write(self.level1_template().format(**d))
 
 
 
@@ -348,19 +366,31 @@ class document_package(object):
 #                print('xxx', fpath)
 #                print(class_list_text)
 #                print(function_list_text)
-                with open(fpath,'w') as f:
-
-                    f.write(self.module_template().format(**d))
+                origpath = inspect.getfile(level2)
+                if out_of_date(origpath, fpath):
+                    with open(fpath,'w') as f:
+                        f.write(self.module_template().format(**d))
 
 def generate_api_rst(app):
     rootdir = os.path.join(app.builder.srcdir, 'api')
-    print('made it here')
     a = document_package(package_name='geotecha', docs_path=rootdir)
-    print('made it here2')
     a.make_rst_files()
 
 def setup(app):
 
     app.connect('builder-inited', generate_api_rst)
 
+if __name__ == "__main__":
+    rootdir = os.path.join("..", 'api')
+    a = document_package(package_name='geotecha', docs_path=rootdir)
+    a.make_rst_files()
 
+#    class abc(object):
+#        pass
+#    class app_(object):
+#        def __init__(self):
+#            self.builder = abc()
+#            self.builder.srcdir = os.path.join('..')
+#            self.builder.outdir = os.path.join('..')
+#    a = app_()
+#    generate_example_rst(a)
