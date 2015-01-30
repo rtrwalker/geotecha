@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 # inserted.  Use double curly braces {{}} if you need curly braces in your
 # string.
 reader = """\
-# Parameters from Schiffman and Stein 1970
+# Parameters from Schiffman and Stein(1970)
 h = np.array([10, 20, 30, 20]) # feet
 cv = np.array([0.0411, 0.1918, 0.0548, 0.0686]) # square feet per day
 mv = np.array([3.07e-3, 1.95e-3, 9.74e-4, 1.95e-3]) # square feet per kip
@@ -66,7 +66,7 @@ ax.set_xlabel('Pore pressure, u/q')
 ax.set_ylabel('Depth, feet')
 ax.invert_yaxis()
 ax.grid()
-ax.set_title('Schiffman and Stein 1970, Figure 4')
+ax.set_title('Schiffman and Stein (1970), Figure 2')
 
 lineObjects = plt.plot(a.por, a.ppress_z * a.H)
 
