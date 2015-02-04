@@ -25,6 +25,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 import functools
+from scipy.optimize import fixed_point
 
 class OneDimensionalVoidRatioEffectiveStress(object):
     """Base class for defining 1D void ratio-effective stress relationships"""
@@ -1076,7 +1077,493 @@ class FunctionSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         return
 
+
+class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
+    """Yin and Graham creep void ratio-effective stress realationship
+
+    Parameters
+    ----------
+    lam : float
+        Compressibility index, slope of the referece time line
+        e-ln(sig) line.
+    kap : float
+        Recompression index, slope of e-ln(sig) line.
+    psi : float
+        Creep parameter.  Slope of the void ratio-ln(time) line.
+    siga, ea : float
+        Point on reference time line fixing it in effective
+        stress-void ratio space.
+    ta : float
+        Reference time corresponding to the reference time line.
+    e0 : float, optional
+        Initial void ratio. Default e0=None.
+        If specifying initial conditions then only use two of the four
+        available (e0, estress0, pstress0, t0).
+    estress0 : float, optional
+        Initial effective stress. Default estress=None.
+        If specifying initial conditions then only use two of the four
+        available (e0, estress0, pstress0, t0).
+    pstress0 : float, optional
+        Initial 'preconsolidation` stress on the reference time line.
+        Default pstress0=None.
+        If specifying initial conditions then only use two of the four
+        available (e0, estress0, pstress0, t0).
+    t0 : float, optional
+        Initial equivalent time at the initial conditon. Default t0=None.
+        If specifying initial conditions then only use two of the four
+        available (e0, estress0, pstress0, t0).
+
+    Attributes
+    ----------
+    _alpha : float
+        Composite material parameter (lam - kap / psi)
+    _psi_zero_model : CcCrSoilModel
+        soil model when psi=0.  i.e. CcCrSoilModel following instant time line
+        and reference time line.
+    _igral : float
+        Ccurrent value of the material model integration w.r.t. time.
+        Igral = integrate[1/t0 * (estress/etress0)**alpha, t,0,t]
+
+
+    Examples
+    --------
+    Combos of initial conditions give the same results
+
+    >>> fixed_param = dict(lam=0.2, kap=0.04, psi=0.01, siga=20, ea=1, ta=1)
+    >>> oparam = dict(e0=0.95, estress0=18, pstress0=28.06637954,
+    ... t0=1220.73731)
+    >>> a = YinAndGrahamSoilModel(e0=oparam['e0'],
+    ... estress0=oparam['estress0'], **fixed_param)
+    >>> [a.e0, a.estress0, a.pstress0, a.t0]
+    [0.95..., 18..., 28.0..., 1220.737...]
+    >>> a = YinAndGrahamSoilModel(e0=oparam['e0'],
+    ... pstress0=oparam['pstress0'], **fixed_param)
+    >>> [a.e0, a.estress0, a.pstress0, a.t0]
+    [0.95..., 18..., 28.0..., 1220.737...]
+    >>> a = YinAndGrahamSoilModel(e0=oparam['e0'],
+    ... t0=oparam['t0'], **fixed_param)
+    >>> [a.e0, a.estress0, a.pstress0, a.t0]
+    [0.95..., 18..., 28.0..., 1220.737...]
+    >>> a = YinAndGrahamSoilModel(estress0=oparam['estress0'],
+    ... pstress0=oparam['pstress0'], **fixed_param)
+    >>> [a.e0, a.estress0, a.pstress0, a.t0]
+    [0.95..., 18..., 28.0..., 1220.737...]
+    >>> a = YinAndGrahamSoilModel(estress0=oparam['estress0'],
+    ... t0=oparam['t0'], **fixed_param)
+    >>> [a.e0, a.estress0, a.pstress0, a.t0]
+    [0.95..., 18..., 28.0..., 1220.737...]
+    >>> a = YinAndGrahamSoilModel(pstress0=oparam['pstress0'],
+    ... t0=oparam['t0'], **fixed_param)
+    >>> [a.e0, a.estress0, a.pstress0, a.t0]
+    [0.95..., 18..., 28.0..., 1220.737...]
+
+    """
+
+    def __init__(self, lam, kap, psi, siga, ea, ta,
+                 e0=None, estress0=None, pstress0=None, t0=None):
+        self.lam = lam
+        self.kap = kap
+        self.psi = psi
+        self.siga = siga
+        self.ea = ea
+        self.ta = ta
+
+        self._alpha = (self.lam - self.kap) / self.psi
+        self._psi_zero_model = CcCrSoilModel(Cc=np.log(10.0)*self.lam,
+                                             Cr=np.log(10.0)*self.kap,
+                                             siga=self.siga,
+                                             ea=self.ea)
+
+        self.e0, self.estress0, self.pstress0, self.t0 = (
+            self.initial_conditions(e0=e0,
+                                    estress0=estress0,
+                                    pstress0=pstress0,
+                                    t0=t0))
+
+        self._igral = 0#np.zeros(len(np.asarray(self.e0)), dtype=float)
+
+
+
+    def initial_conditions(self, e0=None, estress0=None, pstress0=None, t0=None):
+        """Calculate the initial conditions
+
+        Only use two of the paramters, the other two will be calculated.
+
+        Parameters
+        ----------
+        e0 : float, optional
+            Initial void ratio. Default e0=None.
+            If specifying initial conditions then only use two of the four
+            available (e0, estress0, pstress0, t0).
+        estress0 : float, optional
+            Initial effective stress. Default estress=None.
+            If specifying initial conditions then only use two of the four
+            available (e0, estress0, pstress0, t0).
+        pstress0 : float, optional
+            Initial 'preconsolidation` stress on the reference time line.
+            Default pstress0=None.
+            If specifying initial conditions then only use two of the four
+            available (e0, estress0, pstress0, t0).
+        t0 : float, optional
+            Initial equivalent time at the initial conditon. Default t0=None.
+            If specifying initial conditions then only use two of the four
+            available (e0, estress0, pstress0, t0).
+
+        Returns
+        -------
+        e0 : float
+            Initial void ratio
+        estress0 : float
+            Initial effective stress
+        pstress0 : float
+            Inital preconsolidation stress
+        t0 : float
+            Initial equivalent time.
+
+        """
+
+        d = dict(e0=e0, estress0=estress0, pstress0=pstress0, t0=t0)
+        ic_list = ['e0', 'estress0', 'pstress0','t0']
+        ic_given = [v for v in ic_list if not d.get(v, None) is None]
+        if len(ic_given)==0:
+            #no initial conditions set
+            return None, None, None, None
+        elif len(ic_given)==2:
+            #2 of the 4 initial condition parameters are given, calc the others
+            e0 = d.get('e0', None)
+            estress0 = d.get('estress0', None)
+            pstress0 = d.get('pstress0', None)
+            t0 = d.get('t0', None)
+            ea = self.ea
+            siga = self.siga
+            alpha = self._alpha
+            kap = self.kap
+            lam = self.lam
+            psi = self.psi
+            ta = self.ta
+            if ic_given==['e0', 'estress0']:
+                numer = (ea - e0 - kap * np.log(estress0) + lam * np.log(siga))
+                denom = (lam - kap)
+                pstress0 = np.exp(numer / denom)
+                t0 = (pstress0 / estress0)**(alpha) * ta
+            elif ic_given==['e0', 'pstress0']:
+                numer = (ea - e0- (lam-kap) * np.log(pstress0) + lam * np.log(siga))
+                denom = (kap)
+                estress0 = np.exp(numer / denom)
+                t0 = (pstress0 / estress0)**(alpha) * ta
+            elif ic_given==['e0', 't0']:
+                OCR = (t0/ta)**(1/alpha)
+                numer = (ea - e0 + lam * np.log(siga) + kap * np.log(OCR))
+                denom = (lam)
+                pstress0 = np.exp(numer / denom)
+                estress0 = pstress0 / OCR
+            elif ic_given==['estress0', 'pstress0']:
+                OCR = pstress0 / estress0
+                t0 = (OCR)**alpha * ta
+                e0 = (ea - lam * np.log(pstress0 / siga)
+                      + kap * np.log(OCR))
+            elif ic_given==['estress0', 't0']:
+                OCR = (t0/ta)**(1/alpha)
+                pstress0 = OCR * estress0
+                e0 = ea - lam * np.log(pstress0 / siga) + kap * np.log(OCR)
+            elif ic_given==['pstress0', 't0']:
+                OCR = (t0/ta)**(1/alpha)
+                estress0 = pstress0 / OCR
+                e0 = (ea - lam * np.log(pstress0 / siga)
+                      + kap * np.log(OCR))
+            return e0, estress0, pstress0, t0
+        else:
+
+            #too many initial conditoin parameters given.
+            raise ValueError("If specifying initial conditions ({}) then only "
+                    "two and only two can be specified.  "
+                    "You have {}.".format(ic_list, ",".join(ic_given)))
+
+
+
+
+    def e_from_stress(self, estress, **kwargs):
+        """Void ratio from effective stress
+
+        Parameters
+        ----------
+        estress : float
+            Current effective stress. estress is assumed to be the effective
+            stress at the end of an increment of length dt. i.e. at time t+dt.
+        dt : float, optional
+            Time increment. Default dt=None.  When dt is None, the void
+            ratio is calculted assuming psi=0.  i.e. along the instant
+            time line and then down the reference time line.
+        pstress : float, optional
+            Preconsolidation stress.  This is only relevant if dt is not None.
+            Default pstress=estress i.e. on the reference time line.
+
+        Returns
+        -------
+        e : float
+            Void ratio corresponding to current stress state.
+
+        Notes
+        -----
+        _igral will be updated!
+
+        The void ratio stress relationship is:
+
+        .. math::
+
+           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_z}{\\sigma^{\\prime}_{z0}}}\\right)
+             -\\psi\\left[{
+               \\int_{0}^{t}{
+                 \\frac{1}{t_0}
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
+                             }+1
+                           }\\right]
+
+        To calculate the integral we keep track of the integration at time t
+        and then use a finte difference approximation to calculate the
+        integral at t+dt:
+
+        .. math::
+
+           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup t}}{\\sigma^{\\prime}_{z0}}}\\right)
+             -\\psi\\left[{
+               \\int_{0}^{t}{
+                 \\frac{1}{t_0}
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
+                             }+\\frac{\\bigtriangleup t}{t_0}\\left({
+                   \\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup  t}}
+                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}+1
+                           }\\right]
+
+
+        YinAndGrahamSoilModel().e_from_stress()
+
+        Examples
+        --------
+
+
+        """
+
+        dt = kwargs.get('dt', None)
+        pstress = kwargs.get('pstress', estress)
+
+        if dt is None:
+            e = self._psi_zero_model.e_from_stress(estress, pstress)
+            return e
+        else:
+            # estress is assumed to be the effective stress at the end
+            # of an increment of lenght dt.
+            e0 = self.e0
+            kap = self.kap
+            lam = self.lam
+            psi = self.psi
+            estress0 = self.estress0
+
+            inc = dt/self.t0 * (estress / estress0) ** self._alpha
+            self._igral += inc
+            e = (e0 - kap * np.log(estress / estress0)
+                 - psi * np.log(self.igral + 1))
+
+        return e
+
+    def stress_from_e(self, e, **kwargs):
+        """Effective stress from void ratio
+
+        Parameters
+        ----------
+        e : float
+            Current void ratio.  e is assumed to be the effective
+            stress at the end of an increment of length dt. i.e. at time t+dt.
+        dt : float, optional
+            Time increment. Default dt=0.
+
+        Returns
+        -------
+        estress : float
+            Effective stress corresponding to current void ratio.
+
+        Notes
+        -----
+        _igral will be updated!
+
+        The void ratio stress relationship is:
+
+        .. math::
+
+           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_z}{\\sigma^{\\prime}_{z0}}}\\right)
+             -\\psi\\left[{
+               \\int_{0}^{t}{
+                 \\frac{1}{t_0}
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
+                             }+1
+                           }\\right]
+
+        To calculate the integral we keep track of the integration at time t
+        and then use a finte difference approximation to calculate the
+        integral at t+dt:
+
+        .. math::
+
+           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup t}}{\\sigma^{\\prime}_{z0}}}\\right)
+             -\\psi\\left[{
+               \\int_{0}^{t}{
+                 \\frac{1}{t_0}
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
+                             }+\\frac{\\bigtriangleup t}{t_0}\\left({
+                   \\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup  t}}
+                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}+1
+                           }\\right]
+
+        Knowing :math:`e_0` and the integral at time :math:`t`, after
+        rearranging we perform fixed point iteration to find the stress
+        :math:`\\sigma^{\\prime}_{z,t+\\bigtriangleup  t}`.
+
+        YinAndGrahamSoilModel().stress_from_e()
+
+        Examples
+        --------
+
+
+        """
+
+        dt = kwargs.get('dt', 0)
+        e0 = self.e0
+        kap = self.kap
+        lam = self.lam
+        psi = self.psi
+        estress0 = self.estress0
+
+
+        def fn(estress):
+            inc = dt / self.t0 * (estress / estress0) ** self._alpha
+            numer = e0 - e - psi * np.log(self._igral + inc + 1)
+            es=estress0 * np.exp(numer/kap)
+
+            return es
+
+        estress = fixed_point(fn, estress0)
+        inc = dt / self.t0 * (estress / estress0) ** self._alpha
+        self._igral += inc
+
+        return  estress
+#
+#    def e_and_stress_for_plotting(self, **kwargs):
+#        """Void ratio and stress values that plot the model
+#
+#        Parameters
+#        ----------
+#        pstress : float, optional
+#            Preconsolidation stress.  Default behaviour is normally
+#            consolidated.
+#        npts : int, optional
+#            Number of points to return.  Default npts=100.
+#        xmin, xmax : float, optional
+#            range of x (i.e. effective stress) values from which
+#            to return points. Default xmin=1, xmax=100
+#
+#
+#        Returns
+#        -------
+#        x, y : 1d ndarray
+#            `npts` stress, and void ratio values between `xmin` and `xmax`.
+#
+#        """
+#
+#        npts = kwargs.get('npts', 100)
+#        xmin, xmax = kwargs.get('xmin', 1.0), kwargs.get('xmax', 100)
+#
+#        x = np.linspace(xmin, xmax, npts)
+#        pstress = kwargs.get('pstress', x)
+#        i = np.searchsorted(x, pstress)
+#        x[i] = pstress
+#        y = self.e_from_stress(x, pstress=pstress)
+#
+#        return x, y
+#
+#
+#    def av_from_stress(self, estress, **kwargs):
+#        """Slope of void ratio from effective stress
+#
+#        Parameters
+#        ----------
+#        estress : float
+#            Current effective stress.
+#        pstress : float, optional
+#            Preconsolidation stress.  Default pstress=estress i.e. normally
+#            consolidated.
+#
+#        Returns
+#        -------
+#        av : float
+#            Slope of void-ratio vs effective stress plot at current stress
+#            state.
+#
+#        Examples
+#        --------
+#        On recompression line:
+#
+#        >>> a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
+#        >>> a.av_from_stress(estress=40, pstress=50)
+#        0.00542868...
+#
+#        On compression line:
+#
+#        >>> a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
+#        >>> a.av_from_stress(estress=60, pstress=50)
+#        0.02171472...
+#
+#        Array inputs:
+#
+#        >>> a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
+#        >>> a.av_from_stress(estress=np.array([40, 60.0]),
+#        ... pstress=np.array([50, 55.0]))
+#        array([ 0.00542868,  0.02171472])
+#
+#        """
+#
+#        pstress = kwargs.get('pstress', estress)
+#
+#        Cc = self.Cc
+#        Cr = self.Cr
+#
+#        chooser = np.array((Cc, Cc, Cr), dtype=float)
+#
+#        # appropriate value of Cc or Cr
+#        Cx = chooser[np.sign(estress - pstress, dtype=int)]
+#
+#        av = 0.43429448190325182 * Cx / estress
+#
+#        return av
+
 if __name__ == '__main__':
 #    print(CcCr_estress_from_e(2.95154499, 50, 3, 0.5, 10, 5))
-    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+#    a = YinAndGraham(lam=0.2, kap=0.04, psi=0.001, siga=20, ea=1, ta=1,
+#                     e0=1.5)
+
+    fixed_param = dict(lam=0.2, kap=0.04, psi=0.01, siga=20, ea=1, ta=1)
+    oparam = dict(e0=0.95, estress0=18)
+    oparam = dict(e0=np.array([0.95, 0.90]), estress0=np.array([18,20]))
+    a = YinAndGrahamSoilModel(e0=oparam['e0'], estress0=oparam['estress0'], **fixed_param)
+    b=a._psi_zero_model.plot_model()
+    plt.gca().plot(a.siga, a.ea , marker="o", ms=10)
+    plt.gca().plot(a.estress0, a.e0, marker = 's', ms=5)
+    plt.gca().plot(a.pstress0, a.ea-a.lam*np.log(a.pstress0/a.siga), marker = '^', ms=5)
+
+    print([a.e0, a.estress0, a.pstress0, a.t0])
+    bb = a.stress_from_e(a.e0*0.9, dt=10000000)
+    print(bb)
+
+    plt.gca().plot(bb, a.e0*.9, marker = 'h', ms=5)
+    plt.show()
+
+    plt.show()
