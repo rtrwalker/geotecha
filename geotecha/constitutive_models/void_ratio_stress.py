@@ -1489,59 +1489,39 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 #        return x, y
 #
 #
-#    def av_from_stress(self, estress, **kwargs):
-#        """Slope of void ratio from effective stress
-#
-#        Parameters
-#        ----------
-#        estress : float
-#            Current effective stress.
-#        pstress : float, optional
-#            Preconsolidation stress.  Default pstress=estress i.e. normally
-#            consolidated.
-#
-#        Returns
-#        -------
-#        av : float
-#            Slope of void-ratio vs effective stress plot at current stress
-#            state.
-#
-#        Examples
-#        --------
-#        On recompression line:
-#
-#        >>> a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
-#        >>> a.av_from_stress(estress=40, pstress=50)
-#        0.00542868...
-#
-#        On compression line:
-#
-#        >>> a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
-#        >>> a.av_from_stress(estress=60, pstress=50)
-#        0.02171472...
-#
-#        Array inputs:
-#
-#        >>> a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
-#        >>> a.av_from_stress(estress=np.array([40, 60.0]),
-#        ... pstress=np.array([50, 55.0]))
-#        array([ 0.00542868,  0.02171472])
-#
-#        """
-#
-#        pstress = kwargs.get('pstress', estress)
-#
-#        Cc = self.Cc
-#        Cr = self.Cr
-#
-#        chooser = np.array((Cc, Cc, Cr), dtype=float)
-#
-#        # appropriate value of Cc or Cr
-#        Cx = chooser[np.sign(estress - pstress, dtype=int)]
-#
-#        av = 0.43429448190325182 * Cx / estress
-#
-#        return av
+    def av_from_stress(self, estress, **kwargs):
+        """Slope of void ratio from effective stress
+
+        Without knowing the time rate of change in effective stress
+        it is very difficult to determie an av value from a soil creep
+        model.  Therefore we default to the model when psi=0.
+
+        Parameters
+        ----------
+        estress : float
+            Current effective stress.
+        pstress : float, optional
+            Preconsolidation stress.  Default pstress=estress i.e. normally
+            consolidated.
+
+        Returns
+        -------
+        av : float
+            Slope of void-ratio vs effective stress plot at current stress
+            state, assuming psi=0.
+
+        Examples
+        --------
+
+
+        """
+
+        pstress = kwargs.get('pstress', estress)
+
+        av = self._psi_zero_model.av_from_stress(estress, pstress=pstress)
+
+
+        return av
 
 if __name__ == '__main__':
 #    print(CcCr_estress_from_e(2.95154499, 50, 3, 0.5, 10, 5))
