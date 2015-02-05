@@ -1,4 +1,4 @@
-# speccon1d_vr example (if viewing this in docs, plots are at bottom of page)
+# speccon1d_vrw example (if viewing this in docs, plots are at bottom of page)
 
 # Reproduce solution of Tang and Onitsuka (2000) which includes vertical and
 # radial drainage as well as well resistance in a unit cell.
