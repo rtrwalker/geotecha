@@ -1,8 +1,7 @@
 # speccon1d_unsat example (if viewing this in docs, plots are at bottom of page)
 
 # Unsaturated soil 1 dimensional consolidation. Surcharge load
-#Stone column with vertical and radial drainage in both the column and soil
-#Compare with Shan et al. (2012) Fig2a and Fig5a
+# Compare with Shan et al. (2012) Fig2a and Fig5a
 # The orignal Shan et al. (2012)
 # is implemented separately in geotecha.consolidation.shanetal2012.
 
