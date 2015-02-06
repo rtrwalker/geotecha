@@ -132,7 +132,8 @@ for i, line in enumerate(ax1.get_lines()[-2:]):
 leg = ax1.legend(loc=3)
 leg.draggable()
 
-fig.tight_layout()
+fig.subplots_adjust(top=0.90, bottom=0.15, left=0.1, right=0.94, wspace=0.4)
+#fig.tight_layout()
 plt.show()
 
 

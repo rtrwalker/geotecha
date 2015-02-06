@@ -198,7 +198,8 @@ ax4.plot(tuw, a.porw[0,len(tua):len(tua)+len(tuw)],
          markeredgecolor='red',
          label='calculated')
 
-fig.tight_layout()
+fig.subplots_adjust(top=0.9)#, bottom=0.15, left=0.13, right=0.94)
+#fig.tight_layout()
 plt.show()
 
 

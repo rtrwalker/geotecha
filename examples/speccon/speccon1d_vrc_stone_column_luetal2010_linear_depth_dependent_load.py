@@ -323,7 +323,7 @@ fig = plt.figure(figsize=(13,6))
 fig.suptitle(title)
 #z vs u
 ax1 = fig.add_subplot("141")
-ax1.set_xlabel('Excess pore pressure in soil, kPa')
+ax1.set_xlabel('Excess pore pressure \nin soil, kPa')
 ax1.set_ylabel('Depth')
 ax1.invert_yaxis()
 ax1.plot(pors, z,
@@ -338,7 +338,7 @@ ax1.plot(a.pors, z,
 # avp vs t
 ax2 = fig.add_subplot("143")
 ax2.set_xlabel('Time')
-ax2.set_ylabel('Average excess pore pressure (soil and column), kPa')
+ax2.set_ylabel('Average excess pore press \n (soil and column), kPa')
 ax2.set_xscale('log')
 ax2.set_xlim((0.01, 10))
 ax2.plot(t, avp[0],
@@ -370,7 +370,7 @@ leg.draggable()
 
 
 ax4 = fig.add_subplot("142")
-ax4.set_xlabel('Excess pore pressure in column, kPa')
+ax4.set_xlabel('Excess pore pressure \nin column, kPa')
 ax4.set_ylabel('Depth')
 ax4.invert_yaxis()
 ax4.plot(porc, z,
@@ -381,7 +381,8 @@ ax4.plot(a.porc, z,
          markeredgecolor='red',
          label='calculated')
 
-fig.tight_layout()
+fig.subplots_adjust(top=0.90, bottom=0.15, left=0.1, right=0.94, wspace=0.4)
+#fig.tight_layout()
 plt.show()
 
 
