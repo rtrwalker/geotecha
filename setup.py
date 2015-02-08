@@ -13,10 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""geotecha: a software suite for geotechncial engineering
-
-Hey look at me I'm a long description
-But how long am I?
+"""geotecha: A software suite for geotechncial engineering
 
 """
 
@@ -102,10 +99,10 @@ NAME = 'geotecha'
 MAINTAINER = "Dr Rohan Walker"
 MAINTAINER_EMAIL = "rtrwalker@gmail.com"
 DESCRIPTION = DOCLINES[0]
-LONG_DESCRIPTION = "\n".join(DOCLINES[2:])#readme('readme.rst')
+LONG_DESCRIPTION = readme('readme.rst')#"\n".join(DOCLINES[2:])#
 URL = "https://github.com/rtrwalker/geotecha.git"
 DOWNLOAD_URL = "https://github.com/rtrwalker/geotecha.git"
-LICENSE = 'GNU General Public License v3 or later (GPLv3+)'
+LICENSE = 'GNU General Public License v3 or later (    )'
 CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
 KEYWORDS=''
 AUTHOR = "Dr Rohan Walker"
