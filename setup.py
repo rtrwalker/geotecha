@@ -110,7 +110,7 @@ AUTHOR_EMAIL = "rtrwalker@gmail.com"
 PLATFORMS = ["Windows"]#, "Linux", "Solaris", "Mac OS-X", "Unix"]
 MAJOR = 0
 MINOR = 1
-MICRO = 2
+MICRO = 3
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -131,7 +131,7 @@ TESTS_REQUIRE=['nose', 'testfixtures']
 
 DATA_FILES = [(NAME, ['LICENSE.txt','README.rst', 'CHANGELOG.txt'])]
 PACKAGES=setuptools.find_packages()
-#PACKAGES.remove('tools')
+PACKAGES.remove('tools')
 
 PACKAGE_DATA={
               '': ['*.f95','*.f90'],}
