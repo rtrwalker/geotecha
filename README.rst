@@ -33,7 +33,8 @@ develop a linux or mac distribution.  Major requirements are
 numpy, matplotlib, and scipy.  Setting up your python environment 
 to succesfully run all these packages can be cumbersome so pre-built
 python stacks such as the freely available `Python(x,y)`_ are highly 
-recommended (I use `Python(x,y)`_).
+recommended (I use `Python(x,y)`_). Note it is best to unistall any 
+existing python distributions before installing `Python(x,y)`_.
 
 pip
 +++
@@ -93,7 +94,8 @@ Once installed you can test the package using:
 
 The '-w' working directory tag is so that nose runs tests on the 
 installed version of *geotecha* rather than the source code version 
-(the source version will not have the external extensions).
+(the source version will not have the external extensions).  Change 
+the working directory to match your python location.
 
 Removing geotecha
 +++++++++++++++++
