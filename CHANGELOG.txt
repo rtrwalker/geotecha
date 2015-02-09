@@ -1,3 +1,8 @@
+2015-02-10 geotecha-0.1.3 Added many speccon examples. Updated
+	   README.rst so that github and pipy have nice looking
+           front pages.
+
+-----------------------------------------------------------------------
 2015-01-30 geotecha-0.1.2 Release.  Similar release to 0.1.1 but with
            with important changes to docs.  Added sphinx extensions
            gen_api_rst_files.py and gen_examples_rst_files.py which
