@@ -2,7 +2,9 @@ geotecha: A software suite for geotechnical engineering
 =======================================================
 
 
-.. image:: https://github.com/rtrwalker/geotecha/blob/master/docs/_static/logo.png
+.. image:: https://raw.githubusercontent.com/rtrwalker/geotecha/master/docs/_static/logo.png
+
+
 
 Writen by Dr Rohan Walker
 
