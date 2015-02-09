@@ -25,6 +25,11 @@ solutions to soil consolidatoin problems are avialable in the
 `consolidation` sub-package.
 
 
+Documentation
+-------------
+*geotecha* documentation is currently stored at http://pythonhosted.org//geotecha/ .
+
+
 Installation
 ------------
 *geotecha* was developed and tested using python 2.7 on a 
@@ -106,8 +111,6 @@ The cleanest method for removing *geotecha* is simply to use pip:
    pip uninstall geotecha
 
 You can also manually delete all files in the 'install.record' file.
-
-
 
 
 
