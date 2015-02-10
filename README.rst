@@ -41,7 +41,18 @@ numpy, matplotlib, and scipy.  Setting up your python environment
 to succesfully run all these packages can be cumbersome so pre-built
 python stacks such as the freely available `Python(x,y)`_ are highly 
 recommended (I use `Python(x,y)`_). Note it is best to unistall any 
-existing python distributions before installing `Python(x,y)`_.
+existing python distributions before installing `Python(x,y)`_.  Also
+make sure that you check the sympy option when specifying what 
+packages in Python(x,y) to install (I just choose the "full" version.
+
+Windows binaries
+++++++++++++++++
+The easiest, hassle-free way to install *geotecha* on a windows 
+machine is to download one of the pre-built binaries available  
+at https://pypi.python.org/pypi/geotecha .  Once downloaded 
+double click the .exe file to install.  I am not sure but you 
+may need to install the dependency packages separately.
+
 
 pip
 +++
@@ -50,6 +61,11 @@ To install *geotecha* from the Python Package Index (PyPI) using pip:
 .. code-block::
 
    pip install geotecha
+
+This will essentially download the source files and build and install
+the package.  As such you may have difficultly in building the 
+external extensions (see `Building from source`_ below.
+
 
 Note that due to anomalies in handling dashes in required package 
 names, the required packages `pkg_resources` and `mpl_toolkits` 
@@ -79,7 +95,24 @@ matter of building and installing:
 The "--record install.record" will make a file containing a list
 of all the files installed.  It is possible to skip the build step
 (it will be included in the install step).  But I find it more
-informative to use two steps.  At times I have have issues with 
+informative to use two steps.  
+
+Once installed you can test the package using:
+
+.. code-block::
+
+   nosetests geotecha -v -w C:\Python27\Lib\site-packages\ --with-doctest --doctest-options=+ELLIPSIS
+
+The '-w' working directory tag is so that nose runs tests on the 
+installed version of *geotecha* rather than the source code version 
+(the source version will not have the external extensions).  Change 
+the working directory to match your python location.
+
+
+Issues with building/installing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+At times I have had issues with 
 the build step and have had to explicitly specify the compiler to
 use, for example:
 
@@ -93,16 +126,17 @@ You can see other build options using:
 
    python setup.py build --help
 
-Once installed you can test the package using:
+Another problem is getting errors such as:
 
 .. code-block::
 
-   nosetests geotecha -v -w C:\Python27\Lib\site-packages\ --with-doctest --doctest-options=+ELLIPSIS
+   gcc is not recognized as an internal or external command
 
-The '-w' working directory tag is so that nose runs tests on the 
-installed version of *geotecha* rather than the source code version 
-(the source version will not have the external extensions).  Change 
-the working directory to match your python location.
+
+I had to make sure that the 'MinGW\\bin\\' directory was in my *PATH* 
+environment variable. Note you may have to install MinGW.
+
+
 
 Removing geotecha
 +++++++++++++++++
