@@ -37,7 +37,6 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
-import wx
 import fnmatch
 import argparse
 import logging
@@ -46,6 +45,7 @@ import pkg_resources
 from geotecha.plotting.one_d import copy_dict
 import pkgutil
 import importlib
+
 
 class SyntaxChecker(ast.NodeVisitor):
     """Check if a string contains only allowabel python syntax
@@ -2069,7 +2069,7 @@ def working_directory(path):
 
 
 def get_filepaths(wildcard=""):
-    """wx dialog box to select files
+    """ dialog box to select files
 
     Opens a dialog box from which the user can select files
 
@@ -2088,15 +2088,30 @@ def get_filepaths(wildcard=""):
 
     """
 
-    # wx idea from http://stackoverflow.com/a/9319832/2530083
-    app = wx.App(None)
-    style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE
-    dialog = wx.FileDialog(None, 'Open', wildcard=wildcard, style=style)
-    if dialog.ShowModal() == wx.ID_OK:
-        filepaths = dialog.GetPaths()
-    else:
-        filepaths = None
-    dialog.Destroy()
+    try:
+        from PyQt4 import QtGui
+        # pyqt idea from https://www.daniweb.com/software-development/python/code/452624/get-multiple-file-names-pyqtpyside
+        app = QtGui.QApplication([])
+        caption = 'Select file(s)'
+        # use current/working directory
+        directory = './'
+        filter_mask = wildcard
+        filepaths = QtGui.QFileDialog.getOpenFileNames(None,
+            caption, directory, filter_mask)
+        if len(filepaths)==0:
+            filepaths=None
+
+    except ImportError:
+        import wx
+        # wx idea from http://stackoverflow.com/a/9319832/2530083
+        app = wx.App(None)
+        style = wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE
+        dialog = wx.FileDialog(None, 'Open', wildcard=wildcard, style=style)
+        if dialog.ShowModal() == wx.ID_OK:
+            filepaths = dialog.GetPaths()
+        else:
+            filepaths = None
+            dialog.Destroy()
     return filepaths
 
 
