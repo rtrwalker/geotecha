@@ -2089,7 +2089,10 @@ def get_filepaths(wildcard=""):
     """
 
     try:
-        from PyQt4 import QtGui
+        try:
+            from PyQt5 import QtGui
+        except ImportError:
+            from PyQt4 import QtGui
         # pyqt idea from https://www.daniweb.com/software-development/python/code/452624/get-multiple-file-names-pyqtpyside
         app = QtGui.QApplication([])
         caption = 'Select file(s)'
