@@ -129,8 +129,8 @@ class test_m_from_sin_mx(object):
             [(0, 1), 1.57080],
             [(1, 0), 6.28319],
             [(1, 1), 4.71239],
-            [(np.array(range(7)), 0), self.PTPB],
-            [(np.array(range(7)), 1), self.PTIB],
+            [(np.array(list(range(7))), 0), self.PTPB],
+            [(np.array(list(range(7))), 1), self.PTIB],
             ] #then you canjust add more cases
 
     def test_bc0(self):
@@ -145,7 +145,7 @@ class test_m_from_sin_mx(object):
 
     def test_numpy(self):
         """test a numpy array as input to i; i = range(7), boundary = 0"""
-        x = np.array(range(7))
+        x = np.array(list(range(7)))
         y0 = m_from_sin_mx(x,0)
         assert np.allclose(y0,self.PTPB)
 

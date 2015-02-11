@@ -149,8 +149,8 @@ class Talbot(object):
             inv_laplace = np.exp(z * t)
             inv_laplace *= dz
 
-            for i in xrange(inv_laplace.shape[0]):
-                for j in xrange(inv_laplace.shape[1]):
+            for i in range(inv_laplace.shape[0]):
+                for j in range(inv_laplace.shape[1]):
                     inv_laplace[i,j] *= self.f(z[i,j], *args)
             inv_laplace = np.sum(inv_laplace, axis=0)
 

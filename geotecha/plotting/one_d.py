@@ -286,10 +286,10 @@ class MarkersDashesColors(object):
             pass
 
         if n==0:
-            markers = range(len(self.markers))
-            dashes = range(len(self.dashes))
-            marker_colors = range(len(self.colors))
-            line_colors = range(len(self.colors))
+            markers = list(range(len(self.markers)))
+            dashes = list(range(len(self.dashes)))
+            marker_colors = list(range(len(self.colors)))
+            line_colors = list(range(len(self.colors)))
             n = max([len(v) for v in [markers, dashes, marker_colors, line_colors] if v is not None])
 
         if markers is None: # no markers
@@ -312,8 +312,8 @@ class MarkersDashesColors(object):
 
         styles=[dict() for i in range(n)]
         for i in range(n):
-            m = markers.next()
-            mc = marker_colors.next()
+            m = next(markers)
+            mc = next(marker_colors)
             if m is None:
                 styles[i]['marker'] = 'none'
             else:
@@ -327,13 +327,13 @@ class MarkersDashesColors(object):
                     if self.markers[m]['markerfacecolor'] != 'none':
                         styles[i]['markerfacecolor'] = self.colors[mc]
 
-            d = dashes.next()
+            d = next(dashes)
             if d is None:
                 styles[i]['linestyle'] = 'None'
             else:
                 styles[i]['dashes'] = self.dashes[d]
 
-            lc = line_colors.next()
+            lc = next(line_colors)
             if lc is None:
                 styles[i]['color'] = self.color
             else:
@@ -1189,7 +1189,7 @@ def apply_dict_to_object(obj, dic):
     for o, d in zip(obj, dic):
         if d is None:
             continue
-        for key, value in d.iteritems():
+        for key, value in d.items():
             s = 'set_{0}'.format(key)
             if hasattr(o, s):
                 getattr(o, s)(value)
@@ -1290,7 +1290,7 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
         mcd = MarkersDashesColors(
             #color = 'black',
             markersize= 7)
-        mcd.construct_styles(markers = range(32), dashes=[0],
+        mcd.construct_styles(markers = list(range(32)), dashes=[0],
                              marker_colors=None, line_colors=None)
 
 
@@ -1345,7 +1345,7 @@ def plot_generic_loads(load_triples, load_names, ylabels=None,
         ax2.append(plt.subplot(gs[i, 1], sharex=sharex2, sharey=sharey2 ))
 
         for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
-            style = styles.next()
+            style = next(styles)
             if vs_time is None: #allow for fixed ppress
                 vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
 
@@ -1526,7 +1526,7 @@ def plot_vs_time(t, y, line_labels=None, prop_dict={}):
         mcd = MarkersDashesColors(
             #color = 'black',
             markersize= 7)
-        mcd.construct_styles(markers = range(32), dashes=[0],
+        mcd.construct_styles(markers = list(range(32)), dashes=[0],
                              marker_colors=None, line_colors=None)
 
 
@@ -1647,7 +1647,7 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
         mcd = MarkersDashesColors(
             #color = 'black',
             markersize= 7)
-        mcd.construct_styles(markers = range(32), dashes=[0],
+        mcd.construct_styles(markers = list(range(32)), dashes=[0],
                              marker_colors=None, line_colors=None)
 
 
@@ -1661,7 +1661,7 @@ def plot_single_material_vs_depth(z_x, xlabels, H = 1.0, RLzero=None,
     fig = plt.figure(**fig_prop)
 
     ax1=[]
-    style = styles.next()
+    style = next(styles)
     for i, (vs_depth, xlabel)  in enumerate(zip(z_x, xlabels)):
 
 
@@ -1886,7 +1886,7 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
         mcd = MarkersDashesColors(
             #color = 'black',
             markersize= 7)
-        mcd.construct_styles(markers = range(32), dashes=[0],
+        mcd.construct_styles(markers = list(range(32)), dashes=[0],
                              marker_colors=None, line_colors=None)
 
 

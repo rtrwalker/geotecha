@@ -3,9 +3,9 @@
 
 from __future__ import print_function, division
 
-import _setup_build
-import _setup_install
-import _setup_clean
+from . import _setup_build
+from . import _setup_install
+from . import _setup_clean
 
 def main():
     """run _setup_build, _setup_install, _setup_clean"""

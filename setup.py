@@ -147,7 +147,7 @@ EXT_MODULES = [Extension(name=x,sources=[y]) for x, y in zip(ext_module_names, e
 baseline_folders = get_folder(NAME, ['baseline_images'])
 baseline_module_names = [osp.split(v)[0].replace(osp.sep,'.') for v in baseline_folders]
 for v in baseline_module_names:
-    if PACKAGE_DATA.has_key(v):
+    if v in PACKAGE_DATA:
         PACKAGE_DATA[v].append(osp.join('baseline_images','*','*.*'))
     else:
         PACKAGE_DATA[v]=[osp.join('baseline_images','*','*.*')]

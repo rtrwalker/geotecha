@@ -20,7 +20,12 @@ have python syntax.
 """
 
 from __future__ import division, print_function
-import __builtin__
+try:
+    #py27
+    import __builtin__
+except ImportError:
+    #py34
+    import builtins as __builtin__
 import sys
 import ast
 import imp
@@ -31,7 +36,12 @@ from geotecha.piecewise.piecewise_linear_1d import PolyLine
 from sympy.printing.fcode import FCodePrinter
 import multiprocessing
 import time
-from StringIO import StringIO
+try:
+    #py27
+    from StringIO import StringIO
+except ImportError:
+    #py34
+    from io import StringIO
 import re
 import os
 import pandas as pd
@@ -549,7 +559,7 @@ def make_module_from_text(reader, syntax_checker=None):
     mymodule = imp.new_module('mymodule') #may need to randomise the name; not sure
 
     if syntax_checker is None:
-        exec reader in mymodule.__dict__
+        exec(reader, mymodule.__dict__)
         return mymodule
 
 
@@ -560,7 +570,7 @@ def make_module_from_text(reader, syntax_checker=None):
     syntax_checker.visit(tree)
     compiled = compile(tree, '<string>', "exec")
     mymodule.__dict__.update(syntax_checker.allowed_functions)
-    exec compiled in mymodule.__dict__
+    exec(compiled, mymodule.__dict__)
 
     return mymodule
 
@@ -1010,7 +1020,7 @@ def code_for_explicit_attribute_initialization(attributes=[],
             out+='{0} = {1}\n'.format('.'.join([object_name,v]), v2)
     else:
         for v in attributes:
-            if v in defaults.keys():
+            if v in list(defaults.keys()):
                 v2 = not_found_value
                 if isinstance(v2, str):
                     v2 = "'{0}'".format(v2)

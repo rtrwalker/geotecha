@@ -96,7 +96,7 @@ def gen_dim1sin_integrate_af():
     print(no_bc)
     print('#'*10+'\n')
 
-    for s, f in fn.iteritems():
+    for s, f in fn.items():
         if s == "no_bc":
             continue
         sout = str(f)
@@ -159,7 +159,7 @@ def gen_dim1sin_E_Igamv_the_BC_abf_linear():
             'a': a, 'b':b, 'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
 #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
 
-    for k, v in fn.iteritems():
+    for k, v in fn.items():
         print(k)
         print (dim1sin_E_Igamv_the_BC_abf_linear(**v))
         print('#'*10+'\n')
@@ -213,7 +213,7 @@ def gen_dim1sin_E_Igamv_the_BC_D_aDf_linear():
             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
 #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
 
-    for k, v in fn.iteritems():
+    for k, v in fn.items():
         print(k)
         print (dim1sin_E_Igamv_the_BC_D_aDf_linear(**v))
         print('#'*10+'\n')
@@ -268,7 +268,7 @@ def gen_dim1sin_E_Igamv_the_BC_aDfDt_linear():
             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
 #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
 
-    for k, v in fn.iteritems():
+    for k, v in fn.items():
         print(k)
         print (dim1sin_E_Igamv_the_BC_aDfDt_linear(**v))
         print('#'*10+'\n')
@@ -345,7 +345,7 @@ def gen_dim1sin_E_Igamv_the_BC_deltaf_linear():
           'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
 #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
 
-    for k, v in fn.iteritems():
+    for k, v in fn.items():
         print(k)
         print (dim1sin_E_Igamv_the_BC_deltaf_linear(**v))
         print('#'*10+'\n')
@@ -382,7 +382,7 @@ def gen_dim1sin_E_Igamv_the_abmag_bilinear():
                'a':a, 'b':b,
                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
 
-    for k, v in fn.iteritems():
+    for k, v in fn.items():
         print(k)
         print (dim1sin_E_Igamv_the_abmag_bilinear(**v))
         print('#'*10+'\n')
@@ -419,7 +419,7 @@ def gen_dim1sin_E_Igamv_the_aDmagDt_bilinear():
                'a':a,
                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
 
-    for k, v in fn.iteritems():
+    for k, v in fn.items():
         print(k)
         print (dim1sin_E_Igamv_the_aDmagDt_bilinear(**v))
         print('#'*10+'\n')
@@ -457,7 +457,7 @@ def gen_dim1sin_E_Igamv_the_deltamag_linear():
                'zvals': zvals, 'pseudo_k':pseudo_k,
                 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
 
-    for k, v in fn.iteritems():
+    for k, v in fn.items():
         print(k)
         print (dim1sin_E_Igamv_the_deltamag_linear(**v))
         print('#'*10+'\n')

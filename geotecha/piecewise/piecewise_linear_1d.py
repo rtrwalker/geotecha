@@ -271,7 +271,7 @@ def force_strictly_increasing(x, y = None, keep_end_points = True, eps = 1e-15):
         y = y[::-1]
 
     if not non_decreasing(x):
-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing"
+        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing")
 
 
     steps = np.where(np.diff(x) == 0)[0]
@@ -312,7 +312,7 @@ def force_non_decreasing(x, y = None):
         return x, y
 
     if not non_increasing(x):
-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing"
+        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing")
 
     return x[::-1], y[::-1]
 
@@ -1179,13 +1179,13 @@ def remove_superfluous_from_x_y(x, y, atol=1e-08):
     if n<=2:
         return x, y
 
-    ikeep = range(len(x))
+    ikeep = list(range(len(x)))
 
 
     j = 0
     x0 = x[j]
     y0 = y[j]
-    for i in xrange(2,n):
+    for i in range(2,n):
         x1=x[i]
         y1=y[i]
         dx = x1-x0
@@ -1742,7 +1742,7 @@ def integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(x1a, x2a,
     y2b = np.asarray(y2b)
 
     if (not np.allclose(x1a, x1b)) or (not np.allclose(x2a, x2b)): #they may be different sizes
-        raise ValueError ("x values are different; they must be the same: \nx1a = {0}\nx1b = {1}\nx2a = {2}\nx2b = {3}".format(x1a,x1b, x2a, x2b))
+        raise ValueError("x values are different; they must be the same: \nx1a = {0}\nx1b = {1}\nx2a = {2}\nx2b = {3}".format(x1a,x1b, x2a, x2b))
         #sys.exit(0)
 
     xi = np.atleast_1d(xi)
@@ -2716,8 +2716,8 @@ def subdivide_x_y_into_segments(x, y, dx=None, min_segments = 2,
 
 
     if len(x)!=len(y):
-        raise (ValueError('x and y must have same length '
-                     'len(x)={:d}, len(y)={:d}'.format(len(x), len(y))))
+        raise ValueError('x and y must have same length '
+                     'len(x)={:d}, len(y)={:d}'.format(len(x), len(y)))
     if logx:
         x[np.abs(x) <= (atol + rtol * np.abs(x))] = logxzero
         if np.any(x<0):

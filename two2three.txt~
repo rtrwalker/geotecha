@@ -1,0 +1,4299 @@
+--- .\setup.py	(original)
++++ .\setup.py	(refactored)
+@@ -17,7 +17,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ #ideas for setup/f2py came from:
+ #    -numpy setup.py: https://github.com/numpy/numpy/blob/master/setup.py 2013-11-07
+@@ -147,7 +147,7 @@
+ baseline_folders = get_folder(NAME, ['baseline_images'])
+ baseline_module_names = [osp.split(v)[0].replace(osp.sep,'.') for v in baseline_folders]
+ for v in baseline_module_names:
+-    if PACKAGE_DATA.has_key(v):
++    if v in PACKAGE_DATA:
+         PACKAGE_DATA[v].append(osp.join('baseline_images','*','*.*'))
+     else:
+         PACKAGE_DATA[v]=[osp.join('baseline_images','*','*.*')]
+--- .\build\lib.win32-2.7\geotecha\consolidation\cosenzaandkorosak2014.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\cosenzaandkorosak2014.py	(refactored)
+@@ -19,7 +19,7 @@
+ an Anomalous Diffusion Process".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\dengetal2013and2014.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\dengetal2013and2014.py	(refactored)
+@@ -19,7 +19,7 @@
+ the discharge capacity varies with depth and time".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+@@ -365,7 +365,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, A2={1:.3g}".format(Th[j], A2))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -450,7 +450,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -513,7 +513,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -665,7 +665,7 @@
+                 plt.plot(por8[:,j], z, marker='o', label="eq8 Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None', markersize=7)
+--- .\build\lib.win32-2.7\geotecha\consolidation\luetal2010.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\luetal2010.py	(refactored)
+@@ -19,7 +19,7 @@
+ disturbed soil zone".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\nogamiandli2003.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\nogamiandli2003.py	(refactored)
+@@ -19,7 +19,7 @@
+ Horizontal Drains'.
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\nogamiandli2003_interactive.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\nogamiandli2003_interactive.py	(refactored)
+@@ -25,7 +25,7 @@
+ geotecha.consolidation.nogamiandli2003.NogamiAndLi2003 : calculations
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\schiffmanandstein1970.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\schiffmanandstein1970.py	(refactored)
+@@ -18,7 +18,7 @@
+ Schiffman and Stein 1970 "One-Dimensional consolidation of layered systems".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+@@ -480,7 +480,7 @@
+ 
+         beta = np.zeros_like(self.h, dtype=float)
+         beta[0] = beta0
+-        for i in xrange(1, self.nlayers):
++        for i in range(1, self.nlayers):
+             beta[i] = np.sqrt(self.cv[i-1] / self.cv[i] * beta[i-1]**2)
+ 
+         alpha = self.kv[:-1] / self.kv[1:]
+@@ -493,7 +493,7 @@
+         self.BC[-1, -1] = (self.bbot * math.sin(beta[-1] * self.zlayer[-1]) +
+                      self.abot * beta[-1] * math.cos(beta[-1] * self.zlayer[-1]))
+ 
+-        for i in xrange(self.nlayers - 1):
++        for i in range(self.nlayers - 1):
+             #1st equation
+             #TODO: row is wrong
+             row = 2 * i + 1
+@@ -530,7 +530,7 @@
+ 
+         x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, npts)
+         y = np.zeros_like(x)
+-        for i in xrange(len(x)):
++        for i in range(len(x)):
+             y[i]=self._characteristic_eqn(x[i])
+ #        plt.gcf().clear()
+         fig = plt.figure(figsize=(30,5))
+--- .\build\lib.win32-2.7\geotecha\consolidation\schiffmanandstein1970_interactive.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\schiffmanandstein1970_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ the schiffmanandstein1970 module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\shanetal2012.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\shanetal2012.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\smear_zones.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\smear_zones.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\tangandonitsuka2000.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\tangandonitsuka2000.py	(refactored)
+@@ -19,7 +19,7 @@
+ time-dependent loading".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\terzahi.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\terzahi.py	(refactored)
+@@ -18,7 +18,7 @@
+ Terzaghi one-dimensional consolidation
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\xieandleo2004.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\xieandleo2004.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib
+--- .\build\lib.win32-2.7\geotecha\consolidation\zhuandyin2012.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\zhuandyin2012.py	(refactored)
+@@ -19,7 +19,7 @@
+ of a soil layer with depth-dependent parameters under confined compression".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\consolidation\test\test_dengetal2013and2014.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\test\test_dengetal2013and2014.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the dengetal2013and2014 module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\consolidation\test\test_schiffmanandstein1970.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\test\test_schiffmanandstein1970.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\consolidation\test\test_smear_zones.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\test\test_smear_zones.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the smear_zones module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\consolidation\test\test_tangandonitsuka2000.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\test\test_tangandonitsuka2000.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\consolidation\test\test_xieandleo2004.py	(original)
++++ .\build\lib.win32-2.7\geotecha\consolidation\test\test_xieandleo2004.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the xieandleo2004 module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\constitutive_models\void_ratio_permeability.py	(original)
++++ .\build\lib.win32-2.7\geotecha\constitutive_models\void_ratio_permeability.py	(refactored)
+@@ -17,7 +17,7 @@
+ """
+ Relationships between permeability and void-ratio
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\constitutive_models\void_ratio_stress.py	(original)
++++ .\build\lib.win32-2.7\geotecha\constitutive_models\void_ratio_stress.py	(refactored)
+@@ -20,7 +20,7 @@
+ """
+ 
+ 
+-from __future__ import print_function, division
++
+ import numpy as np
+ import matplotlib.pyplot as plt
+ import matplotlib
+--- .\build\lib.win32-2.7\geotecha\inputoutput\inputoutput.py	(original)
++++ .\build\lib.win32-2.7\geotecha\inputoutput\inputoutput.py	(refactored)
+@@ -19,8 +19,8 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
+-import __builtin__
++
++import builtins
+ import sys
+ import ast
+ import imp
+@@ -31,7 +31,7 @@
+ from sympy.printing.fcode import FCodePrinter
+ import multiprocessing
+ import time
+-from StringIO import StringIO
++from io import StringIO
+ import re
+ import os
+ import pandas as pd
+@@ -550,7 +550,7 @@
+     mymodule = imp.new_module('mymodule') #may need to randomise the name; not sure
+ 
+     if syntax_checker is None:
+-        exec reader in mymodule.__dict__
++        exec(reader, mymodule.__dict__)
+         return mymodule
+ 
+ 
+@@ -561,7 +561,7 @@
+     syntax_checker.visit(tree)
+     compiled = compile(tree, '<string>', "exec")
+     mymodule.__dict__.update(syntax_checker.allowed_functions)
+-    exec compiled in mymodule.__dict__
++    exec(compiled, mymodule.__dict__)
+ 
+     return mymodule
+ 
+@@ -1011,7 +1011,7 @@
+             out+='{0} = {1}\n'.format('.'.join([object_name,v]), v2)
+     else:
+         for v in attributes:
+-            if v in defaults.keys():
++            if v in list(defaults.keys()):
+                 v2 = not_found_value
+                 if isinstance(v2, str):
+                     v2 = "'{0}'".format(v2)
+--- .\build\lib.win32-2.7\geotecha\inputoutput\test\test_inputoutput.py	(original)
++++ .\build\lib.win32-2.7\geotecha\inputoutput\test\test_inputoutput.py	(refactored)
+@@ -17,7 +17,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import ast
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\fourier.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\fourier.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Fourier transforms."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+--- .\build\lib.win32-2.7\geotecha\mathematics\geometry.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\geometry.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some routines loosely related to geometry."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ import sympy
+ import matplotlib
+@@ -238,7 +238,7 @@
+ 
+     i = np.argmax(n) #project polygon onto plane that is perpendicular to this direction, then integrate the area
+ 
+-    j = range(3)
++    j = list(range(3))
+     j.pop(i) #remaining directions
+     e = (x, y, z)
+     def if1dxdy(x, y):
+--- .\build\lib.win32-2.7\geotecha\mathematics\hankel.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\hankel.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Hankel transforms."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+--- .\build\lib.win32-2.7\geotecha\mathematics\laplace.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\laplace.py	(refactored)
+@@ -17,7 +17,7 @@
+ """Numerical inverse Laplace transform"""
+ 
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ 
+@@ -149,8 +149,8 @@
+             inv_laplace = np.exp(z * t)
+             inv_laplace *= dz
+ 
+-            for i in xrange(inv_laplace.shape[0]):
+-                for j in xrange(inv_laplace.shape[1]):
++            for i in range(inv_laplace.shape[0]):
++                for j in range(inv_laplace.shape[1]):
+                     inv_laplace[i,j] *= self.f(z[i,j], *args)
+             inv_laplace = np.sum(inv_laplace, axis=0)
+ 
+--- .\build\lib.win32-2.7\geotecha\mathematics\mp_laplace.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\mp_laplace.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """this module implements numerical inverse laplace transform using mpmath"""
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ 
+--- .\build\lib.win32-2.7\geotecha\mathematics\multi_transform.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\multi_transform.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some routines related multi dimensional integral transforms"""
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from matplotlib import pyplot as plt
+ import functools
+@@ -29,6 +29,7 @@
+ from geotecha.mathematics.laplace import Talbot
+ from geotecha.mathematics.hankel import HankelTransform
+ from geotecha.mathematics.fourier import FourierTransform
++import collections
+ 
+ 
+ 
+@@ -148,7 +149,7 @@
+     if isinstance(opts, dict):
+         opts = [opts] * depth
+     else:
+-        opts = [opt if callable(opt) else _OptFunc(opt) for opt in opts]
++        opts = [opt if isinstance(opt, collections.Callable) else _OptFunc(opt) for opt in opts]
+ 
+     return _NTransform(func, transforms,
+                        transvars, opts).integral_transform(*args)
+--- .\build\lib.win32-2.7\geotecha\mathematics\quadrature.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\quadrature.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Numerical integration by quadrature"""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+@@ -1093,9 +1093,9 @@
+         from random import Random
+         rnd = Random()
+         rnd.seed(START)
+-    for i in xrange(START, STOP):
++    for i in range(START, STOP):
+         row = []
+-        for j in xrange(i+1):
++        for j in range(i+1):
+             if j == 0:
+                 a, b = 0, seq[i+1]-seq[i]
+             else:
+--- .\build\lib.win32-2.7\geotecha\mathematics\root_finding.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\root_finding.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Routines for finding zeros/roots of equations."""
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import scipy.optimize
+--- .\build\lib.win32-2.7\geotecha\mathematics\transformations.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\transformations.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Rotines to perform transformations"""
+ 
+-from __future__ import print_function, division
++
+ import numpy as np
+ 
+ def depth_to_reduced_level(z, H = 1.0, rlzero=None):
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_fourier.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_fourier.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Test routines for the fourier module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_geometry.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_geometry.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Testing routines for the geometry module"""
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_hankel.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_hankel.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the hankel module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -126,7 +126,7 @@
+ 
+ 
+ 
+-def check_HankelTransform(s, (func, funcdoc), (func_, func_doc), args, order, m,
++def check_HankelTransform(s, xxx_todo_changeme, xxx_todo_changeme1, args, order, m,
+                           ng, ng0, shanks_ind):
+     """check if a HankelTransform gives it's analytical solution
+ 
+@@ -140,7 +140,8 @@
+         analytical transform of `func`
+     other: see HankelTransform
+     """
+-
++    (func, funcdoc) = xxx_todo_changeme
++    (func_, func_doc) = xxx_todo_changeme1
+     if func==hankel3:
+         points= args[0] / jn_zeros(0, 70)
+         atol=1e-4
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_laplace.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_laplace.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the laplace module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_mp_laplace.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_mp_laplace.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the mp_laplace module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_multi_transform.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_multi_transform.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the multi_transform module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_quadrature.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_quadrature.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the quadrature module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_root_finding.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_root_finding.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Testing routines for the root_finding module."""
+ 
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\mathematics\test\test_transformations.py	(original)
++++ .\build\lib.win32-2.7\geotecha\mathematics\test\test_transformations.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Testing routines for the transformations module."""
+ 
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\piecewise\piecewise_linear_1d.py	(original)
++++ .\build\lib.win32-2.7\geotecha\piecewise\piecewise_linear_1d.py	(refactored)
+@@ -18,7 +18,7 @@
+ One dimensional piecwise linear relationships and manipulations
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import math
+@@ -271,7 +271,7 @@
+         y = y[::-1]
+ 
+     if not non_decreasing(x):
+-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing"
++        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing")
+ 
+ 
+     steps = np.where(np.diff(x) == 0)[0]
+@@ -312,7 +312,7 @@
+         return x, y
+ 
+     if not non_increasing(x):
+-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing"
++        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing")
+ 
+     return x[::-1], y[::-1]
+ 
+@@ -1179,13 +1179,13 @@
+     if n<=2:
+         return x, y
+ 
+-    ikeep = range(len(x))
++    ikeep = list(range(len(x)))
+ 
+ 
+     j = 0
+     x0 = x[j]
+     y0 = y[j]
+-    for i in xrange(2,n):
++    for i in range(2,n):
+         x1=x[i]
+         y1=y[i]
+         dx = x1-x0
+@@ -2716,8 +2716,7 @@
+ 
+ 
+     if len(x)!=len(y):
+-        raise (ValueError('x and y must have same length '
+-                     'len(x)={:d}, len(y)={:d}'.format(len(x), len(y))))
++        raise ValueError
+     if logx:
+         x[np.abs(x) <= (atol + rtol * np.abs(x))] = logxzero
+         if np.any(x<0):
+--- .\build\lib.win32-2.7\geotecha\piecewise\test\test_piecewise_linear_1d.py	(original)
++++ .\build\lib.win32-2.7\geotecha\piecewise\test\test_piecewise_linear_1d.py	(refactored)
+@@ -18,7 +18,7 @@
+ Testing rotines for piecewise_linear_1d module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -173,13 +173,13 @@
+ 
+     def test_non_increasing_and_non_decreasing_parts(self):
+         """test some non_increasing_and_non_decreasing_parts examples"""
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [range(len(self.two_steps['x'])-1)])
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [range(len(self.two_ramps_reverse['x'])-1)])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [list(range(len(self.two_steps['x'])-1))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [list(range(len(self.two_ramps_reverse['x'])-1))])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x']), [[0,1],[2],[3,4]])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x']), [[0,1],[2,3],[4]])
+ 
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [range(len(self.two_steps['x']))])
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [range(len(self.two_ramps_reverse['x']))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [list(range(len(self.two_steps['x'])))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [list(range(len(self.two_ramps_reverse['x'])))])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x'],include_end_point=True), [[0,1,2],[2,3],[3,4,5]])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x'],include_end_point=True), [[0,1,2],[2,3,4],[4,5]])
+ 
+--- .\build\lib.win32-2.7\geotecha\plotting\one_d.py	(original)
++++ .\build\lib.win32-2.7\geotecha\plotting\one_d.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib as mpl
+@@ -286,10 +286,10 @@
+             pass
+ 
+         if n==0:
+-            markers = range(len(self.markers))
+-            dashes = range(len(self.dashes))
+-            marker_colors = range(len(self.colors))
+-            line_colors = range(len(self.colors))
++            markers = list(range(len(self.markers)))
++            dashes = list(range(len(self.dashes)))
++            marker_colors = list(range(len(self.colors)))
++            line_colors = list(range(len(self.colors)))
+             n = max([len(v) for v in [markers, dashes, marker_colors, line_colors] if v is not None])
+ 
+         if markers is None: # no markers
+@@ -312,8 +312,8 @@
+ 
+         styles=[dict() for i in range(n)]
+         for i in range(n):
+-            m = markers.next()
+-            mc = marker_colors.next()
++            m = next(markers)
++            mc = next(marker_colors)
+             if m is None:
+                 styles[i]['marker'] = 'none'
+             else:
+@@ -327,13 +327,13 @@
+                     if self.markers[m]['markerfacecolor'] != 'none':
+                         styles[i]['markerfacecolor'] = self.colors[mc]
+ 
+-            d = dashes.next()
++            d = next(dashes)
+             if d is None:
+                 styles[i]['linestyle'] = 'None'
+             else:
+                 styles[i]['dashes'] = self.dashes[d]
+ 
+-            lc = line_colors.next()
++            lc = next(line_colors)
+             if lc is None:
+                 styles[i]['color'] = self.color
+             else:
+@@ -439,8 +439,8 @@
+              'fillstyle': 'bottom'},
+             {'marker': '^',
+              'markerfacecolor': 'none'},
+-            {'marker': u'$\u25E9$'},
+-            {'marker': u'$\u2b2d$'},
++            {'marker': '$\u25E9$'},
++            {'marker': '$\u2b2d$'},
+             {'marker': 'h'},
+             {'marker': '^',
+              'fillstyle': 'bottom'},
+@@ -457,10 +457,10 @@
+             {'marker': 'H',
+              'fillstyle': 'top'},
+             {'marker': (6, asterisk, 0)},
+-            {'marker': u'$\u29bf$'},
+-            {'marker': u'$\u29c7$'},
+-            {'marker': u'$\u29fe$'},
+-            {'marker': u'$\u27E1$'},
++            {'marker': '$\u29bf$'},
++            {'marker': '$\u29c7$'},
++            {'marker': '$\u29fe$'},
++            {'marker': '$\u27E1$'},
+             ]
+ 
+ 
+@@ -1189,7 +1189,7 @@
+     for o, d in zip(obj, dic):
+         if d is None:
+             continue
+-        for key, value in d.iteritems():
++        for key, value in d.items():
+             s = 'set_{0}'.format(key)
+             if hasattr(o, s):
+                 getattr(o, s)(value)
+@@ -1290,7 +1290,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1345,7 +1345,7 @@
+         ax2.append(plt.subplot(gs[i, 1], sharex=sharex2, sharey=sharey2 ))
+ 
+         for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+-            style = styles.next()
++            style = next(styles)
+             if vs_time is None: #allow for fixed ppress
+                 vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
+ 
+@@ -1526,7 +1526,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1647,7 +1647,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1661,7 +1661,7 @@
+     fig = plt.figure(**fig_prop)
+ 
+     ax1=[]
+-    style = styles.next()
++    style = next(styles)
+     for i, (vs_depth, xlabel)  in enumerate(zip(z_x, xlabels)):
+ 
+ 
+@@ -1886,7 +1886,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+--- .\build\lib.win32-2.7\geotecha\plotting\test\test_one_d.py	(original)
++++ .\build\lib.win32-2.7\geotecha\plotting\test\test_one_d.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the one_d module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\speccon\integrals.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\integrals.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ import math
+ 
+--- .\build\lib.win32-2.7\geotecha\speccon\integrals_generate_code.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\integrals_generate_code.py	(refactored)
+@@ -15,7 +15,7 @@
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Use sympy to generate code for generating spectral method matrix subroutines"""
+ 
+-from __future__ import division, print_function
++
+ 
+ import sympy
+ import textwrap
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d.py	(refactored)
+@@ -19,7 +19,7 @@
+ Spectral Galerkin methods.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_unsat.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_unsat.py	(refactored)
+@@ -19,7 +19,7 @@
+ Multilayer consolidation of unsaturated soil using the spectral Galerkin
+ method.
+ """
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_unsat_interactive.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_unsat_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_unsat
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vr.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vr.py	(refactored)
+@@ -21,7 +21,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vr_interactive.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vr_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vr
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrc.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrc.py	(refactored)
+@@ -20,7 +20,7 @@
+ radial drainage using the spectral Galerkin method.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrc_interactive.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrc_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vrc
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrw.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrw.py	(refactored)
+@@ -20,7 +20,7 @@
+ using the spectral Galerkin method.
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrw_interactive.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\speccon1d_vrw_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vrw
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-2.7\geotecha\speccon\test\dim1sin_test_data_gen.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\dim1sin_test_data_gen.py	(refactored)
+@@ -30,7 +30,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from math import pi
+ 
+--- .\build\lib.win32-2.7\geotecha\speccon\test\speccon1d_test_data_gen.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\speccon1d_test_data_gen.py	(refactored)
+@@ -24,7 +24,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from collections import OrderedDict
+ import numpy as np
+@@ -96,7 +96,7 @@
+     print(no_bc)
+     print('#'*10+'\n')
+ 
+-    for s, f in fn.iteritems():
++    for s, f in fn.items():
+         if s == "no_bc":
+             continue
+         sout = str(f)
+@@ -159,7 +159,7 @@
+             'a': a, 'b':b, 'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_abf_linear(**v))
+         print('#'*10+'\n')
+@@ -213,7 +213,7 @@
+             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_D_aDf_linear(**v))
+         print('#'*10+'\n')
+@@ -268,7 +268,7 @@
+             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_aDfDt_linear(**v))
+         print('#'*10+'\n')
+@@ -345,7 +345,7 @@
+           'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_deltaf_linear(**v))
+         print('#'*10+'\n')
+@@ -382,7 +382,7 @@
+                'a':a, 'b':b,
+                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_abmag_bilinear(**v))
+         print('#'*10+'\n')
+@@ -419,7 +419,7 @@
+                'a':a,
+                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_aDmagDt_bilinear(**v))
+         print('#'*10+'\n')
+@@ -457,7 +457,7 @@
+                'zvals': zvals, 'pseudo_k':pseudo_k,
+                 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_deltamag_linear(**v))
+         print('#'*10+'\n')
+--- .\build\lib.win32-2.7\geotecha\speccon\test\test_integrals.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\test_integrals.py	(refactored)
+@@ -18,7 +18,7 @@
+ Shows a few approaches to testing (so there may be some repeated test)
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -129,8 +129,8 @@
+             [(0, 1), 1.57080],
+             [(1, 0), 6.28319],
+             [(1, 1), 4.71239],
+-            [(np.array(range(7)), 0), self.PTPB],
+-            [(np.array(range(7)), 1), self.PTIB],
++            [(np.array(list(range(7))), 0), self.PTPB],
++            [(np.array(list(range(7))), 1), self.PTIB],
+             ] #then you canjust add more cases
+ 
+     def test_bc0(self):
+@@ -145,7 +145,7 @@
+ 
+     def test_numpy(self):
+         """test a numpy array as input to i; i = range(7), boundary = 0"""
+-        x = np.array(range(7))
++        x = np.array(list(range(7)))
+         y0 = m_from_sin_mx(x,0)
+         assert np.allclose(y0,self.PTPB)
+ 
+--- .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_unsat.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_unsat.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_vr.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_vr.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_vrc.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_vrc.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_vrw.py	(original)
++++ .\build\lib.win32-2.7\geotecha\speccon\test\test_speccon1d_vrw.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\consolidation\cosenzaandkorosak2014.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\cosenzaandkorosak2014.py	(refactored)
+@@ -19,7 +19,7 @@
+ an Anomalous Diffusion Process".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\dengetal2013and2014.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\dengetal2013and2014.py	(refactored)
+@@ -19,7 +19,7 @@
+ the discharge capacity varies with depth and time".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+@@ -365,7 +365,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, A2={1:.3g}".format(Th[j], A2))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -450,7 +450,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -513,7 +513,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -665,7 +665,7 @@
+                 plt.plot(por8[:,j], z, marker='o', label="eq8 Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None', markersize=7)
+--- .\build\lib.win32-3.4\geotecha\consolidation\luetal2010.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\luetal2010.py	(refactored)
+@@ -19,7 +19,7 @@
+ disturbed soil zone".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\nogamiandli2003.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\nogamiandli2003.py	(refactored)
+@@ -19,7 +19,7 @@
+ Horizontal Drains'.
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\nogamiandli2003_interactive.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\nogamiandli2003_interactive.py	(refactored)
+@@ -25,7 +25,7 @@
+ geotecha.consolidation.nogamiandli2003.NogamiAndLi2003 : calculations
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\schiffmanandstein1970.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\schiffmanandstein1970.py	(refactored)
+@@ -18,7 +18,7 @@
+ Schiffman and Stein 1970 "One-Dimensional consolidation of layered systems".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+@@ -480,7 +480,7 @@
+ 
+         beta = np.zeros_like(self.h, dtype=float)
+         beta[0] = beta0
+-        for i in xrange(1, self.nlayers):
++        for i in range(1, self.nlayers):
+             beta[i] = np.sqrt(self.cv[i-1] / self.cv[i] * beta[i-1]**2)
+ 
+         alpha = self.kv[:-1] / self.kv[1:]
+@@ -493,7 +493,7 @@
+         self.BC[-1, -1] = (self.bbot * math.sin(beta[-1] * self.zlayer[-1]) +
+                      self.abot * beta[-1] * math.cos(beta[-1] * self.zlayer[-1]))
+ 
+-        for i in xrange(self.nlayers - 1):
++        for i in range(self.nlayers - 1):
+             #1st equation
+             #TODO: row is wrong
+             row = 2 * i + 1
+@@ -530,7 +530,7 @@
+ 
+         x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, npts)
+         y = np.zeros_like(x)
+-        for i in xrange(len(x)):
++        for i in range(len(x)):
+             y[i]=self._characteristic_eqn(x[i])
+ #        plt.gcf().clear()
+         fig = plt.figure(figsize=(30,5))
+--- .\build\lib.win32-3.4\geotecha\consolidation\schiffmanandstein1970_interactive.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\schiffmanandstein1970_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ the schiffmanandstein1970 module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\shanetal2012.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\shanetal2012.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\smear_zones.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\smear_zones.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\tangandonitsuka2000.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\tangandonitsuka2000.py	(refactored)
+@@ -19,7 +19,7 @@
+ time-dependent loading".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\terzahi.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\terzahi.py	(refactored)
+@@ -18,7 +18,7 @@
+ Terzaghi one-dimensional consolidation
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\xieandleo2004.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\xieandleo2004.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib
+--- .\build\lib.win32-3.4\geotecha\consolidation\zhuandyin2012.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\zhuandyin2012.py	(refactored)
+@@ -19,7 +19,7 @@
+ of a soil layer with depth-dependent parameters under confined compression".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\consolidation\test\test_dengetal2013and2014.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\test\test_dengetal2013and2014.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the dengetal2013and2014 module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\consolidation\test\test_schiffmanandstein1970.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\test\test_schiffmanandstein1970.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\consolidation\test\test_smear_zones.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\test\test_smear_zones.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the smear_zones module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\consolidation\test\test_tangandonitsuka2000.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\test\test_tangandonitsuka2000.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\consolidation\test\test_xieandleo2004.py	(original)
++++ .\build\lib.win32-3.4\geotecha\consolidation\test\test_xieandleo2004.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the xieandleo2004 module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\constitutive_models\void_ratio_permeability.py	(original)
++++ .\build\lib.win32-3.4\geotecha\constitutive_models\void_ratio_permeability.py	(refactored)
+@@ -17,7 +17,7 @@
+ """
+ Relationships between permeability and void-ratio
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\constitutive_models\void_ratio_stress.py	(original)
++++ .\build\lib.win32-3.4\geotecha\constitutive_models\void_ratio_stress.py	(refactored)
+@@ -20,7 +20,7 @@
+ """
+ 
+ 
+-from __future__ import print_function, division
++
+ import numpy as np
+ import matplotlib.pyplot as plt
+ import matplotlib
+--- .\build\lib.win32-3.4\geotecha\inputoutput\inputoutput.py	(original)
++++ .\build\lib.win32-3.4\geotecha\inputoutput\inputoutput.py	(refactored)
+@@ -19,8 +19,8 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
+-import __builtin__
++
++import builtins
+ import sys
+ import ast
+ import imp
+@@ -31,7 +31,7 @@
+ from sympy.printing.fcode import FCodePrinter
+ import multiprocessing
+ import time
+-from StringIO import StringIO
++from io import StringIO
+ import re
+ import os
+ import pandas as pd
+@@ -549,7 +549,7 @@
+     mymodule = imp.new_module('mymodule') #may need to randomise the name; not sure
+ 
+     if syntax_checker is None:
+-        exec reader in mymodule.__dict__
++        exec(reader, mymodule.__dict__)
+         return mymodule
+ 
+ 
+@@ -560,7 +560,7 @@
+     syntax_checker.visit(tree)
+     compiled = compile(tree, '<string>', "exec")
+     mymodule.__dict__.update(syntax_checker.allowed_functions)
+-    exec compiled in mymodule.__dict__
++    exec(compiled, mymodule.__dict__)
+ 
+     return mymodule
+ 
+@@ -1010,7 +1010,7 @@
+             out+='{0} = {1}\n'.format('.'.join([object_name,v]), v2)
+     else:
+         for v in attributes:
+-            if v in defaults.keys():
++            if v in list(defaults.keys()):
+                 v2 = not_found_value
+                 if isinstance(v2, str):
+                     v2 = "'{0}'".format(v2)
+--- .\build\lib.win32-3.4\geotecha\inputoutput\test\test_inputoutput.py	(original)
++++ .\build\lib.win32-3.4\geotecha\inputoutput\test\test_inputoutput.py	(refactored)
+@@ -17,7 +17,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import ast
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\fourier.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\fourier.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Fourier transforms."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+--- .\build\lib.win32-3.4\geotecha\mathematics\geometry.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\geometry.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some routines loosely related to geometry."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ import sympy
+ import matplotlib
+@@ -238,7 +238,7 @@
+ 
+     i = np.argmax(n) #project polygon onto plane that is perpendicular to this direction, then integrate the area
+ 
+-    j = range(3)
++    j = list(range(3))
+     j.pop(i) #remaining directions
+     e = (x, y, z)
+     def if1dxdy(x, y):
+--- .\build\lib.win32-3.4\geotecha\mathematics\hankel.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\hankel.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Hankel transforms."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+--- .\build\lib.win32-3.4\geotecha\mathematics\laplace.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\laplace.py	(refactored)
+@@ -17,7 +17,7 @@
+ """Numerical inverse Laplace transform"""
+ 
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ 
+@@ -149,8 +149,8 @@
+             inv_laplace = np.exp(z * t)
+             inv_laplace *= dz
+ 
+-            for i in xrange(inv_laplace.shape[0]):
+-                for j in xrange(inv_laplace.shape[1]):
++            for i in range(inv_laplace.shape[0]):
++                for j in range(inv_laplace.shape[1]):
+                     inv_laplace[i,j] *= self.f(z[i,j], *args)
+             inv_laplace = np.sum(inv_laplace, axis=0)
+ 
+--- .\build\lib.win32-3.4\geotecha\mathematics\mp_laplace.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\mp_laplace.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """this module implements numerical inverse laplace transform using mpmath"""
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ 
+--- .\build\lib.win32-3.4\geotecha\mathematics\multi_transform.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\multi_transform.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some routines related multi dimensional integral transforms"""
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from matplotlib import pyplot as plt
+ import functools
+@@ -29,6 +29,7 @@
+ from geotecha.mathematics.laplace import Talbot
+ from geotecha.mathematics.hankel import HankelTransform
+ from geotecha.mathematics.fourier import FourierTransform
++import collections
+ 
+ 
+ 
+@@ -148,7 +149,7 @@
+     if isinstance(opts, dict):
+         opts = [opts] * depth
+     else:
+-        opts = [opt if callable(opt) else _OptFunc(opt) for opt in opts]
++        opts = [opt if isinstance(opt, collections.Callable) else _OptFunc(opt) for opt in opts]
+ 
+     return _NTransform(func, transforms,
+                        transvars, opts).integral_transform(*args)
+--- .\build\lib.win32-3.4\geotecha\mathematics\quadrature.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\quadrature.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Numerical integration by quadrature"""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+@@ -1093,9 +1093,9 @@
+         from random import Random
+         rnd = Random()
+         rnd.seed(START)
+-    for i in xrange(START, STOP):
++    for i in range(START, STOP):
+         row = []
+-        for j in xrange(i+1):
++        for j in range(i+1):
+             if j == 0:
+                 a, b = 0, seq[i+1]-seq[i]
+             else:
+--- .\build\lib.win32-3.4\geotecha\mathematics\root_finding.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\root_finding.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Routines for finding zeros/roots of equations."""
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import scipy.optimize
+--- .\build\lib.win32-3.4\geotecha\mathematics\transformations.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\transformations.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Rotines to perform transformations"""
+ 
+-from __future__ import print_function, division
++
+ import numpy as np
+ 
+ def depth_to_reduced_level(z, H = 1.0, rlzero=None):
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_fourier.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_fourier.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Test routines for the fourier module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_geometry.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_geometry.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Testing routines for the geometry module"""
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_hankel.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_hankel.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the hankel module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -126,7 +126,7 @@
+ 
+ 
+ 
+-def check_HankelTransform(s, (func, funcdoc), (func_, func_doc), args, order, m,
++def check_HankelTransform(s, xxx_todo_changeme, xxx_todo_changeme1, args, order, m,
+                           ng, ng0, shanks_ind):
+     """check if a HankelTransform gives it's analytical solution
+ 
+@@ -140,7 +140,8 @@
+         analytical transform of `func`
+     other: see HankelTransform
+     """
+-
++    (func, funcdoc) = xxx_todo_changeme
++    (func_, func_doc) = xxx_todo_changeme1
+     if func==hankel3:
+         points= args[0] / jn_zeros(0, 70)
+         atol=1e-4
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_laplace.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_laplace.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the laplace module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_mp_laplace.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_mp_laplace.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the mp_laplace module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_multi_transform.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_multi_transform.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the multi_transform module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_quadrature.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_quadrature.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the quadrature module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_root_finding.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_root_finding.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Testing routines for the root_finding module."""
+ 
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\mathematics\test\test_transformations.py	(original)
++++ .\build\lib.win32-3.4\geotecha\mathematics\test\test_transformations.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Testing routines for the transformations module."""
+ 
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\piecewise\piecewise_linear_1d.py	(original)
++++ .\build\lib.win32-3.4\geotecha\piecewise\piecewise_linear_1d.py	(refactored)
+@@ -18,7 +18,7 @@
+ One dimensional piecwise linear relationships and manipulations
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import math
+@@ -271,7 +271,7 @@
+         y = y[::-1]
+ 
+     if not non_decreasing(x):
+-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing"
++        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing")
+ 
+ 
+     steps = np.where(np.diff(x) == 0)[0]
+@@ -312,7 +312,7 @@
+         return x, y
+ 
+     if not non_increasing(x):
+-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing"
++        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing")
+ 
+     return x[::-1], y[::-1]
+ 
+@@ -1179,13 +1179,13 @@
+     if n<=2:
+         return x, y
+ 
+-    ikeep = range(len(x))
++    ikeep = list(range(len(x)))
+ 
+ 
+     j = 0
+     x0 = x[j]
+     y0 = y[j]
+-    for i in xrange(2,n):
++    for i in range(2,n):
+         x1=x[i]
+         y1=y[i]
+         dx = x1-x0
+@@ -2716,8 +2716,7 @@
+ 
+ 
+     if len(x)!=len(y):
+-        raise (ValueError('x and y must have same length '
+-                     'len(x)={:d}, len(y)={:d}'.format(len(x), len(y))))
++        raise ValueError
+     if logx:
+         x[np.abs(x) <= (atol + rtol * np.abs(x))] = logxzero
+         if np.any(x<0):
+--- .\build\lib.win32-3.4\geotecha\piecewise\test\test_piecewise_linear_1d.py	(original)
++++ .\build\lib.win32-3.4\geotecha\piecewise\test\test_piecewise_linear_1d.py	(refactored)
+@@ -18,7 +18,7 @@
+ Testing rotines for piecewise_linear_1d module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -173,13 +173,13 @@
+ 
+     def test_non_increasing_and_non_decreasing_parts(self):
+         """test some non_increasing_and_non_decreasing_parts examples"""
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [range(len(self.two_steps['x'])-1)])
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [range(len(self.two_ramps_reverse['x'])-1)])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [list(range(len(self.two_steps['x'])-1))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [list(range(len(self.two_ramps_reverse['x'])-1))])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x']), [[0,1],[2],[3,4]])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x']), [[0,1],[2,3],[4]])
+ 
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [range(len(self.two_steps['x']))])
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [range(len(self.two_ramps_reverse['x']))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [list(range(len(self.two_steps['x'])))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [list(range(len(self.two_ramps_reverse['x'])))])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x'],include_end_point=True), [[0,1,2],[2,3],[3,4,5]])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x'],include_end_point=True), [[0,1,2],[2,3,4],[4,5]])
+ 
+--- .\build\lib.win32-3.4\geotecha\plotting\one_d.py	(original)
++++ .\build\lib.win32-3.4\geotecha\plotting\one_d.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib as mpl
+@@ -286,10 +286,10 @@
+             pass
+ 
+         if n==0:
+-            markers = range(len(self.markers))
+-            dashes = range(len(self.dashes))
+-            marker_colors = range(len(self.colors))
+-            line_colors = range(len(self.colors))
++            markers = list(range(len(self.markers)))
++            dashes = list(range(len(self.dashes)))
++            marker_colors = list(range(len(self.colors)))
++            line_colors = list(range(len(self.colors)))
+             n = max([len(v) for v in [markers, dashes, marker_colors, line_colors] if v is not None])
+ 
+         if markers is None: # no markers
+@@ -312,8 +312,8 @@
+ 
+         styles=[dict() for i in range(n)]
+         for i in range(n):
+-            m = markers.next()
+-            mc = marker_colors.next()
++            m = next(markers)
++            mc = next(marker_colors)
+             if m is None:
+                 styles[i]['marker'] = 'none'
+             else:
+@@ -327,13 +327,13 @@
+                     if self.markers[m]['markerfacecolor'] != 'none':
+                         styles[i]['markerfacecolor'] = self.colors[mc]
+ 
+-            d = dashes.next()
++            d = next(dashes)
+             if d is None:
+                 styles[i]['linestyle'] = 'None'
+             else:
+                 styles[i]['dashes'] = self.dashes[d]
+ 
+-            lc = line_colors.next()
++            lc = next(line_colors)
+             if lc is None:
+                 styles[i]['color'] = self.color
+             else:
+@@ -439,8 +439,8 @@
+              'fillstyle': 'bottom'},
+             {'marker': '^',
+              'markerfacecolor': 'none'},
+-            {'marker': u'$\u25E9$'},
+-            {'marker': u'$\u2b2d$'},
++            {'marker': '$\u25E9$'},
++            {'marker': '$\u2b2d$'},
+             {'marker': 'h'},
+             {'marker': '^',
+              'fillstyle': 'bottom'},
+@@ -457,10 +457,10 @@
+             {'marker': 'H',
+              'fillstyle': 'top'},
+             {'marker': (6, asterisk, 0)},
+-            {'marker': u'$\u29bf$'},
+-            {'marker': u'$\u29c7$'},
+-            {'marker': u'$\u29fe$'},
+-            {'marker': u'$\u27E1$'},
++            {'marker': '$\u29bf$'},
++            {'marker': '$\u29c7$'},
++            {'marker': '$\u29fe$'},
++            {'marker': '$\u27E1$'},
+             ]
+ 
+ 
+@@ -1189,7 +1189,7 @@
+     for o, d in zip(obj, dic):
+         if d is None:
+             continue
+-        for key, value in d.iteritems():
++        for key, value in d.items():
+             s = 'set_{0}'.format(key)
+             if hasattr(o, s):
+                 getattr(o, s)(value)
+@@ -1290,7 +1290,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1345,7 +1345,7 @@
+         ax2.append(plt.subplot(gs[i, 1], sharex=sharex2, sharey=sharey2 ))
+ 
+         for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+-            style = styles.next()
++            style = next(styles)
+             if vs_time is None: #allow for fixed ppress
+                 vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
+ 
+@@ -1526,7 +1526,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1647,7 +1647,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1661,7 +1661,7 @@
+     fig = plt.figure(**fig_prop)
+ 
+     ax1=[]
+-    style = styles.next()
++    style = next(styles)
+     for i, (vs_depth, xlabel)  in enumerate(zip(z_x, xlabels)):
+ 
+ 
+@@ -1886,7 +1886,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+--- .\build\lib.win32-3.4\geotecha\plotting\test\test_one_d.py	(original)
++++ .\build\lib.win32-3.4\geotecha\plotting\test\test_one_d.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the one_d module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\speccon\integrals.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\integrals.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ import math
+ 
+--- .\build\lib.win32-3.4\geotecha\speccon\integrals_generate_code.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\integrals_generate_code.py	(refactored)
+@@ -15,7 +15,7 @@
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Use sympy to generate code for generating spectral method matrix subroutines"""
+ 
+-from __future__ import division, print_function
++
+ 
+ import sympy
+ import textwrap
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d.py	(refactored)
+@@ -19,7 +19,7 @@
+ Spectral Galerkin methods.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_unsat.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_unsat.py	(refactored)
+@@ -19,7 +19,7 @@
+ Multilayer consolidation of unsaturated soil using the spectral Galerkin
+ method.
+ """
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_unsat_interactive.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_unsat_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_unsat
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vr.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vr.py	(refactored)
+@@ -21,7 +21,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vr_interactive.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vr_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vr
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrc.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrc.py	(refactored)
+@@ -20,7 +20,7 @@
+ radial drainage using the spectral Galerkin method.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrc_interactive.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrc_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vrc
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrw.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrw.py	(refactored)
+@@ -20,7 +20,7 @@
+ using the spectral Galerkin method.
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrw_interactive.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\speccon1d_vrw_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vrw
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\build\lib.win32-3.4\geotecha\speccon\test\dim1sin_test_data_gen.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\dim1sin_test_data_gen.py	(refactored)
+@@ -30,7 +30,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from math import pi
+ 
+--- .\build\lib.win32-3.4\geotecha\speccon\test\speccon1d_test_data_gen.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\speccon1d_test_data_gen.py	(refactored)
+@@ -24,7 +24,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from collections import OrderedDict
+ import numpy as np
+@@ -96,7 +96,7 @@
+     print(no_bc)
+     print('#'*10+'\n')
+ 
+-    for s, f in fn.iteritems():
++    for s, f in fn.items():
+         if s == "no_bc":
+             continue
+         sout = str(f)
+@@ -159,7 +159,7 @@
+             'a': a, 'b':b, 'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_abf_linear(**v))
+         print('#'*10+'\n')
+@@ -213,7 +213,7 @@
+             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_D_aDf_linear(**v))
+         print('#'*10+'\n')
+@@ -268,7 +268,7 @@
+             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_aDfDt_linear(**v))
+         print('#'*10+'\n')
+@@ -345,7 +345,7 @@
+           'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_deltaf_linear(**v))
+         print('#'*10+'\n')
+@@ -382,7 +382,7 @@
+                'a':a, 'b':b,
+                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_abmag_bilinear(**v))
+         print('#'*10+'\n')
+@@ -419,7 +419,7 @@
+                'a':a,
+                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_aDmagDt_bilinear(**v))
+         print('#'*10+'\n')
+@@ -457,7 +457,7 @@
+                'zvals': zvals, 'pseudo_k':pseudo_k,
+                 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_deltamag_linear(**v))
+         print('#'*10+'\n')
+--- .\build\lib.win32-3.4\geotecha\speccon\test\test_integrals.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\test_integrals.py	(refactored)
+@@ -18,7 +18,7 @@
+ Shows a few approaches to testing (so there may be some repeated test)
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -129,8 +129,8 @@
+             [(0, 1), 1.57080],
+             [(1, 0), 6.28319],
+             [(1, 1), 4.71239],
+-            [(np.array(range(7)), 0), self.PTPB],
+-            [(np.array(range(7)), 1), self.PTIB],
++            [(np.array(list(range(7))), 0), self.PTPB],
++            [(np.array(list(range(7))), 1), self.PTIB],
+             ] #then you canjust add more cases
+ 
+     def test_bc0(self):
+@@ -145,7 +145,7 @@
+ 
+     def test_numpy(self):
+         """test a numpy array as input to i; i = range(7), boundary = 0"""
+-        x = np.array(range(7))
++        x = np.array(list(range(7)))
+         y0 = m_from_sin_mx(x,0)
+         assert np.allclose(y0,self.PTPB)
+ 
+--- .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_unsat.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_unsat.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_vr.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_vr.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_vrc.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_vrc.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_vrw.py	(original)
++++ .\build\lib.win32-3.4\geotecha\speccon\test\test_speccon1d_vrw.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\docs\conf.py	(original)
++++ .\docs\conf.py	(refactored)
+@@ -62,8 +62,8 @@
+ master_doc = 'index'
+ 
+ # General information about the project.
+-project = u'geotecha'
+-copyright = u'2014, Rohan Walker'
++project = 'geotecha'
++copyright = '2014, Rohan Walker'
+ 
+ # The version info for the project you're documenting, acts as replacement for
+ # |version| and |release|, also used in various other places throughout the
+@@ -227,8 +227,8 @@
+ # (source start file, target name, title,
+ #  author, documentclass [howto, manual, or own class]).
+ latex_documents = [
+-  ('index', 'geotecha.tex', u'geotecha Documentation',
+-   u'Rohan Walker', 'manual'),
++  ('index', 'geotecha.tex', 'geotecha Documentation',
++   'Rohan Walker', 'manual'),
+ ]
+ 
+ # The name of an image file (relative to this directory) to place at the top of
+@@ -257,8 +257,8 @@
+ # One entry per manual page. List of tuples
+ # (source start file, name, description, authors, manual section).
+ man_pages = [
+-    ('index', 'geotecha', u'geotecha Documentation',
+-     [u'Rohan Walker'], 1)
++    ('index', 'geotecha', 'geotecha Documentation',
++     ['Rohan Walker'], 1)
+ ]
+ 
+ # If true, show URL addresses after external links.
+@@ -271,8 +271,8 @@
+ # (source start file, target name, title, author,
+ #  dir menu entry, description, category)
+ texinfo_documents = [
+-  ('index', 'geotecha', u'geotecha Documentation',
+-   u'Rohan Walker', 'geotecha', 'One line description of project.',
++  ('index', 'geotecha', 'geotecha Documentation',
++   'Rohan Walker', 'geotecha', 'One line description of project.',
+    'Miscellaneous'),
+ ]
+ 
+--- .\docs\_build\html\geotecha_examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py	(refactored)
+@@ -14,7 +14,7 @@
+ 
+ # Examine the effect of different layer thicknesses
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_bot_air_BC_shanetal2012.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_bot_air_BC_shanetal2012.py	(refactored)
+@@ -18,7 +18,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_top_water_BC_shanetal2012.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_top_water_BC_shanetal2012.py	(refactored)
+@@ -18,7 +18,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_unsat_surcharge_ka_divide_kw_100_shanetal2012.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_unsat_surcharge_ka_divide_kw_100_shanetal2012.py	(refactored)
+@@ -14,7 +14,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_4layers_vert_schiffmanandstein1970_Fig2.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_4layers_vert_schiffmanandstein1970_Fig2.py	(refactored)
+@@ -7,7 +7,7 @@
+ # Division 96, no. 4 (1970): 1499-1504.
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_gradient_bottom_boundary_condition.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_gradient_bottom_boundary_condition.py	(refactored)
+@@ -10,7 +10,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_pumping_at_mid_depth.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_pumping_at_mid_depth.py	(refactored)
+@@ -13,7 +13,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_radial_mimic_hansbo1981_with_vacuum.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_radial_mimic_hansbo1981_with_vacuum.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_drainage_tangandonitsuka2000.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_drainage_tangandonitsuka2000.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_equal_vs_free_strain_nogmaiandli2003.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_equal_vs_free_strain_nogmaiandli2003.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_vert_with_depth_dependent_mv_kv_zhuandyin2012.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vr_vert_with_depth_dependent_mv_kv_zhuandyin2012.py	(refactored)
+@@ -19,7 +19,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrc import Speccon1dVRC
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010_linear_depth_dependent_load.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010_linear_depth_dependent_load.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrc import Speccon1dVRC
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrw_mimic_partially_penetrating_drain_with_kw_of_0_in_bottom_layer.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrw_mimic_partially_penetrating_drain_with_kw_of_0_in_bottom_layer.py	(refactored)
+@@ -8,7 +8,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrw_vert_and_radial_with_well_resis_drainage_tangandonitsuka2000.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrw_vert_and_radial_with_well_resis_drainage_tangandonitsuka2000.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrw_well_resistance_linear_with_depth_dengetal2013.py	(original)
++++ .\docs\_build\html\geotecha_examples\speccon\speccon1d_vrw_well_resistance_linear_with_depth_dengetal2013.py	(refactored)
+@@ -20,7 +20,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py	(original)
++++ .\docs\geotecha_examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py	(refactored)
+@@ -14,7 +14,7 @@
+ 
+ # Examine the effect of different layer thicknesses
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_bot_air_BC_shanetal2012.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_bot_air_BC_shanetal2012.py	(refactored)
+@@ -18,7 +18,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_top_water_BC_shanetal2012.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_unsat_sinusoidal_top_water_BC_shanetal2012.py	(refactored)
+@@ -18,7 +18,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_unsat_surcharge_ka_divide_kw_100_shanetal2012.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_unsat_surcharge_ka_divide_kw_100_shanetal2012.py	(refactored)
+@@ -14,7 +14,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vr_4layers_vert_schiffmanandstein1970_Fig2.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vr_4layers_vert_schiffmanandstein1970_Fig2.py	(refactored)
+@@ -7,7 +7,7 @@
+ # Division 96, no. 4 (1970): 1499-1504.
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_gradient_bottom_boundary_condition.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_gradient_bottom_boundary_condition.py	(refactored)
+@@ -10,7 +10,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_pumping_at_mid_depth.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vr_mimic_terzaghi_with_pumping_at_mid_depth.py	(refactored)
+@@ -13,7 +13,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vr_radial_mimic_hansbo1981_with_vacuum.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vr_radial_mimic_hansbo1981_with_vacuum.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_drainage_tangandonitsuka2000.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_drainage_tangandonitsuka2000.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_equal_vs_free_strain_nogmaiandli2003.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vr_vert_and_radial_equal_vs_free_strain_nogmaiandli2003.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vr_vert_with_depth_dependent_mv_kv_zhuandyin2012.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vr_vert_with_depth_dependent_mv_kv_zhuandyin2012.py	(refactored)
+@@ -19,7 +19,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrc import Speccon1dVRC
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010_linear_depth_dependent_load.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vrc_stone_column_luetal2010_linear_depth_dependent_load.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrc import Speccon1dVRC
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vrw_mimic_partially_penetrating_drain_with_kw_of_0_in_bottom_layer.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vrw_mimic_partially_penetrating_drain_with_kw_of_0_in_bottom_layer.py	(refactored)
+@@ -8,7 +8,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vrw_vert_and_radial_with_well_resis_drainage_tangandonitsuka2000.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vrw_vert_and_radial_with_well_resis_drainage_tangandonitsuka2000.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\docs\geotecha_examples\speccon\speccon1d_vrw_well_resistance_linear_with_depth_dengetal2013.py	(original)
++++ .\docs\geotecha_examples\speccon\speccon1d_vrw_well_resistance_linear_with_depth_dengetal2013.py	(refactored)
+@@ -20,7 +20,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\docs\sphinxext\gen_api_rst_files.py	(original)
++++ .\docs\sphinxext\gen_api_rst_files.py	(refactored)
+@@ -17,7 +17,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import textwrap
+ import os
+ import functools
+--- .\docs\sphinxext\gen_examples_rst_files.py	(original)
++++ .\docs\sphinxext\gen_examples_rst_files.py	(refactored)
+@@ -5,7 +5,7 @@
+ # Note a large part of this code was canabalised from the matplotlib sphinxext
+ # gen_rst.py
+ 
+-from __future__ import print_function
++
+ import io
+ import os
+ import re
+@@ -147,12 +147,12 @@
+                 continue
+ 
+             fh = io.open(outrstfile, 'w', encoding='utf-8')
+-            fh.write(u'.. _%s-%s:\n\n' % (subdir, basename))
++            fh.write('.. _%s-%s:\n\n' % (subdir, basename))
+             title = '%s example code: %s'%(subdir, fname)
+             #title = '<img src=%s> %s example code: %s'%(thumbfile, subdir, fname)
+ 
+-            fh.write(title + u'\n')
+-            fh.write(u'=' * len(title) + u'\n\n')
++            fh.write(title + '\n')
++            fh.write('=' * len(title) + '\n\n')
+ 
+             if do_plot:
+                 fpath = fullpath[fullpath.index('geotecha_examples'):]
+@@ -160,10 +160,10 @@
+ #                fpath = os.path.join(fpath[fpath.index('geotecha_examples'):])
+ #                fh.write(u"\n\n.. plot:: %s\n\n::\n\n" % fullpath)
+ #                fh.write(u"\n\n.. plot:: %s\n   :include-source:\n\n\n" % fullpath)
+-                fh.write(u"\n\n.. plot:: %s\n   :include-source:\n\n\n" % fpath)
++                fh.write("\n\n.. plot:: %s\n   :include-source:\n\n\n" % fpath)
+                 pass
+             else:
+-                fh.write(u"[`source code <%s>`_]\n\n::\n\n" % fname)
++                fh.write("[`source code <%s>`_]\n\n::\n\n" % fname)
+ 
+ #            # indent the contents
+ #            contents = u'\n'.join([u'    %s'%row.rstrip() for row in contents.split(u'\n')])
+--- .\examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py	(original)
++++ .\examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py	(refactored)
+@@ -14,7 +14,7 @@
+ 
+ # Examine the effect of different layer thicknesses
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_unsat_sinusoidal_bot_air_BC_shanetal2012.py	(original)
++++ .\examples\speccon\speccon1d_unsat_sinusoidal_bot_air_BC_shanetal2012.py	(refactored)
+@@ -18,7 +18,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_unsat_sinusoidal_top_water_BC_shanetal2012.py	(original)
++++ .\examples\speccon\speccon1d_unsat_sinusoidal_top_water_BC_shanetal2012.py	(refactored)
+@@ -18,7 +18,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_unsat_surcharge_ka_divide_kw_100_shanetal2012.py	(original)
++++ .\examples\speccon\speccon1d_unsat_surcharge_ka_divide_kw_100_shanetal2012.py	(refactored)
+@@ -14,7 +14,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_unsat import Speccon1dUnsat
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vr_4layers_vert_schiffmanandstein1970_Fig2.py	(original)
++++ .\examples\speccon\speccon1d_vr_4layers_vert_schiffmanandstein1970_Fig2.py	(refactored)
+@@ -7,7 +7,7 @@
+ # Division 96, no. 4 (1970): 1499-1504.
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vr_mimic_terzaghi_with_gradient_bottom_boundary_condition.py	(original)
++++ .\examples\speccon\speccon1d_vr_mimic_terzaghi_with_gradient_bottom_boundary_condition.py	(refactored)
+@@ -10,7 +10,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vr_mimic_terzaghi_with_pumping_at_mid_depth.py	(original)
++++ .\examples\speccon\speccon1d_vr_mimic_terzaghi_with_pumping_at_mid_depth.py	(refactored)
+@@ -13,7 +13,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vr_radial_mimic_hansbo1981_with_vacuum.py	(original)
++++ .\examples\speccon\speccon1d_vr_radial_mimic_hansbo1981_with_vacuum.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vr_vert_and_radial_drainage_tangandonitsuka2000.py	(original)
++++ .\examples\speccon\speccon1d_vr_vert_and_radial_drainage_tangandonitsuka2000.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vr_vert_and_radial_equal_vs_free_strain_nogmaiandli2003.py	(original)
++++ .\examples\speccon\speccon1d_vr_vert_and_radial_equal_vs_free_strain_nogmaiandli2003.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vr_vert_with_depth_dependent_mv_kv_zhuandyin2012.py	(original)
++++ .\examples\speccon\speccon1d_vr_vert_with_depth_dependent_mv_kv_zhuandyin2012.py	(refactored)
+@@ -19,7 +19,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vr import Speccon1dVR
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vrc_stone_column_luetal2010.py	(original)
++++ .\examples\speccon\speccon1d_vrc_stone_column_luetal2010.py	(refactored)
+@@ -15,7 +15,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrc import Speccon1dVRC
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vrc_stone_column_luetal2010_linear_depth_dependent_load.py	(original)
++++ .\examples\speccon\speccon1d_vrc_stone_column_luetal2010_linear_depth_dependent_load.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrc import Speccon1dVRC
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vrw_mimic_partially_penetrating_drain_with_kw_of_0_in_bottom_layer.py	(original)
++++ .\examples\speccon\speccon1d_vrw_mimic_partially_penetrating_drain_with_kw_of_0_in_bottom_layer.py	(refactored)
+@@ -8,7 +8,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vrw_vert_and_radial_with_well_resis_drainage_tangandonitsuka2000.py	(original)
++++ .\examples\speccon\speccon1d_vrw_vert_and_radial_with_well_resis_drainage_tangandonitsuka2000.py	(refactored)
+@@ -16,7 +16,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\examples\speccon\speccon1d_vrw_well_resistance_linear_with_depth_dengetal2013.py	(original)
++++ .\examples\speccon\speccon1d_vrw_well_resistance_linear_with_depth_dengetal2013.py	(refactored)
+@@ -20,7 +20,7 @@
+ # This file should be run with python.  It will not work if run with the
+ # speccon1d_vr.exe script program.
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from geotecha.speccon.speccon1d_vrw import Speccon1dVRW
+ import matplotlib.pyplot as plt
+--- .\geotecha\consolidation\cosenzaandkorosak2014.py	(original)
++++ .\geotecha\consolidation\cosenzaandkorosak2014.py	(refactored)
+@@ -19,7 +19,7 @@
+ an Anomalous Diffusion Process".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\geotecha\consolidation\dengetal2013and2014.py	(original)
++++ .\geotecha\consolidation\dengetal2013and2014.py	(refactored)
+@@ -19,7 +19,7 @@
+ the discharge capacity varies with depth and time".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+@@ -365,7 +365,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, A2={1:.3g}".format(Th[j], A2))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -450,7 +450,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -513,7 +513,7 @@
+                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None')
+@@ -665,7 +665,7 @@
+                 plt.plot(por8[:,j], z, marker='o', label="eq8 Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
+                 plt.plot(uz0,0, marker='o', ms=14)
+ 
+-        for key, val in res.iteritems():
++        for key, val in res.items():
+             x = val[:,0]
+             y = val[:,1]*20
+             plt.plot(x,y, label=key, marker='s', linestyle='None', markersize=7)
+--- .\geotecha\consolidation\luetal2010.py	(original)
++++ .\geotecha\consolidation\luetal2010.py	(refactored)
+@@ -19,7 +19,7 @@
+ disturbed soil zone".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\geotecha\consolidation\nogamiandli2003.py	(original)
++++ .\geotecha\consolidation\nogamiandli2003.py	(refactored)
+@@ -19,7 +19,7 @@
+ Horizontal Drains'.
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\consolidation\nogamiandli2003_interactive.py	(original)
++++ .\geotecha\consolidation\nogamiandli2003_interactive.py	(refactored)
+@@ -25,7 +25,7 @@
+ geotecha.consolidation.nogamiandli2003.NogamiAndLi2003 : calculations
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\consolidation\schiffmanandstein1970.py	(original)
++++ .\geotecha\consolidation\schiffmanandstein1970.py	(refactored)
+@@ -18,7 +18,7 @@
+ Schiffman and Stein 1970 "One-Dimensional consolidation of layered systems".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+@@ -480,7 +480,7 @@
+ 
+         beta = np.zeros_like(self.h, dtype=float)
+         beta[0] = beta0
+-        for i in xrange(1, self.nlayers):
++        for i in range(1, self.nlayers):
+             beta[i] = np.sqrt(self.cv[i-1] / self.cv[i] * beta[i-1]**2)
+ 
+         alpha = self.kv[:-1] / self.kv[1:]
+@@ -493,7 +493,7 @@
+         self.BC[-1, -1] = (self.bbot * math.sin(beta[-1] * self.zlayer[-1]) +
+                      self.abot * beta[-1] * math.cos(beta[-1] * self.zlayer[-1]))
+ 
+-        for i in xrange(self.nlayers - 1):
++        for i in range(self.nlayers - 1):
+             #1st equation
+             #TODO: row is wrong
+             row = 2 * i + 1
+@@ -530,7 +530,7 @@
+ 
+         x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, npts)
+         y = np.zeros_like(x)
+-        for i in xrange(len(x)):
++        for i in range(len(x)):
+             y[i]=self._characteristic_eqn(x[i])
+ #        plt.gcf().clear()
+         fig = plt.figure(figsize=(30,5))
+--- .\geotecha\consolidation\schiffmanandstein1970_interactive.py	(original)
++++ .\geotecha\consolidation\schiffmanandstein1970_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ the schiffmanandstein1970 module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\consolidation\shanetal2012.py	(original)
++++ .\geotecha\consolidation\shanetal2012.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\geotecha\consolidation\smear_zones.py	(original)
++++ .\geotecha\consolidation\smear_zones.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\geotecha\consolidation\tangandonitsuka2000.py	(original)
++++ .\geotecha\consolidation\tangandonitsuka2000.py	(refactored)
+@@ -19,7 +19,7 @@
+ time-dependent loading".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\geotecha\consolidation\terzahi.py	(original)
++++ .\geotecha\consolidation\terzahi.py	(refactored)
+@@ -18,7 +18,7 @@
+ Terzaghi one-dimensional consolidation
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\geotecha\consolidation\xieandleo2004.py	(original)
++++ .\geotecha\consolidation\xieandleo2004.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib
+--- .\geotecha\consolidation\zhuandyin2012.py	(original)
++++ .\geotecha\consolidation\zhuandyin2012.py	(refactored)
+@@ -19,7 +19,7 @@
+ of a soil layer with depth-dependent parameters under confined compression".
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ from matplotlib import pyplot as plt
+--- .\geotecha\consolidation\test\test_dengetal2013and2014.py	(original)
++++ .\geotecha\consolidation\test\test_dengetal2013and2014.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the dengetal2013and2014 module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\consolidation\test\test_schiffmanandstein1970.py	(original)
++++ .\geotecha\consolidation\test\test_schiffmanandstein1970.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\consolidation\test\test_smear_zones.py	(original)
++++ .\geotecha\consolidation\test\test_smear_zones.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the smear_zones module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\consolidation\test\test_tangandonitsuka2000.py	(original)
++++ .\geotecha\consolidation\test\test_tangandonitsuka2000.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\consolidation\test\test_xieandleo2004.py	(original)
++++ .\geotecha\consolidation\test\test_xieandleo2004.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the xieandleo2004 module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\constitutive_models\void_ratio_permeability.py	(original)
++++ .\geotecha\constitutive_models\void_ratio_permeability.py	(refactored)
+@@ -17,7 +17,7 @@
+ """
+ Relationships between permeability and void-ratio
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\constitutive_models\void_ratio_stress.py	(original)
++++ .\geotecha\constitutive_models\void_ratio_stress.py	(refactored)
+@@ -20,7 +20,7 @@
+ """
+ 
+ 
+-from __future__ import print_function, division
++
+ import numpy as np
+ import matplotlib.pyplot as plt
+ import matplotlib
+--- .\geotecha\inputoutput\inputoutput.py	(original)
++++ .\geotecha\inputoutput\inputoutput.py	(refactored)
+@@ -19,8 +19,8 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
+-import __builtin__
++
++import builtins
+ import sys
+ import ast
+ import imp
+@@ -31,7 +31,7 @@
+ from sympy.printing.fcode import FCodePrinter
+ import multiprocessing
+ import time
+-from StringIO import StringIO
++from io import StringIO
+ import re
+ import os
+ import pandas as pd
+@@ -549,7 +549,7 @@
+     mymodule = imp.new_module('mymodule') #may need to randomise the name; not sure
+ 
+     if syntax_checker is None:
+-        exec reader in mymodule.__dict__
++        exec(reader, mymodule.__dict__)
+         return mymodule
+ 
+ 
+@@ -560,7 +560,7 @@
+     syntax_checker.visit(tree)
+     compiled = compile(tree, '<string>', "exec")
+     mymodule.__dict__.update(syntax_checker.allowed_functions)
+-    exec compiled in mymodule.__dict__
++    exec(compiled, mymodule.__dict__)
+ 
+     return mymodule
+ 
+@@ -1010,7 +1010,7 @@
+             out+='{0} = {1}\n'.format('.'.join([object_name,v]), v2)
+     else:
+         for v in attributes:
+-            if v in defaults.keys():
++            if v in list(defaults.keys()):
+                 v2 = not_found_value
+                 if isinstance(v2, str):
+                     v2 = "'{0}'".format(v2)
+--- .\geotecha\inputoutput\test\test_inputoutput.py	(original)
++++ .\geotecha\inputoutput\test\test_inputoutput.py	(refactored)
+@@ -17,7 +17,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import ast
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\fourier.py	(original)
++++ .\geotecha\mathematics\fourier.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Fourier transforms."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+--- .\geotecha\mathematics\geometry.py	(original)
++++ .\geotecha\mathematics\geometry.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some routines loosely related to geometry."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ import sympy
+ import matplotlib
+@@ -238,7 +238,7 @@
+ 
+     i = np.argmax(n) #project polygon onto plane that is perpendicular to this direction, then integrate the area
+ 
+-    j = range(3)
++    j = list(range(3))
+     j.pop(i) #remaining directions
+     e = (x, y, z)
+     def if1dxdy(x, y):
+--- .\geotecha\mathematics\hankel.py	(original)
++++ .\geotecha\mathematics\hankel.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Hankel transforms."""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+--- .\geotecha\mathematics\laplace.py	(original)
++++ .\geotecha\mathematics\laplace.py	(refactored)
+@@ -17,7 +17,7 @@
+ """Numerical inverse Laplace transform"""
+ 
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ 
+@@ -149,8 +149,8 @@
+             inv_laplace = np.exp(z * t)
+             inv_laplace *= dz
+ 
+-            for i in xrange(inv_laplace.shape[0]):
+-                for j in xrange(inv_laplace.shape[1]):
++            for i in range(inv_laplace.shape[0]):
++                for j in range(inv_laplace.shape[1]):
+                     inv_laplace[i,j] *= self.f(z[i,j], *args)
+             inv_laplace = np.sum(inv_laplace, axis=0)
+ 
+--- .\geotecha\mathematics\mp_laplace.py	(original)
++++ .\geotecha\mathematics\mp_laplace.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """this module implements numerical inverse laplace transform using mpmath"""
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ 
+--- .\geotecha\mathematics\multi_transform.py	(original)
++++ .\geotecha\mathematics\multi_transform.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some routines related multi dimensional integral transforms"""
+ 
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ from matplotlib import pyplot as plt
+ import functools
+@@ -29,6 +29,7 @@
+ from geotecha.mathematics.laplace import Talbot
+ from geotecha.mathematics.hankel import HankelTransform
+ from geotecha.mathematics.fourier import FourierTransform
++import collections
+ 
+ 
+ 
+@@ -148,7 +149,7 @@
+     if isinstance(opts, dict):
+         opts = [opts] * depth
+     else:
+-        opts = [opt if callable(opt) else _OptFunc(opt) for opt in opts]
++        opts = [opt if isinstance(opt, collections.Callable) else _OptFunc(opt) for opt in opts]
+ 
+     return _NTransform(func, transforms,
+                        transvars, opts).integral_transform(*args)
+--- .\geotecha\mathematics\quadrature.py	(original)
++++ .\geotecha\mathematics\quadrature.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Numerical integration by quadrature"""
+ 
+ 
+-from __future__ import division, print_function
++
+ import matplotlib.pyplot
+ import numpy as np
+ from scipy import integrate
+@@ -1093,9 +1093,9 @@
+         from random import Random
+         rnd = Random()
+         rnd.seed(START)
+-    for i in xrange(START, STOP):
++    for i in range(START, STOP):
+         row = []
+-        for j in xrange(i+1):
++        for j in range(i+1):
+             if j == 0:
+                 a, b = 0, seq[i+1]-seq[i]
+             else:
+--- .\geotecha\mathematics\root_finding.py	(original)
++++ .\geotecha\mathematics\root_finding.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Routines for finding zeros/roots of equations."""
+ 
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import scipy.optimize
+--- .\geotecha\mathematics\transformations.py	(original)
++++ .\geotecha\mathematics\transformations.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Rotines to perform transformations"""
+ 
+-from __future__ import print_function, division
++
+ import numpy as np
+ 
+ def depth_to_reduced_level(z, H = 1.0, rlzero=None):
+--- .\geotecha\mathematics\test\test_fourier.py	(original)
++++ .\geotecha\mathematics\test\test_fourier.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Test routines for the fourier module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\test\test_geometry.py	(original)
++++ .\geotecha\mathematics\test\test_geometry.py	(refactored)
+@@ -16,7 +16,7 @@
+ 
+ """Testing routines for the geometry module"""
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\test\test_hankel.py	(original)
++++ .\geotecha\mathematics\test\test_hankel.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the hankel module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -126,7 +126,7 @@
+ 
+ 
+ 
+-def check_HankelTransform(s, (func, funcdoc), (func_, func_doc), args, order, m,
++def check_HankelTransform(s, xxx_todo_changeme, xxx_todo_changeme1, args, order, m,
+                           ng, ng0, shanks_ind):
+     """check if a HankelTransform gives it's analytical solution
+ 
+@@ -140,7 +140,8 @@
+         analytical transform of `func`
+     other: see HankelTransform
+     """
+-
++    (func, funcdoc) = xxx_todo_changeme
++    (func_, func_doc) = xxx_todo_changeme1
+     if func==hankel3:
+         points= args[0] / jn_zeros(0, 70)
+         atol=1e-4
+--- .\geotecha\mathematics\test\test_laplace.py	(original)
++++ .\geotecha\mathematics\test\test_laplace.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the laplace module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\test\test_mp_laplace.py	(original)
++++ .\geotecha\mathematics\test\test_mp_laplace.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the mp_laplace module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\test\test_multi_transform.py	(original)
++++ .\geotecha\mathematics\test\test_multi_transform.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the multi_transform module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\test\test_quadrature.py	(original)
++++ .\geotecha\mathematics\test\test_quadrature.py	(refactored)
+@@ -14,7 +14,7 @@
+ # You should have received a copy of the GNU General Public License
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Testing routines for the quadrature module."""
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\test\test_root_finding.py	(original)
++++ .\geotecha\mathematics\test\test_root_finding.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Testing routines for the root_finding module."""
+ 
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\mathematics\test\test_transformations.py	(original)
++++ .\geotecha\mathematics\test\test_transformations.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Testing routines for the transformations module."""
+ 
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\piecewise\piecewise_linear_1d.py	(original)
++++ .\geotecha\piecewise\piecewise_linear_1d.py	(refactored)
+@@ -18,7 +18,7 @@
+ One dimensional piecwise linear relationships and manipulations
+ 
+ """
+-from __future__ import print_function, division
++
+ 
+ import numpy as np
+ import math
+@@ -271,7 +271,7 @@
+         y = y[::-1]
+ 
+     if not non_decreasing(x):
+-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing"
++        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to strictly increasing")
+ 
+ 
+     steps = np.where(np.diff(x) == 0)[0]
+@@ -312,7 +312,7 @@
+         return x, y
+ 
+     if not non_increasing(x):
+-        raise ValueError, "x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing"
++        raise ValueError("x data is neither non-increasing, nor non-decreasing, therefore cannot force to non-decreasing")
+ 
+     return x[::-1], y[::-1]
+ 
+@@ -1179,13 +1179,13 @@
+     if n<=2:
+         return x, y
+ 
+-    ikeep = range(len(x))
++    ikeep = list(range(len(x)))
+ 
+ 
+     j = 0
+     x0 = x[j]
+     y0 = y[j]
+-    for i in xrange(2,n):
++    for i in range(2,n):
+         x1=x[i]
+         y1=y[i]
+         dx = x1-x0
+@@ -2716,8 +2716,7 @@
+ 
+ 
+     if len(x)!=len(y):
+-        raise (ValueError('x and y must have same length '
+-                     'len(x)={:d}, len(y)={:d}'.format(len(x), len(y))))
++        raise ValueError
+     if logx:
+         x[np.abs(x) <= (atol + rtol * np.abs(x))] = logxzero
+         if np.any(x<0):
+--- .\geotecha\piecewise\test\test_piecewise_linear_1d.py	(original)
++++ .\geotecha\piecewise\test\test_piecewise_linear_1d.py	(refactored)
+@@ -18,7 +18,7 @@
+ Testing rotines for piecewise_linear_1d module.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -173,13 +173,13 @@
+ 
+     def test_non_increasing_and_non_decreasing_parts(self):
+         """test some non_increasing_and_non_decreasing_parts examples"""
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [range(len(self.two_steps['x'])-1)])
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [range(len(self.two_ramps_reverse['x'])-1)])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [list(range(len(self.two_steps['x'])-1))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [list(range(len(self.two_ramps_reverse['x'])-1))])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x']), [[0,1],[2],[3,4]])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x']), [[0,1],[2,3],[4]])
+ 
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [range(len(self.two_steps['x']))])
+-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [range(len(self.two_ramps_reverse['x']))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [list(range(len(self.two_steps['x'])))])
++        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [list(range(len(self.two_ramps_reverse['x'])))])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x'],include_end_point=True), [[0,1,2],[2,3],[3,4,5]])
+         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x'],include_end_point=True), [[0,1,2],[2,3,4],[4,5]])
+ 
+--- .\geotecha\plotting\one_d.py	(original)
++++ .\geotecha\plotting\one_d.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib as mpl
+@@ -286,10 +286,10 @@
+             pass
+ 
+         if n==0:
+-            markers = range(len(self.markers))
+-            dashes = range(len(self.dashes))
+-            marker_colors = range(len(self.colors))
+-            line_colors = range(len(self.colors))
++            markers = list(range(len(self.markers)))
++            dashes = list(range(len(self.dashes)))
++            marker_colors = list(range(len(self.colors)))
++            line_colors = list(range(len(self.colors)))
+             n = max([len(v) for v in [markers, dashes, marker_colors, line_colors] if v is not None])
+ 
+         if markers is None: # no markers
+@@ -312,8 +312,8 @@
+ 
+         styles=[dict() for i in range(n)]
+         for i in range(n):
+-            m = markers.next()
+-            mc = marker_colors.next()
++            m = next(markers)
++            mc = next(marker_colors)
+             if m is None:
+                 styles[i]['marker'] = 'none'
+             else:
+@@ -327,13 +327,13 @@
+                     if self.markers[m]['markerfacecolor'] != 'none':
+                         styles[i]['markerfacecolor'] = self.colors[mc]
+ 
+-            d = dashes.next()
++            d = next(dashes)
+             if d is None:
+                 styles[i]['linestyle'] = 'None'
+             else:
+                 styles[i]['dashes'] = self.dashes[d]
+ 
+-            lc = line_colors.next()
++            lc = next(line_colors)
+             if lc is None:
+                 styles[i]['color'] = self.color
+             else:
+@@ -439,8 +439,8 @@
+              'fillstyle': 'bottom'},
+             {'marker': '^',
+              'markerfacecolor': 'none'},
+-            {'marker': u'$\u25E9$'},
+-            {'marker': u'$\u2b2d$'},
++            {'marker': '$\u25E9$'},
++            {'marker': '$\u2b2d$'},
+             {'marker': 'h'},
+             {'marker': '^',
+              'fillstyle': 'bottom'},
+@@ -457,10 +457,10 @@
+             {'marker': 'H',
+              'fillstyle': 'top'},
+             {'marker': (6, asterisk, 0)},
+-            {'marker': u'$\u29bf$'},
+-            {'marker': u'$\u29c7$'},
+-            {'marker': u'$\u29fe$'},
+-            {'marker': u'$\u27E1$'},
++            {'marker': '$\u29bf$'},
++            {'marker': '$\u29c7$'},
++            {'marker': '$\u29fe$'},
++            {'marker': '$\u27E1$'},
+             ]
+ 
+ 
+@@ -1189,7 +1189,7 @@
+     for o, d in zip(obj, dic):
+         if d is None:
+             continue
+-        for key, value in d.iteritems():
++        for key, value in d.items():
+             s = 'set_{0}'.format(key)
+             if hasattr(o, s):
+                 getattr(o, s)(value)
+@@ -1290,7 +1290,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1345,7 +1345,7 @@
+         ax2.append(plt.subplot(gs[i, 1], sharex=sharex2, sharey=sharey2 ))
+ 
+         for j, (vs_time, vs_depth, omega_phase) in enumerate(triples):
+-            style = styles.next()
++            style = next(styles)
+             if vs_time is None: #allow for fixed ppress
+                 vs_time = PolyLine([tmin, tmax], [0.0, 0.0])
+ 
+@@ -1526,7 +1526,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1647,7 +1647,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+@@ -1661,7 +1661,7 @@
+     fig = plt.figure(**fig_prop)
+ 
+     ax1=[]
+-    style = styles.next()
++    style = next(styles)
+     for i, (vs_depth, xlabel)  in enumerate(zip(z_x, xlabels)):
+ 
+ 
+@@ -1886,7 +1886,7 @@
+         mcd = MarkersDashesColors(
+             #color = 'black',
+             markersize= 7)
+-        mcd.construct_styles(markers = range(32), dashes=[0],
++        mcd.construct_styles(markers = list(range(32)), dashes=[0],
+                              marker_colors=None, line_colors=None)
+ 
+ 
+--- .\geotecha\plotting\test\test_one_d.py	(original)
++++ .\geotecha\plotting\test\test_one_d.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the one_d module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\speccon\integrals.py	(original)
++++ .\geotecha\speccon\integrals.py	(refactored)
+@@ -20,7 +20,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import numpy as np
+ import math
+ 
+--- .\geotecha\speccon\integrals_generate_code.py	(original)
++++ .\geotecha\speccon\integrals_generate_code.py	(refactored)
+@@ -15,7 +15,7 @@
+ # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
+ """Use sympy to generate code for generating spectral method matrix subroutines"""
+ 
+-from __future__ import division, print_function
++
+ 
+ import sympy
+ import textwrap
+--- .\geotecha\speccon\speccon1d.py	(original)
++++ .\geotecha\speccon\speccon1d.py	(refactored)
+@@ -19,7 +19,7 @@
+ Spectral Galerkin methods.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\speccon\speccon1d_unsat.py	(original)
++++ .\geotecha\speccon\speccon1d_unsat.py	(refactored)
+@@ -19,7 +19,7 @@
+ Multilayer consolidation of unsaturated soil using the spectral Galerkin
+ method.
+ """
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\geotecha\speccon\speccon1d_unsat_interactive.py	(original)
++++ .\geotecha\speccon\speccon1d_unsat_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_unsat
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\speccon\speccon1d_vr.py	(original)
++++ .\geotecha\speccon\speccon1d_vr.py	(refactored)
+@@ -21,7 +21,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\geotecha\speccon\speccon1d_vr_interactive.py	(original)
++++ .\geotecha\speccon\speccon1d_vr_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vr
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\speccon\speccon1d_vrc.py	(original)
++++ .\geotecha\speccon\speccon1d_vrc.py	(refactored)
+@@ -20,7 +20,7 @@
+ radial drainage using the spectral Galerkin method.
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\geotecha\speccon\speccon1d_vrc_interactive.py	(original)
++++ .\geotecha\speccon\speccon1d_vrc_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vrc
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\speccon\speccon1d_vrw.py	(original)
++++ .\geotecha\speccon\speccon1d_vrw.py	(refactored)
+@@ -20,7 +20,7 @@
+ using the spectral Galerkin method.
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ import geotecha.plotting.one_d #import MarkersDashesColors as MarkersDashesColors
+ import time
+--- .\geotecha\speccon\speccon1d_vrw_interactive.py	(original)
++++ .\geotecha\speccon\speccon1d_vrw_interactive.py	(refactored)
+@@ -20,7 +20,7 @@
+ geotecha.speccon.speccon1d_vrw
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ import numpy as np
+ import matplotlib.pyplot as plt
+--- .\geotecha\speccon\test\dim1sin_test_data_gen.py	(original)
++++ .\geotecha\speccon\test\dim1sin_test_data_gen.py	(refactored)
+@@ -30,7 +30,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from math import pi
+ 
+--- .\geotecha\speccon\test\speccon1d_test_data_gen.py	(original)
++++ .\geotecha\speccon\test\speccon1d_test_data_gen.py	(refactored)
+@@ -24,7 +24,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from collections import OrderedDict
+ import numpy as np
+@@ -96,7 +96,7 @@
+     print(no_bc)
+     print('#'*10+'\n')
+ 
+-    for s, f in fn.iteritems():
++    for s, f in fn.items():
+         if s == "no_bc":
+             continue
+         sout = str(f)
+@@ -159,7 +159,7 @@
+             'a': a, 'b':b, 'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_abf_linear(**v))
+         print('#'*10+'\n')
+@@ -213,7 +213,7 @@
+             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_D_aDf_linear(**v))
+         print('#'*10+'\n')
+@@ -268,7 +268,7 @@
+             'a': a,  'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_aDfDt_linear(**v))
+         print('#'*10+'\n')
+@@ -345,7 +345,7 @@
+           'top_vs_time': [top_vs_time, top_vs_time],'bot_vs_time':[bot_vs_time, bot_vs_time]}
+ #    print(dim1sin_E_Igamv_the_BC_abf_linear(0,m,eigs,tvals,Igamv, a,b, top_vs_time=None, bot_vs_time=None))
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_BC_deltaf_linear(**v))
+         print('#'*10+'\n')
+@@ -382,7 +382,7 @@
+                'a':a, 'b':b,
+                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_abmag_bilinear(**v))
+         print('#'*10+'\n')
+@@ -419,7 +419,7 @@
+                'a':a,
+                 'mag_vs_depth': [mag_vs_depth], 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_aDmagDt_bilinear(**v))
+         print('#'*10+'\n')
+@@ -457,7 +457,7 @@
+                'zvals': zvals, 'pseudo_k':pseudo_k,
+                 'mag_vs_time': [mag_vs_time],'omega_phase': [omega_phase]}
+ 
+-    for k, v in fn.iteritems():
++    for k, v in fn.items():
+         print(k)
+         print (dim1sin_E_Igamv_the_deltamag_linear(**v))
+         print('#'*10+'\n')
+--- .\geotecha\speccon\test\test_integrals.py	(original)
++++ .\geotecha\speccon\test\test_integrals.py	(refactored)
+@@ -18,7 +18,7 @@
+ Shows a few approaches to testing (so there may be some repeated test)
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+@@ -129,8 +129,8 @@
+             [(0, 1), 1.57080],
+             [(1, 0), 6.28319],
+             [(1, 1), 4.71239],
+-            [(np.array(range(7)), 0), self.PTPB],
+-            [(np.array(range(7)), 1), self.PTIB],
++            [(np.array(list(range(7))), 0), self.PTPB],
++            [(np.array(list(range(7))), 1), self.PTIB],
+             ] #then you canjust add more cases
+ 
+     def test_bc0(self):
+@@ -145,7 +145,7 @@
+ 
+     def test_numpy(self):
+         """test a numpy array as input to i; i = range(7), boundary = 0"""
+-        x = np.array(range(7))
++        x = np.array(list(range(7)))
+         y0 = m_from_sin_mx(x,0)
+         assert np.allclose(y0,self.PTPB)
+ 
+--- .\geotecha\speccon\test\test_speccon1d.py	(original)
++++ .\geotecha\speccon\test\test_speccon1d.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\speccon\test\test_speccon1d_unsat.py	(original)
++++ .\geotecha\speccon\test\test_speccon1d_unsat.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\speccon\test\test_speccon1d_vr.py	(original)
++++ .\geotecha\speccon\test\test_speccon1d_vr.py	(refactored)
+@@ -16,7 +16,7 @@
+ """Some test routines for the speccon_1d_vert_radial_boundary module
+ 
+ """
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\speccon\test\test_speccon1d_vrc.py	(original)
++++ .\geotecha\speccon\test\test_speccon1d_vrc.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\geotecha\speccon\test\test_speccon1d_vrw.py	(original)
++++ .\geotecha\speccon\test\test_speccon1d_vrw.py	(refactored)
+@@ -18,7 +18,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ 
+ from nose import with_setup
+ from nose.tools.trivial import assert_almost_equal
+--- .\tools\_docs_delete__build_dir.py	(original)
++++ .\tools\_docs_delete__build_dir.py	(refactored)
+@@ -1,7 +1,7 @@
+ """Delete the docs/_build directory"""
+ 
+ 
+-from __future__ import print_function, division
++
+ import shutil
+ import os
+ 
+--- .\tools\_docs_generate_api_rst_files.py	(original)
++++ .\tools\_docs_generate_api_rst_files.py	(refactored)
+@@ -17,7 +17,7 @@
+ 
+ """
+ 
+-from __future__ import division, print_function
++
+ import textwrap
+ import os
+ import functools
+--- .\tools\_docs_html_docs.py	(original)
++++ .\tools\_docs_html_docs.py	(refactored)
+@@ -1,7 +1,7 @@
+ """Build html docs"""
+ 
+ 
+-from __future__ import print_function, division
++
+ import os
+ import subprocess
+ import shlex
+--- .\tools\_setup_build.py	(original)
++++ .\tools\_setup_build.py	(refactored)
+@@ -1,7 +1,7 @@
+ """build from the setup.py file"""
+ 
+ 
+-from __future__ import print_function, division
++
+ import os
+ import subprocess
+ import shlex
+--- .\tools\_setup_clean.py	(original)
++++ .\tools\_setup_clean.py	(refactored)
+@@ -1,7 +1,7 @@
+ """clean up the install from the setup.py file."""
+ 
+ 
+-from __future__ import print_function, division
++
+ import os
+ import subprocess
+ import shlex
+--- .\tools\_setup_install.py	(original)
++++ .\tools\_setup_install.py	(refactored)
+@@ -1,7 +1,7 @@
+ """Install package from the setup.py file"""
+ 
+ 
+-from __future__ import print_function, division
++
+ import os
+ import subprocess
+ import shlex
+--- .\tools\_tests_with_nose.py	(original)
++++ .\tools\_tests_with_nose.py	(refactored)
+@@ -1,7 +1,7 @@
+ """run nose tests on <package-name>"""
+ 
+ 
+-from __future__ import print_function, division
++
+ import os
+ import nose
+ import importlib
+--- .\tools\_tests_with_nose_with_coverage.py	(original)
++++ .\tools\_tests_with_nose_with_coverage.py	(refactored)
+@@ -1,7 +1,7 @@
+ """run nose tests on <package-name> with coverage"""
+ 
+ 
+-from __future__ import print_function, division
++
+ import os
+ import nose
+ import importlib
+--- .\tools\_uninstall_delete_build_dir.py	(original)
++++ .\tools\_uninstall_delete_build_dir.py	(refactored)
+@@ -1,7 +1,7 @@
+ """Delete the build directory"""
+ 
+ 
+-from __future__ import print_function, division
++
+ import shutil
+ import os
+ 
+--- .\tools\_uninstall_with_pip.py	(original)
++++ .\tools\_uninstall_with_pip.py	(refactored)
+@@ -1,6 +1,6 @@
+ """Uninstall package using pip"""
+ 
+-from __future__ import print_function, division
++
+ import os
+ import subprocess
+ import shlex
+--- .\tools\build_docs_from_scratch.py	(original)
++++ .\tools\build_docs_from_scratch.py	(refactored)
+@@ -1,10 +1,10 @@
+ """delete "..\docs\_build\" directory and build html docs"""
+ 
+ 
+-from __future__ import print_function, division
+ 
+-import _docs_delete__build_dir
+-import _docs_html_docs
++
++from . import _docs_delete__build_dir
++from . import _docs_html_docs
+ 
+ 
+ def main():
+--- .\tools\delete_files_ending_in_tilde.py	(original)
++++ .\tools\delete_files_ending_in_tilde.py	(refactored)
+@@ -83,21 +83,20 @@
+     for mypath in args.dirs:
+         
+         if args.no_recursion:
+-            for file in filter(lambda x: re.match(pattern, x), 
+-                               os.listdir(mypath)):
++            for file in [x for x in os.listdir(mypath) if re.match(pattern, x)]:
+                 matching_files.add(os.path.join(mypath, file))
+         else:
+             for root, dirs, files in os.walk(mypath):
+-                for file in filter(lambda x: re.match(pattern, x), files):
++                for file in [x for x in files if re.match(pattern, x)]:
+                     matching_files.add(os.path.join(root, file))                                        
+                             
+     if args.verbose:
+-        print('%d filenames matching "%s" found and removed:' % (len(matching_files), pattern))
++        print(('%d filenames matching "%s" found and removed:' % (len(matching_files), pattern)))
+         for file in matching_files:
+             print(file)
+             
+     for file in matching_files:
+-        print("name: " + file)
++        print(("name: " + file))
+         #os.remove(os.path.join(root, file))
+       
+         
+--- .\tools\generate_api_documentation.py	(original)
++++ .\tools\generate_api_documentation.py	(refactored)
+@@ -103,7 +103,7 @@
+     try: #ensure file exists before trying to exit
+         f = open(file, 'r')
+     except IOError:
+-        print('%s doesnt exist' % file); sys.exit(1)
++        print(('%s doesnt exist' % file)); sys.exit(1)
+         
+     filestr = f.read()
+     f.close()
+@@ -141,8 +141,8 @@
+     
+     #command_line ='sphinx-apidoc -A "'+ authors + r'" -o \source ..\'
+     command_line ='sphinx-apidoc -A "Rohan Walker" -f -o \source ' + '"' + os.path.dirname(os.path.dirname(os.getcwd())) + '"'
+-    print command_line
+-    print shlex.split(command_line)     
++    print(command_line)
++    print(shlex.split(command_line))     
+     subprocess.call(shlex.split(command_line))
+     
+     command_line ='make html'
+--- .\tools\install_and_test.py	(original)
++++ .\tools\install_and_test.py	(refactored)
+@@ -1,12 +1,12 @@
+ """install and test package"""
+ 
+ 
+-from __future__ import print_function, division
+ 
+-import _setup_build
+-import _setup_install
+-import _setup_clean
+-import _tests_with_nose
++
++from . import _setup_build
++from . import _setup_install
++from . import _setup_clean
++from . import _tests_with_nose
+ 
+ def main():
+     """run _setup_build, _setup_install, _setup_clean, _tests_with_nose"""
+--- .\tools\install_only.py	(original)
++++ .\tools\install_only.py	(refactored)
+@@ -1,11 +1,11 @@
+ """Build, install, clean package using setup.py"""
+ 
+ 
+-from __future__ import print_function, division
+ 
+-import _setup_build
+-import _setup_install
+-import _setup_clean
++
++from . import _setup_build
++from . import _setup_install
++from . import _setup_clean
+ 
+ def main():
+     """run _setup_build, _setup_install, _setup_clean"""
