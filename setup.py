@@ -92,6 +92,7 @@ CLASSIFIERS = """\
 Development Status :: 4 - Beta
 License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
 Programming Language :: Python :: 2.7
+Programming Language :: Python :: 3.4
 Topic :: Scientific/Engineering
 """
 
@@ -122,7 +123,9 @@ INSTALL_REQUIRES=[
     "brewer2mpl",
     "testfixtures",
     "pandas",
-    "numpydoc"
+    "numpydoc",
+    "IPython",
+    "Sphinx-PyPI-upload",
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     ]

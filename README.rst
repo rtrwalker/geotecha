@@ -34,16 +34,58 @@ Documentation
 
 Installation
 ------------
-*geotecha* was developed and tested using python 2.7 on a 
-windows 7 32-bit computer.  No attempt (as yet) has been made to 
-develop a linux or mac distribution.  Major requirements are
+*geotecha* was developed on a Windows platform.  While I have tried
+to use cross platform programming idioms, I have (at the time of 
+writing) made no attempt to build/use *geotecha* on any platform other
+than windows.  That does not mean that it will not work.  I simply
+do not know if it does or does not.
+
+
+Requirements
+++++++++++++
+*geotecha* uses a number of other python packages such as 
 numpy, matplotlib, and scipy.  Setting up your python environment 
 to succesfully run all these packages can be cumbersome so pre-built
-python stacks such as the freely available `Python(x,y)`_ are highly 
-recommended (I use `Python(x,y)`_). Note it is best to unistall any 
-existing python distributions before installing `Python(x,y)`_.  Also
-make sure that you check the sympy option when specifying what 
-packages in Python(x,y) to install (I just choose the "full" version.
+python stacks such as the readily available Anaconda_ or 
+`Python(x,y)`_ are highly recommended . Note generally better to 
+unistall any existing python distributions before installing a new 
+one.
+
+Package requirements:
+
+ - numpy
+ - matplotlib
+ - scipy
+ - sympy
+ - brewer2mpl
+ - testfixtures
+ - numpydoc
+ - IPython
+ - pandas
+ - pkg_resources
+ - mpl_toolkits
+ - nose
+ - one of wx (i.e. wxPython) or PyQt (PyQt4 or PyQt5)
+ - Sphinx-PyPI-upload
+
+Before worrying about if your system has the required packages just
+try one of the installation methods below (first try the 
+`Windows binaries`_ option).  Hopefully you will already have  
+all the packages or else the requirements section of the setup.py
+file will get them from pypi_.  However, issues can arise.
+Due to anomalies in handling dashes in required package 
+names, the required packages `pkg_resources` and `mpl_toolkits` 
+will not automatically be installed.  Just install these using pip if
+they are not already present:
+
+.. code-block::
+
+   pip install pkg_resources
+   pip install mpl_toolkits
+
+wxPython and PyQt are not always avialable through pypi_ so may 
+have to be installed manually (there are usually windows binaries 
+available.)
 
 Windows binaries
 ++++++++++++++++
@@ -52,7 +94,11 @@ machine is to download one of the pre-built binaries available
 at https://pypi.python.org/pypi/geotecha .  Once downloaded 
 double click the .exe file to install.  I am not sure but you 
 may need to install the dependency packages separately.
+Binaries are avialable for 32 and 64 bit python-2.7 and python-3.4. 
 
+See the `Building from source`_ section below for instructions
+on how to to test your *geotecha* installation.
+  
 
 pip
 +++
@@ -63,21 +109,14 @@ To install *geotecha* from the Python Package Index (PyPI) using pip:
    pip install geotecha
 
 This will essentially download the source files and build and install
-the package.  As such you may have difficultly in building the 
+the package.  *geotecha* has extension modules written in fortran 
+which can cause issues if your python environent is not set up to 
+handle them ( I think you need a fortran and a c compiler).
+.As such you may have difficultly in building the 
 external extensions (see `Building from source`_ below.
 
-
-Note that due to anomalies in handling dashes in required package 
-names, the required packages `pkg_resources` and `mpl_toolkits` 
-will not automatically be installed.  Just install these using pip if
-they are not already present:
-
-.. code-block::
-
-   pip install pkg_resources
-   pip install mpl_toolkits
-
-
+See the `Building from source`_ section below for instructions
+on how to test your *geotecha* installation.
 
 Building from source
 ++++++++++++++++++++
@@ -109,6 +148,8 @@ installed version of *geotecha* rather than the source code version
 the working directory to match your python location.
 
 
+
+
 Issues with building/installing
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -133,8 +174,10 @@ Another problem is getting errors such as:
    gcc is not recognized as an internal or external command
 
 
-I had to make sure that the 'MinGW\\bin\\' directory was in my *PATH* 
-environment variable. Note you may have to install MinGW.
+I had to modify my *PATH* environment variable to include the path 
+to a gcc command (You shouldn't have trouble when using Anaconda_ 
+becuase it comes packaged with MinGW, but occaisionally 
+with `Python(x,y)`_ I've had to install MinGW).
 
 
 
@@ -153,6 +196,7 @@ You can also manually delete all files in the 'install.record' file.
 
 .. _GPLv3: http://choosealicense.com/licenses/gpl-3.0/
 .. _`Python(x,y)`: https://code.google.com/p/pythonxy/
+.. _Anaconda: https://store.continuum.io/cshop/anaconda/
 .. _pypi: https://pypi.python.org/pypi
 
 
