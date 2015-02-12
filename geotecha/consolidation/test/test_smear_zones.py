@@ -1105,6 +1105,9 @@ class test_back_calc_drain_spacing_from_eta(unittest.TestCase):
 if __name__ == '__main__':
 
     import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    nose.runmodule(argv=['nose', 'test_smear_zones:test_mu_parabolic.test_s_n_unequal_len', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+#    nose.runmodule(argv=['nosetests', 'test_foxcon:test_foxcon.test__update_Hlayers', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
 
+#test_mu_parabolic

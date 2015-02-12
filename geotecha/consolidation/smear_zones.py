@@ -72,6 +72,7 @@ def mu_ideal(n, *args):
 
     """
 
+    n = np.asarray(n) 
     if np.any(n <= 1):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
@@ -137,7 +138,9 @@ def mu_constant(n, s, kap):
            Prefabricated Drains'. In 10th ICSMFE, 3:677-82.
            Rotterdam-Boston: A.A. Balkema.
     """
-
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if np.any(n <= 1.0):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
@@ -322,6 +325,9 @@ def mu_overlapping_linear(n, s, kap):
         mu = mu_linear(n, sx, kapx) * kap / kapx
         return mu
 
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if np.any(n <= 1.0):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
@@ -493,7 +499,9 @@ def mu_linear(n, s, kap):
         mu = term1 * (term2 + term3 + term4)
         return mu
 
-
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if np.any(n<=1.0):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
@@ -691,7 +699,9 @@ def mu_parabolic(n, s, kap):
         mu = n ** 2 / (n ** 2 - 1) * (mu1 + mu2)
         return mu
 
-
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if np.any(n<=1.0):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
@@ -843,6 +853,9 @@ def mu_piecewise_constant(s, kap, n=None, kap_m=None):
         s = s_temp
         kap = kap_temp
 
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if len(s)!=len(kap):
         raise ValueError('s and kap must have the same shape.  You have '
             'lengths for s, kap of {}, {}.'.format(
@@ -1038,6 +1051,9 @@ def mu_piecewise_linear(s, kap, n=None, kap_m=None):
         s = s_temp
         kap = kap_temp
 
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if len(s)!=len(kap):
         raise ValueError('s and kap must have the same shape.  You have '
             'lengths for s, kap of {}, {}.'.format(
@@ -1174,6 +1190,7 @@ def mu_well_resistance(kh, qw, n, H, z=None):
 
     """
 
+    n = np.asarray(n)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -1253,7 +1270,9 @@ def k_parabolic(n, s, kap, si):
            doi:10.1061/(ASCE)1090-0241(2006)132:7(937).
 
     """
-
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -1506,7 +1525,10 @@ def k_overlapping_linear(n, s, kap, si):
         kapx =  _kapx(n, s, kap)
         mu = mu_linear(n, sx, kapx) * kap / kapx
         return mu
-
+    
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -1600,7 +1622,7 @@ def u_ideal(n, si, uavg=1, uw=0, muw=0):
            Rotterdam-Boston: A.A. Balkema.
 
     """
-
+    n = np.asarray(n)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -1712,7 +1734,9 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
 
         u = term4
         return u
-
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)        
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -1899,7 +1923,9 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
 
             u = (term2 + kap * term3)
             return u
-
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)            
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -2101,7 +2127,10 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
 
         u = term1 * (term2 + term7)
         return u
-
+        
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -2731,8 +2760,8 @@ def scratch():
 
 
 if __name__ == '__main__':
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
 
 
 

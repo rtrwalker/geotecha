@@ -157,11 +157,18 @@ def copy_dict(source_dict, diffs):
 
     Examples
     --------
-    >>> copy_dict({'a':7, 'b':12}, {'c':13})
-    {'a': 7, 'c': 13, 'b': 12}
+    >>> d = copy_dict({'a':7, 'b':12}, {'c':13})
+    >>> d['a']; d['b']; d['c']
+    7
+    12
+    13
 
-    >>> copy_dict({'a':7, 'b':12}, {'a':21, 'c':13})
-    {'a': 21, 'c': 13, 'b': 12}
+    >>> d = copy_dict({'a':7, 'b':12}, {'a':21, 'c':13})
+    >>> d['a']; d['b']; d['c']
+    21
+    12
+    13
+
 
     """
        #http://stackoverflow.com/a/5551706/2530083

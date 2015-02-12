@@ -122,6 +122,7 @@ INSTALL_REQUIRES=[
     "brewer2mpl",
     "testfixtures",
     "pandas",
+    "numpydoc"
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     ]

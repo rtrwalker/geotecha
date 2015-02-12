@@ -245,7 +245,8 @@ class SyntaxChecker(ast.NodeVisitor):
                 ", ".join(["'{}'".format(v) for v in in_list])))
         if add_to=='functions':
             for v in [a for a in s.split() if not a.startswith('#')]:
-                self.allowed_functions[v] = getattr(fn_module, v)
+                if hasattr(fn_module, v):
+                    self.allowed_functions[v] = getattr(fn_module, v)
             return
         if add_to=='attributes':
             for v in [a for a in s.split() if not a.startswith('#')]:
@@ -256,8 +257,10 @@ class SyntaxChecker(ast.NodeVisitor):
     def allow_ast(self):
         """Allow subset of ast node types"""
 
+        #py27
         #object_members(ast, 'class')
         s=textwrap.dedent("""\
+            #py27
             #AST Add And Assert Assign Attribute AugAssign AugLoad
             AugStore BinOp BitAnd BitOr BitXor BoolOp Break Call
             #ClassDef Compare Continue Del Delete Dict DictComp Div
@@ -271,10 +274,15 @@ class SyntaxChecker(ast.NodeVisitor):
             TryFinally Tuple UAdd USub UnaryOp While With Yield #alias
             arguments boolop #cmpop comprehension #excepthandler #expr
             #expr_context keyword #mod #operator slice #stmt #unaryop
+
+            #py34_addtional
+            Bytes NameConstant #Nonlocal Starred Try YieldFrom arg
+            withitem
             """)
 
         for v in [a for a in s.split() if not a.startswith('#')]:
-            self.allowed_node_types[v] = getattr(ast, v)
+            if hasattr(ast,v):
+                self.allowed_node_types[v] = getattr(ast, v)
 
         return
 
@@ -283,85 +291,113 @@ class SyntaxChecker(ast.NodeVisitor):
 
         #object_members(__builtin__ , 'routine')
         s=textwrap.dedent("""\
+            #py27
             #__import__ abs all any apply bin #callable chr cmp
-            coerce compile #debugfile #delattr #dir divmod #eval
+            #coerce compile #debugfile #delattr #dir divmod #eval
             #evalsc #execfile filter format #getattr #globals hasattr
             #hash hex id input #intern isinstance issubclass iter
             len locals map max min next oct #open #open_in_spyder
             ord pow print range raw_input reduce #reload repr
             round #runfile #setattr sorted sum unichr #vars zip
+
+            #py34_addtional
+            #__build_class__ ascii #exec repr
             """)
         self._split_string_allow(s, add_to='functions', fn_module=__builtin__)
 
         #object_members(__builtin__ , 'class')
         s=textwrap.dedent("""\
+            #py27
             basestring bool #buffer bytearray bytes #classmethod
             complex dict enumerate #file float frozenset int list
             long #memoryview #object #property reversed set slice
             #staticmethod str super tuple type unicode xrange
+
+            #py34_addtional
+            #__loader__ filter map range reversed zip
             """)
         self._split_string_allow(s, add_to='functions',fn_module=__builtin__)
 
         #object_members(complex , 'routine')
         s=textwrap.dedent("""\
+            #py27
             conjugate
+
+            #py34_addtional
             """)
         self._split_string_allow(s, add_to='attributes')
 
         #object_members(dict , 'routine')
         s=textwrap.dedent("""\
+            #py27
             copy fromkeys get has_key items iteritems iterkeys
             itervalues keys pop popitem setdefault update values
             viewitems viewkeys viewvalues
+
+            #py34_addtional
+            clear
             """)
         self._split_string_allow(s, add_to='attributes')
 
         #object_members(list , 'routine')
         s=textwrap.dedent("""
+            #py27
             append count extend index
             insert pop remove reverse sort
+
+            #py34_addtional
+            clear copy
             """)
         self._split_string_allow(s, add_to='attributes')
 
         #object_members(str , 'routine')
         s=textwrap.dedent("""
+            #py27
             capitalize center count decode encode endswith
             expandtabs find format index isalnum isalpha isdigit
             islower isspace istitle isupper join ljust lower
             lstrip partition replace rfind rindex rjust
             rpartition rsplit rstrip split splitlines startswith
             strip swapcase title translate upper zfill
+
+            #py34_addtional
+            casefold format_map isdecimal isidentifier
+            isnumeric isprintable isspace maketrans
             """)
         self._split_string_allow(s, add_to='attributes')
 
         #object_members(float , 'routine')
         s=textwrap.dedent("""
+            #py27
             as_integer_ratio conjugate fromhex hex
             is_integer
+
+            #py34_addtional
             """)
         self._split_string_allow(s, add_to='attributes')
 
         #object_members(set , 'routine')
         s=textwrap.dedent("""
+            #py27
             add clear copy difference
             difference_update discard intersection
             intersection_update isdisjoint issubset issuperset
             pop remove symmetric_difference
             symmetric_difference_update union update
+
+            #py34_addtional
             """)
         self._split_string_allow(s, add_to='attributes')
 
         #object_members(slice , 'routine')
         s=textwrap.dedent("""
+            #py27
             indices
+
+            #py34_addtional
             """)
         self._split_string_allow(s, add_to='attributes')
 
-        #object_members(slice , 'routine')
-        s=textwrap.dedent("""
-            indices
-            """)
-        self._split_string_allow(s, add_to='attributes')
 
         return
 
@@ -369,91 +405,99 @@ class SyntaxChecker(ast.NodeVisitor):
         """Allow a subset of numpy functionality via np.attribute syntax"""
 
         self.allowed_functions['np'] = np
+        self.allowed_functions['numpy'] = np
 
         #object_members(np , 'routine')
         s=textwrap.dedent("""
-            add_docstring add_newdoc add_newdoc_ufunc alen all
-            allclose alltrue alterdot amax amin angle any append
-            apply_along_axis apply_over_axes arange argmax argmin
-            argsort argwhere around array array2string
-            array_equal array_equiv array_repr array_split
-            array_str asanyarray asarray asarray_chkfinite
-            ascontiguousarray asfarray asfortranarray asmatrix
-            asscalar atleast_1d atleast_2d atleast_3d average
-            bartlett base_repr bench binary_repr bincount
-            blackman bmat broadcast_arrays busday_count
-            busday_offset byte_bounds can_cast choose clip
-            column_stack common_type compare_chararrays compress
-            concatenate convolve copy copyto corrcoef correlate
-            count_nonzero cov cross cumprod cumproduct cumsum
-            datetime_as_string datetime_data delete deprecate
-            deprecate_with_doc diag diag_indices
-            diag_indices_from diagflat diagonal diff digitize
-            disp dot dsplit dstack ediff1d einsum empty
-            empty_like expand_dims extract eye
-            fastCopyAndTranspose fill_diagonal find_common_type
-            fix flatnonzero fliplr flipud frombuffer fromfile
-            fromfunction fromiter frompyfunc fromregex fromstring
-            fv genfromtxt get_array_wrap get_include
-            get_numarray_include get_printoptions getbuffer
-            getbufsize geterr geterrcall geterrobj gradient
-            hamming hanning histogram histogram2d histogramdd
-            hsplit hstack i0 identity imag in1d indices info
-            inner insert int_asbuffer interp intersect1d ipmt irr
-            is_busday isclose iscomplex iscomplexobj isfortran
-            isneginf isposinf isreal isrealobj isscalar issctype
-            issubclass_ issubdtype issubsctype iterable ix_
-            kaiser kron lexsort linspace load loads loadtxt
-            logspace lookfor mafromtxt mask_indices mat max
-            maximum_sctype may_share_memory mean median meshgrid
-            min min_scalar_type mintypecode mirr msort nan_to_num
-            nanargmax nanargmin nanmax nanmin nansum ndfromtxt
-            ndim nested_iters newbuffer nonzero nper npv
-            obj2sctype ones ones_like outer packbits pad
-            percentile piecewise pkgload place pmt poly polyadd
-            polyder polydiv polyfit polyint polymul polysub
-            polyval ppmt prod product promote_types ptp put
-            putmask pv rank rate ravel ravel_multi_index real
-            real_if_close recfromcsv recfromtxt repeat require
-            reshape resize restoredot result_type roll rollaxis
-            roots rot90 round round_ row_stack safe_eval save
-            savetxt savez savez_compressed sctype2char
+            #numpy_v_1_9_0
+            add_docstring add_newdoc add_newdoc_ufunc alen all allclose
+            alltrue alterdot amax amin angle any append apply_along_axis
+            apply_over_axes arange argmax argmin argpartition argsort
+            argwhere around array array2string array_equal array_equiv
+            array_repr array_split array_str asanyarray asarray
+            asarray_chkfinite ascontiguousarray asfarray asfortranarray
+            asmatrix asscalar atleast_1d atleast_2d atleast_3d average
+            bartlett base_repr bench binary_repr bincount blackman bmat
+            broadcast_arrays busday_count busday_offset byte_bounds can_cast
+            choose clip column_stack common_type compare_chararrays compress
+            concatenate convolve copy copyto corrcoef correlate count_nonzero
+            cov cross cumprod cumproduct cumsum datetime_as_string
+            datetime_data delete deprecate deprecate_with_doc diag
+            diag_indices diag_indices_from diagflat diagonal diff digitize
+            disp dot dsplit dstack ediff1d einsum empty empty_like
+            expand_dims extract eye fastCopyAndTranspose fill_diagonal
+            find_common_type fix flatnonzero fliplr flipud frombuffer
+            fromfile fromfunction fromiter frompyfunc fromregex fromstring
+            full full_like fv genfromtxt get_array_wrap get_include
+            get_printoptions getbuffer getbufsize geterr geterrcall geterrobj
+            gradient hamming hanning histogram histogram2d histogramdd hsplit
+            hstack i0 identity imag in1d indices info inner insert
+            int_asbuffer interp intersect1d ipmt irr is_busday isclose
+            iscomplex iscomplexobj isfortran isneginf isposinf isreal
+            isrealobj isscalar issctype issubclass_ issubdtype issubsctype
+            iterable ix_ kaiser kron lexsort linspace load loads loadtxt
+            logspace lookfor mafromtxt mask_indices mat max maximum_sctype
+            may_share_memory mean median meshgrid min min_scalar_type
+            mintypecode mirr msort nan_to_num nanargmax nanargmin nanmax
+            nanmean nanmedian nanmin nanpercentile nanstd nansum nanvar
+            ndfromtxt ndim nested_iters newbuffer nonzero nper npv obj2sctype
+            ones ones_like outer packbits pad partition percentile piecewise
+            pkgload place pmt poly polyadd polyder polydiv polyfit polyint
+            polymul polysub polyval ppmt prod product promote_types ptp put
+            putmask pv rank rate ravel ravel_multi_index real real_if_close
+            recfromcsv recfromtxt repeat require reshape resize restoredot
+            result_type roll rollaxis roots rot90 round round_ row_stack
+            safe_eval save savetxt savez savez_compressed sctype2char
             searchsorted select set_numeric_ops set_printoptions
-            set_string_function setbufsize setdiff1d seterr
-            seterrcall seterrobj setxor1d shape show_config sinc
-            size sometrue sort sort_complex source split squeeze
-            std sum swapaxes take tensordot test tile trace
-            transpose trapz tri tril tril_indices
-            tril_indices_from trim_zeros triu triu_indices
-            triu_indices_from typename union1d unique unpackbits
-            unravel_index unwrap vander var vdot vsplit vstack
-            where who zeros zeros_like pi
+            set_string_function setbufsize setdiff1d seterr seterrcall
+            seterrobj setxor1d shape show_config sinc size sometrue sort
+            sort_complex source split squeeze std sum swapaxes take tensordot
+            test tile trace transpose trapz tri tril tril_indices
+            tril_indices_from trim_zeros triu triu_indices triu_indices_from
+            typename union1d unique unpackbits unravel_index unwrap vander
+            var vdot vsplit vstack where who zeros zeros_like pi
             """)
         self._split_string_allow(s, add_to='attributes')
 
         #object_members(np.ndarray , 'routine')
         s=textwrap.dedent("""
-            all any argmax
-            argmin argsort astype byteswap choose clip compress
-            conj conjugate copy cumprod cumsum diagonal dot dump
-            dumps fill flatten getfield item itemset max mean min
-            newbyteorder nonzero prod ptp put ravel repeat
-            reshape resize round searchsorted setfield setflags
-            sort squeeze std sum swapaxes take tofile tolist
-            tostring trace transpose var view
+            #numpy_v_1_9_0
+            all any argmax argmin argpartition argsort astype byteswap choose
+            clip compress conj conjugate copy cumprod cumsum diagonal dot
+            dump dumps fill flatten getfield item itemset max mean min
+            newbyteorder nonzero partition prod ptp put ravel repeat reshape
+            resize round searchsorted setfield setflags sort squeeze std sum
+            swapaxes take tobytes tofile tolist tostring trace transpose var
+            view
             """)
         self._split_string_allow(s, add_to='attributes')
 
         self.allowed_attributes.add('math')
         #object_members(np.math,'routine')
         s=textwrap.dedent("""
+            #numpy_v_1_9_0
             acos acosh asin asinh atan atan2 atanh ceil copysign cos cosh
             degrees erf erfc exp expm1 fabs factorial floor fmod frexp fsum
-            gamma hypot isinf isnan ldexp lgamma log log10 log1p modf pow
-            radians sin sinh sqrt tan tanh trunc
+            gamma hypot isfinite isinf isnan ldexp lgamma log log10 log1p
+            log2 modf pow radians sin sinh sqrt tan tanh trunc
             """)
         self._split_string_allow(s, add_to='attributes')
 
+        #print(object_members(np, 'ufunc'))
+        s=textwrap.dedent("""
+            #numpy_v_1_9_0
+            abs absolute add arccos arccosh arcsin arcsinh arctan arctan2
+            arctanh bitwise_and bitwise_not bitwise_or bitwise_xor ceil conj
+            conjugate copysign cos cosh deg2rad degrees divide equal exp exp2
+            expm1 fabs floor floor_divide fmax fmin fmod frexp greater
+            greater_equal hypot invert isfinite isinf isnan ldexp left_shift
+            less less_equal log log10 log1p log2 logaddexp logaddexp2
+            logical_and logical_not logical_or logical_xor maximum minimum
+            mod modf multiply negative nextafter not_equal power rad2deg
+            radians reciprocal remainder right_shift rint sign signbit sin
+            sinh spacing sqrt square subtract tan tanh true_divide trunc
+            """)
+        self._split_string_allow(s, add_to='attributes')
         #to find more numpy functionality to add try:
         #object_members(np.polynomial,'routine')
         #mem=object_members(np.polynomial,'class')
@@ -484,7 +528,8 @@ def object_members(obj, info='function', join=True):
         inspect.is<member_type>. e.g. info='function' will check in object for
         inspect.isfunction. Other values include 'method' 'function'
         'routine'. Default info='function'. NOTE that it is safer to use
-        'routine' when getting functions.
+        'routine' when getting functions.  There is a custom check for
+        info='ufunc' to give ufunc members of numpy.
     join : bool, optional
         If join==True then list will be joined together into one large
         space separated string.
@@ -501,6 +546,12 @@ def object_members(obj, info='function', join=True):
     #http://www.andreas-dewes.de/en/2012/static-code-analysis-with-python/
     #isroutine vs isfunction: http://stackoverflow.com/a/22428966
     #pkgutil : http://stackoverflow.com/a/1310912
+
+    #add ufunc
+    def isufunc(object):
+        """Return true if the object is a numpy.ufunc"""
+        return isinstance(object, np.ufunc)
+    inspect.isufunc = isufunc
 
     if info=="module":
         # for some reason getmembers with modules does not allways return a

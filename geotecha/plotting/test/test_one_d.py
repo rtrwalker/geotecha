@@ -31,7 +31,8 @@ import numpy as np
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-
+from mock import patch
+import random
 #from matplotlib.testing.decorators import cleanup
 from numpy.testing import assert_allclose
 try:
@@ -93,10 +94,13 @@ def test_rgb_tint():
 def test_copy_dict():
     """test for copy_dict"""
     #copy_dict(source_dict, diffs)
-    ok_(copy_dict({'a':7, 'b':12}, {'c':13})=={'a':7, 'b':12, 'c':13})
-
-    ok_(copy_dict({'a':7, 'b':12}, {'a':21, 'c':13})=={'a':21, 'b':12, 'c':13})
-
+#    ok_(copy_dict({'a':7, 'b':12}, {'c':13})=={'a':7, 'b':12, 'c':13})
+    assert_equal(copy_dict({'a':7, 'b':12}, {'c':13}),
+                 {'a':7, 'b':12, 'c':13})
+#    ok_(copy_dict({'a':7, 'b':12}, {'a':21, 'c':13})=={'a':21, 'b':12, 'c':13})
+    assert_equal(copy_dict({'a':7, 'b':12}, {'a':21, 'c':13}),
+                 {'a':21, 'b':12, 'c':13})
+                 
 def test_MarkersDashesColors():
     """tests for MarkersDashesColors class"""
 
@@ -442,8 +446,11 @@ class test_apply_markevery_to_sequence_of_lines(temp_cls):
         assert_equal(ax.get_lines()[1].get_markevery(), 8)
         assert_equal(ax.get_lines()[2].get_markevery(), 8)
 
-    def test_int_random_start(self):
+    @patch.object(random, 'randint')
+    def test_int_random_start(self,
+                              mock_randint):
 
+        mock_randint.return_value=2
         fig=plt.figure()
         ax = fig.add_subplot('111')
 
@@ -453,10 +460,12 @@ class test_apply_markevery_to_sequence_of_lines(temp_cls):
 
         apply_markevery_to_sequence_of_lines(ax.get_lines(), markevery=8,
                                          random_start=True, seed=1)
-
-        assert_equal(ax.get_lines()[0].get_markevery(), (1,8))
-        assert_equal(ax.get_lines()[1].get_markevery(), (7,8))
-        assert_equal(ax.get_lines()[2].get_markevery(), (6,8))
+        # using mock here is a bit of a cop out but randint, even
+        # with the same seed, gives different answeres in
+        # py34 vs py27
+        assert_equal(ax.get_lines()[0].get_markevery(), (2,8))
+        assert_equal(ax.get_lines()[1].get_markevery(), (2,8))
+        assert_equal(ax.get_lines()[2].get_markevery(), (2,8))
 
     def test_int(self):
 
