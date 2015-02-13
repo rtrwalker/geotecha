@@ -238,7 +238,7 @@ def polygon_area(pts):
 
     i = np.argmax(n) #project polygon onto plane that is perpendicular to this direction, then integrate the area
 
-    j = range(3)
+    j = list(range(3))
     j.pop(i) #remaining directions
     e = (x, y, z)
     def if1dxdy(x, y):
