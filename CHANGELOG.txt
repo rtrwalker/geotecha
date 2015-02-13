@@ -1,3 +1,18 @@
+2015-02-13 geotecha-0.1.3 Release. Now compatible with python-2.7 and 
+           python-3.4.  32 and 64-bit windows binaries available on
+           pypi. Added many speccon examples. Updated
+	   README.rst so that github and pipy have nice looking
+           front pages. Expanded permissible numpy functions in 
+	   inputoutput syntax_checker.
+
+-----------------------------------------------------------------------
+2015-01-30 geotecha-0.1.2 Release.  Similar release to 0.1.1 but with
+           with important changes to docs.  Added sphinx extensions
+           gen_api_rst_files.py and gen_examples_rst_files.py which
+           auto generate the api rst files and the example docs when
+           I make the docs with 'make html'.  Now I gan just add
+           example files and have them appear in the docs.
+
 -----------------------------------------------------------------------
 2015-01-14 geotecha-0.1.1 Release.  This is the version that works on
            Rohan's computer based on pythonxy-2.7.6.1.  I anticipate 

@@ -1,6 +1,9 @@
 Note the 'geotecha_examples' 'folder' is a symlink that I created using:
 
 mklink /J "C:\Users\Rohan Walker\Documents\GitHub\geotecha\docs\geotecha_examples\" "..\examples\"
+or
+mklink /J "C:\Users\rohanw\Documents\GitHub\geotecha\docs\geotecha_examples\" "..\examples\"
+you may have to change the absolute reference(run the command in the docs directory
 
 This is similar to matplotlib docs which uses a similar approach when refering to mpl_examples
 

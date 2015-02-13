@@ -3,8 +3,8 @@
 
 from __future__ import print_function, division
 
-import _docs_delete__build_dir
-import _docs_html_docs
+from . import _docs_delete__build_dir
+from . import _docs_html_docs
 
 
 def main():

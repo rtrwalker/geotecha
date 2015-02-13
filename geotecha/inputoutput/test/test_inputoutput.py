@@ -278,7 +278,7 @@ def test_SyntaxChecker():
                   ast.parse('eval(44*2)', mode='exec'))
 
     assert_raises(SyntaxError, syntax_checker.visit,
-                  ast.parse('exec "a=34"', mode='exec'))
+                  ast.parse('exec("a=34")', mode='exec'))
 
     assert_raises(SyntaxError, syntax_checker.visit,
                   ast.parse("""[x for x in ().__class__.__bases__[0].__subclasses__()
@@ -445,7 +445,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         data = np.arange(6).reshape(3,2)
         save_grid_data_to_file({'data': data},
                                directory=self.tempdir.path)
-        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,1
@@ -456,7 +456,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         data = np.arange(6).reshape(3,2)
         save_grid_data_to_file({'data': data},
                                directory=os.path.join(self.tempdir.path,'g'))
-        assert_equal(self.tempdir.read(('g','out_000','out_000.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('g','out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,1
@@ -468,7 +468,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         save_grid_data_to_file({'data': data},
                                directory=self.tempdir.path,
                                file_stem="ppp")
-        assert_equal(self.tempdir.read(('ppp','ppp.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('ppp','ppp.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,1
@@ -480,7 +480,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         save_grid_data_to_file({'data': data},
                                directory=self.tempdir.path,
                                ext=".out")
-        assert_equal(self.tempdir.read(('out_000','out_000.out')).splitlines(),
+        assert_equal(self.tempdir.read(('out_000','out_000.out'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,1
@@ -492,7 +492,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         save_grid_data_to_file({'data': data},
                                directory=self.tempdir.path,
                                create_directory=False)
-        assert_equal(self.tempdir.read('out_000.csv').splitlines(),
+        assert_equal(self.tempdir.read('out_000.csv', 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,1
@@ -503,7 +503,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         data = np.arange(6).reshape(3,2)
         save_grid_data_to_file({'data': data, 'header':'hello header'},
                                directory=self.tempdir.path)
-        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             hello header
                             ,0,1
@@ -515,7 +515,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         data = np.arange(6).reshape(3,2)
         save_grid_data_to_file({'data': data, 'name':'xx'},
                                directory=self.tempdir.path)
-        assert_equal(self.tempdir.read(('out_000','out_000xx.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('out_000','out_000xx.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,1
@@ -527,7 +527,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         data = np.arange(6).reshape(3,2)
         save_grid_data_to_file({'data': data, 'row_labels':[8,12,6]},
                                directory=self.tempdir.path)
-        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,item,0,1
                             0,8,0,1
@@ -539,7 +539,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         save_grid_data_to_file({'data': data, 'row_labels':[8,12,6],
                                 'row_labels_label':'yyy'},
                                directory=self.tempdir.path)
-        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,yyy,0,1
                             0,8,0,1
@@ -550,7 +550,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         data = np.arange(6).reshape(3,2)
         save_grid_data_to_file({'data': data, 'column_labels':['a', 'b']},
                                directory=self.tempdir.path)
-        assert_equal(self.tempdir.read(('out_000','out_000.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,a,b
                             0,0,1
@@ -563,13 +563,13 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                 {'data': 2*data, 'name':2}],
                                directory=self.tempdir.path,
                                file_stem="qqq")
-        assert_equal(self.tempdir.read(('qqq','qqq1.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('qqq','qqq1.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
-        assert_equal(self.tempdir.read(('qqq','qqq2.csv')).splitlines(),
+        assert_equal(self.tempdir.read(('qqq','qqq2.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             ,0,1
                             0,0,2
@@ -598,10 +598,10 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 
     def setUp(self):
         self.tempdir = TempDirectory()
-        self.tempdir.write('a1.py', "a1")
-        self.tempdir.write('a2.py', "a2")
-        self.tempdir.write('b1.txt', "b1")
-        self.tempdir.write('b2.txt', "b2")
+        self.tempdir.write('a1.py', "a1", 'utf-8')
+        self.tempdir.write('a2.py', "a2", 'utf-8')
+        self.tempdir.write('b1.txt', "b1", 'utf-8')
+        self.tempdir.write('b2.txt', "b2", 'utf-8')
 
     def tearDown(self):
         self.tempdir.cleanup()
@@ -628,7 +628,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
         print(args)
         a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             a1.py
                             a2.py""").splitlines())
@@ -640,7 +640,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 #        print(args)
         a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             a1
                             a2""").splitlines())
@@ -652,7 +652,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 #        print(args)
         a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             b1.txt
                             b2.txt""").splitlines())
@@ -664,7 +664,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 #        print(args)
         a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             b1
                             b2""").splitlines())
@@ -679,7 +679,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 #        print(args)
         a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             a1
                             b1""").splitlines())
@@ -695,7 +695,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 #        print(args)
         a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             a1.py
                             b1.txt""").splitlines())
@@ -710,7 +710,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
         with working_directory(self.tempdir.path):
             a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             a1.py
                             a2.py""").splitlines())
@@ -730,7 +730,7 @@ class test_GenericInputFileArgParser(unittest.TestCase):
 
         a.main(argv=args)
 
-        assert_equal(self.tempdir.read(('out.zebra')).splitlines(),
+        assert_equal(self.tempdir.read(('out.zebra'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             a1.py
                             dog
@@ -819,9 +819,9 @@ class test_InputFileLoaderCheckerSaver(unittest.TestCase):
         self.dir = os.path.abspath(os.curdir)
 
         self.tempdir = TempDirectory()
-        self.tempdir.write('inp1.py', b'a=4\nb=6')
-        self.tempdir.write('out0001.py', b'a=4\nb=6')
-        self.tempdir.write(('what', 'out0001.py'), b'a=4\nb=6')
+        self.tempdir.write('inp1.py', 'a=4\nb=6', 'utf-8')
+        self.tempdir.write('out0001.py', 'a=4\nb=6', 'utf-8')
+        self.tempdir.write(('what', 'out0001.py'), 'a=4\nb=6', 'utf-8')
 #        self.tempdir.write('a_005', b'some text a5')
 #        self.tempdir.write('b_002.txt', b'some text b2')
 #        self.tempdir.write('b_008.out', b'some text b8')
@@ -846,7 +846,7 @@ class test_InputFileLoaderCheckerSaver(unittest.TestCase):
         a = InputFileLoaderCheckerSaver()
         a._attributes = "a b".split()
         a._initialize_attributes()
-        with open(os.path.join(self.tempdir.path, 'inp1.py'), 'rb') as f:
+        with open(os.path.join(self.tempdir.path, 'inp1.py'), 'r') as f:
             a.__init__(f)
 
         assert_equal(a.a, 4)
@@ -964,7 +964,7 @@ class test_InputFileLoaderCheckerSaver(unittest.TestCase):
 #        print(os.listdir(self.tempdir.path))
 #        print(os.listdir(os.path.join(self.tempdir.path,'out0002')))
         assert_equal(self.tempdir.read(
-                ('out0002','out0002_input_parsed.py')).strip().splitlines(),
+                ('out0002','out0002_input_parsed.py'), 'utf-8').strip().splitlines(),
                      'a = 4\nb = 6'.splitlines())
 
     def test_save_data_input_text(self):
@@ -973,7 +973,7 @@ class test_InputFileLoaderCheckerSaver(unittest.TestCase):
         a.save_data_to_file=True
         a._save_data()
         assert_equal(self.tempdir.read(
-                ('out0002','out0002_input_original.py')).strip().splitlines(),
+                ('out0002','out0002_input_original.py'), 'utf-8').strip().splitlines(),
                      'hello'.splitlines())
 
     def test_save_data_input_ext(self):

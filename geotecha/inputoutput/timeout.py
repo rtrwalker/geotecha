@@ -18,8 +18,8 @@ Examples
 --------
 >>> timed_longcos = timeout(2)(_longcos)
 >>> timed_longcos(1, 0)
-0.5403023058681398
->>> timed_longcos(1, 2)
+0.5403...
+>>> timed_longcos(1, 2) # doctest: +IGNORE_EXCEPTION_DETAIL
 Traceback (most recent call last):
 ...
 TimeoutException: timed out after 2 seconds
@@ -134,6 +134,6 @@ def _longcos(x, wait=0):
 
 if __name__ == '__main__':
     import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
 

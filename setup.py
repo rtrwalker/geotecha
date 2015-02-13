@@ -13,10 +13,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
-"""geotecha: a software suite for geotechncial engineering
-
-Hey look at me I'm a long description
-But how long am I?
+"""geotecha: A software suite for geotechncial engineering
 
 """
 
@@ -95,6 +92,7 @@ CLASSIFIERS = """\
 Development Status :: 4 - Beta
 License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
 Programming Language :: Python :: 2.7
+Programming Language :: Python :: 3.4
 Topic :: Scientific/Engineering
 """
 
@@ -102,10 +100,10 @@ NAME = 'geotecha'
 MAINTAINER = "Dr Rohan Walker"
 MAINTAINER_EMAIL = "rtrwalker@gmail.com"
 DESCRIPTION = DOCLINES[0]
-LONG_DESCRIPTION = "\n".join(DOCLINES[2:])#readme('readme.rst')
+LONG_DESCRIPTION = readme('readme.rst')#"\n".join(DOCLINES[2:])#
 URL = "https://github.com/rtrwalker/geotecha.git"
 DOWNLOAD_URL = "https://github.com/rtrwalker/geotecha.git"
-LICENSE = 'GNU General Public License v3 or later (GPLv3+)'
+LICENSE = 'GNU General Public License v3 or later (    )'
 CLASSIFIERS = [_f for _f in CLASSIFIERS.split('\n') if _f]
 KEYWORDS=''
 AUTHOR = "Dr Rohan Walker"
@@ -113,7 +111,7 @@ AUTHOR_EMAIL = "rtrwalker@gmail.com"
 PLATFORMS = ["Windows"]#, "Linux", "Solaris", "Mac OS-X", "Unix"]
 MAJOR = 0
 MINOR = 1
-MICRO = 1
+MICRO = 3
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -125,6 +123,8 @@ INSTALL_REQUIRES=[
     "brewer2mpl",
     "testfixtures",
     "pandas",
+    "numpydoc",
+    "IPython",    
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     ]
@@ -134,7 +134,7 @@ TESTS_REQUIRE=['nose', 'testfixtures']
 
 DATA_FILES = [(NAME, ['LICENSE.txt','README.rst', 'CHANGELOG.txt'])]
 PACKAGES=setuptools.find_packages()
-#PACKAGES.remove('tools')
+PACKAGES.remove('tools')
 
 PACKAGE_DATA={
               '': ['*.f95','*.f90'],}
@@ -150,7 +150,7 @@ EXT_MODULES = [Extension(name=x,sources=[y]) for x, y in zip(ext_module_names, e
 baseline_folders = get_folder(NAME, ['baseline_images'])
 baseline_module_names = [osp.split(v)[0].replace(osp.sep,'.') for v in baseline_folders]
 for v in baseline_module_names:
-    if PACKAGE_DATA.has_key(v):
+    if v in PACKAGE_DATA:
         PACKAGE_DATA[v].append(osp.join('baseline_images','*','*.*'))
     else:
         PACKAGE_DATA[v]=[osp.join('baseline_images','*','*.*')]
