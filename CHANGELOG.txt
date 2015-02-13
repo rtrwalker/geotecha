@@ -1,6 +1,9 @@
-2015-02-10 geotecha-0.1.3 Added many speccon examples. Updated
+2015-02-13 geotecha-0.1.3 Release. Now compatible with python-2.7 and 
+           python-3.4.  32 and 64-bit windows binaries available on
+           pypi. Added many speccon examples. Updated
 	   README.rst so that github and pipy have nice looking
-           front pages.
+           front pages. Expanded permissible numpy functions in 
+	   inputoutput syntax_checker.
 
 -----------------------------------------------------------------------
 2015-01-30 geotecha-0.1.2 Release.  Similar release to 0.1.1 but with

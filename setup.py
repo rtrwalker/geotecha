@@ -124,8 +124,7 @@ INSTALL_REQUIRES=[
     "testfixtures",
     "pandas",
     "numpydoc",
-    "IPython",
-    "Sphinx-PyPI-upload",
+    "IPython",    
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     ]

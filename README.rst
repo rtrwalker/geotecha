@@ -8,7 +8,7 @@ geotecha: A software suite for geotechnical engineering
 
 Writen by Dr Rohan Walker
 
-*geotecha* is a a GPLv3_-licensed Python package for geotechncial 
+*geotecha* is a a GPLv3_-licensed Python package for geotechnical 
 engineering.
 
 Many components of *geotecha* derive from geotechnical research 
@@ -23,7 +23,7 @@ associated with multi-layer problems using the spectral Galerkin
 method.  Material properties are constant with time but piecewsie-linear
 with depth.  Loads and boundary conditions are piecewise linear with 
 time (plus a sinusoidal component).  A number of other analytical 
-solutions to soil consolidatoin problems are avialable in the 
+solutions to soil consolidation problems are available in the 
 `consolidation` sub-package.
 
 
@@ -45,10 +45,10 @@ Requirements
 ++++++++++++
 *geotecha* uses a number of other python packages such as 
 numpy, matplotlib, and scipy.  Setting up your python environment 
-to succesfully run all these packages can be cumbersome so pre-built
+to successfully run all these packages can be cumbersome so pre-built
 python stacks such as the readily available Anaconda_ or 
 `Python(x,y)`_ are highly recommended . Note generally better to 
-unistall any existing python distributions before installing a new 
+uninstall any existing python distributions before installing a new 
 one.
 
 Package requirements:
@@ -56,17 +56,16 @@ Package requirements:
  - numpy
  - matplotlib
  - scipy
+ - pandas
  - sympy
  - brewer2mpl
  - testfixtures
  - numpydoc
  - IPython
- - pandas
  - pkg_resources
  - mpl_toolkits
  - nose
  - one of wx (i.e. wxPython) or PyQt (PyQt4 or PyQt5)
- - Sphinx-PyPI-upload
 
 Before worrying about if your system has the required packages just
 try one of the installation methods below (first try the 
@@ -83,21 +82,41 @@ they are not already present:
    pip install pkg_resources
    pip install mpl_toolkits
 
-wxPython and PyQt are not always avialable through pypi_ so may 
+wxPython and PyQt are not always available through pypi_ so may 
 have to be installed manually (there are usually windows binaries 
-available.)
+available).
 
 Windows binaries
 ++++++++++++++++
 The easiest, hassle-free way to install *geotecha* on a windows 
 machine is to download one of the pre-built binaries available  
 at https://pypi.python.org/pypi/geotecha .  Once downloaded 
-double click the .exe file to install.  I am not sure but you 
-may need to install the dependency packages separately.
-Binaries are avialable for 32 and 64 bit python-2.7 and python-3.4. 
+double click the .exe file to install.  Note that the installer 
+will display the raw text of this file and it may look odd. This
+does not matter.  
+You may need to install the dependency packages separately.
+Binaries are available for 32 and 64 bit python-2.7 and python-3.4. 
 
-See the `Building from source`_ section below for instructions
-on how to to test your *geotecha* installation.
+Test you installation by opening a command prompt (Windows+R cmd) and 
+enter the following command:
+
+.. code-block::
+
+   nosetests geotecha -v --with-doctest --doctest-options=+ELLIPSIS
+
+
+It is common to get an error such as:
+
+.. code-block::
+
+   ImportError: No module named 'brewer2mpl'
+
+which usually means one of the dependencies is not installed.  Simply 
+rerun the tests after installing the missing package with:
+
+.. code-block::
+
+   pip install brewer2mpl
   
 
 pip
@@ -109,21 +128,22 @@ To install *geotecha* from the Python Package Index (PyPI) using pip:
    pip install geotecha
 
 This will essentially download the source files and build and install
-the package.  *geotecha* has extension modules written in fortran 
-which can cause issues if your python environent is not set up to 
-handle them ( I think you need a fortran and a c compiler).
+the package.  *geotecha* has extension modules written in Fortran 
+which can cause issues if your python environment is not set up to 
+handle them ( I think you need a Fortran and a c compiler).
 .As such you may have difficultly in building the 
 external extensions (see `Building from source`_ below.
 
-See the `Building from source`_ section below for instructions
-on how to test your *geotecha* installation.
+See the `Windows binaries`_ section above for instructions
+on how to to test your *geotecha* installation.
+
 
 Building from source
 ++++++++++++++++++++
 You can download the *geotecha* source files from pypi_ or from the 
 Github repository https://github.com/rtrwalker/geotecha .  
-*geotecha* uses some external extensions written in fortran, so 
-you will need to have a fortran compiler present.  Then it is a 
+*geotecha* uses some external extensions written in Fortran, so 
+you will need to have a Fortran compiler present.  Then it is a 
 matter of building and installing:
 
 .. code-block::
@@ -136,18 +156,30 @@ of all the files installed.  It is possible to skip the build step
 (it will be included in the install step).  But I find it more
 informative to use two steps.  
 
-Once installed you can test the package using:
+See the `Windows binaries`_ section above for instructions
+on how to to test your *geotecha* installation.  When testing
+you may wish to use the 
+'-w' working directory tag is so that nose runs tests on the 
+installed version of *geotecha* rather than the source code version 
+(the source version will not have the external extensions).  Change 
+the working directory to match your python location, for example:
 
 .. code-block::
 
    nosetests geotecha -v -w C:\Python27\Lib\site-packages\ --with-doctest --doctest-options=+ELLIPSIS
 
-The '-w' working directory tag is so that nose runs tests on the 
-installed version of *geotecha* rather than the source code version 
-(the source version will not have the external extensions).  Change 
-the working directory to match your python location.
+   
+Building the docs
+^^^^^^^^^^^^^^^^^
+The *geotecha* docs can be build by running the following in the 
+docs directory:
 
+.. code-block::
 
+   make html
+   
+The build requires a symlink to the examples directory.  See the 
+README.txt in the docs for instructions.  There is also an issue with building the docs
 
 
 Issues with building/installing
@@ -176,9 +208,23 @@ Another problem is getting errors such as:
 
 I had to modify my *PATH* environment variable to include the path 
 to a gcc command (You shouldn't have trouble when using Anaconda_ 
-becuase it comes packaged with MinGW, but occaisionally 
+because it comes packaged with MinGW, but occasionally 
 with `Python(x,y)`_ I've had to install MinGW).
 
+
+When trying to build *geotecha* from source on 64-bit windows you may 
+get the following error:
+
+.. code-block::
+   
+   File "C:\Anaconda3\envs\py27\lib\site-packages\numpy\distutils\fcompiler\gnu.p
+   y", line 337, in get_libraries
+    raise NotImplementedError("Only MS compiler supported with gfortran on win64
+   ")
+   
+According to http://scientificcomputingco.blogspot.com.au/2013/02/f2py-on-64bit-windows-python27.html 
+the error can be fixed by changing the source code to pass the exception 
+(i.e. add "pass #" before the "raise").
 
 
 Removing geotecha
