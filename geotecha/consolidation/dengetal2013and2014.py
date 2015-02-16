@@ -365,7 +365,7 @@ if __name__ == "__main__":
                 plt.plot(por[:,j], z, label="m Th={0:.3g}, A2={1:.3g}".format(Th[j], A2))
                 plt.plot(uz0,0, marker='o', ms=14)
 
-        for key, val in res.iteritems():
+        for key, val in res.items():
             x = val[:,0]
             y = val[:,1]*20
             plt.plot(x,y, label=key, marker='s', linestyle='None')
@@ -450,7 +450,7 @@ if __name__ == "__main__":
                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
                 plt.plot(uz0,0, marker='o', ms=14)
 
-        for key, val in res.iteritems():
+        for key, val in res.items():
             x = val[:,0]
             y = val[:,1]*20
             plt.plot(x,y, label=key, marker='s', linestyle='None')
@@ -513,7 +513,7 @@ if __name__ == "__main__":
                 plt.plot(por[:,j], z, label="m Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
                 plt.plot(uz0,0, marker='o', ms=14)
 
-        for key, val in res.iteritems():
+        for key, val in res.items():
             x = val[:,0]
             y = val[:,1]*20
             plt.plot(x,y, label=key, marker='s', linestyle='None')
@@ -665,7 +665,7 @@ if __name__ == "__main__":
                 plt.plot(por8[:,j], z, marker='o', label="eq8 Th={0:.3g}, a3={1:.3g}".format(Th[j], a3_))
                 plt.plot(uz0,0, marker='o', ms=14)
 
-        for key, val in res.iteritems():
+        for key, val in res.items():
             x = val[:,0]
             y = val[:,1]*20
             plt.plot(x,y, label=key, marker='s', linestyle='None', markersize=7)

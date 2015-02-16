@@ -126,7 +126,7 @@ def test_hankel_transform_order_0():
 
 
 
-def check_HankelTransform(s, (func, funcdoc), (func_, func_doc), args, order, m,
+def check_HankelTransform(s, funcanddoc, funcanddoc_, args, order, m,
                           ng, ng0, shanks_ind):
     """check if a HankelTransform gives it's analytical solution
 
@@ -140,7 +140,8 @@ def check_HankelTransform(s, (func, funcdoc), (func_, func_doc), args, order, m,
         analytical transform of `func`
     other: see HankelTransform
     """
-
+    (func, funcdoc) = funcanddoc
+    (func_, func_doc) = funcanddoc_
     if func==hankel3:
         points= args[0] / jn_zeros(0, 70)
         atol=1e-4

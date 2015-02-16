@@ -29,7 +29,7 @@ from numpy.testing import assert_allclose
 from geotecha.mathematics.laplace import Talbot
 from geotecha.mathematics.hankel import HankelTransform
 from geotecha.mathematics.fourier import FourierTransform
-
+import collections
 
 
 
@@ -148,7 +148,8 @@ def ntransform(func, transforms, transvars, args=None, opts=None):
     if isinstance(opts, dict):
         opts = [opts] * depth
     else:
-        opts = [opt if callable(opt) else _OptFunc(opt) for opt in opts]
+        opts = [opt if isinstance(opt, collections.Callable) else
+                _OptFunc(opt) for opt in opts]
 
     return _NTransform(func, transforms,
                        transvars, opts).integral_transform(*args)

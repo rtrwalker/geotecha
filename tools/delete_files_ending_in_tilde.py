@@ -27,21 +27,21 @@ for usage see :func:`main` or at the command line enter::
 
 def main(argv=None):
     """Delete all files in current working directory tree ending in '~'.
-    
-    When I use Vim on windows, e.g. I open "house.rst", then a file 
+
+    When I use Vim on windows, e.g. I open "house.rst", then a file
     "house.rst~" is created.  As far as I can see these files are useless and
     annoying.  This function/script gets rid of them.
-    
+
     Parameters
     ----------
     argv : list of str, optional
-        list of command line options (see usage below) (default=None, 
+        list of command line options (see usage below) (default=None,
         files will be deleted from the current working directory and its sub
         directories).  Example is ['-v','dirs','path/to/dir']
-    
+
     Notes
     -----
-        
+
     usage: delete_files_ending_in_tilde.py [-h] [-v] [-n]
                                        [-d FOLDER_PATH [FOLDER_PATH ...]]
 
@@ -53,53 +53,52 @@ def main(argv=None):
                             directories]
       -d FOLDER_PATH [FOLDER_PATH ...], --dirs FOLDER_PATH [FOLDER_PATH ...]
                             Directories to search [default: current working
-                            directory]        
-            
-    """      
+                            directory]
+
+    """
     import os, re, sys, argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--verbose', action='store_true', 
+    parser.add_argument('-v', '--verbose', action='store_true',
                         help="print list of filenames "
                         "[default: don't print filenames]")
-    
+
     parser.add_argument('-n', '--no_recursion', action='store_true',
                         help="only search current directory "
-                        "[default: search sub-directories]")    
-    
+                        "[default: search sub-directories]")
+
     parser.add_argument('-d', '--dirs', metavar='FOLDER_PATH', type=str,
                         nargs='+', default=[os.getcwd()],
-                        help="directories to search "                        
+                        help="directories to search "
                         "[default: current working directory")
-                       
+
     if argv == None:
         args = parser.parse_args()
-    else:        
+    else:
         args = parser.parse_args(argv)
-    
-   # print args                     
+
+   # print args
     pattern = ".+~$"
     matching_files = set()
-    
+
     for mypath in args.dirs:
-        
+
         if args.no_recursion:
-            for file in filter(lambda x: re.match(pattern, x), 
-                               os.listdir(mypath)):
+            for file in [x for x in os.listdir(mypath) if re.match(pattern, x)]:
                 matching_files.add(os.path.join(mypath, file))
         else:
             for root, dirs, files in os.walk(mypath):
-                for file in filter(lambda x: re.match(pattern, x), files):
-                    matching_files.add(os.path.join(root, file))                                        
-                            
+                for file in [x for x in files if re.match(pattern, x)]:
+                    matching_files.add(os.path.join(root, file))
+
     if args.verbose:
-        print('%d filenames matching "%s" found and removed:' % (len(matching_files), pattern))
+        print('{:d} filenames matching "{:s} found and removed:'.format((len(matching_files), pattern)))
         for file in matching_files:
             print(file)
-            
+
     for file in matching_files:
-        print("name: " + file)
+        print(("name: " + file))
         #os.remove(os.path.join(root, file))
-      
-        
+
+
 if __name__ == '__main__':
-    main()#    
+    main()#

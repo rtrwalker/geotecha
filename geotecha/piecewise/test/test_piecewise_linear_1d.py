@@ -173,13 +173,13 @@ class test_linear_piecewise(object):
 
     def test_non_increasing_and_non_decreasing_parts(self):
         """test some non_increasing_and_non_decreasing_parts examples"""
-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [range(len(self.two_steps['x'])-1)])
-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [range(len(self.two_ramps_reverse['x'])-1)])
+        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x']), [list(range(len(self.two_steps['x'])-1))])
+        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x']), [list(range(len(self.two_ramps_reverse['x'])-1))])
         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x']), [[0,1],[2],[3,4]])
         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x']), [[0,1],[2,3],[4]])
 
-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [range(len(self.two_steps['x']))])
-        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [range(len(self.two_ramps_reverse['x']))])
+        assert_equal(non_increasing_and_non_decreasing_parts(self.two_steps['x'],include_end_point=True), [list(range(len(self.two_steps['x'])))])
+        assert_equal(non_increasing_and_non_decreasing_parts(self.two_ramps_reverse['x'],include_end_point=True), [list(range(len(self.two_ramps_reverse['x'])))])
         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back['x'],include_end_point=True), [[0,1,2],[2,3],[3,4,5]])
         assert_equal(non_increasing_and_non_decreasing_parts(self.switch_back_steps['x'],include_end_point=True), [[0,1,2],[2,3,4],[4,5]])
 

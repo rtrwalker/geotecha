@@ -1093,9 +1093,9 @@ def shanks_table(seq, table=None, randomized=False):
         from random import Random
         rnd = Random()
         rnd.seed(START)
-    for i in xrange(START, STOP):
+    for i in range(START, STOP):
         row = []
-        for j in xrange(i+1):
+        for j in range(i+1):
             if j == 0:
                 a, b = 0, seq[i+1]-seq[i]
             else:

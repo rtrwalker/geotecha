@@ -645,9 +645,9 @@ def test_fixed_ppress_terzaghi_PTPB():
 
     for impl in ["vectorized"]:
         for dT in [0.1, 1, 10]:
-            a = Speccon1dVRW(reader + "\n" +
-                            "implementation = '%s'" % impl + "\n" +
-                            "dT = %s" % dT)
+            a = Speccon1dVRW((reader + "\n" +
+                            "implementation = '{}'".format(impl) + "\n" +
+                            "dT = {}".format(dT)))
 
             a.make_all()
 
@@ -2106,9 +2106,9 @@ def test_zhuandyin2012_drn0_kv_linear_mv_const():
 
     for impl in ["vectorized"]:
         for dT in [10]:
-            a = Speccon1dVRW(reader + "\n" +
-                            "implementation = '%s'" % impl + "\n" +
-                            "dT = %s" % dT)
+            a = Speccon1dVRW((reader + "\n" +
+                            "implementation = '{}'".format(impl) + "\n" +
+                            "dT = {}".format(dT)))
 
             a.make_all()
 

@@ -480,7 +480,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
         beta = np.zeros_like(self.h, dtype=float)
         beta[0] = beta0
-        for i in xrange(1, self.nlayers):
+        for i in range(1, self.nlayers):
             beta[i] = np.sqrt(self.cv[i-1] / self.cv[i] * beta[i-1]**2)
 
         alpha = self.kv[:-1] / self.kv[1:]
@@ -493,7 +493,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
         self.BC[-1, -1] = (self.bbot * math.sin(beta[-1] * self.zlayer[-1]) +
                      self.abot * beta[-1] * math.cos(beta[-1] * self.zlayer[-1]))
 
-        for i in xrange(self.nlayers - 1):
+        for i in range(self.nlayers - 1):
             #1st equation
             #TODO: row is wrong
             row = 2 * i + 1
@@ -530,7 +530,7 @@ class SchiffmanAndStein1970(inputoutput.InputFileLoaderCheckerSaver):
 
         x = np.linspace(0, self._beta0[-1] + (self._beta0[-1]-self._beta0[-2])/8, npts)
         y = np.zeros_like(x)
-        for i in xrange(len(x)):
+        for i in range(len(x)):
             y[i]=self._characteristic_eqn(x[i])
 #        plt.gcf().clear()
         fig = plt.figure(figsize=(30,5))
