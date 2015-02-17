@@ -26,6 +26,8 @@ import matplotlib.pyplot as plt
 import matplotlib
 import functools
 from scipy.optimize import fixed_point
+from scipy.integrate import odeint
+import geotecha.piecewise.piecewise_linear_1d as pwise
 
 class OneDimensionalVoidRatioEffectiveStress(object):
     """Base class for defining 1D void ratio-effective stress relationships"""
@@ -1121,8 +1123,10 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         soil model when psi=0.  i.e. CcCrSoilModel following instant time line
         and reference time line.
     _igral : float
-        Ccurrent value of the material model integration w.r.t. time.
+        Current value of the material model integration w.r.t. time.
         Igral = integrate[1/t0 * (estress/etress0)**alpha, t,0,t]
+
+
 
 
     Examples
@@ -1523,6 +1527,129 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         return av
 
+    def CRSN(self, tvals, edot, **kwargs):
+        """Constant rate of strain simulation
+
+        Note that the rate of chage of void ratio is specified.  Strain can be
+        back caluclated.
+
+        Parameters
+        ----------
+        tvals : 1d array of float
+            time values for piecewise linear strain-rate vs time.
+        edot : 1d array of float
+            time rate of chage of void ratio corresponding to tvals. Note that
+            you will need a negative edot for void ratio to decrease.  Be
+            careful because strain in geotech is usually positive for a
+            decrease in void ratio.
+        method : ['step', 'ode'] optional
+            Describes which method to use.  'step' will step through time
+            using the stress_from_e function. 'odeint' will reframe the
+            constitutive model in terms of stress-rate and use odeint to
+            solve  for effective stress. Both methods should produce the
+            same results; the 'odeint' method is really just a validity
+            check of the the 'step' method. Default method='step'.
+        **kwargs : various
+            Arguments (other than method) will be passed to
+            the subdivide_x_into_segments function.  If not given then the
+            following values will be used, dx = (tvals[-1]-tvals[0])/200,
+            min_segments=50. You may have to fiddle around with kwargs to
+            get meaningful results; a small dx value will give good results
+            but could take a long time to compute.
+
+
+        Returns
+        -------
+        tvals_ : 1d array of float
+            Time values
+        estress : 1d array of float
+            Effective stress at tvals_.
+        e : 1d array of float
+            void ratio at time tvals_.
+        edot_ : 1d array of float.
+            time rate of change at tvals_
+
+
+        See also
+        --------
+        geotecha.piecewise.piecewsie_linear_1d.subdivide_x_into_segments : used
+            to determine time intervals.
+
+
+        """
+
+        igral0 = self._igral # remember _igral value before CRSN simulation
+
+        method = kwargs.pop('method', 'step').lower()
+        kwargs['dx']= kwargs.get('dx', (tvals[-1]  -tvals[0]) / 200)
+        kwargs['min_segments']= kwargs.get('min_segments', 50)
+
+        tvals_ = pwise.subdivide_x_into_segments(tvals, **kwargs)
+
+
+
+
+
+        if method == "odeint":
+
+            def func(x, tt):
+                """Effective stress rate
+
+                This is based on
+
+                Parameters
+                ----------
+                x : float
+                    Effective stress.
+                tt : float
+                    Time.
+
+                Returns
+                -------
+                y : float
+                    Effective stress rate.
+
+
+                """
+
+                erate = np.interp(tt, tvals, edot)
+                evalue = self.e0 + pwise.integrate_x_y_between_xi_xj(tvals, edot, 0, tt)
+
+                return (-x / self.kap * (
+                    erate
+                    + self.psi/self.ta * np.exp((evalue-self.ea)/self.psi)
+                    *(x / self.siga)**(self.lam / self.psi)
+                    ))
+
+
+            estress = odeint(func, self.estress0, tvals_)[:,0]
+            edot_ = np.interp(tvals_, tvals, edot)
+            e = self.e0 + pwise.integrate_x_y_between_xi_xj(tvals, edot, np.zeros_like(tvals_), tvals_)
+
+        else:
+            e = np.zeros_like(tvals_)
+            e[0] = self.e0
+            estress = np.zeros_like(tvals_)
+            estress[0] = self.estress0
+
+            edot_ = np.interp(tvals_, tvals, edot)
+            dt = np.diff(tvals_)
+
+            e[1:] = edot_[0:-1] * dt
+            np.cumsum(e, out=e)
+            for i, dt_ in enumerate(dt):
+                estress[i + 1] = self.stress_from_e(e[i+1], dt=dt_)
+
+
+        self._igral = igral0 # reset _igral to value before CRSN
+
+        return tvals_, estress, e, edot_
+
+
+
+
+        return
+
 if __name__ == '__main__':
 #    print(CcCr_estress_from_e(2.95154499, 50, 3, 0.5, 10, 5))
 #    import nose
@@ -1532,18 +1659,34 @@ if __name__ == '__main__':
 
     fixed_param = dict(lam=0.2, kap=0.04, psi=0.01, siga=20, ea=1, ta=1)
     oparam = dict(e0=0.95, estress0=18)
-    oparam = dict(e0=np.array([0.95, 0.90]), estress0=np.array([18,20]))
+    oparam = dict(e0=np.array([0.95]), estress0=np.array([18]))
     a = YinAndGrahamSoilModel(e0=oparam['e0'], estress0=oparam['estress0'], **fixed_param)
     b=a._psi_zero_model.plot_model()
     plt.gca().plot(a.siga, a.ea , marker="o", ms=10)
     plt.gca().plot(a.estress0, a.e0, marker = 's', ms=5)
     plt.gca().plot(a.pstress0, a.ea-a.lam*np.log(a.pstress0/a.siga), marker = '^', ms=5)
 
-    print([a.e0, a.estress0, a.pstress0, a.t0])
-    bb = a.stress_from_e(a.e0*0.9, dt=10000000)
-    print(bb)
+#    print([a.e0, a.estress0, a.pstress0, a.t0])
+#    bb = a.stress_from_e(a.e0*0.9, dt=10000000)
+#    print(bb)
+#
+#    plt.gca().plot(bb, a.e0*.9, marker = 'h', ms=5)
+#    plt.show()
+#
+#    plt.show()
+    tt = np.array([0.0, 3000])
+    edot = -np.array([1e-4, 1e-4])
 
-    plt.gca().plot(bb, a.e0*.9, marker = 'h', ms=5)
-    plt.show()
+    tt = np.array([0.0, 1000, 1001, 1e4])
+    edot = -np.array([1e-4, 1e-4, 1e-5, 1e-5])
+#    kwargs = dict(logx=True, dx=0.01)
+    kwargs=dict()
+    tvals, estress, e, edot_ = a.CRSN(tt, edot, method='odeint', **kwargs)
 
+    plt.plot(estress, e, label='odeint', marker='s', ms=2)
+    tvals, estress, e, edot_ = a.CRSN(tt, edot, method='step', **kwargs)
+    plt.plot(estress, e, label='step', marker='o', ms=2)
+    plt.gca().set_xscale('log')
+    leg = plt.gca().legend()
+    leg.draggable()
     plt.show()
