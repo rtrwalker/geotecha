@@ -1370,7 +1370,7 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
             inc = dt/self.t0 * (estress / estress0) ** self._alpha
             self._igral += inc
             e = (e0 - kap * np.log(estress / estress0)
-                 - psi * np.log(self.igral + 1))
+                 - psi * np.log(self._igral + 1))
 
         return e
 
@@ -1531,14 +1531,14 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         """Constant rate of strain simulation
 
         Note that the rate of chage of void ratio is specified.  Strain can be
-        back caluclated.
+        back caluclated using strain = (e0-e) / (1 + e0).
 
         Parameters
         ----------
         tvals : 1d array of float
-            time values for piecewise linear strain-rate vs time.
+            Time values for piecewise linear strain-rate vs time.
         edot : 1d array of float
-            time rate of chage of void ratio corresponding to tvals. Note that
+            Time rate of change of void ratio corresponding to tvals. Note that
             you will need a negative edot for void ratio to decrease.  Be
             careful because strain in geotech is usually positive for a
             decrease in void ratio.
@@ -1565,9 +1565,9 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         estress : 1d array of float
             Effective stress at tvals_.
         e : 1d array of float
-            void ratio at time tvals_.
+            Void ratio at time tvals_.
         edot_ : 1d array of float.
-            time rate of change at tvals_
+            Time rate of change of void ratio at tvals_
 
 
         See also
@@ -1585,10 +1585,6 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         kwargs['min_segments']= kwargs.get('min_segments', 50)
 
         tvals_ = pwise.subdivide_x_into_segments(tvals, **kwargs)
-
-
-
-
 
         if method == "odeint":
 
@@ -1640,15 +1636,121 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
             for i, dt_ in enumerate(dt):
                 estress[i + 1] = self.stress_from_e(e[i+1], dt=dt_)
 
-
         self._igral = igral0 # reset _igral to value before CRSN
 
         return tvals_, estress, e, edot_
 
 
+    def CRSS(self, tvals, estressdot, **kwargs):
+        """Constant rate of stress simulation
+
+        Note that the output is void ratio not strain.  Strain can be
+        back caluclated using strain = (e0-e) / (1 + e0).
+
+        Parameters
+        ----------
+        tvals : 1d array of float
+            Time values for piecewise linear strain-rate vs time.
+        estressdot : 1d array of float
+            Time rate of change of effective stress corresponding
+            to tvals.
+        method : ['step', 'ode'] optional
+            Describes which method to use.  'step' will step through time
+            using the e_from_stress function. 'odeint' will reframe the
+            constitutive model in terms of strain-rate and use odeint to
+            solve  for effective stress. Both methods should produce the
+            same results; the 'odeint' method is really just a validity
+            check of the the 'step' method. Default method='step'.
+        **kwargs : various
+            Arguments (other than method) will be passed to
+            the subdivide_x_into_segments function.  If not given then the
+            following values will be used, dx = (tvals[-1]-tvals[0])/200,
+            min_segments=50. You may have to fiddle around with kwargs to
+            get meaningful results; a small dx value will give good results
+            but could take a long time to compute.
 
 
-        return
+        Returns
+        -------
+        tvals_ : 1d array of float
+            Time values
+        estress : 1d array of float
+            Effective stress at tvals_.
+        e : 1d array of float
+            Void ratio at time tvals_.
+        estressdot_ : 1d array of float.
+            Time rate of change of stress at tvals_
+
+
+        See also
+        --------
+        geotecha.piecewise.piecewsie_linear_1d.subdivide_x_into_segments : used
+            to determine time intervals.
+
+
+        """
+
+        igral0 = self._igral # remember _igral value before CRSS simulation
+
+        method = kwargs.pop('method', 'step').lower()
+        kwargs['dx']= kwargs.get('dx', (tvals[-1]  -tvals[0]) / 200)
+        kwargs['min_segments']= kwargs.get('min_segments', 50)
+
+        tvals_ = pwise.subdivide_x_into_segments(tvals, **kwargs)
+
+        if method == "odeint":
+
+            def func(x, tt):
+                """time rate of change in void ratio
+
+                This is based on
+
+                Parameters
+                ----------
+                x : float
+                    void ratio.
+                tt : float
+                    Time.
+
+                Returns
+                -------
+                y : float
+                    Rate of void ratio change
+
+
+                """
+
+                estressrate = np.interp(tt, tvals, estressdot)
+                estressvalue = self.estress0 + pwise.integrate_x_y_between_xi_xj(tvals, estressdot, 0, tt)
+
+                return (-self.kap * estressrate/estressvalue
+                        -self.psi/self.ta * np.exp((x-self.ea)/self.psi)
+                        *(estressvalue / self.siga)**(self.lam / self.psi))
+
+
+            e = odeint(func, self.e0, tvals_)[:,0]
+            estressdot_ = np.interp(tvals_, tvals, estressdot)
+            estress = self.estress0 + pwise.integrate_x_y_between_xi_xj(tvals, estressdot, np.zeros_like(tvals_), tvals_)
+
+        else:
+            e = np.zeros_like(tvals_)
+            e[0] = self.e0
+            estress = np.zeros_like(tvals_)
+            estress[0] = self.estress0
+
+            estressdot_ = np.interp(tvals_, tvals, estressdot)
+            dt = np.diff(tvals_)
+
+            estress[1:] = estressdot_[0:-1] * dt
+            np.cumsum(estress, out=estress)
+            for i, dt_ in enumerate(dt):
+                e[i + 1] = self.e_from_stress(estress[i+1], dt=dt_)
+
+        self._igral = igral0 # reset _igral to value before CRSS
+
+        return tvals_, estress, e, estressdot_
+
+
 
 if __name__ == '__main__':
 #    print(CcCr_estress_from_e(2.95154499, 50, 3, 0.5, 10, 5))

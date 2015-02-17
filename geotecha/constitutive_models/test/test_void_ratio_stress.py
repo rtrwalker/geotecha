@@ -52,18 +52,15 @@ def test_test_YinAndGrahamSoilModel_CRSN_methods():
     tvals2, estress2, e2, edot_2 = a.CRSN(tt, edot, method='step')
 
     if DEBUG:
-        title ='Compare 2 methods of CRSN simulation'
+        title ='Compare 2 methods of constant rate of void ratio (CRSN) simulation'
         print(title)
-        print(' '.join(['{:>9s}']*4).format('t', 'odeint', 'step', 'diff'))
+        print(' '.join(['{:>9s}']*4).format('t', 'odeint es', 'step es', 'diff'))
         for i, j, k in zip(tvals, estress, estress2):
             print(' '.join(['{:9.4f}']*4).format(i, j, k, j-k))
         print()
 
 
         fig, ax = plt.subplots()
-#        plt.plot(t, settle, color='red', label = 'calced')
-#        plt.plot(t, expected_settle, color='green', marker='o', ls='.', label='expected')
-
         #instant time line
         x = np.linspace(a.estress0, a.pstress0, 10)
         y = a.e0 - a.kap*np.log(x/a.estress0)
@@ -95,10 +92,60 @@ def test_test_YinAndGrahamSoilModel_CRSN_methods():
     assert_allclose(estress, estress2, atol=0.25)
 
 
+def test_test_YinAndGrahamSoilModel_CRSS_methods():
+    """test that 'step' and 'odeint' methods produce the same CRSS simulations"""
 
+    a = YinAndGrahamSoilModel(lam=0.2, kap=0.04, psi=0.01, siga=20, ea=1, ta=1,
+                              e0=0.95, estress0=18)
+
+    tt = np.array([0.0, 20, 20.001, 80])
+    estressdot = np.array([1, 1, 1e-1, 1e-1])
+    tvals, estress, e, edot_ = a.CRSS(tt, estressdot, method='odeint')
+    tvals2, estress2, e2, edot_2 = a.CRSS(tt, estressdot, method='step')
+
+    if DEBUG:
+        title ='Compare 2 methods of constat rate of stress (CRSS) simulation'
+        print(title)
+        print(' '.join(['{:>9s}']*4).format('t', 'odeint e', 'step e', 'diff'))
+        for i, j, k in zip(tvals, e, e2):
+            print(' '.join(['{:9.4f}']*4).format(i, j, k, j-k))
+        print()
+
+
+        fig, ax = plt.subplots()
+        #instant time line
+        x = np.linspace(a.estress0, a.pstress0, 10)
+        y = a.e0 - a.kap*np.log(x/a.estress0)
+        ax.plot(x, y, label='instant time line')
+        #reference time line
+        x = np.linspace(a.pstress0, a.pstress0 + 40, 10)
+        y = a.ea - a.lam*np.log(x/a.siga)
+        ax.plot(x, y, label='reference time line')
+
+
+        ax.plot(estress, e, label='odeint', marker='+', ms=5, markevery=10)
+
+        ax.plot(estress2, e2, label='step', marker='o', ms=3, markevery=10)
+
+
+        ax.set_xscale('log')
+#        ax.invert_yaxis()
+        ax.set_xlabel('Effective stress')
+        ax.set_ylabel('Void ratio')
+        ax.set_title(title)
+        ax.grid()
+        leg=plt.legend(loc=1)
+        leg.draggable()
+
+
+
+        plt.show()
+
+    assert_allclose(e, e2, atol=0.0012)
 
 if __name__ == "__main__":
-    DEBUG = True
+    DEBUG = False
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
 #    test_test_YinAndGrahamSoilModel_CRSN_methods()
+#    test_test_YinAndGrahamSoilModel_CRSS_methods()
