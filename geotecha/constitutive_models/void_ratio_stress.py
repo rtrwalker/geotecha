@@ -49,7 +49,7 @@ class OneDimensionalVoidRatioEffectiveStress(object):
     def av_from_stress(self, estress, **kwargs):
         """Slope of void ratio from effective stress"""
         raise NotImplementedError("av_from_stress must be implemented")
-
+    
     def plot_model(self, **kwargs):
         """plot the void ratio-stress points"""
         ax = kwargs.pop('ax', plt.gca())
@@ -1226,7 +1226,24 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         """
 
-        d = dict(e0=e0, estress0=estress0, pstress0=pstress0, t0=t0)
+        d=dict()
+        try:            
+            d['e0']=e0.copy()
+        except AttributeError:
+            d['e0']=e0
+        try:            
+            d['estress0']=estress0.copy()
+        except AttributeError:
+            d['estress0']=estress0            
+        try:            
+            d['pstress0']=pstress0.copy()
+        except AttributeError:
+            d['pstress0']=pstress0            
+        try:            
+            d['t0']=t0.copy()
+        except AttributeError:
+            d['t0']=t0            
+#        d = dict(e0=e0, estress0=estress0, pstress0=pstress0, t0=t0)
         ic_list = ['e0', 'estress0', 'pstress0','t0']
         ic_given = [v for v in ic_list if not d.get(v, None) is None]
         if len(ic_given)==0:
@@ -1289,6 +1306,10 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
     def e_from_stress(self, estress, **kwargs):
         """Void ratio from effective stress
 
+        When dt is None then then self.e0, self.estress0, self.t0 and 
+        self.pstress0 will be initialized from estress and pstress; self.e0 
+        will be returned.
+        
         Parameters
         ----------
         estress : float
@@ -1356,11 +1377,15 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         pstress = kwargs.get('pstress', estress)
 
         if dt is None:
-            e = self._psi_zero_model.e_from_stress(estress, pstress)
-            return e
+            
+            # assume calculating initial conditions from stress state
+            self.e0, self.estress0, self.pstress0, self.t0 = (
+                self.initial_conditions(estress0=estress, pstress0=pstress))
+#            e = self._psi_zero_model.e_from_stress(estress, pstress)
+            return self.e0
         else:
             # estress is assumed to be the effective stress at the end
-            # of an increment of lenght dt.
+            # of an increment of length dt.
             e0 = self.e0
             kap = self.kap
             lam = self.lam
@@ -1372,11 +1397,20 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
             e = (e0 - kap * np.log(estress / estress0)
                  - psi * np.log(self._igral + 1))
 
-        return e
+            return e
 
+    def _reset_to_initial_conditions(self):
+        """Reset parameters to initial conditions"""       
+        self._igral = 0
+        
     def stress_from_e(self, e, **kwargs):
         """Effective stress from void ratio
 
+        If `stress_from_e` is called when self.estress0 is not initialized
+        then the initial conditions will be initialized assumming the 
+        stress state is on the reference time line. 
+        
+        
         Parameters
         ----------
         e : float
@@ -1430,7 +1464,7 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         rearranging we perform fixed point iteration to find the stress
         :math:`\\sigma^{\\prime}_{z,t+\\bigtriangleup  t}`.
 
-        YinAndGrahamSoilModel().stress_from_e()
+        
 
         Examples
         --------
@@ -1438,13 +1472,21 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         """
 
+        
+        
+        if self.estress0 is None:
+            # estress is on reference line
+            # assume calculating initial conditions from void ratio state
+            self.e0, self.estress0, self.pstress0, self.t0 = (
+                self.initial_conditions(e0=e, t0=self.ta))
+            return self.estress0
+        
         dt = kwargs.get('dt', 0)
         e0 = self.e0
         kap = self.kap
         lam = self.lam
         psi = self.psi
         estress0 = self.estress0
-
 
         def fn(estress):
             inc = dt / self.t0 * (estress / estress0) ** self._alpha
