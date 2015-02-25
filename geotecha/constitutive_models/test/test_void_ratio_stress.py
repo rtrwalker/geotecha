@@ -143,9 +143,95 @@ def test_test_YinAndGrahamSoilModel_CRSS_methods():
 
     assert_allclose(e, e2, atol=0.0012)
 
+
+
+def test_YinAndGrahamSoilModel_av_from_stress_CRSS_methods():
+    """step through a CRSS test and check that av_from_stress gives corret"""
+
+    a = YinAndGrahamSoilModel(lam=0.2, kap=0.04, psi=0.01, siga=20, ea=1, ta=1,
+                              e0=0.90, estress0=18)
+
+
+
+    tmax=30
+    estressdot = 1.5    
+    tt = np.linspace(0,tmax,1000)
+#    tt = np.logspace(np.log10(0.01),np.log10(tmax),1000)
+    
+    dt = np.diff(tt)
+    
+    av = np.zeros_like(tt)
+    av_check = np.zeros_like(tt)
+    e = np.zeros_like(tt)
+    estress = np.zeros_like(tt)
+    igral = np.zeros_like(tt)
+    
+    av[0] = a.kap / a.estress0 + a.psi / a.t0 / estressdot    
+    estress[0] = a.estress0
+    e[0] = a.e0
+    igral[0] = a._igral
+    av_check[0]= a.av_from_stress(estress=estress[0], estressdot=estressdot)
+    
+    for i, dt_ in enumerate(dt):
+        estress[i + 1] += estress[i] + dt_ * estressdot
+        e[i + 1] = a.e_from_stress(estress=estress[i+1], dt=dt_)        
+        av[i + 1] = (e[i]-e[i+1])/(estress[i+1]-estress[i])
+        av_check[i+1]= a.av_from_stress(estress=estress[i+1], estressdot=estressdot)
+        igral[i+1] = a._igral
+        
+    if DEBUG:
+        
+        title ='Compare av_from_stress with finite difference approximation'
+        print(title)
+        print(' '.join(['{:>12s}']*4).format('t', 'av findiff', 'av_f_stress', 'diff'))
+        for i, j, k in zip(tt, av[0::10], av_check[0::10]):
+            print(' '.join(['{:12.6f}']*4).format(i, j, k, j-k))
+        print()
+        
+        fig = plt.figure()
+        ax = fig.add_subplot('221')
+        ax.plot(estress, av, label="step thrugh")
+        ax.plot(estress, av_check, label="av_from_stress")
+        ax.set_xlabel("estress")        
+        ax.set_ylabel("av")        
+        leg = ax.legend()
+        leg.draggable()
+        
+        ax = fig.add_subplot('223')
+        ax.plot(estress, e, label="stress path")
+        
+        ax.set_xlabel("estress")        
+        ax.set_ylabel("e")        
+        leg = ax.legend()
+        leg.draggable()
+        
+        ax = fig.add_subplot('222')
+        ax.plot(tt, av, label="step thrugh")
+        ax.plot(tt, av_check, label="av_from_stress")
+        ax.set_xlabel("time")        
+        ax.set_ylabel("av")        
+        leg = ax.legend()
+        leg.draggable()
+        
+        ax = fig.add_subplot('224')
+        ax.plot(tt, e, label="stress path")
+        
+        ax.set_xlabel("time")        
+        ax.set_ylabel("e")        
+        leg = ax.legend()
+        leg.draggable()        
+        
+        fig.tight_layout()
+        plt.show()
+
+    assert_allclose(av, av_check, atol=0.0001)
+
+
 if __name__ == "__main__":
-    DEBUG = False
-    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+    DEBUG = True
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+
 #    test_test_YinAndGrahamSoilModel_CRSN_methods()
 #    test_test_YinAndGrahamSoilModel_CRSS_methods()
+    test_YinAndGrahamSoilModel_av_from_stress_CRSS_methods()

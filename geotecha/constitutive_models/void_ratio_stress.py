@@ -1082,6 +1082,9 @@ class FunctionSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
 class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
     """Yin and Graham creep void ratio-effective stress realationship
+    
+    This model uses the integral void ratio form of the Yin and 
+    Graham (1996) [1]_ soil model as described by Hu et al. (2014) [2]_. 
 
     Parameters
     ----------
@@ -1160,6 +1163,18 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
     ... t0=oparam['t0'], **fixed_param)
     >>> [a.e0, a.estress0, a.pstress0, a.t0]
     [0.95..., 18..., 28.0..., 1220.737...]
+
+
+    References
+    ----------
+    .. [1] Yin, J.-H., and Graham, J. (1996). 'Elastic visco-plastic modelling 
+           of one-dimensional consolidation. Geotechnique, 46(3), 515-527.
+           
+    .. [2] Hu, Y.-Y., Zhou, W.-H., and Cai, Y.-Q. (2014). 
+           'Large-strain elastic viscoplastic consolidation analysis of very 
+           soft clay layers with vertical drains under preloading. 
+           Canadian Geotechnical Journal, 51(2), 144-157.
+
 
     """
 
@@ -1487,7 +1502,7 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         lam = self.lam
         psi = self.psi
         estress0 = self.estress0
-
+        
         def fn(estress):
             inc = dt / self.t0 * (estress / estress0) ** self._alpha
             numer = e0 - e - psi * np.log(self._igral + inc + 1)
@@ -1495,12 +1510,13 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
             return es
 
-        estress = fixed_point(fn, estress0)
+        estress = fixed_point(fn, fn(0))
         inc = dt / self.t0 * (estress / estress0) ** self._alpha
         self._igral += inc
 
         return  estress
-#
+    
+    
 #    def e_and_stress_for_plotting(self, **kwargs):
 #        """Void ratio and stress values that plot the model
 #
@@ -1538,17 +1554,20 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
     def av_from_stress(self, estress, **kwargs):
         """Slope of void ratio from effective stress
 
-        Without knowing the time rate of change in effective stress
-        it is very difficult to determie an av value from a soil creep
-        model.  Therefore we default to the model when psi=0.
+        When `estressdot` is provided as a kwarg then av is a true 
+        representation of de/destress at the current time (i.e. using the
+        current value of self._igral). When `estressdot` is not provided then
+        a conservative lower value of av based on self.kap and the current
+        estress is calculated.
 
         Parameters
         ----------
         estress : float
             Current effective stress.
-        pstress : float, optional
-            Preconsolidation stress.  Default pstress=estress i.e. normally
-            consolidated.
+        estressdot: float, optional
+            Rate of change of effective stress w.r.t. time. Default 
+            estressdot=None i.e. av is calculated using self.kap and 
+            current effective stress.  
 
         Returns
         -------
@@ -1558,15 +1577,25 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         Examples
         --------
-
+        >>> a = YinAndGrahamSoilModel(lam=0.2, kap=0.04, psi=0.01, siga=20, 
+        ... ea=1, ta=1, e0=0.90, estress0=18)
+        >>> a._igral=3.1 #artificially set igral. Usually calculted advancing through time using e_from_stress or stress_from_e
+        >>> a.av_from_stress(estress=10)
+        0.004
+        >>> a.av_from_stress(estress=40, estressdot=1.5)
+        0.00417...
 
         """
 
-        pstress = kwargs.get('pstress', estress)
-
-        av = self._psi_zero_model.av_from_stress(estress, pstress=pstress)
-
-
+        estressdot = kwargs.get('estressdot', None)
+        
+        if estressdot is None:
+            av = self.kap / estress
+        else:
+            av = (self.kap / estress 
+                  + self.psi / self.t0 / np.abs(estressdot) / (self._igral + 1) 
+                  * (estress / self.estress0)**self._alpha)
+    
         return av
 
     def CRSN(self, tvals, edot, **kwargs):
@@ -1796,8 +1825,8 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
 if __name__ == '__main__':
 #    print(CcCr_estress_from_e(2.95154499, 50, 3, 0.5, 10, 5))
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
 #    a = YinAndGraham(lam=0.2, kap=0.04, psi=0.001, siga=20, ea=1, ta=1,
 #                     e0=1.5)
 
