@@ -1085,6 +1085,10 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
     
     This model uses the integral void ratio form of the Yin and 
     Graham (1996) [1]_ soil model as described by Hu et al. (2014) [2]_. 
+    Basically you step through time keeping track of the stress state and
+    a cumulatlive integral representing creep strain.
+    
+    
 
     Parameters
     ----------
@@ -1127,9 +1131,22 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         and reference time line.
     _igral : float
         Current value of the material model integration w.r.t. time.
-        Igral = integrate[1/t0 * (estress/etress0)**alpha, t,0,t]
-
-
+        _igral = integrate[1/t0 * (estress/etress0)**alpha, t,0,t]
+    _inc : float
+        Increment to add to _igral.  Helper array to speed up stress_from_e.  
+        Only present after initial conditions have been initialized.
+        _inc = integrate[1/t0 * (estress/etress0)**alpha, t,(t),(t + dt)]
+    _es : float
+        Temp effectve stress.  Helper array to speed up stress_from_e calc.  
+        Only present after initial conditions have been initialized.
+    _estress : float
+        Current value of effective stress.  Only present after initial 
+        conditions have been initialized.  Basically when you call 
+        method e_from_stress or method stress_from_e with parameter dt, then 
+        _estress and _igral correspond to effective stress and the time 
+        integral at the start of the increment; the integration increment 
+        _inc will be calculated and then _igral and _estress will be 
+        updated to reflect values at the end of dt time increment.
 
 
     Examples
@@ -1175,6 +1192,191 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
            soft clay layers with vertical drains under preloading. 
            Canadian Geotechnical Journal, 51(2), 144-157.
 
+    Notes
+    -----
+    
+    The void ratio stress relationship is:
+
+        .. math::
+
+           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_z}{\\sigma^{\\prime}_{z}}}\\right)
+             -\\psi\\ln\\left[{
+               \\int_{0}^{t}{
+                 \\frac{1}{t_0}
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{0}}}\\right)^{\\alpha}\\,dt
+                             }+1
+                           }\\right]
+
+        To calculate the integral we keep track of the effective stress and
+        the integration at time t
+        and then add the integration increment between :math:`t` and 
+        :math:`t+\\bigtriangleup t`:
+
+        .. math::
+
+           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup t}}{\\sigma^{\\prime}_{z}}}\\right)
+             -\\psi\\ln\\left[{
+               \\int_{0}^{t}{
+                 \\frac{1}{t_0}
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{0}}}\\right)^{\\alpha}\\,dt
+                             }
+               +
+               \\int_{t}^{t+\\bigtriangleup t}{
+                 \\frac{1}{t_0}
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{0}}}\\right)^{\\alpha}\\,dt
+                             }                                           
+                             +1}\\right]
+
+
+        Consider a time increment of length :math:`\\bigtriangleup t` in which
+        the effective stress changes from :math:`\\sigma^{\\prime}_{t}`
+        to :math:`\\sigma^{\\prime}_{t + \\bigtriangleup t}`.  Assume 
+        that the stress changes in a linear fashion over 
+        :math:`\\bigtriangleup t`:
+        
+        .. math::
+        
+            \\sigma^{\\prime}\\left({t}\\right) = 
+              \\sigma^{\\prime}_{t} + t
+              \\frac{\\sigma^{\\prime}_{t+ \\bigtriangleup t}
+                     -\\sigma^{\\prime}_{t}}
+                    {\\bigtriangleup t}
+               
+
+
+        The time integral becomes:
+            
+            
+        .. math::
+        
+           \\frac{1}{t_0}\\int_{0}^{t}{                 
+                 \\left({
+                   \\frac{\\sigma^{\\prime}_z}
+                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt                             }
+                   + \\frac{1}{t_0}\\int_{0}^{\\bigtriangleup t}                   
+                   {\\left({\\frac{\\sigma^{\\prime}_{t} + t
+              \\frac{\\sigma^{\\prime}_{t+ \\bigtriangleup t}
+                     -\\sigma^{\\prime}_{t}}
+                    {\\bigtriangleup t}}{\\sigma^{\\prime}_0}}\\right)^\\alpha\\,dt}
+                                                            
+                             
+                             
+        The increment that is added to the main integral is:
+
+
+        .. math::
+
+           \\frac{1}{t_0}\\int_{0}^{\\bigtriangleup t}                   
+                   {\\left({\\frac{\\sigma^{\\prime}_{t} + t
+              \\frac{\\sigma^{\\prime}_{t+ \\bigtriangleup t}
+                     -\\sigma^{\\prime}_{t}}
+                    {\\bigtriangleup t}}{\\sigma^{\\prime}_0}}\\right)^\\alpha\\,dt}
+           =
+           \\frac{1}{t_0}
+           \\frac{\\sigma^{\\prime}_{0} \\bigtriangleup t}
+                 {\\left({\\alpha+1}\\right)
+                  \\left({\\sigma^{\\prime}_{t+ \\bigtriangleup t}
+                     -\\sigma^{\\prime}_{t}}\\right)}
+           \\left({
+                   \\left({\\frac{\\sigma^{\\prime}_{t+ \\bigtriangleup t}}{\\sigma^{\\prime}_0}}\\right)^{\\alpha+1}-
+                   \\left({\\frac{\\sigma^{\\prime}_{t}}{\\sigma^{\\prime}_0}}\\right)^{\\alpha+1}
+                   }\\right) 
+                             
+        When :math:`\\sigma^{\\prime}_{t+ \\bigtriangleup t}=\\sigma^{\\prime}_{t}`
+        then the increment is:
+
+        .. math::
+
+           \\frac{1}{t_0}\\int_{0}^{\\bigtriangleup t}                   
+                   {\\left({\\frac{\\sigma^{\\prime}_{t} + t
+              \\frac{\\sigma^{\\prime}_{t+ \\bigtriangleup t}
+                     -\\sigma^{\\prime}_{t}}
+                    {\\bigtriangleup t}}{\\sigma^{\\prime}_0}}\\right)^\\alpha\\,dt}
+           =
+           \\frac{1}{t_0}\\bigtriangleup t 
+           \\left({\\frac{\\sigma^{\\prime}_{t}}{\\sigma^{\\prime}_0}}\\right)^{\\alpha+1}
+
+        The value of the integral and the effective stress is stored
+        within the YinAndGrahamSoilModel object and updated after each call
+        to `e_from_stress` or `stress_from_e`.
+        
+        **e_from_stress**
+        
+        `e_from_stress` uses the above equations directly (knowing all
+        material parameters, the value of the integral at the start of the 
+        increment, and the efffective stresses at the beginning and end of
+        time incremetn dt, then e can be calculated directly).
+        
+        **stress_from_e**
+        
+        `stress_from_e`  recasts the equations as estress=f(estress) 
+        and uses fixed point iteration to determine the effective stress
+        at the end of the increment.
+        
+        **initial_conditions**
+
+        If two of the following four parameters describing the intial state
+        of the soil are known, then the equations below can be combined to 
+        solve for the remaining two unknowns: 
+        initial void ratio :math:`e_0`, initial stress 
+        :math:`\\sigma^{\\prime}_0`, pseudo initial preconsolidation stress
+        :math:`\\sigma^{\\prime}_p` and equivalent time corresponding to 
+        initial state :math:`t_0`.
+
+        
+        On the reference time line running through point
+        :math:`(\\sigma^{\\prime}_a, e_a)`, the psuedo preconsolidation 
+        pressure :math:`\\sigma^{\\prime}_p` corresponds to void ratio
+        :math:`e_p`:
+        
+        .. math::
+        
+           e_p = e_a - \\lambda 
+              \\ln\\left({
+                            \\frac{\\sigma^{\\prime}_p}
+                                  {\\sigma^{\\prime}_a}
+                            }\\right)
+                            
+                            
+        The instant time line running through point
+        :math:`(\\sigma^{\\prime}_0, e_0)` meets the reference time line at 
+        :math:`\\sigma^{\\prime}_p` and void ratio :math:`e_p`:
+        
+        .. math::
+        
+            e_p = e_0 - \\kappa
+              \\ln\\left({
+                            \\frac{\\sigma^{\\prime}_p}
+                                  {\\sigma^{\\prime}_0}
+                            }\\right)
+        
+
+
+        The initial state :math:`(\\sigma^{\\prime}_0, e_0)` can be reached 
+        from the reference time line by either a) loading 
+        to :math:`\\sigma^{\\prime}_p` and then unloading to 
+        :math:`\\sigma^{\\prime}_0`  or b) creeping from time :math:`t_a` to 
+        time :math:`t_0` at constant stress :math:`\\sigma^{\\prime}_0`.  
+        equating the two void ratio changes gives:
+
+        .. math::
+        
+           \\left({\\lambda-\\kappa}\\right)
+             \\ln\\left({
+                         \\frac{\\sigma^{\\prime}_p}{\\sigma^{\\prime}_0}
+                        }\\right)
+           = \\psi 
+             \\ln\\left({
+                         \\frac{t_0}{t_a}
+                        }\\right)
+
+        YinAndGrahamSoilModel()
 
     """
 
@@ -1237,7 +1439,8 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         pstress0 : float
             Inital preconsolidation stress
         t0 : float
-            Initial equivalent time.
+            Initial equivalent time.                
+        
 
         """
 
@@ -1307,6 +1510,17 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
                 estress0 = pstress0 / OCR
                 e0 = (ea - lam * np.log(pstress0 / siga)
                       + kap * np.log(OCR))
+                      
+            #make some temp arrays to speed calcs
+            self._inc = np.zeros_like(estress0, dtype=float)
+            self._es = np.zeros_like(estress0, dtype=float)
+            self._estress = np.zeros_like(estress0, dtype=float)
+            
+            self._inc = np.atleast_1d(self._inc)
+            self._es = np.atleast_1d(self._es)
+            self._estress = np.atleast_1d(self._estress)
+            self._estress[:] = estress0
+            
             return e0, estress0, pstress0, t0
         else:
 
@@ -1345,45 +1559,8 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         Notes
         -----
-        _igral will be updated!
-
-        The void ratio stress relationship is:
-
-        .. math::
-
-           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_z}{\\sigma^{\\prime}_{z0}}}\\right)
-             -\\psi\\left[{
-               \\int_{0}^{t}{
-                 \\frac{1}{t_0}
-                 \\left({
-                   \\frac{\\sigma^{\\prime}_z}
-                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
-                             }+1
-                           }\\right]
-
-        To calculate the integral we keep track of the integration at time t
-        and then use a finte difference approximation to calculate the
-        integral at t+dt:
-
-        .. math::
-
-           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup t}}{\\sigma^{\\prime}_{z0}}}\\right)
-             -\\psi\\left[{
-               \\int_{0}^{t}{
-                 \\frac{1}{t_0}
-                 \\left({
-                   \\frac{\\sigma^{\\prime}_z}
-                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
-                             }+\\frac{\\bigtriangleup t}{t_0}\\left({
-                   \\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup  t}}
-                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}+1
-                           }\\right]
-
-
-        YinAndGrahamSoilModel().e_from_stress()
-
-        Examples
-        --------
+        self._igral and self._estress and self._inc will be updated!
+        
 
 
         """
@@ -1406,9 +1583,14 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
             lam = self.lam
             psi = self.psi
             estress0 = self.estress0
-
-            inc = dt/self.t0 * (estress / estress0) ** self._alpha
-            self._igral += inc
+            
+            self._inc_from_stress(estress, dt)
+            self._igral += self._inc
+            self._estress[:] = estress
+            
+            
+#            inc = dt/self.t0 * (estress / estress0) ** self._alpha
+#            self._igral += inc
             e = (e0 - kap * np.log(estress / estress0)
                  - psi * np.log(self._igral + 1))
 
@@ -1417,6 +1599,51 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
     def _reset_to_initial_conditions(self):
         """Reset parameters to initial conditions"""       
         self._igral = 0
+        self._estress[:] = self.estress0
+        
+    def _inc_from_stress(self, estress, dt):
+        """Integration increment
+        
+        As well as returning the integration increment self._inc will be updated.
+        
+        
+        Parameters
+        ----------
+        estress : 1d array of float
+            effective stress at end of dt increment.
+        dt : float
+            Lenght of time increment
+            
+        Returns
+        -------
+        inc : 1darray of float
+            Integration increment.
+            
+        
+        Stress is assumed to vary from self._estress to estress over
+        a time incrementn dt.
+        
+        Notes
+        -----    
+        self._inc will be updated!
+           
+        """
+
+
+        self._inc[:] = dt
+        self._inc /= self._alpha + 1
+        self._inc *= self.estress0
+        self._inc /= self.t0
+        self._inc /= (estress - self._estress)
+
+        self._inc *= ((estress / self.estress0) ** (self._alpha + 1)
+                      - (self._estress / self.estress0) ** (self._alpha + 1))
+        
+        nans = np.isnan(self._inc)
+        self._inc[nans] = dt / self.t0[nans] * (self._estress[nans] / self.estress0[nans]) ** (self._alpha + 1)
+        return self._inc
+        
+        
         
     def stress_from_e(self, e, **kwargs):
         """Effective stress from void ratio
@@ -1441,80 +1668,47 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         Notes
         -----
-        _igral will be updated!
-
-        The void ratio stress relationship is:
-
-        .. math::
-
-           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_z}{\\sigma^{\\prime}_{z0}}}\\right)
-             -\\psi\\left[{
-               \\int_{0}^{t}{
-                 \\frac{1}{t_0}
-                 \\left({
-                   \\frac{\\sigma^{\\prime}_z}
-                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
-                             }+1
-                           }\\right]
-
-        To calculate the integral we keep track of the integration at time t
-        and then use a finte difference approximation to calculate the
-        integral at t+dt:
-
-        .. math::
-
-           e=e0-\\kappa\\ln\\left({\\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup t}}{\\sigma^{\\prime}_{z0}}}\\right)
-             -\\psi\\left[{
-               \\int_{0}^{t}{
-                 \\frac{1}{t_0}
-                 \\left({
-                   \\frac{\\sigma^{\\prime}_z}
-                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}\\,dt
-                             }+\\frac{\\bigtriangleup t}{t_0}\\left({
-                   \\frac{\\sigma^{\\prime}_{z,t+\\bigtriangleup  t}}
-                   {\\sigma^{\\prime}_{z0}}}\\right)^{\\alpha}+1
-                           }\\right]
-
-        Knowing :math:`e_0` and the integral at time :math:`t`, after
-        rearranging we perform fixed point iteration to find the stress
-        :math:`\\sigma^{\\prime}_{z,t+\\bigtriangleup  t}`.
-
-        
-
-        Examples
-        --------
+        self._igral and self._estress and self._inc will be updated!
 
 
         """
 
-        
         
         if self.estress0 is None:
             # estress is on reference line
             # assume calculating initial conditions from void ratio state
             self.e0, self.estress0, self.pstress0, self.t0 = (
                 self.initial_conditions(e0=e, t0=self.ta))
-            return self.estress0
+            return self.estress0        
+        
         
         dt = kwargs.get('dt', 0)
-        e0 = self.e0
-        kap = self.kap
-        lam = self.lam
-        psi = self.psi
-        estress0 = self.estress0
-        
         def fn(estress):
-            inc = dt / self.t0 * (estress / estress0) ** self._alpha
-            numer = e0 - e - psi * np.log(self._igral + inc + 1)
-            es=estress0 * np.exp(numer/kap)
+            self._inc_from_stress(estress, dt)            
 
-            return es
+            self._es[:] = 1.0
+            self._es += self._inc
+            self._es += self._igral
+            np.log(self._es, out=self._es)
+            self._es *= self.psi
+            np.negative(self._es, out=self._es)
+            self._es += self.e0
+            self._es -= e
+            self._es /= self.kap
+            np.exp(self._es, out=self._es)
+            self._es *= self.estress0
 
-        estress = fixed_point(fn, fn(0))
-        inc = dt / self.t0 * (estress / estress0) ** self._alpha
-        self._igral += inc
 
-        return  estress
+            return self._es
+#        fn(0)
+#        self._es *= 0.95
+        fixed_point(fn, self._estress, xtol=1e-3, maxiter=500)
+        
+        #update the properties at end of dt time increment
+        self._igral += self._inc
+        self._estress[:] = self._es 
+
+        return  self._es
     
     
 #    def e_and_stress_for_plotting(self, **kwargs):
@@ -1585,6 +1779,12 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> a.av_from_stress(estress=40, estressdot=1.5)
         0.00417...
 
+
+        #todo: write up av equations
+
+
+        
+        
         """
 
         estressdot = kwargs.get('estressdot', None)

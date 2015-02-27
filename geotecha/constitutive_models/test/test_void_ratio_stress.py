@@ -155,7 +155,7 @@ def test_YinAndGrahamSoilModel_av_from_stress_CRSS_methods():
 
     tmax=30
     estressdot = 1.5    
-    tt = np.linspace(0,tmax,1000)
+    tt = np.linspace(0,tmax, 100)
 #    tt = np.logspace(np.log10(0.01),np.log10(tmax),1000)
     
     dt = np.diff(tt)
@@ -228,10 +228,10 @@ def test_YinAndGrahamSoilModel_av_from_stress_CRSS_methods():
 
 
 if __name__ == "__main__":
-    DEBUG = True
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+#    DEBUG = True
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
 
 #    test_test_YinAndGrahamSoilModel_CRSN_methods()
 #    test_test_YinAndGrahamSoilModel_CRSS_methods()
-    test_YinAndGrahamSoilModel_av_from_stress_CRSS_methods()
+#    test_YinAndGrahamSoilModel_av_from_stress_CRSS_methods()
