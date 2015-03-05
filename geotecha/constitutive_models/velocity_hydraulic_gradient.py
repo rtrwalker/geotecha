@@ -26,8 +26,20 @@ import scipy.optimize
 from collections import OrderedDict
 
 class OneDimensionalFlowRelationship(object):
-    """Base class for defining velocity vs hydraulic gradient relationships"""
+    """Base class for defining velocity vs hydraulic gradient relationships
+    
+    Attributes
+    ----------
+    non_Darcy: True
+        A class variable indicating if model has a non-Darcian flow 
+        relationship.  Can be overridden in subclasses.  Basically
+        the Darcian flow equations are simple and it might be simpler to  
+        bypass the use of a OneDimensionalFlowRelationship.
+        
+    """
 
+    non_Darcy = True
+    
     def v_from_i(self, hyd_grad, **kwargs):
         """Velocity from hydraulic gradient"""
         #Note this should work for +ve and -ve hydraulic gradients
@@ -93,6 +105,8 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
 
     """
 
+    non_Darcy = False
+        
     def __init__(self, k=1.0):
         self._attribute_list = ['k']
         self.k = k
@@ -321,6 +335,8 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
 
 
     """
+    
+    non_Darcy = True
 
     def __init__(self, klinear=None, kstar=None, n=None, i0=None, iL=None):
 
