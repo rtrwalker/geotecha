@@ -26,6 +26,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 #import cmath
 from numpy import log, sqrt
+import scipy.special as special
 
 def mu_ideal(n, *args):
     """Smear zone permeability/geometry parameter for ideal drain (no smear)
@@ -2740,6 +2741,944 @@ def back_calc_drain_spacing_from_eta(eta, pattern, mu_function, rw, s, kap, muw=
     return sp[0], re, n
 
 
+def _g(r_rw, re_rw, nflow=1.0001, nterms=20):
+    """Non-darcian equal strain radial consolidation term
+
+
+    Parameters
+    ----------
+    r_rw : float
+        Ratio of radial coordinate to drain radius (r/rw).
+    re_rw : float
+        Ratio of drain influence radius to drain readius (re/rw).
+        You will often see this ratio expressed as re/re=n. However, this is
+        confusing with the non-darcian flow exponent.
+    nflow : float, optional
+        Non-Darcian flow exponent. Default nflow=1.0001 i.e. darcian flow.
+        Using nflow=1 will result in an error.
+    nterms : int, optional
+        Number of summation terms.  Default nterms=20.
+
+    Returns
+    -------
+    g : float
+        Non-darcian equal strain radial consolidation term.
+
+    Notes
+    -----
+    The 'g' function arises in the derivation of equal strain radial
+    consolidation equations under non-Darcian flow.
+
+    We only concern ourselves with the exponential part of Hansbo's
+    Non-darcian flow relationship:
+
+    .. math::
+
+       v=k^{\\ast}i^{n}
+
+    where,
+
+    :math:`k^{\\ast}` is a peremability, :math:`i` is hydraulic gradient and
+    :math:`n` is the flow exponent.
+
+    The expression :math:`g\\left({y}\\right)` is given below. :math:`y` is
+    the ratio of radial coordinate :math:`r` to drain radius :math:`r_w`,
+    :math:`y=r/r_w`. :math:`N` is the ratio of influence radius :math:`r_e`
+    to drain radius :math:`r_w`, :math:`N=r_e/r_w`.
+
+    .. math::
+
+       g\\left({y}\\right)=
+           ny^{1-1/n}\sum\limits_{j=0}^\\infty
+           \\frac{\\left\\{{-1/n}\\right\\}_j}
+                 {j!\\left({\\left({2j+1}\\right)n-1}\\right)}
+           \\left({\\frac{y}{N}}\\right)^{2j}
+
+
+    :math:`\\left\\{x\\right\\}_m` is the Pochhammer symbol or rising
+    factorial given by:
+
+    .. math::
+       \\left\\{x\\right\\}_m = x
+                                \\left({x+1}\\right)
+                                \\left({x+2}\\right)
+                                \\dots
+                                \\left({x+m-1}\\right)
+
+
+    .. math::
+
+       \\left\\{x\\right\\}_0=1
+
+    Alterantely a recurrance relatoin can be formed:
+
+    .. math::
+
+       g\\left({y}\\right)=
+           \sum\limits_{j=0}^{\\infty} a_j
+
+    where,
+
+    .. math::
+
+       a_0=\\frac{n}{n-1}y^{1-1/n}
+
+    .. math::
+
+       a_j = a_{j-1}
+           \\frac{\\left({jn-n-1}\\right)\\left({2jn-n-1}\\right)}
+           {nj\\left({2jn+n-1}\\right)}
+           \\left({\\frac{y}{N}}\\right)^{2}
+
+
+    Examples
+    --------
+
+    >>> _g(10.0, 50.0, nflow=1.2)
+    8.7841...
+    >>> _g(10.0, 20.0, nflow=1.2)
+    8.664...
+    >>> _g(2, 50.0, nflow=1.01)
+    101.694...
+    >>> _g(5, 5, nflow=1.01)
+    102.120...
+    >>> _g(10.0, np.array([50.0,20]), nflow=1.2)
+    array([ 8.7841...,  8.664...])
+
+    See also
+    --------
+    _gbar : multiply _g by y and integrate w.r.t y
+
+    """
+
+    r_rw = np.asarray(r_rw)
+    re_rw = np.asarray(re_rw)
+    nflow = np.asarray(nflow)
+    if np.any(r_rw < 1):
+        raise ValueError('r_rw must be greater or equal to 1. '
+                         'You have r_rw = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(r_rw)])))
+    if np.any(re_rw <= 1):
+        raise ValueError('re_rw must be greater than 1. '
+                         'You have re_rw = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(re_rw)])))
+    if np.any(nflow <= 1):
+        raise ValueError('nflow must be greater than 1. '
+                         'You have nflow = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(nflow)])))
+
+
+
+
+    if np.any([len(np.asarray(v).shape)>0 for v in
+                [r_rw, re_rw, nflow, nterms]]):
+        #array inputs, use series loop
+        g = 0
+        term1 = nflow * r_rw**(1-1.0/nflow)
+        for j in range(nterms):
+
+            term2 = special.poch(-1.0 / nflow, j)
+            term3 = np.math.factorial(j)
+            term4 = (2 * j + 1) * nflow - 1
+            term5 = (r_rw / re_rw)**(2 * j)
+            g += term2 / term3 / term4 * term5
+
+        g *= term1
+        return g
+
+    else:
+        #scalar inputs, use recursion relationship
+
+        a = np.zeros(nterms)
+
+        a[0] = nflow / (nflow - 1.0) * r_rw**(1.0 - 1.0 / nflow)
+        j = np.arange(1, nterms)
+        a[1:] = (r_rw / re_rw)**2
+        a[1:] *= (j * nflow - nflow - 1)
+        a[1:] *= (2* j * nflow - nflow - 1)
+        a[1:] /= nflow * j * (2 * j * nflow + nflow - 1)
+
+        np.cumprod(a, out=a)
+        g=np.sum(a)
+
+        return g
+
+
+def _gbar(r_rw, re_rw, nflow=1.0001, nterms=20):
+    """Non-darcian equal strain radial consolidation term
+
+    _g expression multiplied by y and integrated w.r.t. y
+
+
+    Parameters
+    ----------
+    r_rw : float
+        Ratio of radial coordinate to drain radius (r/rw).
+    re_rw : float
+        Ratio of drain influence radius to drain readius (re/rw).
+        You will often see this ratio expressed as re/re=n. However, this is
+        confusing with the non-darcian flow exponent.
+    nflow : int, optional
+        Non-Darcian flow exponent. Default nflow=1.0001 i.e. darcian flow.
+        Using nflow=1 will result in an error.
+
+    nterms : float, optional
+        Number of summation terms.  Default nterms=20.
+
+    Returns
+    -------
+    gbar : float
+        Non-darcian equal strain radial consolidation term.
+
+    Notes
+    -----
+    The 'gbar' (bar stands for overbar) function arises in the derivation
+    of equal strain radial consolidation equations under non-Darcian flow.
+
+    We only concern ourselves with the exponential part of Hansbo's
+    Non-darcian flow relationship:
+
+    .. math::
+
+       v=k^{\\ast}i^{n}
+
+    where,
+
+    :math:`k^{\\ast}` is a peremability, :math:`i` is hydraulic gradient and
+    :math:`n` is the flow exponent.
+
+    The expression :math:`g\\left({y}\\right)` is given below. :math:`y` is
+    the ratio of radial coordinate :math:`r` to drain radius :math:`r_w`,
+    :math:`y=r/r_w`. :math:`N` is the ratio of influence radius :math:`r_e`
+    to drain radius :math:`r_w`, :math:`N=r_e/r_w`.
+
+    .. math::
+
+       \\overline{g}\\left({y}\\right)=
+           n^2y^{3-1/n}\sum\limits_{j=0}^\\infty
+           \\frac{\\left\\{{-1/n}\\right\\}_j}
+                 {j!\\left({\\left({2j+1}\\right)n-1}\\right)
+                  \\left({\\left({2j+3}\\right)n-1}\\right)}
+           \\left({\\frac{y}{N}}\\right)^{2j}
+
+
+    :math:`\\left\\{x\\right\\}_m` is the Pochhammer symbol or rising
+    factorial given by:
+
+    .. math::
+       \\left\\{x\\right\\}_m = x
+                                \\left({x+1}\\right)
+                                \\left({x+2}\\right)
+                                \\dots
+                                \\left({x+m-1}\\right)
+
+
+    .. math::
+
+       \\left\\{x\\right\\}_0=1
+
+    Alterantely a recurrance relatoin can be formed:
+
+    .. math::
+
+       \\overline{g}\\left({y}\\right)=
+           \sum\limits_{j=0}^{\\infty} a_j
+
+    where,
+
+    .. math::
+
+       a_0=\\frac{n^2}{\\left({n-1}\\right)\\left({3n-1}\\right)}y^{3-1/n}
+
+    .. math::
+
+       a_j = a_{j-1}
+           \\frac{\\left({jn-n-1}\\right)\\left({2jn-n-1}\\right)}
+           {nj\\left({2jn+3n-1}\\right)}
+           \\left({\\frac{y}{N}}\\right)^{2}
+
+
+    Examples
+    --------
+
+    >>> _gbar(10.0, 50.0, nflow=1.2)
+    405.924...
+    >>> _gbar(10.0, 20.0, nflow=1.2)
+    403.0541...
+    >>> _gbar(2, 50.0, nflow=1.01)
+    202.3883...
+    >>> _gbar(5, 5, nflow=1.01)
+    1273.3329...
+    >>> _gbar(10.0, np.array([50.0,20]), nflow=1.2)
+    array([ 405.924...,  403.0541...])
+
+
+    See also
+    --------
+    _g : earlier step in derivation of `_gbar`.
+
+    """
+
+    r_rw = np.asarray(r_rw)
+    re_rw = np.asarray(re_rw)
+    nflow = np.asarray(nflow)
+    if np.any(r_rw < 1):
+        raise ValueError('r_rw must be greater or equal to 1. '
+                         'You have r_rw = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(r_rw)])))
+    if np.any(re_rw <= 1):
+        raise ValueError('re_rw must be greater than 1. '
+                         'You have re_rw = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(re_rw)])))
+    if np.any(nflow <= 1):
+        raise ValueError('nflow must be greater than 1. '
+                         'You have nflow = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(nflow)])))
+
+
+
+
+    if np.any([len(np.asarray(v).shape)>0 for v in
+                [r_rw, re_rw, nflow, nterms]]):
+        #array inputs, use series loop
+        gbar = 0
+        term1 = nflow**2 * r_rw**(3 - 1.0/nflow)
+        for j in range(nterms):
+
+            term2 = special.poch(-1.0 / nflow, j)
+            term3 = np.math.factorial(j)
+            term4 = (2 * j + 1) * nflow - 1
+            term4a = (2 * j + 3) * nflow - 1
+            term5 = (r_rw/re_rw)**(2*j)
+            gbar += term2/term3/term4/term4a*term5
+
+        gbar *= term1
+        return gbar
+
+    else:
+
+        a = np.zeros(nterms)
+
+        a[0] = nflow**2 / (nflow - 1.0)/(3 * nflow - 1.0) * r_rw**(3.0 - 1.0 / nflow)
+        j = np.arange(1, nterms)
+        a[1:] = (r_rw / re_rw)**2
+        a[1:] *= (j * nflow - nflow - 1)
+        a[1:] *= (2* j * nflow - nflow - 1)
+        a[1:] /= nflow * j * (2 * j * nflow + 3 * nflow - 1)
+
+        np.cumprod(a, out=a)
+        gbar=np.sum(a)
+
+        return gbar
+
+
+def non_darcy_beta_ideal(n, nflow=1.0001, nterms=20, *args):
+    """Non-darcian flow smear zone permeability/geometry parameter for
+    ideal drain (no smear).
+
+    beta parameter is in equal strain radial consolidation equations  with
+    non-Darcian flow.
+
+
+
+    Parameters
+    ----------
+    n : float or ndarray of float
+        Ratio of drain influence radius to drain radius (re/rw).
+    nflow : float, optional
+        non_darcian flow exponent
+    nterms : int, optional
+        Number of terms to use in series
+    args : anything
+        `args` does not contribute to any calculations it is merely so you
+        can have other arguments such as s and kappa which are used in other
+        smear zone formulations.
+
+    Returns
+    -------
+    beta : float
+        Smear zone permeability/geometry parameter.
+
+    Notes
+    -----
+
+    .. math::
+
+       \\beta = \\frac{1}{N^2-1}
+           \\left({
+               2\\overline{g}\\left({N}\\right)
+               -2\\overline{g}\\left({1}\\right)
+               -g\\left({1}\\right) \\left({N^2-1}\\right)
+                  }\\right)
+
+    :math:`g\\left({y}\\right)` and :math:`\\overline{g}\\left({y}\\right)`
+    are described in the `_g` and `_gbar` functions respectively.
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius.
+
+
+    Examples
+    --------
+    >>> non_darcy_beta_ideal(20, 1.000001, nterms=20)
+    2.2538...
+    >>> non_darcy_beta_ideal(np.array([20, 10]), 1.000001, nterms=20)
+    array([ 2.253...,  1.578...])
+    >>> non_darcy_beta_ideal(15, 1.3)
+    2.618...
+    >>> non_darcy_beta_ideal(np.array([20, 15]), np.array([1.000001,1.3]), nterms=20)
+    array([ 2.253...,  2.618...])
+
+
+    See also
+    --------
+    _g : used in this function.
+    _gbar : used in this function.
+
+
+    References
+    ----------
+    .. [1] Hansbo, S. 1981. "Consolidation of Fine-Grained Soils by
+           Prefabricated Drains". In 10th ICSMFE, 3:677-82.
+           Rotterdam-Boston: A.A. Balkema.
+    .. [2] Walker, R., B. Indraratna, and C. Rujikiatkamjorn.
+           "Vertical Drain Consolidation with Non-Darcian Flow and
+           Void-Ratio-Dependent Compressibility and Permeability."
+           Geotechnique 62, no. 11 (November 1, 2012): 985-97.
+           doi:10.1680/geot.10.P.084.
+
+
+    """
+
+    n = np.asarray(n)    
+    nflow = np.asarray(nflow)
+    if np.any(n <= 1):
+        raise ValueError('n must be greater than 1. '
+                         'You have n = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(n)])))
+    if np.any(nflow <= 1):
+        raise ValueError('nflow must be greater than 1. '
+                         'You have nflow = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(nflow)])))
+
+
+#    if nflow==1:
+#        raise ValueError('nflow must not be 1.')
+##    if n <= 1:
+##        raise ValueError('n must be greater than 1. You have n = {}'.format(
+##            n))
+#    if np.any(n <= 1):
+#        raise ValueError('n must be greater than 1. You have n = {}'.format(
+#            ', '.join([str(v) for v in np.atleast_1d(n)])))
+#    beta = _g(1, n, nflow, nterms)
+#    beta *= n**2 - 1
+#    beta += 2 * _gbar(n, n, nflow, nterms)
+#    beta -= 2 * _gbar(1, n, nflow, nterms)
+#    beta /= n**2 - 1
+
+#    g = _g2
+#    gbar = _gbar2
+
+    beta = -_g(1, n, nflow, nterms)
+    beta *= n**2 - 1
+    beta += 2 * _gbar(n, n, nflow, nterms)
+    beta -= 2 * _gbar(1, n, nflow, nterms)
+    beta /= n**2 - 1
+
+    return beta
+
+def non_darcy_beta_constant(n, s, kap, nflow=1.0001, nterms=20, *args):
+    """Non-darcian flow smear zone permeability/geometry parameter for
+    smear zone with constant permeability.
+
+    beta parameter is in equal strain radial consolidation equations  with
+    non-Darcian flow.
+
+
+
+    Parameters
+    ----------
+    n : float or ndarray of float
+        Ratio of drain influence radius to drain radius (re/rw).
+    s : float or ndarray of float
+        Ratio of smear zone radius to  drain radius (rs/rw)
+    kap : float or ndarray of float.
+        Ratio of undisturbed horizontal permeability to smear zone
+        horizontal permeanility (kh / ks).
+    nflow : float, optional
+        non_darcian flow exponent
+    nterms : int, optional
+        Number of terms to use in series
+    args : anything
+        `args` does not contribute to any calculations it is merely so you
+        can have other arguments such as s and kappa which are used in other
+        smear zone formulations.
+
+    Returns
+    -------
+    beta : float
+        Smear zone permeability/geometry parameter.
+
+    Notes
+    -----
+
+    .. math::
+
+       \\beta = \\frac{1}{N^2-1}
+           \\left({
+               \\begin{multline}
+               2\\overline{g}\\left({N}\\right)
+               -\\kappa^{1/n}\\left({
+                   2\\overline{g}\\left({1}\\right)
+                   + g\\left({1}\\right) \\left({N^2-1}\\right)
+                                    }\\right) \\\\
+               +\\left({\\kappa^{1/n}-1}\\right)\\left({
+                   2\\overline{g}\\left({s}\\right)
+                   + g\\left({s}\\right) \\left({N^2-s^2}\\right)
+                                                       }\\right)
+                \\end{multline}
+                  }\\right)
+
+
+
+    :math:`g\\left({y}\\right)` and :math:`\\overline{g}\\left({y}\\right)`
+    are described in the `_g` and `_gbar` functions respectively.
+
+    .. math:: n = \\frac{r_e}{r_w}
+
+    .. math:: s = \\frac{r_s}{r_w}
+
+    .. math:: \\kappa = \\frac{k_h}{k_s}
+
+    :math:`r_w` is the drain radius, :math:`r_e` is the drain influence radius,
+    :math:`r_s` is the smear zone radius, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
+    permeability.
+
+
+    Examples
+    --------
+    >>> non_darcy_beta_constant(20,1,1, 1.000001, nterms=20)
+    2.2538...
+    >>> non_darcy_beta_constant(20,5,5, 1.000001, nterms=20)
+    8.4710...
+    >>> non_darcy_beta_constant(15, 5, 4, 1.3, nterms=20)
+    6.1150...
+    >>> non_darcy_beta_constant(np.array([20, 15]), 5,
+    ... np.array([5,4]), np.array([1.000001, 1.3]), nterms=20)
+    array([ 8.471...,  6.1150...])
+
+
+
+    See also
+    --------
+    _g : used in this function.
+    _gbar : used in this function.
+
+
+    References
+    ----------
+    .. [1] Hansbo, S. 1981. "Consolidation of Fine-Grained Soils by
+           Prefabricated Drains". In 10th ICSMFE, 3:677-82.
+           Rotterdam-Boston: A.A. Balkema.
+    .. [2] Walker, R., B. Indraratna, and C. Rujikiatkamjorn.
+           "Vertical Drain Consolidation with Non-Darcian Flow and
+           Void-Ratio-Dependent Compressibility and Permeability."
+           Geotechnique 62, no. 11 (November 1, 2012): 985-97.
+           doi:10.1680/geot.10.P.084.
+
+
+    """
+    
+    n = np.asarray(n)    
+    s = np.asarray(s)    
+    kap = np.asarray(kap)    
+    nflow = np.asarray(nflow)
+    if np.any(n <= 1):
+        raise ValueError('n must be greater than 1. '
+                         'You have n = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(n)])))
+    if np.any(s < 1):
+            raise ValueError('s must be greater or equal to 1. '
+                             'You have n = {}'.format(
+                ', '.join([str(v) for v in np.atleast_1d(s)])))
+    if np.any(kap < 1):
+        raise ValueError('kap must be greater or equal to 1. '
+                         'You have kap = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(kap)])))
+    if np.any(nflow <= 1):
+        raise ValueError('nflow must be greater than 1. '
+                         'You have nflow = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(nflow)])))
+
+
+    beta = 2 * _gbar(n, n, nflow, nterms)
+    beta -= kap**(1 / nflow) * (
+            2 * _gbar(1, n, nflow, nterms)
+            + _g(1, n, nflow, nterms) * (n**2 - 1))
+    beta += (kap**(1 / nflow) - 1) * (
+            2 * _gbar(s, n, nflow, nterms)
+            + _g(s, n, nflow, nterms) * (n**2 - s**2))
+    beta /= n**2 - 1
+
+
+
+    return beta
+
+
+def non_darcy_beta_piecewise_constant(s, kap, n=None, kap_m=None,
+                                       nflow=1.0001, nterms=20, *args):
+    """Non-darcian flow smear zone permeability/geometry parameter for
+    smear zone with piecewise constant permeability.
+
+    beta parameter is in equal strain radial consolidation equations  with
+    non-Darcian flow.
+
+    Parameters
+    ----------
+    s : list or 1d ndarray of float
+        Ratio of segment outer radii to drain radius (r_i/r_0). The first value
+        of s should be greater than 1, i.e. the first value should be s_1;
+        s_0=1 at the drain soil interface is implied.
+    kap : list or ndarray of float
+        Ratio of undisturbed horizontal permeability to permeability in each
+        segment kh/khi.
+    n, kap_m : float, optional
+        If `n` and `kap_m` are given then they will each be appended to `s` and
+        `kap`. This allows the specification of a smear zone separate to the
+        specification of the drain influence radius.
+        Default n=kap_m=None, i.e. soil permeability is completely described
+        by `s` and `kap`. If n is given but kap_m is None then the last
+        kappa value in kap will be used.
+    nflow : float, optional
+        non_darcian flow exponent
+    nterms : int, optional
+        Number of terms to use in series
+
+
+    Returns
+    -------
+    beta : float
+        Smear zone permeability/geometry parameter.
+
+    Notes
+    -----
+
+    The non-darcian smear zone parameter :math:`\\beta` is given by:
+
+    .. math:: \\beta = \\frac{1}{\\left({n^2-1}\\right)}
+                \\sum\\limits_{i=1}^{m} \\kappa^{1/n}_i
+                    \\left[{
+                        2\\overline{g}\\left({s_i}\\right)
+                        -2\\overline{g}\\left({s_{i-1}}\\right)
+                    }\\right]
+                    +\\psi_i \\left({s_i^2-s_{i-1}^2}\\right)
+
+    where,
+
+    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}\\kappa^{1/n}_j
+                \\left[{
+                        g\\left({s_j}\\right)
+                        -g\\left({s_{j-1}}\\right)
+                    }\\right]
+
+    and:
+
+    .. math:: n = \\frac{r_m}{r_0}
+
+    .. math:: s_i = \\frac{r_i}{r_0}
+
+    .. math:: \\kappa_i = \\frac{k_h}{k_{hi}}
+
+
+    :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
+    :math:`r_i` is the outer radius of the ith segment,
+    :math:`k_h` is the undisturbed
+    horizontal permeability in the ith segment,
+    :math:`k_{hi}` is the horizontal
+    permeability in the ith segment
+
+
+    Examples
+    --------
+    >>> mu_piecewise_constant([1.5, 3, 4],[2, 3, 1], n=5)
+    2.2533...
+    >>> non_darcy_beta_piecewise_constant(s=np.array([1.5, 3, 4]),
+    ... kap=np.array([2, 3, 1]), n=5, nflow=1.000001)
+    2.2533...
+
+
+    References
+    ----------
+    None because it is new.
+
+    """
+
+
+    s = np.atleast_1d(s)
+    kap = np.atleast_1d(kap)
+
+    if not n is None:
+        s_temp = np.empty(len(s) + 1, dtype=float)
+        s_temp[:-1] = s
+        s_temp[-1] = n
+        kap_temp = np.empty(len(kap) + 1, dtype=float)
+        kap_temp[:-1] = kap
+        if kap_m is None:
+            kap_temp[-1] = kap[-1]
+        else:
+            kap_temp[-1] = kap_m
+        s = s_temp
+        kap = kap_temp
+
+    if len(s)!=len(kap):
+        raise ValueError('s and kap must have the same shape.  You have '
+            'lengths for s, kap of {}, {}.'.format(
+            len(s), len(kap)))
+
+    if np.any(s<=1.0):
+        raise ValueError('must have all s>=1. You have s = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(kap<=0.0):
+        raise ValueError('all kap must be greater than 0. You have kap = '
+                '{}'.format(', '.join([str(v) for v in np.atleast_1d(kap)])))
+
+    if np.any(np.diff(s) <= 0):
+        raise ValueError('s must increase left to right you have s = '
+        '{}'.format(', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(nflow <= 1):
+        raise ValueError('nflow must be greater than 1. '
+                         'You have nflow = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(nflow)])))
+
+    n = s[-1]
+    s_ = np.ones_like(s , dtype=float)
+    s_[1:] = s[:-1]
+
+    sumi = 0
+    for i in range(len(s)):
+        psi = 0
+        for j in range(i):
+            psi+= kap[j]**(1 / nflow) *(
+                    _g(s[j], n, nflow, nterms)
+                    - _g(s_[j], n, nflow, nterms)
+                    )
+        psi /= kap[i]**(1 / nflow)
+
+
+        sumi += kap[i]**(1 / nflow) * (
+            2 * _gbar(s[i], n, nflow, nterms)
+            - 2 * _gbar(s_[i], n, nflow, nterms)
+            +(psi - _g(s_[i], n, nflow, nterms) )* (s[i]**2 - s_[i]**2)
+            )
+
+    beta = sumi / (n**2 - 1)
+    return beta
+
+
+def non_darcy_u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0,
+                                   n=None, kap_m=None,
+                                   nflow=1.0001, nterms=20):
+    """Pore pressure at radius for piecewise constant permeability distribution
+
+    .. warning::
+        `muw` must always be zero. i.e. no well resistance (It exists to have
+        the same inputs as `u_piecewise_constant`.
+
+
+    Parameters
+    ----------
+    s : list or 1d ndarray of float
+        Ratio of segment outer radii to drain radius (r_i/r_0). The first value
+        of s should be greater than 1, i.e. the first value should be s_1;
+        s_0=1 at the drain soil interface is implied.
+    kap : list or ndarray of float
+        Ratio of undisturbed horizontal permeability to permeability in each
+        segment kh/khi.
+    si : float of ndarray of float
+        Normalised radial coordinate(s) at which to calc the pore pressure
+        i.e. si=ri/rw.
+    uavg : float, optional = 1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
+    uw : float, optional
+        Pore pressure in drain, default = 0.
+    muw : float, optional
+        Well resistance mu parameter. Default = 0
+    n, kap_m : float, optional
+        If `n` and `kap_m` are given then they will each be appended to `s` and
+        `kap`. This allows the specification of a smear zone separate to the
+        specification of the drain influence radius.
+        Default n=kap_m=None, i.e. soilpermeability is completely described
+        by `s` and `kap`. If n is given but kap_m is None then the last
+        kappa value in kap will be used.
+    nflow : float, optional
+        non_darcian flow exponent
+    nterms : int, optional
+        Number of terms to use in series
+
+    Returns
+    -------
+    u : float of ndarray of float
+        Pore pressure at specified si.
+
+    Notes
+    -----
+    non_darcy_u_piecewise_constant()
+    The pore pressure in the ith segment is given by:
+
+    .. math:: u_i(y) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\kappa^{1/n}_i
+                                  \\left({
+                                    g\\left({y}\\right)
+                                    -g\\left({s_{i-1}}\\right)
+                                         }\\right)
+                                +\\psi_i
+                            }\\right]+u_w
+
+
+    where,
+
+    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}\\kappa^{1/n}_j
+                \\left[{
+                        g\\left({s_j}\\right)
+                        -g\\left({s_{j-1}}\\right)
+                    }\\right]
+
+    and:
+
+    :math:`g\\left({y}\\right)` is described in the `_g` function
+
+
+    .. math:: y = \\frac{r}{r_0}
+
+    .. math:: n = \\frac{r_m}{r_0}
+
+    .. math:: s_i = \\frac{r_i}{r_0}
+
+    .. math:: \\kappa_i = \\frac{k_h}{k_{hi}}
+
+
+
+    :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
+    :math:`r_i` is the outer radius of the ith segment,
+    :math:`k_h` is the undisturbed
+    horizontal permeability in the ith segment,
+    :math:`k_{hi}` is the horizontal
+    permeability in the ith segment
+
+
+
+    Examples
+    --------
+    >>> u_piecewise_constant([1.5, 3,], [2, 3], 1.6, n=5, kap_m=1)
+    array([ 0.4153...])
+    >>> non_darcy_u_piecewise_constant([1.5, 3,], [2, 3], 1.6, n=5, kap_m=1,
+    ... nflow=1.0000001)
+    array([ 0.4153...])
+    >>> non_darcy_u_piecewise_constant([1.5, 3,], [2, 3], 1.6, n=5, kap_m=1,
+    ... nflow=1.3)
+    array([ 0.3865...])
+
+
+    References
+    ----------
+    none because it is new.
+
+    """
+
+
+    s = np.atleast_1d(s)
+    kap = np.atleast_1d(kap)
+
+    if not n is None:
+        s_temp = np.empty(len(s) + 1, dtype=float)
+        s_temp[:-1] = s
+        s_temp[-1] = n
+        kap_temp = np.empty(len(kap) + 1, dtype=float)
+        kap_temp[:-1] = kap
+        if kap_m is None:
+            kap_temp[-1] = kap[-1]
+        else:
+            kap_temp[-1] = kap_m
+        s = s_temp
+        kap = kap_temp
+
+    if len(s)!=len(kap):
+        raise ValueError('s and kap must have the same shape.  You have '
+            'lengths for s, kap of {}, {}.'.format(
+            len(s), len(kap)))
+
+    if np.any(s<=1.0):
+        raise ValueError('must have all s>=1. You have s = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(kap<=0.0):
+        raise ValueError('all kap must be greater than 0. You have kap = '
+                '{}'.format(', '.join([str(v) for v in np.atleast_1d(kap)])))
+
+    if np.any(np.diff(s) <= 0):
+        raise ValueError('s must increase left to right you have s = '
+        '{}'.format(', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(nflow <= 1):
+        raise ValueError('nflow must be greater than 1. '
+                         'You have nflow = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(nflow)])))
+
+
+
+    n = s[-1]
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= s[-1])')
+
+    s_ = np.ones_like(s)
+    s_[1:] = s[:-1]
+
+    u = np.empty_like(si, dtype=float )
+
+    segment = np.searchsorted(s, si)
+
+    beta = non_darcy_beta_piecewise_constant(s, kap,
+                                             nflow=nflow, nterms=nterms)
+
+    term1 = (uavg - uw) / (beta + muw)
+
+    for ii, i in enumerate(segment):
+
+        psi = 0
+        for j in range(i):
+
+            psi+= kap[j]**(1 / nflow) *(
+                    _g(s[j], n, nflow, nterms)
+                    - _g(s_[j], n, nflow, nterms)
+                    )
+        psi /= kap[i]**(1 / nflow)
+
+#            sumj += (kap[j] * (log(s[j] / s_[j])
+#                    - 0.5 * (s[j] ** 2 / n ** 2 - s_[j] ** 2 / n ** 2)))
+#        sumj = sumj / kap[i]
+
+        u[ii] = kap[i]**(1 / nflow) * (
+                _g(si[ii], n, nflow, nterms)
+                -_g(s_[i], n, nflow, nterms)
+                + psi
+                ) + muw
+
+#        u[ii] = kap[i] * (
+#                log(si[ii] / s_[i])
+#                - 0.5 * (si[ii] ** 2 / n ** 2 - s_[i] ** 2 / n ** 2)
+#                + sumj
+#                ) + muw
+
+    u *= term1
+    u += uw
+    return u
 
 
 
