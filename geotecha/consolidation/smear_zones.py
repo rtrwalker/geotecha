@@ -2611,10 +2611,11 @@ def drain_eta(re, mu_function, *args, **kwargs):
     ----------
     re : float
         Drain influence radius.
-    mu_function : obj
+    mu_function : obj or string
         The mu_funtion to use. e.g. mu_ideal, mu_constant, mu_linear,
         mu_overlapping_linear, mu_parabolic, mu_piecewise_constant,
-        mu_piecewise_linear.
+        mu_piecewise_linear. This can either be the function object itself
+        or the name of the function e.g. 'mu_ideal'.
     muw : float, optional
         Well resistance mu term, default=0.
     *args, **kwargs : various
@@ -2635,8 +2636,13 @@ def drain_eta(re, mu_function, *args, **kwargs):
 
     """
 
+    try:
+        mu_fn = globals()[mu_function]
+    except KeyError:
+        mu_fn = mu_function
+
     muw = kwargs.pop('muw', 0)
-    eta = 2 / re**2 / (mu_function(*args, **kwargs)+muw)
+    eta = 2 / re**2 / (mu_fn(*args, **kwargs)+muw)
     return eta
 
 
@@ -3682,7 +3688,18 @@ def non_darcy_u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0,
 
 
 
-
+def watch():
+    
+    a='mu_ideal'
+    a = mu_ideal
+    try:
+        fn = globals()[a]
+    except KeyError:
+        fn = a
+        
+    
+    print(fn(n=5))
+    
 
 
 ########################################################################
@@ -3699,9 +3716,10 @@ def scratch():
 
 
 if __name__ == '__main__':
-    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
-
+    watch()
+#    import nose
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+    
 
 
     eta = 5
