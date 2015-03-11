@@ -55,6 +55,10 @@ class OneDimensionalFlowRelationship(object):
         #Note this should work for +ve and -ve hydraulic gradients
         raise NotImplementedError("dv_di must be implemented.")
 
+    def vdrain_strain_rate(self, eta, head, **kwargs):
+        """Vertical drain strain rate as based on the eta method"""        
+        raise NotImplementedError("vdrain_strain_rate must be implemented.")
+
     def v_and_i_for_plotting(self, **kwargs):
         """Velocity and hydraulic gradient that that plot the relationship"""
         # should return a tuple of x and y values
@@ -200,6 +204,44 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
 
         return np.ones_like(hyd_grad, dtype=float) * self.k * np.sign(hyd_grad)
 
+    def vdrain_strain_rate(self, eta, head, **kwargs):
+        """Vertical drain strain rate as based on the eta method""
+        
+        [strain rate] = head * self.k * eta
+
+                        
+        Parameters
+        ----------
+        eta : float
+            Value of vertical drain geometry, peremability parameter. This
+            value should be calculated based on Darcy's law (see 
+            geotecha.consolidation.smearzones.drain_eta)
+        head : float
+            Hydraulic head driving the flow.  For vertical drains this is
+            usually the difference between the average head in the soil and 
+            the head in the drain.
+        **kwargs : any
+            Any additional keyword arguments are ignored. 
+            
+        Returns
+        -------
+        strain_rate : float
+            Strain rate based on eta method.
+            
+        See also
+        --------
+        geotecha.consolidation.smearzones : Functions to determine eta.
+            
+        Examples
+        --------
+        >>> a = DarcyFlowModel(k=3)
+        >>> a.vdrain_strain_rate(eta=2.5, head=4)
+        30.0
+        
+        """
+        
+        return head * self.k * eta
+        
     def v_and_i_for_plotting(self, **kwargs):
         """Velocity and hydraulic gradient that plot the relationship
 
@@ -226,7 +268,7 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
         y = self.v_from_i(x)
         return x, y
 
-#HansboNonDarcianFlowModel()
+
 class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
     """Hansbo non-darcian flow model
 
@@ -603,6 +645,54 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
         return np.where(abs_hyd_grad >= self.iL,
                         self.klinear,
                         self.kstar * self.n * abs_hyd_grad**(self.n - 1)) * np.sign(hyd_grad)*1
+
+    def vdrain_strain_rate(self, eta, head, **kwargs):
+        """Vertical drain strain rate as based on the eta method""
+        
+        [strain rate] = head**self.nflow * self.klinear * gamw**(nflow - 1) * eta
+
+
+        Note that `vdrain_strain_rate` only uses the exponential portion of 
+        the Non-Darcian flow relationship.  If hydraulic gradients are 
+        greater than the limiting value iL then the flow rates will be 
+        overestimated.                        
+        
+        Parameters
+        ----------
+        eta : float
+            Value of vertical drain geometry, peremability parameter. This
+            value should be calculated based on Hansbo's non-Darcian flow 
+            model (see geotecha.consolidation.smearzones.non_darcy_drain_eta)
+        head : float
+            Hydraulic head driving the flow.  For vertical drains this is
+            usually the difference between the average head in the soil and 
+            the head in the drain.
+        gamw : float, optional
+            Unit weight of water. Note that this gamw must be consistent with 
+            the value used to determine eta.  Default gamw=10.
+        **kwargs : any
+            Any additional keyword arguments, other than 'gamw', are ignored. 
+            
+        Returns
+        -------
+        strain_rate : float
+            Strain rate based on eta method.
+            
+        See also
+        --------
+        geotecha.consolidation.smearzones : Functions to determine eta.
+            
+        Examples
+        --------        
+        >>> a = HansboNonDarcianFlowModel(klinear=2, n=1.3, iL=16.2402611294)
+        >>> a.vdrain_strain_rate(eta=0.1, head=4, gamw=10)
+        2.419...
+        
+        
+        """
+        
+        gamw = kwargs.get('gamw', 10)
+        return head**self.n * self.klinear * gamw**(self.n - 1) * eta
 
     def v_and_i_for_plotting(self, **kwargs):
         """Velocity and hydraulic gradient that plot the relationship
