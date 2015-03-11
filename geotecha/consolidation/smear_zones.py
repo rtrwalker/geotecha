@@ -2631,6 +2631,8 @@ def drain_eta(re, mu_function, *args, **kwargs):
 
     >>> drain_eta(1.5, mu_ideal, 10)
     0.56317834043349857
+    >>> drain_eta(1.5, 'mu_ideal', 10)
+    0.56317834043349857
     >>> drain_eta(1.5, mu_constant, 5, 1.5, 1.6, muw=1)
     0.41158377241444855
 
@@ -3687,18 +3689,86 @@ def non_darcy_u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0,
     return u
 
 
+def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
+    """For non-Darcy flow calculate the vertical drain eta parameter
 
-def watch():
+    eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow-1) * nflow * iL**(nflow-1))
     
-    a='mu_ideal'
-    a = mu_ideal
+    nflow will be obtained from the **kwargs.  rw will be back calculated
+    from the n parameter (n=re/rw) which is usually the first of the *arg parameters 
+    or one of the **kwargs
+    
+    Note that eta is used in radial consolidation equations:
+    [strain rate] = (u - uw)**n * k / gamw * eta    
+    Compare with the Darcian case of (eta terms are calculated differerntly
+    for Darcy and non-Darcy cases): 
+    [strain rate] = (u - uw) * k / gamw * eta
+    
+    Note that `non_darcy_drain_eta` only uses the exponential portion of the 
+    Non-Darcian flow relationship.  If hydraulic gradients are greater than
+    iL then the flow rates will be overestimated.
+
+    Parameters
+    ----------
+    re : float
+        Drain influence radius.
+    iL : float
+        Limiting hydraulic gradient beyond which flow follows Darcy's law.
+    gamw : float
+        Unit weight of water. Usually gamw=10 kN/m**3 or gamw=9.807 kN/m**3.
+    beta_function : obj or string
+        The non_darcy_beta function to use. e.g. non_darcy_beta_ideal
+        non_darcy_beat_constant, non_darcy_piecewise_constant. 
+        This can either be the function object itself
+        or the name of the function e.g. 'non_darcy_beta_ideal'.    
+    *args, **kwargs : various
+        The arguments to pass to the beta_function.
+
+    Returns
+    -------
+    eta : float
+        Value of eta parameter for non-Darcian flow
+
+    Examples
+    --------    
+    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10, 
+    ... beta_function='non_darcy_beta_ideal', n=15, nflow=1.3, nterms=20)
+    0.09807...
+    >>> non_darcy_drain_eta(1.5, 10, 10, 
+    ... 'non_darcy_beta_ideal', 15, nflow=1.3, nterms=20)
+    0.09807...
+    
+    
+    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10, 
+    ... beta_function='non_darcy_beta_ideal', n=np.array([20.0, 15.0]), 
+    ... nflow=np.array([1.000001, 1.3]), nterms=20)
+    array([ 0.3943...,  0.0980...])
+           
+
+    """
+
+    # beta_function is object or string
     try:
-        fn = globals()[a]
+        beta_fn = globals()[beta_function]
     except KeyError:
-        fn = a
-        
+        beta_fn = beta_function
+
+    # extract n=re/rw from the **kwargs dict or 1st element of the *arg list
+    try:
+        n = kwargs['n']
+    except:
+        n = args[0]
+    rw = re / n
+     
+    nflow = kwargs['nflow']
     
-    print(fn(n=5))
+    beta = beta_fn(*args, **kwargs)
+    
+    eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow - 1) 
+               * nflow * iL**(nflow - 1))
+    return eta
+
+
     
 
 
@@ -3716,9 +3786,9 @@ def scratch():
 
 
 if __name__ == '__main__':
-    watch()
-#    import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+#    watch()
+    import nose
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
     
 
 
