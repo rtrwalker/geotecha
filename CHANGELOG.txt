@@ -1,8 +1,12 @@
-2015-02-13 geotecha-0.1.3 Release. Now compatible with python-2.7 and 
+2015-06-18 Added constitutive_models.epus elasto-plastic unsaturated
+           soil.  A python version of teh visual basic code in the
+           appendix of Pham (2005) PhD thesis.
+
+2015-02-13 geotecha-0.1.3 Release. Now compatible with python-2.7 and
            python-3.4.  32 and 64-bit windows binaries available on
            pypi. Added many speccon examples. Updated
 	   README.rst so that github and pipy have nice looking
-           front pages. Expanded permissible numpy functions in 
+           front pages. Expanded permissible numpy functions in
 	   inputoutput syntax_checker.
 
 -----------------------------------------------------------------------
@@ -15,11 +19,11 @@
 
 -----------------------------------------------------------------------
 2015-01-14 geotecha-0.1.1 Release.  This is the version that works on
-           Rohan's computer based on pythonxy-2.7.6.1.  I anticipate 
+           Rohan's computer based on pythonxy-2.7.6.1.  I anticipate
            some missing requirements in setup.py.  Also I have used
            'python setup.py build --compiler=mingw32' when building
            the extensions etc.  I think later versions of pythonxy
            do not have mingw so I'll adjust accordingly.
 
 -----------------------------------------------------------------------
-2013-05-01 Approximate start of geotecha project. Version 0.1.0.  
+2013-05-01 Approximate start of geotecha project. Version 0.1.0.

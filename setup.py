@@ -124,7 +124,7 @@ INSTALL_REQUIRES=[
     "testfixtures",
     "pandas",
     "numpydoc",
-    "IPython",    
+    "IPython",
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     ]
@@ -137,7 +137,7 @@ PACKAGES=setuptools.find_packages()
 PACKAGES.remove('tools')
 
 PACKAGE_DATA={
-              '': ['*.f95','*.f90'],}
+              '': ['*.f95','*.f90', '*.csv'],}
 #              '..\\examples': ['*.py'],}
 #              'geotecha.speccon': ['examples\\1d_vr\\*.py'],}
 #              '': ['*.txt']} #'geotecha.plotting.test': ['geotecha\\plotting\\test\\baseline_images\\test_one_d\\spines_axes_positions.png'] }
