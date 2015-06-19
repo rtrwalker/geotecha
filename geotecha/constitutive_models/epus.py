@@ -1267,6 +1267,14 @@ class EpusProfile(object):
     max_iter : int, optional
         Maxmum number of convergence iterations at each refinement step.
         Default max_iter=100 .
+    initial_stress : tuple of two 1d arrays
+        Initial stress to use to start of iteration.
+        1st element of tuple is list/array of z values, 2nd element is
+        list/array. Default intial_stress=None i.e. make up an initial guess
+        using unit weight = 15.  Values will be interpolated.
+
+
+
 
     Attributes
     ----------
@@ -1306,7 +1314,8 @@ class EpusProfile(object):
                  npp_refine=[1],
                  atol=0.01,
                  rtol=1e-6,
-                 max_iter=100):
+                 max_iter=100,
+                 initial_stress=None):
 
 
         self.epus_object = epus_object
@@ -1328,7 +1337,7 @@ class EpusProfile(object):
         self.max_iter = max_iter
 
         self.niter=[]
-
+        self.initial_stress = initial_stress
         names = ['SimpleSWCC',
                  #'stp',
                  'logDS',
@@ -1358,9 +1367,17 @@ class EpusProfile(object):
 
     def _initialize_stress(self):
         """Guess initial stress distribution to begin iterations from"""
-        gam = 15.
+        if self.initial_stress is None:
+            gam = 15.
+            self.profile.st[:]=self.profile.z * gam + self.q0
+        else:
+            zi, si = self.initial_stress
+            new_profile.st[:] = np.interp(new_profile.z,
+                                      zi,
+                                      si)
 
-        self.profile.st[:]=self.profile.z * gam + self.q0
+
+
         s = self.profile.uw>0
         self.profile.st[s] -= self.profile.uw[s]
 
@@ -1438,7 +1455,7 @@ class EpusProfile(object):
                     getattr(a.stp.datapoints[-1], v)[-1])
 
             #adjust Sr
-            s = self.profile.Sr>1
+            s = self.profile.Sr > 1
             self.profile.Sr[s] = 1
 
     def _blank_profile(self, nz):
@@ -1544,9 +1561,34 @@ class EpusProfile(object):
 
 
 
+    def save_profile_to_file(self, fpath):
 
 
+#            fname = "EPUS_test_data_case01.csv" #needs to be in same directory as file
+#
+#    #    fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+#    #                          fname)
+#        #inspect approach at http://stackoverflow.com/a/18489147/2530083
+#        mname = os.path.abspath(os.path.dirname(inspect.getsourcefile(lambda:0)))
+#        fpath = os.path.join(mname,
+#                              fname)
+#
+#        data = np.loadtxt(fpath, skiprows=4, dtype=float, delimiter=',', unpack=True)
+#        expect = dict()
+#        names=['ss', 'st', 'e', 'w', 'Sr', 'vw']
+#        for i, v in enumerate(names):
+#            expect[v] = data[i]
 
+        #make X
+        x = np.zeros((self.profile.npts, len(self.profile._attr)))
+
+        for i, v in enumerate(self.profile._attr):
+            x[:, i] = getattr(self.profile, v)[:]
+
+
+        header = ",".join(self.profile._attr)
+        np.savetxt(fname=fpath, X=x, fmt="%g", header=header,
+                   delimiter=",", comments="")
 
 
 
@@ -1582,11 +1624,15 @@ if __name__ =="__main__":
                         nz_refine=[0.5, 1],
                         Npoint_refine=[0.25]*2,
                         npp_refine=[0.5]*2,
-                        max_iter=15, atol=0.1)
+                        max_iter=15, atol=1)
+
 
         a.calc()
+        fpath = "C:\\Users\\Rohan Walker\\Documents\\temp\\profile.csv"
+        a.save_profile_to_file(fpath=fpath)
         print(a.niter)
         fig=a.plot_profile()
         fig.tight_layout()
+
         plt.show()
 
