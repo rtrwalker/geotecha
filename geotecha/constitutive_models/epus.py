@@ -1156,6 +1156,7 @@ class DataResults(object):
         self.Sr = np.zeros(npts, dtype=float)
         self.vw = np.zeros(npts, dtype=float)
 
+        self._attr = ['ss', 'st', 'e', 'w', 'Sr', 'vw']
 
     def __add__(self, other):
         """Join two DataResults objects into one
@@ -1176,9 +1177,9 @@ class DataResults(object):
 
         out = DataResults(self.npts + other.npts)
 
-        attr = ['ss', 'st', 'e', 'w', 'Sr', 'vw']
 
-        for v in attr:
+
+        for v in self._attr:
             getattr(out, v)[:self.npts] = getattr(self, v)
             getattr(out, v)[self.npts:] = getattr(other, v)
 
@@ -1194,8 +1195,398 @@ class DataResults(object):
 
 
 
+class EpusProfile(object):
+    """1D initial conditons (stress etc.) distribution for EOUS unsaturated
+    soil model.
+
+
+    Proceedure:
+
+     - Determine pore water pressure, uw, at depth based on depth of
+       water table, zw,  i.e. uw is negative above water table. This
+       gives suction (psi) profile above water table.
+     - Guess an initial stress (sig) distribution, including an initial
+       surcharge of q0.
+     - Assume a stress path starting from slurry to stress increase to
+       sig and then suction to psi.  Use EPUS to calculate void ratio (e)
+       and saturation (Sr).
+     - Use Gs, e, Sr to calc unit weight (gamma) profile.
+       Numerically integrate unit weight profile to with sig at z=0 equals q0
+       to give new stress profile.
+     - Check convergence of new stress vs old stress profile.  If not equal
+       then iterate.
+     - Once solutin converged, record stress, void ratio, saturation profiles.
+
+
+
+    Note initial EPUS loading steps begin from 0 net normal stress (sig-ua).
+    Below the water table there is a bouyant force so the sig-ua stress input
+    is actually an effective stress.
+
+
+
+    Parameters
+    ----------
+    epus_object : instance of EPUS object
+        An EPUS object from which all relevant paramters can be taken.
+        Use a dummy stress path for this; it will be ignored.  Also Npoint
+        will be ignored.  Basically just using and EPUS object as a
+        convienient container.
+    H : float
+        Height of soil profile.
+    zw : float, optional
+        Depth of water table.  Default zw=None, i.e. will be set to H.
+    q0 : float, optional
+        Existing surcharge.  Default q0=1.
+    gamw : float, optional
+        Unit weight of water.  Default gamw=10.
+    nz : int, optional
+        Final number of depth values in profile. default nz=10.
+    Npoint : int, optional
+        Number of data points along the pore size distribution curve.
+        Default Npoint=1000
+    npp : float, optional
+        Number of points per stress path step.  Default npp=100
+    nz_refine : list of float, optional
+        Allows progressive refinement of the number of points in the profile.
+        Initially stress profile will be calcuated at int(nz*nz_refine[0])
+        evenly spaced depth values. Once convergence is reached
+        a new stress profile will be interpolated at int(nz*nz_refine[1])
+        and the convergence process is run again.  The refinement is repeated
+        untill the final value of nz_refine (which should be 1) is used.
+        Default nz_refine=[1] i.e. no successvie refinement.
+    Npoint_refine : list of float, optional
+        Similar to nz_refine.  Last value whould be 1. Sould be same length as
+        nz_refine. Default Npoint_refine=[1]
+    npp_refine : list of float
+        Similar to nz_refine. Last value should be 1.  Should be same length as
+        nz_refine.  Default npp_refine = [1]
+    rtol, atol : float, optional
+        Relative and absolute tolerance for checking convergence of stress.
+        See numpy.allclose . Default atol=0.01, rtol=1e-6
+    max_iter : int, optional
+        Maxmum number of convergence iterations at each refinement step.
+        Default max_iter=100 .
+
+    Attributes
+    ----------
+    _nz, _Npoint, _npp : int
+        Current 'refined' value of nz, Npoint, and _npp.
+    profile : DataResults object
+        Contains information about each data point in the profile.
+        In addition to normal DataResults attributes ( ss, st, e, w, Sr, vw)
+        it has unit weight (gam), depth (z), pore water pressure (uw)
+    _epus_dict : dictionary
+        dict containing common keywords from the epus_object to initialize
+        other epus objects at each depth.  Basically just need to add
+        Npoints, and stp stress path objects at each depth and refinement.
+    niter : list of int
+        number of iterations to converge at each refinement level.
+
+    Notes
+    -----
+    "stress" below water table is effective stress.  "stress" avbove water
+    table is net normal stress.
+
+    """
+
+
+
+    def __init__(self,
+                 epus_object,
+                 H,
+                 zw=None,
+                 q0=1.0,
+                 gamw=10,
+                 nz=10,
+                 Npoint=1000,
+                 npp=100,
+                 nz_refine=[1],
+                 Npoint_refine=[1],
+                 npp_refine=[1],
+                 atol=0.01,
+                 rtol=1e-6,
+                 max_iter=100):
+
+
+        self.epus_object = epus_object
+        self.H = H
+        if zw is None:
+            self.zw = self.H
+        else:
+            self.zw = zw
+        self.q0 = q0
+        self.gamw = gamw
+        self.nz = nz
+        self.Npoint = Npoint
+        self.npp = npp
+        self.nz_refine = nz_refine
+        self.Npoint_refine = Npoint_refine
+        self.npp_refine = npp_refine
+        self.atol = atol
+        self.rtol = rtol
+        self.max_iter = max_iter
+
+        self.niter=[]
+
+        names = ['SimpleSWCC',
+                 #'stp',
+                 'logDS',
+                 'logRS',
+                 'Ccs',
+                 'Css',
+                 'Ccd',
+                 'Gs',
+                 'Assumption',
+                 'beta',
+                 'pm',
+                 'Pore_shape',
+                 'K0',
+                 'soilname',
+                 'username',
+                 #'Npoint',
+                 'NumSr',
+                 'MaxSuction',
+                 'MinSuction',]
+
+        self._epus_dict = dict()
+        for v in names:
+            self._epus_dict[v] = getattr(self.epus_object, v)
+
+
+        pass
+
+    def _initialize_stress(self):
+        """Guess initial stress distribution to begin iterations from"""
+        gam = 15.
+
+        self.profile.st[:]=self.profile.z * gam + self.q0
+        s = self.profile.uw>0
+        self.profile.st[s] -= self.profile.uw[s]
+
+
+    def _update_uw(self):
+        """Update the pore pressure profile
+
+        z-zw*gamw
+        """
+        pass
+
+#    def _check_convergence(oldstress, newstress):
+#        """Check if new stress = old stress"""
+#        return
+
+    def _refine(self):
+        """Refine numerical parameters"""
+        pass
+
+    def _stress_from_overburden(self):
+        """update stress profile based on q0 and overbuden (integrate density)"""
+
+        self.profile.st[:] = self.q0
+        dz = np.diff(self.profile.z)
+        gamavg = (self.profile.gam[1:] + self.profile.gam[:-1]) * 0.5
+        dsig = dz*gamavg
+
+        self.profile.st[1:] += np.cumsum(dsig)
+
+        #adjust for bouyant force
+        s = self.profile.uw>0
+        self.profile.st[s]-=self.profile.uw[s]
+
+
+
+    def _update_density(self):
+        """update density based on Gs, e and Sr"""
+
+
+
+
+        Gs = self.epus_object.Gs
+        gamw = self.gamw
+        e = self.profile.e
+        Sr = self.profile.Sr
+        self.profile.gam[:] = (Gs+Sr*e)/(1+e)*gamw
+
+
+    def _e_and_Sr_from_EPUS(self):
+        """Use EPUS and sig and psi distribution to calc e and Sr"""
+
+
+
+        for i in range(self.profile.npts):
+
+            ss = self.profile.ss[i]
+            st = max(self.profile.st[i], (10 ** self.epus_object.MinSuction) / 1000)
+            if ss <= 10**self.epus_object.MinSuction:
+                #only need stress increase stresspath
+                stp = StressPath(
+                     [dict(ist=True, npp=self._npp, vl=st, name="1. Stress increase"),])
+            else:
+                #need stress increase and suction increase stress path
+                stp = StressPath(
+                     [dict(ist=True, npp=self._npp, vl=st, name="1. Stress increase"),
+                      dict(ist=False, npp=self._npp, vl=ss, name="2. Suction increase")])
+            self._epus_dict["Npoint"]= self._Npoint
+            self._epus_dict["stp"] = stp
+
+            a = EPUS(**self._epus_dict)
+            a.Calresults()
+
+            for v in a.stp.datapoints[0]._attr:
+                getattr(self.profile, v)[i] = (
+                    getattr(a.stp.datapoints[-1], v)[-1])
+
+            #adjust Sr
+            s = self.profile.Sr>1
+            self.profile.Sr[s] = 1
+
+    def _blank_profile(self, nz):
+        """Modify a DataResults object to contain info about the profile
+
+        Add z, gam, uw
+        Calc uw from water table
+        calc suction ss from negative values of uw (set suctino to zero
+        elsewhere).
+
+        """
+
+        profile = DataResults(npts=nz)
+        profile.z = np.linspace(0, self.H, nz)
+        profile.gam = np.zeros(nz, dtype=float)
+        profile.uw = (np.linspace(0, self.H, nz) - self.zw) * self.gamw
+        profile.ss[:] = 0.0
+        s = profile.uw<0
+        profile.ss[s] = -profile.uw[s]
+
+        profile._attr.extend(['z', 'gam', 'uw'])
+
+        return profile
+
+
+
+    def calc(self):
+        """do all the calculations"""
+
+        first = True
+        for fnz, fNpoint, fnpp in zip(self.nz_refine,
+                                      self.Npoint_refine,
+                                      self.npp_refine):
+
+            self._nz = int(fnz * self.nz)
+            self._Npoint = int(fnz * self.Npoint)
+            self._npp = int(fnz * self.npp)
+
+
+            new_profile = self._blank_profile(nz=self._nz)
+            if first:
+                self.profile = new_profile
+                self._initialize_stress()
+                first = False
+            else:
+
+                #self.profile already exists
+                #interpolate stres from old profile
+                new_profile.st[:] = np.interp(new_profile.z,
+                                              self.profile.z,
+                                              self.profile.st)
+
+                self.profile = new_profile
+
+
+            for j in range(self.max_iter):
+                old_stress = self.profile.st[:].copy()
+
+
+                self._e_and_Sr_from_EPUS()
+                self._update_density()
+                self._stress_from_overburden()
+
+                if np.allclose(old_stress, self.profile.st,
+                               atol=self.atol, rtol=self.rtol):
+                    break
+
+
+            if j>=self.max_iter:
+                raise ValueError("Maximum iterations reached while nz={}".format(self._nz))
+            self.niter.append(j+1)
+
+
+    def plot_profile(self, fig=None):
+
+        if fig is None:
+            fig = plt.figure(figsize=(14,5))
+
+        namemap=dict(vw="$\\theta$", Sr="$S_r$", ss="$\\psi$", st="$\\sigma$",
+                     gam="$\\gamma$")
+
+        attr = self.profile._attr[:]
+        excl = ['z']
+        for v in excl:
+            if v in attr: attr.remove(v)
+
+        n = len(attr)
+
+        first=True
+        for i, v in enumerate(attr):
+            ax = fig.add_subplot(1,n,i+1)
+            ax.plot(getattr(self.profile, v), self.profile.z,
+                    marker='o')
+            ax.set_xlabel(namemap.get(v, v))
+            if first:
+                ax.set_ylabel('z')
+                first=False
+            ax.invert_yaxis()
+            plt.setp(ax.get_xticklabels(), rotation=-90, horizontalalignment='center')
+
+#        fig.tight_layout()
+        return fig
+
+
+
+
+
+
+
+
 
 if __name__ =="__main__":
     import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+
+    if 1:
+        SWCC = CurveFittingSWCC(wsat=0.262,
+                                a = 3.1 * 10 ** 6,
+                                b = 3.377,
+                                wr = 0.128,
+                                sl = 0.115)
+
+
+        stp = StressPath([dict(ist=True, npp=5, vl=20, name="1. Load to 20kPa"),])
+
+        pdict=dict(
+             SimpleSWCC=SWCC,
+             stp=stp,
+             logDS=0.6,
+             logRS=2,
+             Css=0.019,
+             beta=0.1,
+             soilname='Artificial silt',
+             username='Hung Pham',
+             Npoint=400)
+
+        epus_object = EPUS(**pdict)
+
+        a = EpusProfile(epus_object, H=10, zw=10, q0=10,
+                        nz=10, Npoint=400, npp=10,
+                        nz_refine=[0.5, 1],
+                        Npoint_refine=[0.25]*2,
+                        npp_refine=[0.5]*2,
+                        max_iter=15, atol=0.1)
+
+        a.calc()
+        print(a.niter)
+        fig=a.plot_profile()
+        fig.tight_layout()
+        plt.show()
 
