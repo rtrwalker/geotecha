@@ -590,6 +590,7 @@ class EPUS(object):
         Assumption = self.Assumption
         RefSr = self.RefSr
         pm = self.pm
+        CVStress = self.CVStress()
 
         for i in range(f.Npoint):
             s = 10 ** f.WEV[i]        # set variable s = water entry value of the pore on reference WPD
@@ -1370,16 +1371,17 @@ class EpusProfile(object):
         if self.initial_stress is None:
             gam = 15.
             self.profile.st[:]=self.profile.z * gam + self.q0
+            s = self.profile.uw>0
+            self.profile.st[s] -= self.profile.uw[s]
         else:
             zi, si = self.initial_stress
-            new_profile.st[:] = np.interp(new_profile.z,
+            self.profile.st[:] = np.interp(self.profile.z,
                                       zi,
                                       si)
 
 
 
-        s = self.profile.uw>0
-        self.profile.st[s] -= self.profile.uw[s]
+
 
 
     def _update_uw(self):
@@ -1454,9 +1456,9 @@ class EpusProfile(object):
                 getattr(self.profile, v)[i] = (
                     getattr(a.stp.datapoints[-1], v)[-1])
 
-            #adjust Sr
-            s = self.profile.Sr > 1
-            self.profile.Sr[s] = 1
+        #adjust Sr
+        s = self.profile.Sr > 1
+        self.profile.Sr[s] = 1
 
     def _blank_profile(self, nz):
         """Modify a DataResults object to contain info about the profile
@@ -1534,9 +1536,24 @@ class EpusProfile(object):
         if fig is None:
             fig = plt.figure(figsize=(14,5))
 
-        namemap=dict(vw="$\\theta$", Sr="$S_r$", ss="$\\psi$", st="$\\sigma$",
-                     gam="$\\gamma$")
+        namemap=dict(vw="$\\theta$",
+                     Sr="$S_r$",
+                     ss="$\\psi$",
+                     st="$\\sigma$",
+                     gam="$\\gamma$",
+                     uw="$u_w$",
+                     m1s="$m_{1}^s$",
+                     m2s="$m_{2}^s$",
+                     m1w="$m_{1}^w$",
+                     m2w="$m_{2}^w$",
+                     m1a="$m_{1}^a$",
+                     m2a="$m_{2}^a$")
 
+
+        axlims = dict(Sr=dict(left=0, right=1),
+                      )
+
+        not_plot = ['m1s', 'm2s', 'm1w', 'm2w', 'm1a', 'm2a']
         attr = self.profile._attr[:]
         excl = ['z']
         for v in excl:
@@ -1546,17 +1563,33 @@ class EpusProfile(object):
 
         first=True
         for i, v in enumerate(attr):
-            ax = fig.add_subplot(1,n,i+1)
+            if first:
+                ax = fig.add_subplot(1,n,i+1)
+            else:
+                ax = fig.add_subplot(1,n,i+1)
             ax.plot(getattr(self.profile, v), self.profile.z,
                     marker='o')
+            if 'm1s' in self.profile._attr:
+                if v not in not_plot:
+                    ax.plot(getattr(self._dsig_profile, v), self.profile.z,
+                        marker='s')
+                    ax.plot(getattr(self._dpsi_profile, v), self.profile.z,
+                        marker='h')
+
+
             ax.set_xlabel(namemap.get(v, v))
+            ax.get_xticklabels()[-1].set_visible(False)
             if first:
                 ax.set_ylabel('z')
                 first=False
+            else:
+                plt.setp(ax.get_yticklabels(), visible=False)
+
             ax.invert_yaxis()
+            ax.set_xlim(**axlims.get(v, dict()))
             plt.setp(ax.get_xticklabels(), rotation=-90, horizontalalignment='center')
 
-#        fig.tight_layout()
+        fig.subplots_adjust(left=0.05, right=0.95, wspace=0, top=0.95, bottom=0.2)
         return fig
 
 
@@ -1591,6 +1624,164 @@ class EpusProfile(object):
                    delimiter=",", comments="")
 
 
+    def compression_indexes(self, dsig=1.0, dpsi=1.0):
+        """Calculate the compression indexes
+
+        m1s, m2s, m1w, m2w, m1a, m2a
+
+        Calculation is volume change indexes after a) net normal stress
+        change of dsig, and b) or suction change of dpsi.
+
+        m1a + m1w = m1s
+        m2a + m2w = m2s
+
+        Parameters
+        ----------
+        dsig : float, optional
+            Change in net normal stress (sig-ua),  Default dsig=1.0
+        dpsi : float, optional
+            Change in suction (ua-uw)
+
+
+        """
+
+        #
+
+        from copy import deepcopy
+
+
+
+        self.dsig = dsig
+        self.dpsi = dpsi
+
+        profile_backup = deepcopy(self.profile)
+
+#        self._dpsi_profile = deepcopy(self.profile)
+
+        #dsig
+
+        for i in range(self.profile.npts):
+            stp=[]
+            ss = self.profile.ss[i]
+            st = max(self.profile.st[i], (10 ** self.epus_object.MinSuction) / 1000)
+            if ss <= 10**self.epus_object.MinSuction:
+                #only need stress increase stresspath
+                stp.extend(
+                     [dict(ist=True, npp=self._npp, vl=st, name="1. Stress increase"),])
+            else:
+                #need stress increase and suction increase stress path
+                stp.extend(
+                     [dict(ist=True, npp=self._npp, vl=st, name="1. Stress increase"),
+                      dict(ist=False, npp=self._npp, vl=ss, name="2. Suction increase")])
+
+            #increase stress by dsig
+            st += dsig
+            stp.append(dict(ist=True, npp=self._npp, vl=st, name="3. Stress increase"))
+
+            stp = StressPath(stp)
+            self._epus_dict["Npoint"]= self._Npoint
+            self._epus_dict["stp"] = stp
+
+            a = EPUS(**self._epus_dict)
+            a.Calresults()
+
+            for v in a.stp.datapoints[0]._attr:
+                getattr(self.profile, v)[i] = (
+                    getattr(a.stp.datapoints[-1], v)[-1])
+
+        #adjust Sr
+        s = self.profile.Sr > 1
+        self.profile.Sr[s] = 1
+
+        self._dsig_profile = deepcopy(self.profile)
+
+
+
+        #dpsi
+        self.profile = deepcopy(profile_backup) # reset to intitial stress profile
+
+        for i in range(self.profile.npts):
+            stp=[]
+            ss = self.profile.ss[i]
+            st = max(self.profile.st[i], (10 ** self.epus_object.MinSuction) / 1000)
+            if ss <= 10**self.epus_object.MinSuction:
+                #only need stress increase stresspath
+                stp.extend(
+                     [dict(ist=True, npp=self._npp, vl=st, name="1. Stress increase"),])
+            else:
+                #need stress increase and suction increase stress path
+                stp.extend(
+                     [dict(ist=True, npp=self._npp, vl=st, name="1. Stress increase"),
+                      dict(ist=False, npp=self._npp, vl=ss, name="2. Suction increase")])
+            self._epus_dict["Npoint"]= self._Npoint
+            self._epus_dict["stp"] = stp
+
+            #increase suction by dpsi
+            uw = self.profile.uw[i]
+
+            if uw < 0:
+                #uw starts unsaturated and ends in unsaturated; apply full suction
+                stp.append(dict(ist=False, npp=self._npp, vl=ss+dpsi,
+                                name="3. uw decrease--> suction increase"))
+            else:
+                if uw - dpsi >= (10 ** self.epus_object.MinSuction):
+                    #uw starts saturated and ends in saturated
+                    #increase stress by dpsi
+                    stp.append(dict(ist=True, npp=self._npp, vl=st+dpsi,
+                                    name="3. uw decrease--> stress increase"))
+
+                else:
+                    #uw starts saturated and ends unsaturated
+                    #apply uw-0 to effective stress increase then
+                    #apply dpsi-uw to suction
+                    stp.append(dict(ist=True, npp=self._npp, vl=st+uw,
+                                    name="3. uw decrease--> partial stress increase"))
+                    stp.append(dict(ist=False, npp=self._npp, vl=dpsi-uw,
+                                    name="3. uw decrease--> partial suction increase"))
+
+
+
+
+            stp = StressPath(stp)
+            self._epus_dict["Npoint"]= self._Npoint
+            self._epus_dict["stp"] = stp
+
+
+            a = EPUS(**self._epus_dict)
+            a.Calresults()
+
+            for v in a.stp.datapoints[0]._attr:
+                getattr(self.profile, v)[i] = (
+                    getattr(a.stp.datapoints[-1], v)[-1])
+
+        #adjust Sr
+        s = self.profile.Sr > 1
+        self.profile.Sr[s] = 1
+
+        self._dpsi_profile = deepcopy(self.profile)
+
+
+
+        self.profile = deepcopy(profile_backup)
+        #calc compression indexes
+
+        for v in ['m1s', 'm2s', 'm1w', 'm2w', 'm1a', 'm2a']:
+            if v not in self.profile._attr:
+                self.profile._attr.append(v)
+            setattr(self.profile, v, np.zeros(self.profile.npts, dtype=float))
+
+        self.profile.m1s[:] = (self._dsig_profile.e - self.profile.e)/(1+self.profile.e) / dsig
+        self.profile.m2s[:] = (self._dpsi_profile.e - self.profile.e)/(1+self.profile.e) / dpsi
+
+        self.profile.m1w[:] = (self._dsig_profile.Sr*self._dsig_profile.e - self.profile.Sr*self.profile.e)/(1+self.profile.e) / dsig
+        self.profile.m2w[:] = (self._dpsi_profile.Sr*self._dpsi_profile.e - self.profile.Sr*self.profile.e)/(1+self.profile.e) / dpsi
+
+        self.profile.m1a[:] = self.profile.m1s-self.profile.m1w
+        self.profile.m2a[:] = self.profile.m2s-self.profile.m2w
+
+
+
+
 
 if __name__ =="__main__":
     import nose
@@ -1619,20 +1810,33 @@ if __name__ =="__main__":
 
         epus_object = EPUS(**pdict)
 
+        initial_stress=(np.array([  0. ,   2.5,   5. ,   7.5,  10. ]),
+                         np.array([  10.        ,   62.11010239,  115.33445849,  169.3380806 ,
+                                   223.80793771]))
         a = EpusProfile(epus_object, H=10, zw=10, q0=10,
+                        nz=10, Npoint=400, npp=10,
+                        nz_refine=[0.5],
+                        Npoint_refine=[0.25],
+                        npp_refine=[0.5],
+                        max_iter=15, atol=1, initial_stress=initial_stress)
+        a = EpusProfile(epus_object, H=10, zw=8.5, q0=10,
                         nz=10, Npoint=400, npp=10,
                         nz_refine=[0.5, 1],
                         Npoint_refine=[0.25]*2,
                         npp_refine=[0.5]*2,
-                        max_iter=15, atol=1)
+                        max_iter=15, atol=1, initial_stress=initial_stress)
 
 
         a.calc()
         fpath = "C:\\Users\\Rohan Walker\\Documents\\temp\\profile.csv"
+        print(repr(a.profile.z))
+        print(repr(a.profile.st))
+
+        a.compression_indexes(dsig=20, dpsi=20)
         a.save_profile_to_file(fpath=fpath)
         print(a.niter)
         fig=a.plot_profile()
-        fig.tight_layout()
+#        fig.tight_layout()
 
         plt.show()
 
