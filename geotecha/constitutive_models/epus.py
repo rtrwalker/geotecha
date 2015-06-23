@@ -1589,7 +1589,7 @@ class EpusProfile(object):
             ax.set_xlim(**axlims.get(v, dict()))
             plt.setp(ax.get_xticklabels(), rotation=-90, horizontalalignment='center')
 
-        fig.subplots_adjust(left=0.05, right=0.95, wspace=0, top=0.95, bottom=0.2)
+        fig.subplots_adjust(left=0.05, right=0.95, wspace=0, top=0.95, bottom=0.3)
         return fig
 
 
@@ -1786,8 +1786,11 @@ class EpusProfile(object):
 if __name__ =="__main__":
     import nose
 #    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
-
+    from geotecha.plotting.one_d import save_figure
     if 1:
+        import time
+        from datetime  import timedelta
+        start = time.time()
         SWCC = CurveFittingSWCC(wsat=0.262,
                                 a = 3.1 * 10 ** 6,
                                 b = 3.377,
@@ -1814,28 +1817,33 @@ if __name__ =="__main__":
                          np.array([  10.        ,   62.11010239,  115.33445849,  169.3380806 ,
                                    223.80793771]))
         a = EpusProfile(epus_object, H=10, zw=10, q0=10,
-                        nz=10, Npoint=400, npp=10,
-                        nz_refine=[0.5],
+                        nz=10, Npoint=1000, npp=10,
+                        nz_refine=[1],
                         Npoint_refine=[0.25],
                         npp_refine=[0.5],
                         max_iter=15, atol=1, initial_stress=initial_stress)
-        a = EpusProfile(epus_object, H=10, zw=8.5, q0=10,
-                        nz=10, Npoint=400, npp=10,
-                        nz_refine=[0.5, 1],
-                        Npoint_refine=[0.25]*2,
-                        npp_refine=[0.5]*2,
+        a = EpusProfile(epus_object, H=10, zw=20, q0=10,
+                        nz=30, Npoint=1000, npp=50,
+                        nz_refine=[0.2, 1],
+                        Npoint_refine=[0.4, 1],
+                        npp_refine=[0.2, 1]*2,
                         max_iter=15, atol=1, initial_stress=initial_stress)
 
 
         a.calc()
         fpath = "C:\\Users\\Rohan Walker\\Documents\\temp\\profile.csv"
+        fpath = "C:\\Users\\rohanw\\Documents\\temp\\profile.csv"
         print(repr(a.profile.z))
         print(repr(a.profile.st))
-
+        elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
         a.compression_indexes(dsig=20, dpsi=20)
         a.save_profile_to_file(fpath=fpath)
-        print(a.niter)
-        fig=a.plot_profile()
+        print(a.niter)        
+        elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
+        
+
+        fig=a.plot_profile()        
+        save_figure(fig, os.path.join(os.path.dirname(fpath), 'myfig'))
 #        fig.tight_layout()
 
         plt.show()
