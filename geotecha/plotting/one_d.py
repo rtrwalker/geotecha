@@ -1962,7 +1962,35 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
         plt.setp(leg.get_title(),fontsize=legend_prop['fontsize'])
     return fig
 
-
+def save_figure(fig, fname='fig', ext=['pdf', 'eps', 'png'], dpi=1200):
+    """Save a figure to a file in multiple formats
+    
+    Figure will be saved in as fname.ext where ext is each of the extenstions
+    in the ext parameter.
+    
+    Parameters
+    ----------
+    fig : matplotlib.Figure object
+        Figure to save
+    fname : str, optional
+        filepath to save to WITHOUT extension, default fname='fig'.
+    ext : list of str, optional
+        List of file extensions to save.  Must be one of the matplolib 
+        save as file types.  default ext=[['pdf','eps','png'].
+    dpi : int, optional
+        dpi setting to save png etc figures as. Default dpi=1200.    
+        
+    """
+    
+    for ext in ['pdf','eps','png']:
+        if ext in ['png']:
+            d = {'dpi': dpi}
+            d['dpi'] = dpi
+        else:
+            d={}
+        fig.savefig('{}.{}'.format(fname, ext), format=ext, **d)
+        
+        
 
 if __name__ == '__main__':
     import nose

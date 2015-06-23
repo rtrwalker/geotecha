@@ -1,3 +1,5 @@
+2015-06-23 Added geotecha.plotting.one_d.save_figure to easily save 
+           multiple versions of a matplotlib figure.
 2015-06-18 Added constitutive_models.epus elasto-plastic unsaturated
            soil.  A python version of teh visual basic code in the
            appendix of Pham (2005) PhD thesis.
