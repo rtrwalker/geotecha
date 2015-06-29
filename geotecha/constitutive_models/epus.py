@@ -4,11 +4,14 @@ import os
 import matplotlib
 from matplotlib import pyplot as plt
 
+
+
 import math
 log10 = math.log10
 log = math.log
 #log10 = np.log10
 #log = np.log
+
 
 """Elasto-Plastic for Unsaturated Soils, adapted from VB code in Phd thesis of
 Pham (2005).
@@ -73,7 +76,14 @@ class EPUS(object):
         log Scale or 1000000. Default MaxSuction=6
     MinSuction : int, optional
         log scale or 0.001. Default MinSuction=-3
-
+    implementation : ['fortran', 'scalar', ], optional
+        Functional implementation: 'scalar' = python loops (slow),
+        'fortran' = fortran code (fastest).  Currently there is no
+        'vectorized' = numpy(fast) version.
+        Default implementation='fortran'.  If fortran extention module
+        cannot be imported then 'scalar' version will be used.
+        If anything other than 'scalar' is used then
+        default fortran version will be used.
 
     Attributes
     ----------
@@ -108,6 +118,13 @@ class EPUS(object):
 
     """
 
+    #class variable
+    _successful_fortran_import = True
+    # After EPUS code, check is done to see if epus_ext fortran extension
+    # module imports correctly.  If not _successful_fortran_import will
+    # be set to False and slow scalar version with python loops will be
+    # used.
+
     def __init__(self,
                  SimpleSWCC,
                  stp,
@@ -127,7 +144,8 @@ class EPUS(object):
                  Npoint=1000,
                  NumSr=400,
                  MaxSuction=6,
-                 MinSuction=-3):
+                 MinSuction=-3,
+                 implementation='fortran'):
 
         self.SimpleSWCC = SimpleSWCC
         self.stp = stp
@@ -154,6 +172,7 @@ class EPUS(object):
         self.NumSr = NumSr
         self.MaxSuction = MaxSuction
         self.MinSuction = MinSuction
+        self.implementation = implementation
 
         self.Srdry = np.zeros(self.NumSr)
         self.Srwet = np.zeros(self.NumSr)
@@ -723,11 +742,7 @@ class EPUS(object):
             return self.Srwet[int((log10(ssvalue) - MinSuction) / ((MaxSuction - MinSuction) / (NumSr - 1)))]
 #'A-88
 
-
-    def Calresults(self):
-        """Calculate the results ie calculate the response to the stress path
-
-        """
+    def _Calresults_scalar(self):
 
         stp = self.stp
         Drying = self.Drying
@@ -838,6 +853,85 @@ class EPUS(object):
             #MsgBox " Input data is not valid, please check the PORE-SHAPE PARAMETER"
             print("Input data is not valid, please check the PORE-SHAPE PARAMETER")
 
+    def _Calresults_fortran(self):
+
+        epus_ext.epus.dealloc()
+
+        epus_ext.epus.nsteps = self.stp.nsteps
+#        ALLOCATE(ist(1:nsteps))
+#        ALLOCATE(vl(1:nsteps))
+#        ALLOCATE(npp(1:nsteps))
+#        ist(1:5) = (/.true., .true., .false., .false., .false./)
+#        npp(1:5) = 100
+#        vl(1:5) = (/ 20._DP, 1._DP, 1.E6_DP, 30._DP, 1500._DP/)
+        epus_ext.epus.ist = self.stp.ist
+        epus_ext.epus.vl = self.stp.vl
+        epus_ext.epus.npp = self.stp.npp
+
+        epus_ext.epus.wsat = self.SimpleSWCC.wsat
+        epus_ext.epus.a = self.SimpleSWCC.a
+        epus_ext.epus.b = self.SimpleSWCC.b
+        epus_ext.epus.wr = self.SimpleSWCC.wr
+        epus_ext.epus.sl = self.SimpleSWCC.sl
+        epus_ext.epus.logds= self.logDS
+        epus_ext.epus.logrs = self.logRS
+        epus_ext.epus.ccs = self.Ccs
+        epus_ext.epus.css = self.Css
+        epus_ext.epus.ccd = self.Ccd
+        epus_ext.epus.gs = self.Gs
+        epus_ext.epus.assumption = self.Assumption
+        epus_ext.epus.beta = self.beta
+        epus_ext.epus.pm = self.pm
+        epus_ext.epus.pore_shape = self.Pore_shape
+        epus_ext.epus.k0 = self.K0
+#        epus_ext.epus.soilname = self.soilname #fortran code *len messes everything up
+#        epus_ext.epus.username = self.username #fortran code *len messes everything up
+        epus_ext.epus.numsr = self.NumSr
+        epus_ext.epus.npoint = self.Npoint
+        epus_ext.epus.maxsuction = self.MaxSuction
+        epus_ext.epus.minsuction = self.MinSuction
+
+        epus_ext.epus.calresults()
+
+        # put Fortran results (long 1d array) back into stp (multiple 1d arrays for each load step)
+        for i in range(self.stp.nsteps):
+            start = epus_ext.epus.startpoint[i] - 1 # Fortran indexing starts at 1
+            end = epus_ext.epus.endpoint[i]
+
+            self.stp.datapoints[i].ss[:] = epus_ext.epus.ss[start:end]
+            self.stp.datapoints[i].st[:] = epus_ext.epus.st[start:end]
+            self.stp.datapoints[i].e[:] = epus_ext.epus.ee[start:end]
+            self.stp.datapoints[i].w[:] = epus_ext.epus.w[start:end]
+            self.stp.datapoints[i].Sr[:] = epus_ext.epus.sr[start:end]
+            self.stp.datapoints[i].vw[:] = epus_ext.epus.vw[start:end]
+
+
+    def Calresults(self):
+        """Calculate the results ie calculate the response to the stress path
+
+        """
+
+        if self.implementation == 'scalar':
+            self._Calresults_scalar()
+        else:
+            if self._successful_fortran_import:
+                self._Calresults_fortran()
+            else:
+                self._Calresults_scalar()
+#            import geotecha.constitutive_models.epus_ext as epus_ext
+#            try:
+#                import geotecha.constitutive_models.epus_ext as epus_ext
+#            except ImportError:
+#                self._Calresults_scalar()
+#                return
+
+
+try:
+    import geotecha.constitutive_models.epus_ext as epus_ext
+
+except ImportError:
+    print("Failed to import epus_ext; EPUS will use slow scalar version instead.")
+    EPUS._successful_fortran_import = False
 
 
 class PoresizeDistribution(object):
@@ -1809,40 +1903,41 @@ if __name__ =="__main__":
              beta=0.1,
              soilname='Artificial silt',
              username='Hung Pham',
-             Npoint=400)
+             Npoint=400,
+             NumSr=1000)
 
         epus_object = EPUS(**pdict)
 
         initial_stress=(np.array([  0. ,   2.5,   5. ,   7.5,  10. ]),
                          np.array([  10.        ,   62.11010239,  115.33445849,  169.3380806 ,
                                    223.80793771]))
-        a = EpusProfile(epus_object, H=10, zw=10, q0=10,
-                        nz=10, Npoint=1000, npp=10,
-                        nz_refine=[1],
-                        Npoint_refine=[0.25],
-                        npp_refine=[0.5],
-                        max_iter=15, atol=1, initial_stress=initial_stress)
+#        a = EpusProfile(epus_object, H=10, zw=10, q0=10,
+#                        nz=10, Npoint=1000, npp=10,
+#                        nz_refine=[1],
+#                        Npoint_refine=[0.25],
+#                        npp_refine=[0.5],
+#                        max_iter=15, atol=1, initial_stress=initial_stress)
         a = EpusProfile(epus_object, H=10, zw=20, q0=10,
-                        nz=30, Npoint=1000, npp=50,
+                        nz=50, Npoint=1000, npp=10,
                         nz_refine=[0.2, 1],
                         Npoint_refine=[0.4, 1],
-                        npp_refine=[0.2, 1]*2,
-                        max_iter=15, atol=1, initial_stress=initial_stress)
+                        npp_refine=[0.2, 1],
+                        max_iter=15, atol=0.1, initial_stress=initial_stress, )
 
 
         a.calc()
         fpath = "C:\\Users\\Rohan Walker\\Documents\\temp\\profile.csv"
-        fpath = "C:\\Users\\rohanw\\Documents\\temp\\profile.csv"
-        print(repr(a.profile.z))
-        print(repr(a.profile.st))
+#        fpath = "C:\\Users\\rohanw\\Documents\\temp\\profile.csv"
+#        print(repr(a.profile.z))
+#        print(repr(a.profile.st))
         elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
         a.compression_indexes(dsig=20, dpsi=20)
         a.save_profile_to_file(fpath=fpath)
-        print(a.niter)        
+        print(a.niter)
         elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
-        
 
-        fig=a.plot_profile()        
+
+        fig=a.plot_profile()
         save_figure(fig, os.path.join(os.path.dirname(fpath), 'myfig'))
 #        fig.tight_layout()
 
