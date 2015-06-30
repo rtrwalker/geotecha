@@ -4,6 +4,14 @@ import os
 import matplotlib
 from matplotlib import pyplot as plt
 
+try:
+    import geotecha.constitutive_models.epus_ext as epus_ext
+    # remeber that all fortran variables and routines will be lower case
+    # regardless of what case they are in the source code.
+    _SUCCESSFUL_FORTRAN_IMPORT = True
+except ImportError:
+    print("Failed to import epus_ext; EPUS will use slow scalar version instead.")
+    _SUCCESSFUL_FORTRAN_IMPORT = False
 
 
 import math
@@ -118,13 +126,6 @@ class EPUS(object):
 
     """
 
-    #class variable
-    _successful_fortran_import = True
-    # After EPUS code, check is done to see if epus_ext fortran extension
-    # module imports correctly.  If not _successful_fortran_import will
-    # be set to False and slow scalar version with python loops will be
-    # used.
-
     def __init__(self,
                  SimpleSWCC,
                  stp,
@@ -191,17 +192,54 @@ class EPUS(object):
 
 
     def Wc(self, s):
+        """Collapsible water content function
 
+        Calls CurveFittingSWCC.Wc with self.Gs
+
+        Parameters
+        ----------
+        s : float
+            Suction.
+
+        Returns
+        -------
+        out : float
+            water content Wc
+
+        See also
+        --------
+        CurveFittingSWCC.Wc : actual function called.
+
+        """
         return self.SimpleSWCC.Wc(s, Gs=self.Gs)
 
 
     def DWc(self, s):
+        """Derivative of collapsible water content function
 
+        Calls CurveFittingSWCC.DWc with self.Gs
+
+        Parameters
+        ----------
+        s : float
+            Suction.
+
+        Returns
+        -------
+        out : float
+            Derivative of water content Wc w.r.t. suction
+
+        See also
+        --------
+        CurveFittingSWCC.DWc : actual function called.
+
+        """
         return self.SimpleSWCC.DWc(s, Gs=self.Gs)
 
 
     def DryPoreSize(self):
-        """
+        """Set PoresizeDistribution self.f to slurry state
+
 
         Examples
         --------
@@ -418,8 +456,25 @@ class EPUS(object):
 
 
     def ChangeWetSuction(self, MaxSumStress, Airentryvalue, Waterentryvalue):
-        """' = suction(0)/suction(p)"""
+        """
 
+        ' = suction(0)/suction(p)
+
+        Parameters
+        ----------
+        MaxSumStress : float
+            Not sure.
+        Airentryvalue : float
+            Not sure.
+        Waterentryvalue : float
+            Not sure.
+
+        Returns
+        -------
+        out : float
+            not sure
+
+        """
 
         SimpleSWCC = self.SimpleSWCC
 
@@ -914,24 +969,12 @@ class EPUS(object):
         if self.implementation == 'scalar':
             self._Calresults_scalar()
         else:
-            if self._successful_fortran_import:
+            if _SUCCESSFUL_FORTRAN_IMPORT:
                 self._Calresults_fortran()
             else:
                 self._Calresults_scalar()
-#            import geotecha.constitutive_models.epus_ext as epus_ext
-#            try:
-#                import geotecha.constitutive_models.epus_ext as epus_ext
-#            except ImportError:
-#                self._Calresults_scalar()
-#                return
 
 
-try:
-    import geotecha.constitutive_models.epus_ext as epus_ext
-
-except ImportError:
-    print("Failed to import epus_ext; EPUS will use slow scalar version instead.")
-    EPUS._successful_fortran_import = False
 
 
 class PoresizeDistribution(object):
@@ -1475,20 +1518,6 @@ class EpusProfile(object):
 
 
 
-
-
-
-    def _update_uw(self):
-        """Update the pore pressure profile
-
-        z-zw*gamw
-        """
-        pass
-
-#    def _check_convergence(oldstress, newstress):
-#        """Check if new stress = old stress"""
-#        return
-
     def _refine(self):
         """Refine numerical parameters"""
         pass
@@ -1689,24 +1718,16 @@ class EpusProfile(object):
 
 
     def save_profile_to_file(self, fpath):
+        """Save profile data to a csv file
 
+        Parameters
+        ----------
+        fpath : str
+            path of file to save to
 
-#            fname = "EPUS_test_data_case01.csv" #needs to be in same directory as file
-#
-#    #    fpath = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-#    #                          fname)
-#        #inspect approach at http://stackoverflow.com/a/18489147/2530083
-#        mname = os.path.abspath(os.path.dirname(inspect.getsourcefile(lambda:0)))
-#        fpath = os.path.join(mname,
-#                              fname)
-#
-#        data = np.loadtxt(fpath, skiprows=4, dtype=float, delimiter=',', unpack=True)
-#        expect = dict()
-#        names=['ss', 'st', 'e', 'w', 'Sr', 'vw']
-#        for i, v in enumerate(names):
-#            expect[v] = data[i]
+        """
 
-        #make X
+        #make X, i.e. put dataresults in one big array
         x = np.zeros((self.profile.npts, len(self.profile._attr)))
 
         for i, v in enumerate(self.profile._attr):
@@ -1750,10 +1771,8 @@ class EpusProfile(object):
 
         profile_backup = deepcopy(self.profile)
 
-#        self._dpsi_profile = deepcopy(self.profile)
 
         #dsig
-
         for i in range(self.profile.npts):
             stp=[]
             ss = self.profile.ss[i]
@@ -1918,7 +1937,7 @@ if __name__ =="__main__":
 #                        npp_refine=[0.5],
 #                        max_iter=15, atol=1, initial_stress=initial_stress)
         a = EpusProfile(epus_object, H=10, zw=20, q0=10,
-                        nz=50, Npoint=1000, npp=10,
+                        nz=20, Npoint=500, npp=10,
                         nz_refine=[0.2, 1],
                         Npoint_refine=[0.4, 1],
                         npp_refine=[0.2, 1],

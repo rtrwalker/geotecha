@@ -1,11 +1,43 @@
 ! -*- f90 -*-
+!Elasto-Plastic for Unsaturated Soils, adapted from VB code in
+!Phd thesis of Pham (2005)
+!
+!The code is largely the same as that of Pham (2005).  However, some changes
+!were neccesary due to f2py inability to use derived types.  Hence,
+!rather than say 'ss' being an attribute of a 'DataResult' type, (i.e.
+!datapoint%ss) it is merely defined as 'ss' as a public variable in the
+!module name space.  Som minor name changes were needed to prevent
+!name conflict.
+!
+!Comment like "!'A-80" refer to pages in Appendix A of Pham (2005).
+!Basically the code loosely follows the Pham form.
+!
+!Remember if using this through python f2py that all variables and
+!function names are LOWER CASE!
+!
+!For how to use see the 'main' program at the end of the file.
+!
+! compile to an exe with: gfortran epus_ext.f95 -o epus.exe
+!References
+!----------
+!Pham, H. Q., and Fredlund, D. G. (2011).
+!       'Volume-mass unsaturated soil constitutive model for drying-wetting
+!       under isotropic loading-unloading conditions. Canadian Geotechnical
+!       Journal, 48(2), 280-313.
+!Pham, H. Q. (2005). 'A volume-mass constitutive model for
+!       unsaturated soils'. PhD Thesis, University of Saskatchewan,
+!       Saskatoon, Saskatchewan, Canada.
+
+
       MODULE types
+      ! 'types' module defines double precision
         IMPLICIT NONE
         INTEGER, PARAMETER :: DP = KIND(0.0D0)
 
       END MODULE
 
       MODULE parameters
+      ! 'parameters' module defines some double precision constants
         USE types
         IMPLICIT NONE
         REAL(KIND=DP), PARAMETER :: zero = 0.0_DP
@@ -17,20 +49,23 @@
       END MODULE parameters
 
       MODULE epus
+      ! 'epus' module implements Pham(2005) Elasto-Plastic for Unsaturated Soils
         USE types
         USE parameters
         IMPLICIT NONE
 
 !         TYPE CurveFittingSWCC
-          REAL(DP) :: wsat
-          REAL(DP) :: a
-          REAL(DP) :: b
-          REAL(DP) :: wr
-          REAL(DP) :: sl
+          ! Soil water characteristic curve
+          REAL(DP) :: wsat ! Gravimetric water condent at 100% saturation.
+          REAL(DP) :: a ! Curve fitting parameter.
+          REAL(DP) :: b ! Curve fitting parameter.
+          REAL(DP) :: wr ! Residual gravimetric water content.
+          REAL(DP) :: sl ! Initial slope of SWCC.
 !         END TYPE
-        
-        
+
+
 !         TYPE PoresizeDistribution  ! Pore size distribution curve
+
           INTEGER :: Npoint         ! Number of data points along the pore size distribution curve
           REAL(DP), ALLOCATABLE, DIMENSION(:) :: AEV ! Value of Air Entry Value that the function F represents
           REAL(DP), ALLOCATABLE, DIMENSION(:) :: WEV ! Value of Water Entry Value that the function F represents
@@ -46,27 +81,27 @@
           LOGICAL, ALLOCATABLE, DIMENSION(:) :: Airentrapped ! If experienced dried state = true, if did not = false
 !         END TYPE
 
-        
+
 
 !         TYPE StressPath                  !Describe all stress paths
-          INTEGER :: stpn
-          INTEGER :: nsteps
+          INTEGER :: stpn ! counter
+          INTEGER :: nsteps ! number of stress path steps
           LOGICAL, ALLOCATABLE, DIMENSION(:) :: ist ! If change in stress...ist=1 else ist=0
-          REAL(DP), ALLOCATABLE, DIMENSION(:) :: vl
-          INTEGER, ALLOCATABLE, DIMENSION(:) :: npp
+          REAL(DP), ALLOCATABLE, DIMENSION(:) :: vl ! value of suction or stress
+          INTEGER, ALLOCATABLE, DIMENSION(:) :: npp ! Number of points to subdivide stress path step into.
           INTEGER, ALLOCATABLE, DIMENSION(:) :: startpoint ! Describe starting for a stress path
           INTEGER, ALLOCATABLE, DIMENSION(:) :: endpoint ! Describe ending point for a stress path
 !         END TYPE
 
 !         TYPE DataResults
-          INTEGER :: datapointn
-          INTEGER :: npts
-          REAL(DP), ALLOCATABLE, DIMENSION(:) :: ss
-          REAL(DP), ALLOCATABLE, DIMENSION(:) :: st
-          REAL(DP), ALLOCATABLE, DIMENSION(:) :: ee
-          REAL(DP), ALLOCATABLE, DIMENSION(:) :: w
-          REAL(DP), ALLOCATABLE, DIMENSION(:) :: Sr
-          REAL(DP), ALLOCATABLE, DIMENSION(:) :: vw
+          INTEGER :: datapointn ! counter
+          INTEGER :: npts ! totoal number of data points
+          REAL(DP), ALLOCATABLE, DIMENSION(:) :: ss ! suction
+          REAL(DP), ALLOCATABLE, DIMENSION(:) :: st ! net normal stress
+          REAL(DP), ALLOCATABLE, DIMENSION(:) :: ee ! void ratio
+          REAL(DP), ALLOCATABLE, DIMENSION(:) :: w ! gravimetric water content
+          REAL(DP), ALLOCATABLE, DIMENSION(:) :: Sr ! degree of saturation
+          REAL(DP), ALLOCATABLE, DIMENSION(:) :: vw ! volumnetric water content
 !         END TYPE
 
 
@@ -78,25 +113,25 @@
         CHARACTER(LEN=100) :: Datafilename
         CHARACTER(LEN=100) :: soilname
         CHARACTER(LEN=100) :: username
-        REAL(DP) :: Ccs
-        REAL(DP) :: Css
-        REAL(DP) :: Ccd
-        REAL(DP) :: Gs
-        REAL(DP) :: MinSuction
-        REAL(DP) :: MaxSuction
-        REAL(DP) :: Interval
+        REAL(DP) :: Ccs ! semi-log slope of saturated compression curve
+        REAL(DP) :: Css ! semi-log slope of saturated recompression curve
+        REAL(DP) :: Ccd ! semi-log slope of dry compression curve
+        REAL(DP) :: Gs ! Specific gravity of solids
+        REAL(DP) :: MinSuction ! log10 of minimum suction, usually -3.
+        REAL(DP) :: MaxSuction ! log10 of maximum suction, usually 6.
+        REAL(DP) :: Interval ! interval lenght between pore sizes
         REAL(DP) :: Suction ! Current stress
         REAL(DP) :: Stress ! Current soil suction
 !         INTEGER :: LoadCond ! = 0 for isotropic; = 1 for Ko
-        REAL(DP) :: LogDS
+        REAL(DP) :: LogDS ! Distance ratio between boundary drying and boundary drying curve. In log cycles.
 !'A-80
-        REAL(DP) :: LogRS
+        REAL(DP) :: LogRS ! Slope ratio between boundary drying and boundary drying curve. In log cycles
 !         TYPE(DataResults) :: datapoint
-        INTEGER :: ssvar
-        INTEGER :: prvar
-        INTEGER :: plstp
-        REAL(DP) :: beta
-        REAL(DP) :: K0
+!        INTEGER :: ssvar
+!        INTEGER :: prvar
+!        INTEGER :: plstp
+        REAL(DP) :: beta ! air entrapped in a collapsible pore is proportional to the volume of the pore and can be denoted by an entrapped air parameter beta.
+        REAL(DP) :: K0 ! Lateral earth pressure coefficient. Use 1 for isotropic
         REAL(DP), ALLOCATABLE, DIMENSION(:) :: Srdry ! Drying degree of saturation SWCC (zero net mean stress)
         REAL(DP), ALLOCATABLE, DIMENSION(:) :: Srwet !' Wetting degree of saturation SWCC  (zero net mean stress)
         INTEGER :: NumSr ! Number points divided along the wetting and drying Sr
@@ -107,12 +142,13 @@
         REAL(DP) :: Pore_shape ! For describing the change in AEV/WEV of the soil
         LOGICAL :: errocc
 
-        LOGICAL :: DEBUG
+        LOGICAL :: DEBUG ! for possible dubugging
 
 
 
         CONTAINS
           SUBROUTINE initialize_stp ()!(nsteps_)
+          ! Allocate any variables associated with the stresspath
 !             USE types
 !             USE parameters
             IMPLICIT NONE
@@ -129,28 +165,30 @@
 
           END SUBROUTINE initialize_stp
 
-          SUBROUTINE initialize_f()!(nPoint_)
+          SUBROUTINE initialize_f()
+          ! Allocate any variables associated with the pore size distrbution
 !             USE types
 !             USE parameters
             IMPLICIT NONE
 !             INTEGER, intent(in) :: Npoint_
 
 !             Npoint = Npoint_
-            ALLOCATE(AEV(1:Npoint))
-            ALLOCATE(WEV(1:Npoint))
-            ALLOCATE(Ccp(1:Npoint))
-            ALLOCATE(Csp(1:Npoint))
-            ALLOCATE(Ccdp(1:Npoint))
-            ALLOCATE(RV(1:Npoint))
-            ALLOCATE(YieldSt(1:Npoint))
-            ALLOCATE(Filled(1:Npoint))
-            ALLOCATE(RVC(1:Npoint))
-            ALLOCATE(AEVC(1:Npoint))
-            ALLOCATE(WEVC(1:Npoint))
-            ALLOCATE(Airentrapped(1:Npoint))
+            ALLOCATE(AEV(1:Npoint)) ! Value of Air Entry Value that the function F represents.
+            ALLOCATE(WEV(1:Npoint)) ! Value of Water Entry Value that the function F represents.
+            ALLOCATE(Ccp(1:Npoint)) ! Virgin compression index of the group of pore at saturated.
+            ALLOCATE(Csp(1:Npoint)) ! Unloading-Reloading index of the group of pore at saturated.
+            ALLOCATE(Ccdp(1:Npoint)) ! Virgin compression index of the group of pore at completely dry condition (10^6 kPa).
+            ALLOCATE(RV(1:Npoint)) ! Ratio of Volume of the group of pore/ volume of solid phase.
+            ALLOCATE(YieldSt(1:Npoint)) ! Equivalent maximum stress acted on the pores at water-filled state.
+            ALLOCATE(Filled(1:Npoint)) ! State of the pore - either filled or empty.
+            ALLOCATE(RVC(1:Npoint)) ! Actual ratio of volume of the group of pore/ volume of solid phase.
+            ALLOCATE(AEVC(1:Npoint)) ! Actual Air Entry Value of the group of pores [i] which has AEV at dried slurry = AEV[i].
+            ALLOCATE(WEVC(1:Npoint)) ! Actual water entry value.
+            ALLOCATE(Airentrapped(1:Npoint)) ! If experienced dried state = True, if did not = False.
           END SUBROUTINE initialize_f
 
           SUBROUTINE initialize_SrDry_SrWet
+          ! Allocate any variables associated with wet and dry saturation curves
             USE types
             USE parameters
             IMPLICIT NONE
@@ -162,6 +200,7 @@
           END SUBROUTINE initialize_SrDry_SrWet
 
          SUBROUTINE initialize_datapoint()!(npts_)
+         ! Allocate any variables associated with the results
 !             USE types
 !             USE parameters
             IMPLICIT NONE
@@ -169,7 +208,7 @@
 !             INTEGER, intent(in) :: npts_
 
 !             npts = npts_
-            npts = 0            
+            npts = 0
             DO i = 1, nsteps
               npts = npts + npp(i)
             END DO
@@ -182,86 +221,7 @@
 
           END SUBROUTINE initialize_datapoint
 
-!           SUBROUTINE Initiate ! Initiate values for all variables
-!             USE types
-!             USE parameters
-!             IMPLICIT NONE
 
-!             INTEGER :: i
-!             INTEGER :: npts
-!             soilname = "Artificial silt"
-!             username = "Hung Pham"
-!             wsat = 0.262_DP
-!             a = 3.1 * 10.0_DP ** 6.0_DP
-!             b = 3.377_DP
-!             wr = 0.128_DP
-!             sl = 0.115_DP
-!             LogDS = 0.6_DP
-!             LogRS = 2.0_DP
-!             Ccs = sl
-!             Css = 0.019_DP
-!             Ccd = 0.0_DP
-!             Assumption = 1
-!             Gs = 2.7_DP
-!             K0 = 1.0_DP
-!             beta = 0.1_DP
-!             pm = 1.0_DP
-!             Pore_shape = 1.0_DP
-!             !Describe first three stress paths Load - unload - drying
-!             LoadCond = 0 ! iso
-!             !nsteps = 11
-!             CALL initialize_stp (1)
-!             !' 1. Load to 20kPa
-!             ist(1) = .True.
-!             npp(1) = 100
-!             vl(1) = 20.0_DP
-!   !           !' 2. Unload to 1 kPa
-!   !           ist(2) = .True.
-!   !           npp(2) = 100
-!   !           vl(2) = 1.0
-!   !           !' 3. Dry to 10**6 kPa
-!   !           ist(3) = .False.
-!   !           npp(3) = 100
-!   !           vl(3) = 1000000.0
-!   !           !' 4. Wetting to 30 kPa
-!   !           ist(4) = .false.
-!   !           npp(4) = 100
-!   !           vl(4) = 30.0
-!   !           !' 5. Load to 1500 kPa
-!   !           ist(5) = .True.
-!   !           npp(5) = 90
-!   !           vl(5) = 1500.0
-!   !
-!   !           !' Set variables and soil properties for plotting graphs
-!   !           ssvar = 0
-!   !           prvar = 0
-!   !           plstp = 0
-!           !'A-81
-!           ! ' Set initiating graphs
-!           !  AScaleX = True
-!           !  AScaleY = True
-!           !  MaxXaxis = 1000000
-!           !  MaxYaxis = 1
-!           !  MinXaxis = 0.1
-!           !  MinYaxis = 0
-
-!           NumSr=400
-!           CALL initialize_SrDry_SrWet
-!           CALL initialize_f(1000)
-
-!           npts = 0
-!           DO i = 1, nsteps
-!             npts = npts + npp(i)
-!           END DO
-!           CALL initialize_datapoint(npts)
-
-
-!           MaxSuction = 6.0_DP                 !(Log Scale or 1000000)
-!           MinSuction = -3.0_DP                !(Log scale or 0.001)
-!   !         Npoint = 1000                ' Number of points along the pore size distribution curve
-
-
-!           END SUBROUTINE Initiate
 
           FUNCTION CVStress() !This function is used to convert (K0 stress or Isotropic stress) to Isotropic stress
             USE types
@@ -831,7 +791,7 @@
           CALL initialize_SrDry_SrWet()
           CALL initialize_f()
           CALL initialize_stp()
-          
+
           errocc = .False.
           If (Assumption .EQ. 1) Then
             CALL DegreeofsaturationSWCC
@@ -937,13 +897,12 @@
 
 
         SUBROUTINE save_to_file()
-!           USE types
-!           USE parameters
+        ! saves ss, st, ee, w, Sr, vw to a file called "epus_results.csv"
           IMPLICIT NONE
           INTEGER, parameter :: out_unit=20
           INTEGER :: i, j, k
 
-          open (unit=out_unit,file="results.csv",action="write",status="replace")
+          open (unit=out_unit,file="epus_results.csv",action="write",status="replace")
           write(out_unit, *) "st,ss,e,w,Sr,vw"
 
           DO i = 1, npts
@@ -960,50 +919,30 @@
           close (out_unit)
 
         END SUBROUTINE
-        
-!         SUBROUTINE initialize(NumSr_, nsteps_, Npoint_)
-
-!           USE types
-!           USE parameters
-!           IMPLICIT NONE
-!           
-!           INTEGER :: NumSr_, nsteps_, Npoint_
-!           
-!           CALL initialize_stp(nsteps_)          
-!           CALL initialize_SrDry_SrWet
-!           CALL initialize_f(Npoint_)
-!           
-!           CALL initialize_datapoint(npts_)
-
-
-!           CALL print_module_var()          
-!           CALL Calresults()
-!           CALL save_to_file()
 
 
 
-!         END SUBROUTINE initialize  
-
-
-        
         SUBROUTINE dealloc()
+        !Deallocate epus arrays.  This is useful if using epus more than
+        ! once in the same program run.  run dealloc between the each use
+        ! otherwise you will get an 'array already allocated error'.
           IF (ALLOCATED (ss)) DEALLOCATE (ss)
           IF (ALLOCATED (st)) DEALLOCATE (st)
           IF (ALLOCATED (ee)) DEALLOCATE (ee)
           IF (ALLOCATED (w)) DEALLOCATE (w)
           IF (ALLOCATED (Sr)) DEALLOCATE (Sr)
           IF (ALLOCATED (vw)) DEALLOCATE (vw)
-          
+
           IF (ALLOCATED (ist)) DEALLOCATE (ist)
           IF (ALLOCATED (vl)) DEALLOCATE (vl)
           IF (ALLOCATED (npp)) DEALLOCATE (npp)
-          
+
           IF (ALLOCATED (startpoint)) DEALLOCATE (startpoint)
           IF (ALLOCATED (endpoint)) DEALLOCATE (endpoint)
-          
+
           IF (ALLOCATED (SrDry)) DEALLOCATE (SrDry)
           IF (ALLOCATED (SrWet)) DEALLOCATE (SrWet)
-          
+
           IF (ALLOCATED (AEV)) DEALLOCATE (AEV)
           IF (ALLOCATED (WEV)) DEALLOCATE (WEV)
           IF (ALLOCATED (Ccp)) DEALLOCATE (Ccp)
@@ -1016,8 +955,8 @@
           IF (ALLOCATED (AEVC)) DEALLOCATE (AEVC)
           IF (ALLOCATED (WEVC)) DEALLOCATE (WEVC)
           IF (ALLOCATED (Airentrapped)) DEALLOCATE (Airentrapped)
-          
-                          
+
+
         END SUBROUTINE
 
 
@@ -1025,8 +964,7 @@
 
 
         SUBROUTINE print_module_var()
-!           USE types
-!           USE parameters
+        ! prints epus module data to stdout (usually the screen)
           IMPLICIT NONE
 
           PRINT *, "*******Module variables******"
@@ -1065,3 +1003,60 @@
 
 
 
+
+      PROGRAM main
+      !This is an example of how to use the epus module
+      ! steps for use are basically:
+      ! 1. Assign all variables (see code for which variables are needed)
+      ! 2. Allocate and fill the stress path arrays ist, vl, npp
+      ! 3. Run subroutine Calresults to calculate.
+      ! 4. Results for ss, st, w, ee, Sr, vw are now avalable.  You can
+      !    use the startpoint and endpoint arrays to break up the
+      !    results into individual stress path steps.
+      ! 5. if needed run subroutine dealloc. to deallocate all the arrays.
+
+        USE types
+        USE parameters
+        USE epus
+        IMPLICIT NONE
+
+        NumSr=400
+        Npoint=1000
+        nsteps=5
+        ALLOCATE(ist(1:nsteps))
+        ALLOCATE(vl(1:nsteps))
+        ALLOCATE(npp(1:nsteps))
+        ist(1:5) = (/.true., .true., .false., .false., .false./)
+        npp(1:5) = 100
+        vl(1:5) = (/ 20._DP, 1._DP, 1.E6_DP, 30._DP, 1500._DP/)
+
+
+        wsat=0.262_DP
+        a=3.1E6_DP
+        b=3.377_DP
+        wr=0.128_DP
+        sl=0.115_DP
+        logDS=0.6_DP
+        logRS=2._DP
+        Ccs=0.115_DP
+        Css=0.019_DP
+        Ccd=0._DP
+        Gs=2.7_DP
+        Assumption=1
+        beta=0.1_DP
+        pm=1._DP
+        Pore_shape=1._DP
+        K0=1._DP
+        soilname="unknown"
+        username="unknown"
+        Npoint=1000!400
+        NumSr=400
+        MaxSuction=6._DP
+        MinSuction=-3._DP
+
+        CALL print_module_var()
+        CALL Calresults()
+        CALL save_to_file()
+
+
+      END PROGRAM
