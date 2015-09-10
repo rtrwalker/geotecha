@@ -29,6 +29,8 @@ except ImportError:
     print("Failed to import epus_ext; EPUS will use slow scalar version instead.")
     _SUCCESSFUL_FORTRAN_IMPORT = False
 
+from geotecha.constitutive_models import void_ratio_permeability
+from geotecha.constitutive_models import swcc
 
 import math
 log10 = math.log10
@@ -1058,8 +1060,16 @@ class PoresizeDistribution(object):
 
 
 class CurveFittingSWCC(object):
-    """Curve fitting soil water characteristic curve
+    """Curve fitting soil water characteristic curve for collapsible pores.
+    
+    i.e. wc(suction)
 
+    Note that that when suction is less than 1, results are not meaningful.
+    At low suction values we expect wc approx equal to wsat-wr, but the 
+    sl * log10(suction) /Gs term gives large negative numbers for suctions 
+    less than 1, whereas at suction =1 it dissapears as expected.
+    
+    
     Parameters
     ----------
     wsat : float
@@ -1071,7 +1081,8 @@ class CurveFittingSWCC(object):
     wr : float
         Residual gravimetric water content.
     sl : float
-        Initial slope of SWCC.
+        Initial slope of SWCC*Gs. This is actually the saturated virgin 
+        compressibility index Cc.
 
     Attributes
     ----------
@@ -1686,13 +1697,14 @@ class EpusProfile(object):
                      m1w="$m_{1}^w$",
                      m2w="$m_{2}^w$",
                      m1a="$m_{1}^a$",
-                     m2a="$m_{2}^a$")
+                     m2a="$m_{2}^a$",
+                     kw="$k_w$")
 
 
         axlims = dict(Sr=dict(left=0, right=1),
                       )
 
-        not_plot = ['m1s', 'm2s', 'm1w', 'm2w', 'm1a', 'm2a']
+        not_plot = ['m1s', 'm2s', 'm1w', 'm2w', 'm1a', 'm2a', 'kw']
         attr = self.profile._attr[:]
         excl = ['z']
         for v in excl:
@@ -1909,9 +1921,87 @@ class EpusProfile(object):
         self.profile.m2a[:] = self.profile.m2s-self.profile.m2w
 
 
+    def water_permeability(self, e_ksat=None, npp_swcc=500):
+        """Calculate the water permeability
+        
+        First saturated permeability at depth is determined based on e_ksat.
+        Then unsaturated water peremability is determined by a) working 
+        out a volumetric water content vs suction curve (i.e. epus stress
+        path of load to stress and then dry to get a SWCC) and b) use _[1] to 
+        numerically integrate and determine relative permeability at the 
+        relevatnt profile suction value.
+        
+        Parameters
+        ----------
+        e_ksat : PermeabilityVoidRatioRelationship object
+            PermeabilityVoidRatioRelationship object defining dependence of
+            saturated permebility on void ratio.  
+            Default e_ksat=ConstantPermeabilityModel(ka=1) i.e. constant 
+            saturated permeability with value one.
+        npp_swcc : int, optional
+            number of sterss path intervals to use when determining the 
+            volumetric water content vs suction curve that will be used to 
+            calculate the relative permeability. Defulat npp_swcc=500
+        
+                    
+        See also
+        --------
+        geotecha.constitutive_models.void_ratio_permeability : void ratio
+            saturated permeability relationship.
+        
+        References
+        ----------
+        .. [1] Fredlund, D.G., Anqing Xing, and Shangyan Huang. 
+               "Predicting the Permeability Function for Unsaturated 
+               Soils Using the Soil-Water Characteristic Curve. 
+               Canadian Geotechnical Journal 31, no. 4 (1994): 533-46. 
+               doi:10.1139/t94-062.
+        
+        """
+        if e_ksat is None:
+            e_ksat = void_ratio_permeability.ConstantPermeabilityModel(ka=1.0)
+                
+        # saturated water permeability
+        ksat = e_ksat.k_from_e(self.profile.e)
 
+        # water permeability relative to saturated
+        kr = np.zeros_like(ksat)
+        for i in range(self.profile.npts):
+            stp=[]
+            ss = self.profile.ss[i]
+            st = max(self.profile.st[i], (10 ** self.epus_object.MinSuction) / 1000)
+            if ss <= 10**self.epus_object.MinSuction:
+                #soil is saturated
+                kr[i] = 1.0                
+            else:
+                #need stress increase and then drying stress path
+                stp.extend(
+                     [dict(ist=True, npp=self._npp, vl=st, name="1. Stress increase"),
+                      dict(ist=False, npp=npp_swcc, vl=1e6, name="2. Suction increase")])
 
-
+                stp = StressPath(stp)
+                self._epus_dict["Npoint"]= self._Npoint
+                self._epus_dict["stp"] = stp
+        
+                a = EPUS(**self._epus_dict)
+                a.Calresults()
+                        
+                #have the vw vs psi cureve (SWCC), now calc krel                        
+                x = a.stp.datapoints[-1].ss 
+                y = a.stp.datapoints[-1].vw 
+                
+                kr[i] = swcc.krel_from_discrete_swcc(ss, x, y)                    
+        
+        #add "kw" to the profile                               
+        for v in ['kw']:
+            if v not in self.profile._attr:
+                self.profile._attr.append(v)
+            setattr(self.profile, v, np.zeros(self.profile.npts, dtype=float))                                                
+            
+        self.profile.kw[:] = ksat * kr
+                                                            
+                                                
+                                                
 if __name__ =="__main__":
     import nose
 #    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
@@ -1924,7 +2014,8 @@ if __name__ =="__main__":
                                 a = 3.1 * 10 ** 6,
                                 b = 3.377,
                                 wr = 0.128,
-                                sl = 0.115)
+                                sl = 0.115, # note that sl is Cc * Gs see Equation 3.74 in Pham(2005 PhD)
+                                )
 
 
         stp = StressPath([dict(ist=True, npp=5, vl=20, name="1. Load to 20kPa"),])
@@ -1952,7 +2043,7 @@ if __name__ =="__main__":
 #                        Npoint_refine=[0.25],
 #                        npp_refine=[0.5],
 #                        max_iter=15, atol=1, initial_stress=initial_stress)
-        a = EpusProfile(epus_object, H=10, zw=20, q0=10,
+        a = EpusProfile(epus_object, H=10, zw=5, q0=10,
                         nz=20, Npoint=500, npp=10,
                         nz_refine=[0.2, 1],
                         Npoint_refine=[0.4, 1],
@@ -1961,12 +2052,13 @@ if __name__ =="__main__":
 
 
         a.calc()
-        fpath = "C:\\Users\\Rohan Walker\\Documents\\temp\\profile.csv"
-#        fpath = "C:\\Users\\rohanw\\Documents\\temp\\profile.csv"
+#           fpath = "C:\\Users\\Rohan Walker\\Documents\\temp\\profile.csv"
+        fpath = "C:\\Users\\rohanw\\Documents\\temp\\profile.csv"
 #        print(repr(a.profile.z))
 #        print(repr(a.profile.st))
         elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
         a.compression_indexes(dsig=20, dpsi=20)
+        a.water_permeability()#e_ksat = void_ratio_permeability.ConstantPermeabilityModel
         a.save_profile_to_file(fpath=fpath)
         print(a.niter)
         elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
