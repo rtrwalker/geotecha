@@ -304,10 +304,10 @@ class SWCC_FredlundAndXing1994(SWCC):
     
 
     def k_from_psi(self, psi, **kwargs):
-        """Relative permeability from suction
+        """Relative permeability from suction    
         
-        Paramters
-        ---------
+        Parameters
+        ---------_
         psi : float
             Soil suction. Can be a 1d array.
         aev : float, optional
@@ -386,10 +386,11 @@ class SWCC_FredlundAndXing1994(SWCC):
         ey2 = np.exp(y2)
         
         f2 = (self.w_from_psi(ey2) - self.ws) * self.dw_dpsi(ey2) / ey2
-        
+#        ws_numerical = self.w_from_psi(aev)
+#        f2 = (self.w_from_psi(ey2) - ws_numerical) * self.dw_dpsi(ey2) / ey2
         denom = np.sum(f2)
         
-        k = (numer*dy1) / (denom*dy2)
+        k = (numer * dy1) / (denom * dy2)
         if k.size==1:
             return k[0]
         else:
@@ -399,6 +400,11 @@ class SWCC_FredlundAndXing1994(SWCC):
 
 class SWCC_PhamAndFredlund2008(SWCC):
     """Soil water characteristic curve from Fredlund and Xing 2008
+
+    Be careful interpreting results when suction is less than 1.
+    At low suction values we expect wc approx equal to wsat-wr, but the 
+    s1 * log10(psi) term gives large negative numbers for psi<<1, 
+    whereas at psi=1 the term dissapears as expected.    
     
     Parameters
     ----------    
@@ -410,7 +416,7 @@ class SWCC_PhamAndFredlund2008(SWCC):
     wr : float
         Residual gravimetric water content.
     s1 : float
-        Initial slope of SWCC.
+        Initial slope of SWCC (i.e. Cc/Gs)
     ws : float
         Saturated water content. Default ws=1.0 i.e. basically a degree of 
         saturation.
@@ -674,12 +680,15 @@ class SWCC_PhamAndFredlund2008(SWCC):
     def k_from_psi(self, psi, **kwargs):
         """Relative permeability from suction
         
+        If k_from_psi returns a number greater than zero then try reducing 
+        aev.
+        
         Paramters
         ---------
         psi : float
             Soil suction. Can be a 1d array.
         aev : float, optional
-            Air entry soil suction. Default aev=1.0
+            Air entry soil suction. Default aev=0.001
         npts : int, optional
             Numper of intervals to break integral into. Default npts=500.
             
@@ -717,7 +726,7 @@ class SWCC_PhamAndFredlund2008(SWCC):
         mid point of each inteval, then summing the areas of each section.
         
         
-        If you enter a single elment array you will get a scalar returned.
+        If you enter a single element array you will get a scalar returned.
         
         
         References
@@ -731,7 +740,7 @@ class SWCC_PhamAndFredlund2008(SWCC):
            
         """
         
-        aev = kwargs.get('aev', 1.0)
+        aev = kwargs.get('aev', 0.001)
         npts = kwargs.get('npts', 500)
         psi = np.atleast_1d(psi)
 
@@ -753,8 +762,9 @@ class SWCC_PhamAndFredlund2008(SWCC):
         y2 = a2 + dy2*(np.arange(npts) + 0.5)                    
         ey2 = np.exp(y2)
         
-        f2 = (self.w_from_psi(ey2) - self.ws) * self.dw_dpsi(ey2) / ey2
-        
+#        f2 = (self.w_from_psi(ey2) - self.ws) * self.dw_dpsi(ey2) / ey2
+        ws_numerical = self.w_from_psi(aev)
+        f2 = (self.w_from_psi(ey2) - ws_numerical) * self.dw_dpsi(ey2) / ey2
         denom = np.sum(f2)
         
         k = (numer*dy1) / (denom*dy2)
@@ -764,10 +774,100 @@ class SWCC_PhamAndFredlund2008(SWCC):
             return k
         return k
         
+
+
+def krel_from_discrete_swcc(psi, psi_swcc, vw_swcc):
+    """Relative permeability from integrating discrete soil water 
+    characteristic curve.
     
+    Parameters
+    ----------
+    psi: float
+        Suction values to calculate relative permeability at. Suction is 
+        positve.
+    psi_swcc : 1d array of float
+        Suction values defining soil water charteristic curve.
+    vw_swcc : 1d array of float
+        Volumetric water content corresponding to psi_swcc
+        
+        
+    Returns
+    -------
+    krel : 1d array of float
+        relative permeability values corresponding to psi.
+        
+    Notes
+    -----
+    This integrates the whole SWCC.  Initial slope of SWCC is non-zero then 
+    peremability reduction with suction will commence straight from first
+    value of psi_swcc.
+    
+    Uses _[1] method but does it assuming taht you already have all
+    the SWCC points (_[1] can calculate volumetric water content from suction).
+    Main differnce is that in _[1] vw and dvw/dpsi at the midpoint are 
+    calculated analytically, whereas here midpoint value is half the 
+    segment endpoint values, and slope is approx value at segmetn endpoint.
+    
+    Will return scalar if scalar or single elemtn array is input.
+    
+    If you get some sort of index error then probably your pis input is 
+    beyond your data range.
+    
+    Examples
+    --------
+    >>> b = SWCC_FredlundAndXing1994(a=2.77, n=11.2, m=0.45, psir=300)
+    >>> x = np.logspace(-3,6,500)
+    >>> y = b.w_from_psi(x)
+    >>> krel_from_discrete_swcc(4, x, y)
+    0.0550...
+    
+    
+    
+    References
+    ----------
+    .. [1] Fredlund, D.G., Anqing Xing, and Shangyan Huang. 
+           "Predicting the Permeability Function for Unsaturated 
+           Soils Using the Soil-Water Characteristic Curve. 
+           Canadian Geotechnical Journal 31, no. 4 (1994): 533-46. 
+           doi:10.1139/t94-062.
+    """
+    
+    
+    
+    
+    dlogx = np.log10(psi_swcc[1:]) - np.log10(psi_swcc[:-1]) #interval in log10-space    
+
+    xbar = psi_swcc[:-1]*np.power(10, 0.5*dlogx) # x value at midpoint    
+    ybar = 0.5 * (vw_swcc[:-1] + vw_swcc[1:]) # y value at interval
+    logslope = (vw_swcc[1:] - vw_swcc[:-1]) / dlogx #interval slope in log10-space
+    slopebar = logslope/np.log(10)/xbar #slope at interval midpoint in normal space
+
+    idx = np.searchsorted(psi_swcc, psi, side="right")-1  
+    # if index error then chances are
+    
+    #TODO: limit what values of idx, to be within range 
+    f1 = dlogx[:,None] * (ybar[:,None] - ybar[None,idx]) / xbar[:,None] * slopebar[:,None]
+    #note in f1 each row is an interval, each column is a psi value
+    
+    row, col = np.indices(f1.shape)
+
+    f1[row<idx] = 0.0 #ignore values before psi
+    
+    numer = np.sum(f1, axis=0)    
+
+    denom = np.sum(dlogx[:]*(ybar[:] - ybar[0])/xbar[:] * slopebar[:])
+
+    krel = numer / denom
+    
+    
+    if krel.size==1:
+        return krel[0]
+    else:
+        return krel
+            
 if __name__ == "__main__":
     import nose
-#    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
+    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
     
     if 0:
         a = SWCC_FredlundAndXing1994(a=3000, n=1.5, m=1, ws=60, correction=1)    
@@ -858,11 +958,11 @@ if __name__ == "__main__":
         print(a)
         print()
         print(b)
-    if 1:
+    if 0:
         SWCC_PhamAndFredlund2008._numerical_check_of_dw_dpsi()
         
     
-    if 1:
+    if 0:
         
         b = SWCC_PhamAndFredlund2008(a = 50000., 
                                      b = 2.,
@@ -911,4 +1011,30 @@ if __name__ == "__main__":
         
         plt.show()
         
-    
+    if 1:
+        b = SWCC_FredlundAndXing1994(a=2.77, n=11.2, m=0.45, psir=300)
+
+                        
+        x = np.logspace(-3,6, 500)
+        y = b.w_from_psi(x)
+        x2 = x[0:-1]*10**(0.5*(np.log10(x[1]) - np.log10(x[0])))
+#        print(x)
+#        print(x2)
+        k_obj = b.k_from_psi(x)
+
+        
+        np.logspace
+        krel = krel_from_discrete_swcc(x2[:-2], x, y)
+#        krel = krel_from_discrete_swcc(x[:-1], x, y)
+        
+        fig, ax = plt.subplots()
+        
+        ax.plot(x, k_obj, label="expected")
+        ax.plot(x2[:-2], krel, label="numerical", ls=".", marker='o')
+#        ax.plot(x[:-1], krel, label="numerical", ls=".", marker='o')
+        ax.set_xscale('log')
+        ax.set_xlabel('psi')
+        ax.set_ylabel('krel')
+        plt.show()
+        
+        
