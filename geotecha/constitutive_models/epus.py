@@ -1698,13 +1698,14 @@ class EpusProfile(object):
                      m2w="$m_{2}^w$",
                      m1a="$m_{1}^a$",
                      m2a="$m_{2}^a$",
-                     kw="$k_w$")
+                     kw="$k_w$",
+                     ka="$k_a$")
 
 
         axlims = dict(Sr=dict(left=0, right=1),
                       )
 
-        not_plot = ['m1s', 'm2s', 'm1w', 'm2w', 'm1a', 'm2a', 'kw']
+        not_plot = ['m1s', 'm2s', 'm1w', 'm2w', 'm1a', 'm2a', 'kw', 'ka']
         attr = self.profile._attr[:]
         excl = ['z']
         for v in excl:
@@ -1925,7 +1926,7 @@ class EpusProfile(object):
         """Calculate the water permeability
         
         First saturated permeability at depth is determined based on e_ksat.
-        Then unsaturated water peremability is determined by a) working 
+        Then unsaturated water permeability is determined by a) working 
         out a volumetric water content vs suction curve (i.e. epus stress
         path of load to stress and then dry to get a SWCC) and b) use _[1] to 
         numerically integrate and determine relative permeability at the 
@@ -1990,7 +1991,7 @@ class EpusProfile(object):
                 x = a.stp.datapoints[-1].ss 
                 y = a.stp.datapoints[-1].vw 
                 
-                kr[i] = swcc.krel_from_discrete_swcc(ss, x, y)                    
+                kr[i] = swcc.kwrel_from_discrete_swcc(ss, x, y)                    
         
         #add "kw" to the profile                               
         for v in ['kw']:
@@ -2000,13 +2001,65 @@ class EpusProfile(object):
             
         self.profile.kw[:] = ksat * kr
                                                             
-                                                
+    def air_permeability(self, e_ksat=None, qfit=0.5):
+        """Calculate the Air permeability based on saturation
+        
+        ka = kd * (1-Sr)**0.5*(1-Sr**(1/qfit))**(2*qfit)
+        
+        kd = fn(e)
+        
+        
+        Parameters
+        ----------
+        e_ksat : PermeabilityVoidRatioRelationship object
+            PermeabilityVoidRatioRelationship object defining dependence of
+            dry air permeability on void ratio.  
+            Default e_ksat=ConstantPermeabilityModel(ka=1) i.e. constant 
+            saturated permeability with value one.
+        qfit : float, optional
+            fitting parameter.  Generally between between 0 and 1. 
+            Default qfit=1
+        
+                    
+        See also
+        --------
+        geotecha.constitutive_models.void_ratio_permeability : void ratio
+            saturated permeability relationship.
+        
+        References
+        ----------
+        .. [1] Ba-Te, B., Limin Zhang, and Delwyn G. Fredlund. "A General 
+               Air-Phase Permeability Function for Airflow through Unsaturated 
+               Soils." In Proceedings of Geofrontiers 2005 Cngress, 
+               2961-85. Austin, Tx: ASCE, 2005. doi:10.1061/40787(166)29.
+               
+        """
+
+        if e_ksat is None:
+            e_ksat = void_ratio_permeability.ConstantPermeabilityModel(ka=1.0)
+                
+        # saturated water permeability
+        kd = e_ksat.k_from_e(self.profile.e)
+
+        # air permeability relative to saturated
+        kr = np.zeros_like(kd)
+        Sr = self.profile.Sr
+#        kr = (1 - Sr)**0.5*(1 - Sr**(1 / qfit))**(2 * qfit)
+        kr = swcc.karel_air_from_saturation(Sr, qfit=qfit)
+
+         #add "ka" to the profile                               
+        for v in ['ka']:
+            if v not in self.profile._attr:
+                self.profile._attr.append(v)
+            setattr(self.profile, v, np.zeros(self.profile.npts, dtype=float))                                                
+            
+        self.profile.ka[:] = kd * kr                                                            
                                                 
 if __name__ =="__main__":
     import nose
 #    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
     from geotecha.plotting.one_d import save_figure
-    if 1:
+    if 1: # this takes upwards of 
         import time
         from datetime  import timedelta
         start = time.time()
@@ -2059,6 +2112,7 @@ if __name__ =="__main__":
         elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
         a.compression_indexes(dsig=20, dpsi=20)
         a.water_permeability()#e_ksat = void_ratio_permeability.ConstantPermeabilityModel
+        a.air_permeability()
         a.save_profile_to_file(fpath=fpath)
         print(a.niter)
         elapsed = (time.time() - start); print(str(timedelta(seconds=elapsed)))
