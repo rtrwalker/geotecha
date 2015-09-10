@@ -776,7 +776,7 @@ class SWCC_PhamAndFredlund2008(SWCC):
         
 
 
-def krel_from_discrete_swcc(psi, psi_swcc, vw_swcc):
+def kwrel_from_discrete_swcc(psi, psi_swcc, vw_swcc):
     """Relative permeability from integrating discrete soil water 
     characteristic curve.
     
@@ -818,7 +818,7 @@ def krel_from_discrete_swcc(psi, psi_swcc, vw_swcc):
     >>> b = SWCC_FredlundAndXing1994(a=2.77, n=11.2, m=0.45, psir=300)
     >>> x = np.logspace(-3,6,500)
     >>> y = b.w_from_psi(x)
-    >>> krel_from_discrete_swcc(4, x, y)
+    >>> kwrel_from_discrete_swcc(4, x, y)
     0.0550...
     
     
@@ -864,6 +864,34 @@ def krel_from_discrete_swcc(psi, psi_swcc, vw_swcc):
         return krel[0]
     else:
         return krel
+
+
+def karel_air_from_saturation(Sr, qfit=0.5):
+    """Relative air peremability (w.r.t. dry_ka)
+    
+    krel = (1-Sr)**0.5*(1-Sr**(1 / qfit))**(2*qfit)
+    
+    Parameters
+    ----------
+    Sr : 1d array of float
+        Degree of saturation at which to calc relative permeability of air.
+    qfit : float, optional
+        Fitting parameter.  Generally between between 0 and 1. 
+        Default qfit=1            
+    
+    References
+    ----------
+    .. [1] Ba-Te, B., Limin Zhang, and Delwyn G. Fredlund. "A General 
+           Air-Phase Permeability Function for Airflow through Unsaturated 
+           Soils." In Proceedings of Geofrontiers 2005 Cngress, 
+           2961-85. Austin, Tx: ASCE, 2005. doi:10.1061/40787(166)29.
+           
+    """
+
+    
+    return (1 - Sr)**0.5*(1 - Sr**(1 / qfit))**(2 * qfit)
+
+
             
 if __name__ == "__main__":
     import nose
@@ -1024,8 +1052,8 @@ if __name__ == "__main__":
 
         
         np.logspace
-        krel = krel_from_discrete_swcc(x2[:-2], x, y)
-#        krel = krel_from_discrete_swcc(x[:-1], x, y)
+        krel = kwrel_from_discrete_swcc(x2[:-2], x, y)
+#        krel = kwrel_from_discrete_swcc(x[:-1], x, y)
         
         fig, ax = plt.subplots()
         
