@@ -326,8 +326,12 @@ class MarkersDashesColors(object):
             else:
                 styles[i].update(self.markers[m])
                 if mc is None:
-                    styles[i].update({'markeredgecolor': self.color,
-                               'markerfacecolor': self.color})
+#                    styles[i].update({'markeredgecolor': self.color,
+#                               'markerfacecolor': self.color})
+                    if self.markers[m]['markeredgecolor'] != 'none':
+                        styles[i]['markeredgecolor']= self.color
+                    if self.markers[m]['markerfacecolor'] != 'none':
+                        styles[i]['markerfacecolor'] = self.color
                 else:
                     if self.markers[m]['markeredgecolor'] != 'none':
                         styles[i]['markeredgecolor']= self.colors[mc]
