@@ -20,6 +20,7 @@
 from __future__ import print_function, division
 
 import numpy as np
+from numpy import (isscalar, asarray)
 import matplotlib.pyplot as plt
 import matplotlib
 import scipy.optimize
@@ -348,6 +349,12 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
     n = 1.3
     iL = 16.240...
     i0 = 3.747...
+    >>> a = HansboNonDarcianFlowModel(kstar=p['kstar'], i0=p['i0'], klinear=p['klinear'])
+    >>> print(a)
+    kstar = 2
+    n = 1.3
+    iL = 16.240...
+    i0 = 3.747...
     klinear = 6
     >>> a = HansboNonDarcianFlowModel(n=p['n'], iL=p['iL'], klinear=p['klinear'])
     >>> print(a)
@@ -466,13 +473,19 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
                 self.kstar = kstar
 
                 def fn(_n, _klinear, _kstar, _iL):
-                    return _klinear / _kstar / (_iL**(_n - 1))
+                    return np.log(_klinear/_kstar/_n) / np.log(_iL) + 1
 
 
-
-                self.n = scipy.optimize.fixed_point(fn,
-                                                    1.1,
-                                                    args=(klinear, kstar, iL))
+                
+#                self.n = scipy.optimize.fixed_point(fn,
+#                                                    1.0001,
+#                                                    args=(klinear, kstar, iL))
+                # note as at 20151106 scipy.optimize.fixed_point may not 
+                # converge for this function because convergence acceleration 
+                # is used.  Use my modified version instead:
+                self.n = _fixed_point(fn,
+                                      1.00001,
+                                      args=(klinear, kstar, iL))                                                    
 
 #                self.n = klinear / kstar / iL**(n - 1)
                 self.iL = iL
@@ -488,15 +501,22 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
                 self.klinear = klinear
             else:
                 self.kstar = kstar
+                                
+                def fn(_n, _klinear, _kstar, _i0): 
+                    
+                    return np.log(_klinear/_kstar/_n) / np.log((_i0 *_n/(_n - 1))) + 1
 
-                def fn(_n, _klinear, _kstar, _i0):
-                    return _klinear / _kstar / _i0 / (_n/(_n - 1))**(_n-1)
 
-
-
-                self.n = scipy.optimize.fixed_point(fn,
-                                                    1.1,
-                                                    args=(klinear, kstar, i0))
+#                self.n = scipy.optimize.fixed_point(fn,
+#                                                    1.00001,
+#                                                    args=(klinear, kstar, i0))
+                # note as at 20151106 scipy.optimize.fixed_point may not 
+                # converge for this function because convergence acceleration 
+                # is used.  Use my modified version instead:
+                self.n = _fixed_point(fn,
+                                      1.00001,
+                                      args=(klinear, kstar, i0))
+                                                    
                 self.iL = i0 * self.n / (self.n - 1)
                 self.i0 = i0
                 self.klinear = klinear
@@ -720,17 +740,99 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
         y = self.v_from_i(x)
         return x, y
 
+def fnn(_n, _klinear, _kstar, _i0):
+                    return _klinear / _kstar / (_i0 *_n/(_n - 1))**(_n-1)
+def fnn(_n, _klinear, _kstar, _i0):
+                    return np.log(_klinear/_kstar/_n) / np.log((_i0 *_n/(_n - 1))) + 1
+def fnn2(_n, _klinear, _kstar, _iL):
+                    return _klinear / _kstar / (_iL**(_n - 1))
+def fnn2(_n, _klinear, _kstar, _iL):
+                    return np.log(_klinear/_kstar/_n) / np.log(_iL) + 1
+                    
+def _fixed_point(func, x0, args=(), xtol=1e-8, maxiter=500):
+    """
+    Find a fixed point of the function (NO CONVEGENCE ACCELERATION!!!).
+    
+    Based on scipy.optimize.fixed_point for no convergence acelleration (RTRW)
 
+    Given a function of one or more variables and a starting point, find a
+    fixed-point of the function: i.e. where ``func(x0) == x0``.
 
+    Parameters
+    ----------
+    func : function
+        Function to evaluate.
+    x0 : array_like
+        Fixed point of function.
+    args : tuple, optional
+        Extra arguments to `func`.
+    xtol : float, optional
+        Convergence tolerance, defaults to 1e-08.
+    maxiter : int, optional
+        Maximum number of iterations, defaults to 500.
+
+    Notes
+    -----
+    Uses Steffensen's Method using Aitken's ``Del^2`` convergence acceleration.
+    See Burden, Faires, "Numerical Analysis", 5th edition, pg. 80
+
+    Examples
+    --------
+    >>> from scipy import optimize
+    >>> def func(x, c1, c2):
+    ...    return np.sqrt(c1/(x+c2))
+    >>>
+    >>> c1 = np.array([10,12.])
+    >>> c2 = np.array([3, 5.])
+    >>> optimize.fixed_point(func, [1.2, 1.3], args=(c1,c2))
+    array([ 1.4920333 ,  1.37228132])
+
+    """
+    if not isscalar(x0):
+        x0 = asarray(x0)
+        p0 = x0
+        for iter in range(maxiter):
+            p1 = func(p0, *args)            
+#            p2 = func(p1, *args)
+#            d = p2 - 2.0 * p1 + p0
+#            p = where(d == 0, p2, p0 - (p1 - p0)*(p1 - p0) / d)
+            p = p1
+            relerr = where(p0 == 0, p, (p-p0)/p0)
+            if all(abs(relerr) < xtol):
+                return p
+            p0 = p
+    else:
+        p0 = x0
+        for iter in range(maxiter):
+            p1 = func(p0, *args)
+#            p2 = func(p1, *args)
+#            d = p2 - 2.0 * p1 + p0
+#            if d == 0.0:
+#                return p2
+#            else:
+#                p = p0 - (p1 - p0)*(p1 - p0) / d
+            p=p1
+            if p0 == 0:
+                relerr = p
+            else:
+                relerr = (p - p0)/p0
+            if abs(relerr) < xtol:
+                return p
+            p0 = p
+    msg = "Failed to converge after %d iterations, value is %s" % (maxiter, p)
+    raise RuntimeError(msg)
+
+                    
 if __name__ == "__main__":
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
     pass
-
-    a = HansboNonDarcianFlowModel(kstar=2, n=1.3, klinear=6)
-#    for i in ('kstar', 'n', 'iL', 'i0', 'klinear'):
-#        print(i,'=', getattr(a, i))
-
-    a.plot_model()
-    plt.show()
-    print(a)
+    
+    if 1:    
+        p = dict(kstar=2, n=1.3, iL=16.2402611294, i0=3.7477525683, klinear=6)
+        a = HansboNonDarcianFlowModel(kstar=p['kstar'], iL=p['iL'], klinear=p['klinear'])
+        print(a)
+#        a.plot_model()
+#        plt.show()
+        b = HansboNonDarcianFlowModel(kstar=p['kstar'], i0=p['i0'], klinear=p['klinear'])
+        print(b)
