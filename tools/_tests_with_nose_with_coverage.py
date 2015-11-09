@@ -34,6 +34,7 @@ def main():
                     '-v',
                     '--with-doctest',
                     '--doctest-options=+ELLIPSIS',
+                    '--doctest-options=+IGNORE_EXCEPTION_DETAIL'
                     '--with-coverage',
                     '--cover-erase',
                     '--cover-package=geotecha',

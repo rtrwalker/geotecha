@@ -102,7 +102,7 @@ enter the following command:
 
 .. code-block::
 
-   nosetests geotecha -v --with-doctest --doctest-options=+ELLIPSIS
+   nosetests geotecha -v --with-doctest --doctest-options=+ELLIPSIS --doctest-options=+IGNORE_EXCEPTION_DETAIL
 
 
 It is common to get an error such as:
