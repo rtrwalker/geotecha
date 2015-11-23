@@ -1418,7 +1418,7 @@ class EpusProfile(object):
         evenly spaced depth values. Once convergence is reached
         a new stress profile will be interpolated at int(nz*nz_refine[1])
         and the convergence process is run again.  The refinement is repeated
-        untill the final value of nz_refine (which should be 1) is used.
+        untill the  final value of nz_refine (which should be 1) is used.
         Default nz_refine=[1] i.e. no successvie refinement.
     Npoint_refine : list of float, optional
         Similar to nz_refine.  Last value whould be 1. Sould be same length as
@@ -1620,10 +1620,30 @@ class EpusProfile(object):
 
         """
 
-        profile = DataResults(npts=nz)
-        profile.z = np.linspace(0, self.H, nz)
-        profile.gam = np.zeros(nz, dtype=float)
-        profile.uw = (np.linspace(0, self.H, nz) - self.zw) * self.gamw
+        #put in a point just below and just above the water level
+        ztemp = np.linspace(0, self.H, nz)
+        
+        dz = (ztemp[1] - ztemp[0])/5.0        
+        zp = self.zw + dz
+        zm = self.zw - dz
+        
+        for z in [zm, self.zw, zp]:            
+            if (z > 0) and (z < self.H):            
+                ztemp = np.concatenate((ztemp, np.array([z])))
+                
+        ztemp = np.unique(np.sort(ztemp))
+
+        profile = DataResults(npts=len(ztemp))
+        profile.z = ztemp#np.linspace(0, self.H, nz)
+        
+        
+        
+        
+        
+                
+            
+        profile.gam = np.zeros_like(profile.z, dtype=float)
+        profile.uw = (profile.z - self.zw) * self.gamw
         profile.ss[:] = 0.0
         s = profile.uw<0
         profile.ss[s] = -profile.uw[s]
