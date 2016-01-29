@@ -3769,8 +3769,188 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
     return eta
 
 
+def mu_outward_ideal(*args):
+    """Smear zone permeability/geometry parameter for ideal drain (no smear)
+    considering outward flow.
+
+    mu parameter in equal strain radial consolidation equations e.g.
+    u = u0 * exp(-8*Th/mu)
+
+    Parameters
+    ----------
+    args : anything
+        `args` does not contribute to any calculations it is merely so you
+        can have other arguments such as s and kappa which are used in other
+        smear zone formulations.
+
+    Returns
+    -------
+    mu : float
+        Smear zone permeability/geometry parameter.
+
+    Notes
+    -----
+    The :math:`\\mu` parameter for outward flow with no smear zone is given by:
+
+    .. math:: \\mu=\\frac{1}{4}
+              
+
+    i.e. :math:`mu` is independent of math:`r_e`.
+
+
+    References
+    ----------
+    .. [1] I worked this one out myself Jan 2016.
+
     
 
+    """
+
+    return 0.25
+    
+def mu_outward_piecewise_constant(s, kap, n=None, kap_m=None):
+    """Smear zone parameter for piecewise constant permeability distribution
+    considering flow to an outer drain.
+
+
+    mu parameter in equal strain radial consolidation equations e.g.
+    u = u0 * exp(-8*Th/mu)
+
+    Parameters
+    ----------
+    s : list or 1d ndarray of float
+        Ratio of segment outer radii to drain radius (r_i/r_0). The first value
+        of s should be greater than 1, i.e. the first value should be s_1;
+        s_0=1 at the drain soil interface is implied.
+    kap : list or ndarray of float
+        Ratio of undisturbed horizontal permeability to permeability in each
+        segment kh/khi.
+    n, kap_m : float, optional
+        If `n` and `kap_m` are given then they will each be appended to `s` and
+        `kap`. This allows the specification of a smear zone separate to the
+        specification of the drain influence radius.
+        Default n=kap_m=None, i.e. soilpermeability is completely described
+        by `s` and `kap`. If n is given but kap_m is None then the last
+        kappa value in kap will be used.
+
+
+    Returns
+    -------
+    mu : float
+        Smear zone permeability/geometry parameter
+
+    Notes
+    -----
+
+    The smear zone parameter :math:`\\mu` is given by:
+
+    .. math:: \\mu = \\frac{n^2}{\\left({n^2-1}\\right)}
+                \\sum\\limits_{i=1}^{m} \\kappa_i
+                    \\left[{
+                        \\frac{s_i^2}{n^2}\\ln
+                            \\left({
+                                \\frac{s_i}{s_{i-1}}
+                            }\\right)
+                        -\\frac{s_i^2-s_{i-1}^2}{2n^2}
+                        -\\frac{\\left({s_i^2-s_{i-1}^2}\\right)^2}{4n^4}
+                    }\\right]
+                    +\\psi_i\\frac{s_i^2-s_{i-1}^2}{n^2}
+
+    where,
+
+    .. math:: \\psi_{i} = \\sum\\limits_{j=1}^{i-1}\\kappa_j
+                \\left[{
+                        \\ln
+                            \\left({
+                                \\frac{s_j}{s_{j-1}}
+                            }\\right)
+                        -\\frac{s_j^2-s_{j-1}^2}{2n^2}
+                    }\\right]
+
+    and:
+
+    .. math:: n = \\frac{r_m}{r_0}
+
+    .. math:: s_i = \\frac{r_i}{r_0}
+
+    .. math:: \\kappa_i = \\frac{k_h}{k_{hi}}
+
+
+    :math:`r_0` is the drain radius, :math:`r_m` is the drain influence radius,
+    :math:`r_i` is the outer radius of the ith segment,
+    :math:`k_h` is the undisturbed
+    horizontal permeability in the ith segment,
+    :math:`k_{hi}` is the horizontal
+    permeability in the ith segment
+
+    References
+    ----------
+    .. [1] Walker, Rohan. 2006. 'Analytical Solutions for Modeling Soft Soil
+           Consolidation by Vertical Drains'. PhD Thesis, Wollongong, NSW,
+           Australia: University of Wollongong. http://ro.uow.edu.au/theses/501
+    .. [2] Walker, Rohan T. 2011. 'Vertical Drain Consolidation Analysis in
+           One, Two and Three Dimensions'. Computers and
+           Geotechnics 38 (8): 1069-77. doi:10.1016/j.compgeo.2011.07.006.
+
+    """
+
+
+    s = np.atleast_1d(s)
+    kap = np.atleast_1d(kap)
+
+    if not n is None:
+        s_temp = np.empty(len(s) + 1, dtype=float)
+        s_temp[:-1] = s
+        s_temp[-1] = n
+        kap_temp = np.empty(len(kap) + 1, dtype=float)
+        kap_temp[:-1] = kap
+        if kap_m is None:
+            kap_temp[-1] = kap[-1]
+        else:
+            kap_temp[-1] = kap_m
+        s = s_temp
+        kap = kap_temp
+
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
+    if len(s)!=len(kap):
+        raise ValueError('s and kap must have the same shape.  You have '
+            'lengths for s, kap of {}, {}.'.format(
+            len(s), len(kap)))
+
+    if np.any(s<=1.0):
+        raise ValueError('must have all s>=1. You have s = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(kap<=0.0):
+        raise ValueError('all kap must be greater than 0. You have kap = '
+                '{}'.format(', '.join([str(v) for v in np.atleast_1d(kap)])))
+
+    if np.any(np.diff(s) <= 0):
+        raise ValueError('s must increase left to right you have s = '
+        '{}'.format(', '.join([str(v) for v in np.atleast_1d(s)])))
+
+
+    n = s[-1]
+    s_ = np.ones_like(s , dtype=float)
+    s_[1:] = s[:-1]
+
+    sumi = 0
+    for i in range(len(s)):
+        psi = 0
+        for j in range(i):
+            psi += kap[j] * (log(s[j] / s_[j])
+                - 0.5 * (s[j] ** 2 / n ** 2 - s_[j] ** 2 / n ** 2))
+        psi /= kap[i]
+
+        sumi += kap[i] * (
+            s[i] ** 2 / n ** 2 * log(s[i] / s_[i])
+            + (psi - 0.5) * (s[i] ** 2 / n ** 2 - s_[i] ** 2 / n ** 2)
+            - 0.25 * (s[i] ** 2 - s_[i] ** 2) ** 2 / n ** 4
+            )
+    mu = sumi * n ** 2 / (n ** 2 - 1)
+    return mu
 
 ########################################################################
 
