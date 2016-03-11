@@ -2264,7 +2264,283 @@
 
 
 
-    
+      SUBROUTINE dim1sin_dd_abddf_linear(m, at, ab, bt, bb, zt, zb, a, &
+                                    neig, nlayers)
+        USE types
+        IMPLICIT NONE
+
+        INTEGER, intent(in) :: neig
+        INTEGER, intent(in) :: nlayers
+        REAL(DP), intent(in), dimension(0:neig-1) ::m
+        REAL(DP), intent(in), dimension(0:nlayers-1) :: at,ab,bt,bb,zt,zb
+        REAL(DP), intent(out), dimension(0:neig-1, 0:neig-1) :: a
+        INTEGER :: i , j, layer
+        REAL(DP) :: a_slope, b_slope
+
+
+        a=0.0D0
+        DO layer = 0, nlayers-1
+          a_slope = (ab(layer) - at(layer)) / (zb(layer) - zt(layer))
+          b_slope = (bb(layer) - bt(layer)) / (zb(layer) - zt(layer))
+          DO j = 0, neig-1
+              i=j
+      a(i, i) = a(i, i) + (-m(i)**4*((1.0d0/4.0d0)*a_slope*b_slope*m(i)&
+      **(-3)*cos(zt(layer)*m(i))*sin(zt(layer)*m(i)) + (1.0d0/4.0d0)*&
+      a_slope*b_slope*zt(layer)*m(i)**(-2)*sin(zt(layer)*m(i))**2 + (&
+      1.0d0/4.0d0)*a_slope*b_slope*zt(layer)*m(i)**(-2)*cos(zt(layer)*m&
+      (i))**2 + (1.0d0/6.0d0)*a_slope*b_slope*zt(layer)**3*sin(zt(layer&
+      )*m(i))**2 + (1.0d0/6.0d0)*a_slope*b_slope*zt(layer)**3*cos(zt(&
+      layer)*m(i))**2 - 1.0d0/4.0d0*a_slope*bt(layer)*m(i)**(-2)*cos(zt&
+      (layer)*m(i))**2 - 1.0d0/4.0d0*a_slope*zt(layer)**2*bt(layer)*sin&
+      (zt(layer)*m(i))**2 - 1.0d0/4.0d0*a_slope*zt(layer)**2*bt(layer)*&
+      cos(zt(layer)*m(i))**2 - 1.0d0/4.0d0*b_slope*at(layer)*m(i)**(-2)&
+      *cos(zt(layer)*m(i))**2 - 1.0d0/4.0d0*b_slope*zt(layer)**2*at(&
+      layer)*sin(zt(layer)*m(i))**2 - 1.0d0/4.0d0*b_slope*zt(layer)**2*&
+      at(layer)*cos(zt(layer)*m(i))**2 - 1.0d0/2.0d0*bt(layer)*at(layer&
+      )*1.0/m(i)*cos(zt(layer)*m(i))*sin(zt(layer)*m(i)) + (1.0d0/2.0d0&
+      )*zt(layer)*bt(layer)*at(layer)*sin(zt(layer)*m(i))**2 + (1.0d0/&
+      2.0d0)*zt(layer)*bt(layer)*at(layer)*cos(zt(layer)*m(i))**2) + m(&
+      i)**4*((1.0d0/4.0d0)*a_slope*b_slope*m(i)**(-3)*cos(zb(layer)*m(i&
+      ))*sin(zb(layer)*m(i)) + (1.0d0/4.0d0)*a_slope*b_slope*zb(layer)*&
+      m(i)**(-2)*sin(zb(layer)*m(i))**2 - 1.0d0/4.0d0*a_slope*b_slope*&
+      zb(layer)*m(i)**(-2)*cos(zb(layer)*m(i))**2 + a_slope*b_slope*zb(&
+      layer)*zt(layer)*1.0/m(i)*cos(zb(layer)*m(i))*sin(zb(layer)*m(i&
+      )) + (1.0d0/2.0d0)*a_slope*b_slope*zb(layer)*zt(layer)**2*sin(zb(&
+      layer)*m(i))**2 + (1.0d0/2.0d0)*a_slope*b_slope*zb(layer)*zt(&
+      layer)**2*cos(zb(layer)*m(i))**2 - 1.0d0/2.0d0*a_slope*b_slope*zb&
+      (layer)**2*1.0/m(i)*cos(zb(layer)*m(i))*sin(zb(layer)*m(i)) -&
+      1.0d0/2.0d0*a_slope*b_slope*zb(layer)**2*zt(layer)*sin(zb(layer)*&
+      m(i))**2 - 1.0d0/2.0d0*a_slope*b_slope*zb(layer)**2*zt(layer)*cos&
+      (zb(layer)*m(i))**2 + (1.0d0/6.0d0)*a_slope*b_slope*zb(layer)**3*&
+      sin(zb(layer)*m(i))**2 + (1.0d0/6.0d0)*a_slope*b_slope*zb(layer)&
+      **3*cos(zb(layer)*m(i))**2 + (1.0d0/2.0d0)*a_slope*b_slope*zt(&
+      layer)*m(i)**(-2)*cos(zb(layer)*m(i))**2 - 1.0d0/2.0d0*a_slope*&
+      b_slope*zt(layer)**2*1.0/m(i)*cos(zb(layer)*m(i))*sin(zb(layer)*m&
+      (i)) - 1.0d0/4.0d0*a_slope*bt(layer)*m(i)**(-2)*cos(zb(layer)*m(i&
+      ))**2 - 1.0d0/2.0d0*a_slope*zb(layer)*bt(layer)*1.0/m(i)*cos(zb(&
+      layer)*m(i))*sin(zb(layer)*m(i)) - 1.0d0/2.0d0*a_slope*zb(layer)*&
+      zt(layer)*bt(layer)*sin(zb(layer)*m(i))**2 - 1.0d0/2.0d0*a_slope*&
+      zb(layer)*zt(layer)*bt(layer)*cos(zb(layer)*m(i))**2 + (1.0d0/&
+      4.0d0)*a_slope*zb(layer)**2*bt(layer)*sin(zb(layer)*m(i))**2 + (&
+      1.0d0/4.0d0)*a_slope*zb(layer)**2*bt(layer)*cos(zb(layer)*m(i))**&
+      2 + (1.0d0/2.0d0)*a_slope*zt(layer)*bt(layer)*1.0/m(i)*cos(zb(&
+      layer)*m(i))*sin(zb(layer)*m(i)) - 1.0d0/4.0d0*b_slope*at(layer)*&
+      m(i)**(-2)*cos(zb(layer)*m(i))**2 - 1.0d0/2.0d0*b_slope*zb(layer)&
+      *at(layer)*1.0/m(i)*cos(zb(layer)*m(i))*sin(zb(layer)*m(i)) -&
+      1.0d0/2.0d0*b_slope*zb(layer)*zt(layer)*at(layer)*sin(zb(layer)*m&
+      (i))**2 - 1.0d0/2.0d0*b_slope*zb(layer)*zt(layer)*at(layer)*cos(&
+      zb(layer)*m(i))**2 + (1.0d0/4.0d0)*b_slope*zb(layer)**2*at(layer)&
+      *sin(zb(layer)*m(i))**2 + (1.0d0/4.0d0)*b_slope*zb(layer)**2*at(&
+      layer)*cos(zb(layer)*m(i))**2 + (1.0d0/2.0d0)*b_slope*zt(layer)*&
+      at(layer)*1.0/m(i)*cos(zb(layer)*m(i))*sin(zb(layer)*m(i)) -&
+      1.0d0/2.0d0*bt(layer)*at(layer)*1.0/m(i)*cos(zb(layer)*m(i))*sin(&
+      zb(layer)*m(i)) + (1.0d0/2.0d0)*zb(layer)*bt(layer)*at(layer)*sin&
+      (zb(layer)*m(i))**2 + (1.0d0/2.0d0)*zb(layer)*bt(layer)*at(layer)&
+      *cos(zb(layer)*m(i))**2))
+            DO i = j+1, neig-1
+      a(i, j) = a(i, j) + (-m(j)**2*m(i)**2*(2*a_slope*b_slope*sin(zt(&
+      layer)*m(j))*m(i)**3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4&
+      *m(i)**2 - m(j)**6)*cos(zt(layer)*m(i)) - 6*a_slope*b_slope*m(j)*&
+      cos(zt(layer)*m(j))*m(i)**2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*&
+      m(j)**4*m(i)**2 - m(j)**6)*sin(zt(layer)*m(i)) + 6*a_slope*&
+      b_slope*m(j)**2*sin(zt(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2&
+      *m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zt(layer)*m(i)) - 2*&
+      a_slope*b_slope*m(j)**3*cos(zt(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)&
+      **2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zt(layer)*m(i)) +&
+      a_slope*bt(layer)*sin(zt(layer)*m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(&
+      j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zt(layer)*m(i))&
+      + 2*a_slope*bt(layer)*m(j)*cos(zt(layer)*m(j))*m(i)**3*1.0/(m(i)&
+      **6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zt(&
+      layer)*m(i)) - 2*a_slope*bt(layer)*m(j)**3*cos(zt(layer)*m(j))*m(&
+      i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6&
+      )*cos(zt(layer)*m(i)) - a_slope*bt(layer)*m(j)**4*sin(zt(layer)*m&
+      (j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)&
+      **6)*sin(zt(layer)*m(i)) + b_slope*at(layer)*sin(zt(layer)*m(j))*&
+      m(i)**4*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(&
+      j)**6)*sin(zt(layer)*m(i)) + 2*b_slope*at(layer)*m(j)*cos(zt(&
+      layer)*m(j))*m(i)**3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4&
+      *m(i)**2 - m(j)**6)*cos(zt(layer)*m(i)) - 2*b_slope*at(layer)*m(j&
+      )**3*cos(zt(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 +&
+      3*m(j)**4*m(i)**2 - m(j)**6)*cos(zt(layer)*m(i)) - b_slope*at(&
+      layer)*m(j)**4*sin(zt(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)&
+      **4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zt(layer)*m(i)) - bt(layer&
+      )*at(layer)*sin(zt(layer)*m(j))*m(i)**5*1.0/(m(i)**6 - 3*m(j)**2*&
+      m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zt(layer)*m(i)) + bt(&
+      layer)*at(layer)*m(j)*cos(zt(layer)*m(j))*m(i)**4*1.0/(m(i)**6 -&
+      3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zt(layer)*m(&
+      i)) + 2*bt(layer)*at(layer)*m(j)**2*sin(zt(layer)*m(j))*m(i)**3*&
+      1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*&
+      cos(zt(layer)*m(i)) - 2*bt(layer)*at(layer)*m(j)**3*cos(zt(layer)&
+      *m(j))*m(i)**2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)&
+      **2 - m(j)**6)*sin(zt(layer)*m(i)) - bt(layer)*at(layer)*m(j)**4*&
+      sin(zt(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j&
+      )**4*m(i)**2 - m(j)**6)*cos(zt(layer)*m(i)) + bt(layer)*at(layer)&
+      *m(j)**5*cos(zt(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3&
+      *m(j)**4*m(i)**2 - m(j)**6)*sin(zt(layer)*m(i))) + m(j)**2*m(i)**&
+      2*(2*a_slope*b_slope*sin(zb(layer)*m(j))*m(i)**3*1.0/(m(i)**6 - 3&
+      *m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i&
+      )) - 6*a_slope*b_slope*m(j)*cos(zb(layer)*m(j))*m(i)**2*1.0/(m(i)&
+      **6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(&
+      layer)*m(i)) + 6*a_slope*b_slope*m(j)**2*sin(zb(layer)*m(j))*m(i)&
+      *1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*&
+      cos(zb(layer)*m(i)) - 2*a_slope*b_slope*m(j)**3*cos(zb(layer)*m(j&
+      ))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6&
+      )*sin(zb(layer)*m(i)) + 2*a_slope*b_slope*zb(layer)*sin(zb(layer)&
+      *m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)&
+      **2 - m(j)**6)*sin(zb(layer)*m(i)) + 4*a_slope*b_slope*zb(layer)*&
+      m(j)*cos(zb(layer)*m(j))*m(i)**3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4&
+      + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) - 4*a_slope*&
+      b_slope*zb(layer)*m(j)**3*cos(zb(layer)*m(j))*m(i)*1.0/(m(i)**6 -&
+      3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(&
+      i)) - 2*a_slope*b_slope*zb(layer)*m(j)**4*sin(zb(layer)*m(j))*1.0&
+      /(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(&
+      zb(layer)*m(i)) + 2*a_slope*b_slope*zb(layer)*zt(layer)*sin(zb(&
+      layer)*m(j))*m(i)**5*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4&
+      *m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) - 2*a_slope*b_slope*zb(&
+      layer)*zt(layer)*m(j)*cos(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 -&
+      3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(&
+      i)) - 4*a_slope*b_slope*zb(layer)*zt(layer)*m(j)**2*sin(zb(layer)&
+      *m(j))*m(i)**3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)&
+      **2 - m(j)**6)*cos(zb(layer)*m(i)) + 4*a_slope*b_slope*zb(layer)*&
+      zt(layer)*m(j)**3*cos(zb(layer)*m(j))*m(i)**2*1.0/(m(i)**6 - 3*m(&
+      j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i))&
+      + 2*a_slope*b_slope*zb(layer)*zt(layer)*m(j)**4*sin(zb(layer)*m(j&
+      ))*m(i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(&
+      j)**6)*cos(zb(layer)*m(i)) - 2*a_slope*b_slope*zb(layer)*zt(layer&
+      )*m(j)**5*cos(zb(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 +&
+      3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - a_slope*&
+      b_slope*zb(layer)**2*sin(zb(layer)*m(j))*m(i)**5*1.0/(m(i)**6 - 3&
+      *m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i&
+      )) + a_slope*b_slope*zb(layer)**2*m(j)*cos(zb(layer)*m(j))*m(i)**&
+      4*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)&
+      *sin(zb(layer)*m(i)) + 2*a_slope*b_slope*zb(layer)**2*m(j)**2*sin&
+      (zb(layer)*m(j))*m(i)**3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j&
+      )**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) - 2*a_slope*b_slope*&
+      zb(layer)**2*m(j)**3*cos(zb(layer)*m(j))*m(i)**2*1.0/(m(i)**6 - 3&
+      *m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i&
+      )) - a_slope*b_slope*zb(layer)**2*m(j)**4*sin(zb(layer)*m(j))*m(i&
+      )*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)&
+      *cos(zb(layer)*m(i)) + a_slope*b_slope*zb(layer)**2*m(j)**5*cos(&
+      zb(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)&
+      **2 - m(j)**6)*sin(zb(layer)*m(i)) - 2*a_slope*b_slope*zt(layer)*&
+      sin(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*&
+      m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - 4*a_slope*&
+      b_slope*zt(layer)*m(j)*cos(zb(layer)*m(j))*m(i)**3*1.0/(m(i)**6 -&
+      3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(&
+      i)) + 4*a_slope*b_slope*zt(layer)*m(j)**3*cos(zb(layer)*m(j))*m(i&
+      )*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)&
+      *cos(zb(layer)*m(i)) + 2*a_slope*b_slope*zt(layer)*m(j)**4*sin(zb&
+      (layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**&
+      2 - m(j)**6)*sin(zb(layer)*m(i)) - a_slope*b_slope*zt(layer)**2*&
+      sin(zb(layer)*m(j))*m(i)**5*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*&
+      m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) + a_slope*b_slope*&
+      zt(layer)**2*m(j)*cos(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(&
+      j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i))&
+      + 2*a_slope*b_slope*zt(layer)**2*m(j)**2*sin(zb(layer)*m(j))*m(i)&
+      **3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**&
+      6)*cos(zb(layer)*m(i)) - 2*a_slope*b_slope*zt(layer)**2*m(j)**3*&
+      cos(zb(layer)*m(j))*m(i)**2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*&
+      m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - a_slope*b_slope*&
+      zt(layer)**2*m(j)**4*sin(zb(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(&
+      j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i))&
+      + a_slope*b_slope*zt(layer)**2*m(j)**5*cos(zb(layer)*m(j))*1.0/(m&
+      (i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(&
+      layer)*m(i)) + a_slope*bt(layer)*sin(zb(layer)*m(j))*m(i)**4*1.0/&
+      (m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(&
+      zb(layer)*m(i)) + 2*a_slope*bt(layer)*m(j)*cos(zb(layer)*m(j))*m(&
+      i)**3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)&
+      **6)*cos(zb(layer)*m(i)) - 2*a_slope*bt(layer)*m(j)**3*cos(zb(&
+      layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(&
+      i)**2 - m(j)**6)*cos(zb(layer)*m(i)) - a_slope*bt(layer)*m(j)**4*&
+      sin(zb(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*&
+      m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - a_slope*zb(layer)*bt(&
+      layer)*sin(zb(layer)*m(j))*m(i)**5*1.0/(m(i)**6 - 3*m(j)**2*m(i)&
+      **4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) + a_slope*&
+      zb(layer)*bt(layer)*m(j)*cos(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6&
+      - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*&
+      m(i)) + 2*a_slope*zb(layer)*bt(layer)*m(j)**2*sin(zb(layer)*m(j))&
+      *m(i)**3*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m&
+      (j)**6)*cos(zb(layer)*m(i)) - 2*a_slope*zb(layer)*bt(layer)*m(j)&
+      **3*cos(zb(layer)*m(j))*m(i)**2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4&
+      + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - a_slope*zb(&
+      layer)*bt(layer)*m(j)**4*sin(zb(layer)*m(j))*m(i)*1.0/(m(i)**6 -&
+      3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(&
+      i)) + a_slope*zb(layer)*bt(layer)*m(j)**5*cos(zb(layer)*m(j))*1.0&
+      /(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(&
+      zb(layer)*m(i)) + a_slope*zt(layer)*bt(layer)*sin(zb(layer)*m(j))&
+      *m(i)**5*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m&
+      (j)**6)*cos(zb(layer)*m(i)) - a_slope*zt(layer)*bt(layer)*m(j)*&
+      cos(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*&
+      m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - 2*a_slope*zt(&
+      layer)*bt(layer)*m(j)**2*sin(zb(layer)*m(j))*m(i)**3*1.0/(m(i)**6&
+      - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*&
+      m(i)) + 2*a_slope*zt(layer)*bt(layer)*m(j)**3*cos(zb(layer)*m(j))&
+      *m(i)**2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m&
+      (j)**6)*sin(zb(layer)*m(i)) + a_slope*zt(layer)*bt(layer)*m(j)**4&
+      *sin(zb(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(&
+      j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) - a_slope*zt(layer)*&
+      bt(layer)*m(j)**5*cos(zb(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(&
+      i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) +&
+      b_slope*at(layer)*sin(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(&
+      j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i))&
+      + 2*b_slope*at(layer)*m(j)*cos(zb(layer)*m(j))*m(i)**3*1.0/(m(i)&
+      **6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(&
+      layer)*m(i)) - 2*b_slope*at(layer)*m(j)**3*cos(zb(layer)*m(j))*m(&
+      i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6&
+      )*cos(zb(layer)*m(i)) - b_slope*at(layer)*m(j)**4*sin(zb(layer)*m&
+      (j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)&
+      **6)*sin(zb(layer)*m(i)) - b_slope*zb(layer)*at(layer)*sin(zb(&
+      layer)*m(j))*m(i)**5*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4&
+      *m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) + b_slope*zb(layer)*at(&
+      layer)*m(j)*cos(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(j)**2*&
+      m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) + 2*&
+      b_slope*zb(layer)*at(layer)*m(j)**2*sin(zb(layer)*m(j))*m(i)**3*&
+      1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*&
+      cos(zb(layer)*m(i)) - 2*b_slope*zb(layer)*at(layer)*m(j)**3*cos(&
+      zb(layer)*m(j))*m(i)**2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)&
+      **4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - b_slope*zb(layer)*at&
+      (layer)*m(j)**4*sin(zb(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2&
+      *m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) +&
+      b_slope*zb(layer)*at(layer)*m(j)**5*cos(zb(layer)*m(j))*1.0/(m(i)&
+      **6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(&
+      layer)*m(i)) + b_slope*zt(layer)*at(layer)*sin(zb(layer)*m(j))*m(&
+      i)**5*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)&
+      **6)*cos(zb(layer)*m(i)) - b_slope*zt(layer)*at(layer)*m(j)*cos(&
+      zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)&
+      **4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - 2*b_slope*zt(layer)*&
+      at(layer)*m(j)**2*sin(zb(layer)*m(j))*m(i)**3*1.0/(m(i)**6 - 3*m(&
+      j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i))&
+      + 2*b_slope*zt(layer)*at(layer)*m(j)**3*cos(zb(layer)*m(j))*m(i)&
+      **2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**&
+      6)*sin(zb(layer)*m(i)) + b_slope*zt(layer)*at(layer)*m(j)**4*sin(&
+      zb(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4&
+      *m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) - b_slope*zt(layer)*at(&
+      layer)*m(j)**5*cos(zb(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)&
+      **4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i)) - bt(layer&
+      )*at(layer)*sin(zb(layer)*m(j))*m(i)**5*1.0/(m(i)**6 - 3*m(j)**2*&
+      m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) + bt(&
+      layer)*at(layer)*m(j)*cos(zb(layer)*m(j))*m(i)**4*1.0/(m(i)**6 -&
+      3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(&
+      i)) + 2*bt(layer)*at(layer)*m(j)**2*sin(zb(layer)*m(j))*m(i)**3*&
+      1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)**2 - m(j)**6)*&
+      cos(zb(layer)*m(i)) - 2*bt(layer)*at(layer)*m(j)**3*cos(zb(layer)&
+      *m(j))*m(i)**2*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j)**4*m(i)&
+      **2 - m(j)**6)*sin(zb(layer)*m(i)) - bt(layer)*at(layer)*m(j)**4*&
+      sin(zb(layer)*m(j))*m(i)*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3*m(j&
+      )**4*m(i)**2 - m(j)**6)*cos(zb(layer)*m(i)) + bt(layer)*at(layer)&
+      *m(j)**5*cos(zb(layer)*m(j))*1.0/(m(i)**6 - 3*m(j)**2*m(i)**4 + 3&
+      *m(j)**4*m(i)**2 - m(j)**6)*sin(zb(layer)*m(i))))
+            END DO
+          END DO
+        END DO
+
+        DO j = 0, neig -2
+          DO i = j + 1, neig-1
+            a(j,i) = a(i, j)
+          END DO
+        END DO
+
+      END SUBROUTINE    
 
 
     
