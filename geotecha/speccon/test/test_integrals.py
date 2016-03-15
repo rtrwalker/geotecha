@@ -43,6 +43,7 @@ from geotecha.speccon.integrals import dim1sin_abc_linear
 from geotecha.speccon.integrals import dim1sin_abf_linear
 from geotecha.speccon.integrals import dim1sin_D_aDb_linear
 from geotecha.speccon.integrals import dim1sin_D_aDf_linear
+from geotecha.speccon.integrals import dim1sin_DD_abDDf_linear
 from geotecha.speccon.integrals import Eload_linear
 from geotecha.speccon.integrals import EDload_linear
 from geotecha.speccon.integrals import EDload_coslinear
@@ -55,10 +56,12 @@ from geotecha.speccon.integrals import pdim1sin_abc_linear
 from geotecha.speccon.integrals import pdim1sin_abf_linear
 from geotecha.speccon.integrals import pdim1sin_D_aDb_linear
 from geotecha.speccon.integrals import pdim1sin_D_aDf_linear
+from geotecha.speccon.integrals import pdim1sin_DD_abDDf_linear
 from geotecha.speccon.integrals import pEload_linear
 from geotecha.speccon.integrals import pEDload_linear
 from geotecha.speccon.integrals import pEDload_coslinear
 from geotecha.speccon.integrals import pEload_coslinear
+
 
 
 
@@ -1109,6 +1112,152 @@ class test_pdim1sin_a_linear_between(base_t_ester):
             ['3 layers, a const = 1 betwn[0,0.4] 2 betw[0.4,0.6] 3 betw[0.6,1], z = [0.2, 0.8], PTIB',
              {'m': self.PTIB,'a': PolyLine([0,0.4,0.6],[0.4,0.6,1],[1, 2, 3], [1, 2, 3]), 'z': [0.2, 0.8]},
              np.array([[0.904514325378385, 0.372372215462563]])],
+            ]
+
+
+
+
+
+class test_dim1sin_DD_abDDf_linear(base_t_ester):
+    """loop through and test the dim1sin_DD_abDDf_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, dim1sin_DD_abDDf_linear, prefix = self.__class__.__name__)
+        self.iso_PTIB = (0.5) * np.array([[(np.pi/2.0)**4.0, 0], [0, (3.0*np.pi/2.0)**4.0]])
+        self.iso_PTPB = (0.5) * np.array([[(np.pi)**4.0, 0], [0, (2.0*np.pi)**4.0]])
+        self.implementation = ['scalar','vectorized','fortran']
+        self.cases = [
+
+            #a
+            ['a const, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},
+             self.iso_PTIB],
+            ['a const, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},
+             self.iso_PTPB],
+
+            ['a const*2, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [2], 'ab':[2], 'bt': [1], 'bb': [1]},
+             self.iso_PTIB*2],
+            ['a const*2, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [2], 'ab':[2], 'bt': [1], 'bb': [1]},
+             self.iso_PTPB*2],
+
+            ['a const, 2 layers PTIB',
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},
+             self.iso_PTIB],
+            ['a const, 2 layers, PTPB',
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},
+             self.iso_PTPB],
+             
+            ['a 2 layers, const within each layer, PTIB',   
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 2], 'ab':[1, 2], 'bt': [1, 1], 'bb': [1, 1]},
+             np.array([[ 5.79197709804, -5.73080776939], [-5.73080776939,  379.129447802]])],
+            ['a 2 layers, const within each layer, PTPB',
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 2], 'ab':[1, 2], 'bt': [1, 1], 'bb': [1, 1]},
+             np.array([[ 82.4835308675, -71.1274644065], [-71.1274644065, 1187.85892227]])],
+
+            ['a linear within 1 layer, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [1]},
+             np.array([[5.18290141729, -5.551652475613],[-5.551652475613, 375.401794995]])],
+            ['a linear within 1 layer, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [1]},
+             np.array([[73.0568182755, -35.0919267594],[-35.0919267594, 1168.90909241]])],
+#
+#            #b, originally Walker Phd a and b were lumped together.
+#            #Therefore once separated varying one parameter while keeping
+#            #the other constant, then changing which parameter alters should
+#            #yield the same result. Hence reusing the a results.
+            ['b const, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},
+             self.iso_PTIB],
+            ['b const, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [1]},
+             self.iso_PTPB],
+
+            ['b const*2, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [2], 'ab':[2], 'bt': [1], 'bb': [1]},
+             self.iso_PTIB*2],
+            ['b const*2, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [2], 'bb': [2]},
+             self.iso_PTPB*2],
+
+            ['b const, 2 layers PTIB',
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},
+             self.iso_PTIB],
+            ['b const, 2 layers, PTPB',
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},
+             self.iso_PTPB],
+
+            ['b 2 layers, const within each layer, PTIB',
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 2], 'bb': [1, 2]},
+             np.array([[ 5.79197709804, -5.73080776939], [-5.73080776939,  379.129447802]])],
+            ['b 2 layers, const within each layer, PTPB',
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1],
+              'at': [1, 1], 'ab':[1, 1], 'bt': [1, 2], 'bb': [1, 2]},
+             np.array([[ 82.4835308675, -71.1274644065], [-71.1274644065, 1187.85892227]])],
+
+            ['b linear within 1 layer, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [2]},
+             np.array([[5.18290141729, -5.551652475613],[-5.551652475613, 375.401794995]])],
+            ['b linear within 1 layer, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[1], 'bt': [1], 'bb': [2]},
+             np.array([[73.0568182755, -35.0919267594],[-35.0919267594, 1168.90909241]])],
+
+
+
+            #mixed
+            ['a const, b const cancel out, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [0.5], 'ab':[0.5], 'bt': [2], 'bb': [2]},
+             self.iso_PTIB],
+            ['a const, b const cancel out, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [0.5], 'ab':[0.5], 'bt': [2], 'bb': [2]},
+             self.iso_PTPB],
+
+            ['a linear in one layer, b linear in one layer, PTIB',
+             {'m': self.PTIB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [2]},
+             np.array([[8.9533, -18.04287054574], [-18.04287054574, 591.9774013464]])],
+            ['a linear in one layer, b linear in one layer, PTPB',
+             {'m': self.PTPB, 'zt': [0], 'zb': [1],
+              'at': [1], 'ab':[2], 'bt': [1], 'bb': [2]},
+             np.array([[111.1765384394, -105.2757802783], [-105.2757802783  , 1808.43342823]])],
+
+            ]
+
+
+class test_pdim1sin_DD_abDDf_linear(base_t_ester):
+    """loop through and test the pdim1sin_DD_abDDf_linear cases with np.allclose"""
+    def __init__(self):
+        base_t_ester.__init__(self, pdim1sin_DD_abDDf_linear, prefix = self.__class__.__name__)
+
+
+        self.cases = [
+
+            ['a linear accross two layers, b linear in one layer, PTIB',
+             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1, 1.4],[1.4, 2]),
+                              'b': PolyLine([0],[1],[1],[2])},
+             np.array([[8.9533, -18.04287054574], [-18.04287054574, 591.9774013464]])],
             ]
 
 
