@@ -1,9 +1,58 @@
-2015-06-23 Added geotecha.plotting.one_d.save_figure to easily save 
+2016-05-30 Fixed issue with YinAndGrahamSoilModel throwing error in
+           geotecha.constitutive_models.void_ratio_stress when
+           non-array inputs are used for t0, estress0, pstress0, e0.
+           The fix does a number of 'if np.isscalar' checks so
+           may slow down code.
+2016-05-30 In docs\conf.  changed code "html_theme = 'default'" to
+           "html_style = 'default.css'".  This is so new Sphinx version
+           can find style sheet for doc building.
+2016-05-30 Tidied up some docstrings in Ding et al 2102, epus etc.
+2016-05-30 Added YinAndGrahamSoilModel soil model to
+           geotecha.constitutive_models.void_ratio_stress
+           Note: not fully tested.
+2016-03-15 Added geotecha.beam_on_foundation.dingetal2012
+           implementing Ding et al. 2012, '"Convergence of Galerkin
+           truncation for dynamic response of finite beams on
+           nonlinear foundations under a moving load."
+           Journal of Sound and Vibration, 331(10), 2426-2442.
+           Test routine provided.
+2016-03-15 Added subpackage geotecha.beam_on_foundation.
+           Beams on ealstic foundations, winkler foundations etc.
+2016-03-15 Generated new code for spectral galerkin method integration.
+           Integration is dim1sin_DD_abDDf_linear for use with beams.
+           Generation code and result code incorporated into:
+           geotecha.speccon.integrals_generate_code
+           geotecha.speccon.integrals
+           geotecha.speccon.ext_integrals
+           geotecha.speccon.tests.test_integrals
+2015-11-23 In geotecha.constitutive_models.epus.EpusProfile the profile now
+           has a point just above and just below the water table.
+           This is where rapid changes in unsaturated soil properties
+           is likely to occur
+2015-11-09 Added '--doctest-options=+IGNORE_EXCEPTION_DETAIL' to nose
+           testing routines in
+           tools\test_with_nose and tools\tests_with_nose_with_coverage
+           and the description in README.rst.  Now when running
+           geotecha tests the exception detail is ignored.  Previously
+           there were some python version issues.
+2015-11-09 In HansboNonDarcianFlowModel class in
+           geotecha.constitutive_models.velocity_hydraulic_gradient
+            it now uses geotecha.mathematics.rootfinding._fixed_point
+            instead of error producing scipy.optimize.fixed_point.
+2015-11-09 As at 20151106 scipy.optimize.fixed_point may not
+           converge for all functions because it uses convergence
+           acceleration.  I added a non-convergence acceleration
+           version '_fixed_point' to geotecha.mathematics.rootfinding.
+2015-10-21 In MarkersDashesColors class of
+           geotecha.plotting.one_d, markers will now default to
+           filled.
+2015-06-23 Added geotecha.plotting.one_d.save_figure to easily save
            multiple versions of a matplotlib figure.
 2015-06-18 Added constitutive_models.epus elasto-plastic unsaturated
            soil.  A python version of teh visual basic code in the
            appendix of Pham (2005) PhD thesis.
 
+-----------------------------------------------------------------------
 2015-02-13 geotecha-0.1.3 Release. Now compatible with python-2.7 and
            python-3.4.  32 and 64-bit windows binaries available on
            pypi. Added many speccon examples. Updated
