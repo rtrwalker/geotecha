@@ -1,3 +1,12 @@
+-----------------------------------------------------------------------
+2016-05-30 geotecha-0.1.4 Release.
+           Added YinAndGrahamSoilModel voidratio_stress relationship.
+           Added Elasto-Plastic for Unsaturated Soils (EPUS) based on
+           Pham (2005). beam_on_foundation sub-package including
+           Ding et al (2012) "Finite elastic Euler-Bernoulli
+           beam resting on non-linear viscoelastic foundation
+           subjected to a moving load." . Some bug fixes.
+           Fixed docs to have correct autosummary.
 2016-05-30 Fixed issue with YinAndGrahamSoilModel throwing error in
            geotecha.constitutive_models.void_ratio_stress when
            non-array inputs are used for t0, estress0, pstress0, e0.
@@ -56,9 +65,9 @@
 2015-02-13 geotecha-0.1.3 Release. Now compatible with python-2.7 and
            python-3.4.  32 and 64-bit windows binaries available on
            pypi. Added many speccon examples. Updated
-	   README.rst so that github and pipy have nice looking
+	         README.rst so that github and pipy have nice looking
            front pages. Expanded permissible numpy functions in
-	   inputoutput syntax_checker.
+	         inputoutput syntax_checker.
 
 -----------------------------------------------------------------------
 2015-01-30 geotecha-0.1.2 Release.  Similar release to 0.1.1 but with
