@@ -400,7 +400,7 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
         chooser = np.array((Cc, Cc, Cr), dtype=float)
 
         # appropriate value of Cc or Cr
-        Cx = chooser[np.sign(estress - pstress, dtype=int)]
+        Cx = chooser[np.array(np.sign(estress - pstress), dtype=int)]
 
         av = 0.43429448190325182 * Cx / estress
 

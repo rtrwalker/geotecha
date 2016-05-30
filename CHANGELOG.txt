@@ -1,5 +1,5 @@
 -----------------------------------------------------------------------
-2016-05-30 geotecha-0.1.4 Release.
+2016-05-31 geotecha-0.1.4 Release.
            Added YinAndGrahamSoilModel voidratio_stress relationship.
            Added Elasto-Plastic for Unsaturated Soils (EPUS) based on
            Pham (2005). beam_on_foundation sub-package including
@@ -7,6 +7,12 @@
            beam resting on non-linear viscoelastic foundation
            subjected to a moving load." . Some bug fixes.
            Fixed docs to have correct autosummary.
+2016-05-31 Fixed py27 bug in
+           geotecha.constitutive_models.void_ratio_stress.CcCrSoilModel.av_from_stress
+           Previously Cx = chooser[np.sign(estress - pstress, dtype=int)]
+           sometimes threw a type casting error.  Fixed by replacing with the
+           following.
+           Cx = chooser[np.array(np.sign(estress - pstress), dtype=int)]
 2016-05-30 Fixed issue with YinAndGrahamSoilModel throwing error in
            geotecha.constitutive_models.void_ratio_stress when
            non-array inputs are used for t0, estress0, pstress0, e0.
@@ -14,7 +20,8 @@
            may slow down code.
 2016-05-30 In docs\conf.  changed code "html_theme = 'default'" to
            "html_style = 'default.css'".  This is so new Sphinx version
-           can find style sheet for doc building.
+           can find style sheet for doc building. Also added
+           sphinx>=1.4 dependency to setup.py.
 2016-05-30 Tidied up some docstrings in Ding et al 2102, epus etc.
 2016-05-30 Added YinAndGrahamSoilModel soil model to
            geotecha.constitutive_models.void_ratio_stress
