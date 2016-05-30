@@ -14,6 +14,11 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
+"""Elasto-Plastic for Unsaturated Soils, adapted from VB code in Phd thesis of
+Pham (2005).
+
+"""
+
 from __future__ import division, print_function
 import numpy as np
 import os
@@ -39,10 +44,7 @@ log = math.log
 #log = np.log
 
 
-"""Elasto-Plastic for Unsaturated Soils, adapted from VB code in Phd thesis of
-Pham (2005).
 
-"""
 
 class EPUS(object):
     """Elasto-Plastic for Unsaturated Soils
@@ -1361,7 +1363,7 @@ class DataResults(object):
 
 
 class EpusProfile(object):
-    """1D initial conditons (stress etc.) distribution for EOUS unsaturated
+    """1D initial conditons (stress etc.) distribution for EPUS unsaturated
     soil model.
 
 

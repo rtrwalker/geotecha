@@ -15,7 +15,7 @@
 # along with this program.  If not, see http://www.gnu.org/licenses/gpl.html.
 
 """
-Ding et al. (2012) "Convergence of Galerkin truncation for dynamic response 
+Ding et al (2012) "Convergence of Galerkin truncation for dynamic response 
 of finite beams on nonlinear foundations under a moving load".
 
 """
