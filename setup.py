@@ -125,6 +125,7 @@ INSTALL_REQUIRES=[
     "pandas",
     "numpydoc",
     "IPython",
+    "sphinx>=1.4",
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     ]
