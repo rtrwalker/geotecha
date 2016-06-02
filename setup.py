@@ -111,7 +111,7 @@ AUTHOR_EMAIL = "rtrwalker@gmail.com"
 PLATFORMS = ["Windows"]#, "Linux", "Solaris", "Mac OS-X", "Unix"]
 MAJOR = 0
 MINOR = 1
-MICRO = 3
+MICRO = 4
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
@@ -125,6 +125,7 @@ INSTALL_REQUIRES=[
     "pandas",
     "numpydoc",
     "IPython",
+    "sphinx>=1.4",
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     ]

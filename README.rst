@@ -66,6 +66,7 @@ Package requirements:
  - mpl_toolkits
  - nose
  - one of wx (i.e. wxPython) or PyQt (PyQt4 or PyQt5)
+ - sphinx
 
 Before worrying about if your system has the required packages just
 try one of the installation methods below (first try the
