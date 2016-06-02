@@ -685,7 +685,7 @@ class Speccon1dUnsat(speccon1d.Speccon1d):
     def make_output(self):
         """make all output"""
 
-        header1 = ("program: speccon1d_vrc; geotecha version: "
+        header1 = ("program: speccon1d_unsat; geotecha version: "
             "{}; author: {}; date: {}\n").format(self.version,
                 self.author, time.strftime('%Y/%m/%d %H:%M:%S'))
         if not self.title is None:

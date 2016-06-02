@@ -326,8 +326,12 @@ class MarkersDashesColors(object):
             else:
                 styles[i].update(self.markers[m])
                 if mc is None:
-                    styles[i].update({'markeredgecolor': self.color,
-                               'markerfacecolor': self.color})
+#                    styles[i].update({'markeredgecolor': self.color,
+#                               'markerfacecolor': self.color})
+                    if self.markers[m]['markeredgecolor'] != 'none':
+                        styles[i]['markeredgecolor']= self.color
+                    if self.markers[m]['markerfacecolor'] != 'none':
+                        styles[i]['markerfacecolor'] = self.color
                 else:
                     if self.markers[m]['markeredgecolor'] != 'none':
                         styles[i]['markeredgecolor']= self.colors[mc]
@@ -1961,6 +1965,34 @@ def plot_vs_depth(x, z, line_labels=None, H = 1.0, RLzero=None,
         leg.draggable(True)
         plt.setp(leg.get_title(),fontsize=legend_prop['fontsize'])
     return fig
+
+def save_figure(fig, fname='fig', ext=['pdf', 'eps', 'png'], dpi=1200):
+    """Save a figure to a file in multiple formats
+
+    Figure will be saved in as fname.ext where ext is each of the extenstions
+    in the ext parameter.
+
+    Parameters
+    ----------
+    fig : matplotlib.Figure object
+        Figure to save
+    fname : str, optional
+        filepath to save to WITHOUT extension, default fname='fig'.
+    ext : list of str, optional
+        List of file extensions to save.  Must be one of the matplolib
+        save as file types.  default ext=[['pdf','eps','png'].
+    dpi : int, optional
+        dpi setting to save png etc figures as. Default dpi=1200.
+
+    """
+
+    for ex in ext:
+        if ex in ['png']:
+            d = {'dpi': dpi}
+            d['dpi'] = dpi
+        else:
+            d={}
+        fig.savefig('{}.{}'.format(fname, ex), format=ex, **d)
 
 
 

@@ -34,7 +34,8 @@ def main():
                     package_name,
                     '-v',
                     '--with-doctest',
-                    '--doctest-options=+ELLIPSIS'])
+                    '--doctest-options=+ELLIPSIS',
+                    '--doctest-options=+IGNORE_EXCEPTION_DETAIL'])
 
     os.chdir(cwd)
 

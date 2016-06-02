@@ -447,7 +447,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                directory=self.tempdir.path)
         assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -458,7 +458,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                directory=os.path.join(self.tempdir.path,'g'))
         assert_equal(self.tempdir.read(('g','out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -470,7 +470,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                file_stem="ppp")
         assert_equal(self.tempdir.read(('ppp','ppp.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -482,7 +482,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                ext=".out")
         assert_equal(self.tempdir.read(('out_000','out_000.out'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -494,7 +494,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                create_directory=False)
         assert_equal(self.tempdir.read('out_000.csv', 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -506,7 +506,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
         assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
                             hello header
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -517,7 +517,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                directory=self.tempdir.path)
         assert_equal(self.tempdir.read(('out_000','out_000xx.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -529,7 +529,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                directory=self.tempdir.path)
         assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,item,0,1
+                            idex,item,0,1
                             0,8,0,1
                             1,12,2,3
                             2,6,4,5""").splitlines())
@@ -541,7 +541,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                directory=self.tempdir.path)
         assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,yyy,0,1
+                            idex,yyy,0,1
                             0,8,0,1
                             1,12,2,3
                             2,6,4,5""").splitlines())
@@ -552,7 +552,7 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                directory=self.tempdir.path)
         assert_equal(self.tempdir.read(('out_000','out_000.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,a,b
+                            idex,a,b
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
@@ -565,13 +565,13 @@ class test_save_grid_data_to_file(unittest.TestCase):
                                file_stem="qqq")
         assert_equal(self.tempdir.read(('qqq','qqq1.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,1
                             1,2,3
                             2,4,5""").splitlines())
         assert_equal(self.tempdir.read(('qqq','qqq2.csv'), 'utf-8').splitlines(),
                             textwrap.dedent("""\
-                            ,0,1
+                            idex,0,1
                             0,0,2
                             1,4,6
                             2,8,10""").splitlines())

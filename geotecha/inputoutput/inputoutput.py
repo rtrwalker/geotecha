@@ -1835,7 +1835,7 @@ def save_grid_data_to_file(data_dicts, directory=None, file_stem='out_000',
                 column_labels=column_labels, row_labels=row_labels,
                 row_labels_label=row_labels_label)
 
-
+        df_kwargs['index_label'] = "idex" # ensure all columns have labels incl. index
         filename = os.path.join(dirname, str(file_stem) + str(name) + ext )
         with open(filename,'w') as myfile:
             if not header is None:
