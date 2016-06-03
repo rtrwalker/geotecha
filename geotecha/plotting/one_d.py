@@ -1995,13 +1995,50 @@ def save_figure(fig, fname='fig', ext=['pdf', 'eps', 'png'], dpi=1200):
         fig.savefig('{}.{}'.format(fname, ex), format=ex, **d)
 
 
+def figure_from_source_code(obj, figsize=None, font=None):
+    """Put source code of object into a matplotlib figure
+
+    Paramters
+    ---------
+    obj : python object
+        object to display source code of
+    figsize : tuple, optional
+        figsize in inches, default = None i.e. use matplotlib default
+    font : matplotlib .fontmanager optional
+        font to be applied to the annotation object
+        default=None
+
+    Returns
+    -------
+    fig : matplotlib.Figure
+        figure of text
+
+    """
+    #TODO: needs testing
+    import inspect
+
+    code = "".join(inspect.getsourcelines(obj)[0])
+
+    fig = plt.figure(figsize=figsize)
+
+    plt.axis('off')
+    ax = plt.gca()
+    annot1 = ax.annotate(code,
+                xy=(0.01, 0.99), xycoords='figure fraction',
+                xytext=(0.01, 0.99), textcoords='figure fraction',
+                va="top", ha="left",
+                arrowprops=None)
+
+#    font = matplotlib.font_manager.FontProperties(family='times new roman', style='italic', size=16)
+    if not font is  None:
+        annot1.set_font_properties(font)
+
+    return fig
 
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])
-
-
 #    a = MarkersDashesColors()
 #    a.color=(0.5, 0, 0)
 #    a.default_marker={       'markersize':5,
