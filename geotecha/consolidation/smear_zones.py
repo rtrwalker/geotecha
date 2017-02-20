@@ -73,7 +73,7 @@ def mu_ideal(n, *args):
 
     """
 
-    n = np.asarray(n) 
+    n = np.asarray(n)
     if np.any(n <= 1):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
@@ -1526,7 +1526,7 @@ def k_overlapping_linear(n, s, kap, si):
         kapx =  _kapx(n, s, kap)
         mu = mu_linear(n, sx, kapx) * kap / kapx
         return mu
-    
+
     n = np.asarray(n)
     s = np.asarray(s)
     kap = np.asarray(kap)
@@ -1737,7 +1737,7 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
         return u
     n = np.asarray(n)
     s = np.asarray(s)
-    kap = np.asarray(kap)        
+    kap = np.asarray(kap)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -1926,7 +1926,7 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
             return u
     n = np.asarray(n)
     s = np.asarray(s)
-    kap = np.asarray(kap)            
+    kap = np.asarray(kap)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -2128,7 +2128,7 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
 
         u = term1 * (term2 + term7)
         return u
-        
+
     n = np.asarray(n)
     s = np.asarray(s)
     kap = np.asarray(kap)
@@ -3159,7 +3159,7 @@ def non_darcy_beta_ideal(n, nflow=1.0001, nterms=20, *args):
 
     """
 
-    n = np.asarray(n)    
+    n = np.asarray(n)
     nflow = np.asarray(nflow)
     if np.any(n <= 1):
         raise ValueError('n must be greater than 1. '
@@ -3298,10 +3298,10 @@ def non_darcy_beta_constant(n, s, kap, nflow=1.0001, nterms=20, *args):
 
 
     """
-    
-    n = np.asarray(n)    
-    s = np.asarray(s)    
-    kap = np.asarray(kap)    
+
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     nflow = np.asarray(nflow)
     if np.any(n <= 1):
         raise ValueError('n must be greater than 1. '
@@ -3693,18 +3693,18 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
     """For non-Darcy flow calculate the vertical drain eta parameter
 
     eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow-1) * nflow * iL**(nflow-1))
-    
+
     nflow will be obtained from the **kwargs.  rw will be back calculated
-    from the n parameter (n=re/rw) which is usually the first of the *arg parameters 
+    from the n parameter (n=re/rw) which is usually the first of the *arg parameters
     or one of the **kwargs
-    
+
     Note that eta is used in radial consolidation equations:
-    [strain rate] = (u - uw)**n * k / gamw * eta    
+    [strain rate] = (u - uw)**n * k / gamw * eta
     Compare with the Darcian case of (eta terms are calculated differerntly
-    for Darcy and non-Darcy cases): 
+    for Darcy and non-Darcy cases):
     [strain rate] = (u - uw) * k / gamw * eta
-    
-    Note that `non_darcy_drain_eta` only uses the exponential portion of the 
+
+    Note that `non_darcy_drain_eta` only uses the exponential portion of the
     Non-Darcian flow relationship.  If hydraulic gradients are greater than
     iL then the flow rates will be overestimated.
 
@@ -3718,9 +3718,9 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
         Unit weight of water. Usually gamw=10 kN/m**3 or gamw=9.807 kN/m**3.
     beta_function : obj or string
         The non_darcy_beta function to use. e.g. non_darcy_beta_ideal
-        non_darcy_beat_constant, non_darcy_piecewise_constant. 
+        non_darcy_beat_constant, non_darcy_piecewise_constant.
         This can either be the function object itself
-        or the name of the function e.g. 'non_darcy_beta_ideal'.    
+        or the name of the function e.g. 'non_darcy_beta_ideal'.
     *args, **kwargs : various
         The arguments to pass to the beta_function.
 
@@ -3730,20 +3730,20 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
         Value of eta parameter for non-Darcian flow
 
     Examples
-    --------    
-    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10, 
+    --------
+    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10,
     ... beta_function='non_darcy_beta_ideal', n=15, nflow=1.3, nterms=20)
     0.09807...
-    >>> non_darcy_drain_eta(1.5, 10, 10, 
+    >>> non_darcy_drain_eta(1.5, 10, 10,
     ... 'non_darcy_beta_ideal', 15, nflow=1.3, nterms=20)
     0.09807...
-    
-    
-    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10, 
-    ... beta_function='non_darcy_beta_ideal', n=np.array([20.0, 15.0]), 
+
+
+    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10,
+    ... beta_function='non_darcy_beta_ideal', n=np.array([20.0, 15.0]),
     ... nflow=np.array([1.000001, 1.3]), nterms=20)
     array([ 0.3943...,  0.0980...])
-           
+
 
     """
 
@@ -3759,20 +3759,371 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
     except:
         n = args[0]
     rw = re / n
-     
+
     nflow = kwargs['nflow']
-    
+
     beta = beta_fn(*args, **kwargs)
-    
-    eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow - 1) 
+
+    eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow - 1)
                * nflow * iL**(nflow - 1))
     return eta
 
 
-    
+def plane_strain_mu_ideal(n, *args,s0=1):
+    """Plane strain smear zone permeability/geometry parameter for ideal drain (no smear)
+
+    mu parameter in equal strain radial consolidation equations e.g.
+    u = u0 * exp(-8*Th/mu)
+
+    Parameters
+    ----------
+    n : float or ndarray of float
+        Ratio of drain influence half-width radius to drain half-width (B/bw).
+        When bw=0 use n=B.
+    args : anything
+        `args` does not contribute to any calculations it is merely so you
+        can have other arguments such as s and kappa which are used in other
+        smear zone formulations.
+    s0 : float, optional
+        Drain size ratio bw/B.  When drain wall is at x=0 use s0=0.
+        Default s0=1.
+
+    Returns
+    -------
+    mu : float
+        Plane strain smear zone permeability/geometry parameter.
+
+    Notes
+    -----
+
+    The :math:`\\mu` parameter is given by:
+
+    .. math:: \\mu=\\frac{n}{n-s_0)}\\frac{2}{3}
+              \\left(1-\\frac{s_0}{n}\\right)^3
+
+    where:
+
+    .. math:: n = \\frac{B}{b_w}
+
+    :math:`b_w` is the drain half-width, :math:`r_e` is the drain influence
+    half-width (when :math:`b_w=0` use :math:`n=B`).  :math:`s_0=1` unless
+    drain wall is at :math:`x=0`  in which case :math:`s_0=0`.
+
+
+    References
+    ----------
+    .. [1] Nothing
+
+
+    """
+
+    n = np.asarray(n)
+    if np.any(n <= 1):
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(n)])))
+
+    mu = n / (n - s0) * 2 / 3 * (1 - s0 / n)**3
+    return mu
 
 
 ########################################################################
+
+def plane_strain_u_ideal(n, si, uavg=1, uw=0, muw=0, s0=1):
+    """Pore pressure at radius for ideal drain with no smear zone
+
+    Parameters
+    ----------
+    n : float
+        Ratio of drain influence half-width radius to drain half-width (B/bw).
+        When bw=0 use n=B.
+    si : float of ndarray of float
+        Normalised width coordinate(s) at which to calc the pore pressure
+        i.e. si=bi/bw. when bw=0 use si=bi.
+    uavg : float, optional = 1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
+    uw : float, optional
+        Pore pressure in drain, default = 0.
+    muw : float, optional
+        Well resistance mu parameter
+    s0 : float, optional
+        Drain size ratio bw/B.  When drain wall is at x=0 use s0=0.
+        Default s0=1.
+
+    Returns
+    -------
+    u : float or ndarray of float
+        Pore pressure at specified si
+
+
+    Notes
+    -----
+    The uavg is calculated from the eta method.  It is not the uavg used when
+    considering the vacuum as an equivalent surcharge.  You would have to do
+    other manipulations for that.
+
+    Noteing that :math:`s_i=b_i/b_w`, the radial pore pressure distribution is given by:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{\\frac{2}{n}\\left({s-s_0}\\right)
+                                -\\frac{1}{n^2}\\left({s^2-s_0^2}\\right)
+                                +\\mu_w
+                            }\\right]+u_w
+
+
+    where:
+
+    .. math:: n = \\frac{B}{b_w}
+
+    :math:`b_w` is the drain half-width, :math:`r_e` is the drain influence
+    half-width (when :math:`b_w=0` use :math:`n=B`).  :math:`s_0=1` unless
+    drain wall is at :math:`x=0`  in which case :math:`s_0=0`.
+
+    References
+    ----------
+    .. [1] None.
+
+    """
+    n = np.asarray(n)
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= n)')
+
+
+    mu = plane_strain_mu_ideal(n,s0=s0)
+    term1 = (uavg - uw) / (mu + muw)
+    term2 = 2/n * (si-s0)-1/n**2 * (si**2-s0**2) + muw
+
+    u = term1 * term2 + uw
+    return u
+
+
+def plane_strain_mu_constant(n, s, kap, s0=1):
+    """Plane strain smear zone parameter for smear zone with constant permeability
+
+
+    mu parameter in equal strain plane strain consolidation equations e.g.
+    u = u0 * exp(-8*Th/mu)
+
+    Parameters
+    ----------
+    n : float or ndarray of float
+        Ratio of drain influence half-width to drain wall halfwidth (B/bw).
+        When bw=0 use n=B.
+    s : float or ndarray of float
+        Ratio of smear zone half-width to  drain half-width (bs/bw).  When
+        bw=0 use s=bs
+    kap : float or ndarray of float.
+        Ratio of undisturbed horizontal permeability to smear zone
+        horizontal permeability (kh / ks).
+    s0 : float, optional
+        Drain size ratio bw/B.  When drain wall is at x=0 use s0=0.
+        Default s0=1.
+
+    Returns
+    -------
+    mu : float
+        plane strain smear zone permeability/geometry parameter
+
+    Notes
+    -----
+    The :math:`\\mu` parameter is given by:
+
+    .. math:: \\mu=\\frac{n}{n-s_0)}\\frac{2}{3}
+                \\left({
+                    \\kappa\\left(1-\\frac{s_0}{n}\\right)^3 -
+                    \\left({kappa-1}\\right)\\left(1-\\frac{s}{n}\\right)^3
+                       }\\right)
+
+
+    where:
+
+    .. math:: n = \\frac{B}{b_w}
+
+    .. math:: s = \\frac{b_s}{b_w}
+
+    .. math:: \\kappa = \\frac{k_h}{k_s}
+
+    :math:`b_w` is the drain halfwidth, :math:`B` is the drain influence halfwidth,
+    :math:`b_s` is the smear zone halfwidth, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
+    permeability. :math:`s_0=1` unless
+    drain wall is at :math:`x=0` in which case :math:`s_0=0` and
+    use :math:`n=B`, :math:`s_0=0`, :math:`s=b_s`.
+
+    References
+    ----------
+    .. [1] None
+
+
+
+    """
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
+    if np.any(n <= 1.0):
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(n)])))
+
+    if np.any(s < 1.0):
+        raise ValueError('s must be greater than 1. You have s = {}'.format(
+            ', '.join([str(v) for v in np.atleast_1d(s)])))
+
+    if np.any(kap <= 0.0):
+        raise ValueError('kap must be greater than 0. You have kap = '
+                         '{}'.format(', '.join([str(v) for v in
+                                                np.atleast_1d(kap)])))
+
+    if np.any(s > n):
+        raise ValueError('s must be less than n. You have s = '
+                         '{} and n = {}'.format(
+                             ', '.join([str(v) for v in np.atleast_1d(s)]),
+                             ', '.join([str(v) for v in np.atleast_1d(n)])))
+
+
+    mu = n / (n - s0) * 2 / 3 * (kap * (1 - s0 / n)**3 - (kap - 1) * (1 - s / n)**3)
+    return mu
+
+
+def plane_strain_u_constant(n, s, kap, si, uavg=1, uw=0, muw=0, s0=1):
+    """Plane strain Pore pressure at radius for constant permeability smear zone
+
+    Parameters
+    ----------
+    n : float
+        Ratio of drain influence halfwidth to drain halfwidth (B/bw).
+        When bw=0 use n=B.
+    s : float
+        Ratio of smear zone halfwidth to drain halfwidth (bs/bw). When bw=0
+        use s=bs
+    kap : float
+        Ratio of undisturbed horizontal permeability to permeability at
+        the drain-soil interface (kh / ks).
+    si : float of ndarray of float
+        Normalised halfwidth coordinate(s) at which to calc the pore pressure
+        i.e. si=bi/bw. when bw=0 use si=bi
+    uavg : float, optional = 1
+        Average pore pressure in soil. default = 1.  when `uw`=0 , then if
+        uavg=1.
+    uw : float, optional
+        Pore pressure in drain, default = 0.
+    muw : float, optional
+        Well resistance mu parameter.
+
+    Returns
+    -------
+    u : float or ndarray of float
+        Plane strain pore pressure at specified si
+
+    Notes
+    -----
+    The uavg is calculated from the eta method.  It is not the uavg used when
+    considering the vacuum as an equivalent surcharge.  You would have to do
+    other manipulations for that.
+
+    Noteing that :math:`s_i=b_i/b_w`, the radial pore pressure distribution
+    in the smear zone is given by:
+
+
+    .. math:: u^\\prime(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\kappa\\left({
+                                \\ln\\left({s_i}\\right)
+                                -\\frac{1}{2n^2}\\left({s_i^2-1}\\right)
+                                }\\right)
+                                +\\mu_w
+                            }\\right]+u_w
+
+    The pore pressure in the undisturbed zone is:
+
+    .. math:: u(r) = \\frac{u_{avg}-u_w}{\\mu+\\mu_w}
+                            \\left[{
+                                \\frac{2}{n}\\left({s_i-s}\\right)-\\frac{1}{n^2}\\left({s_i^2-s^2}\\right)
+                                +\\kappa\\left({\\frac{2}{n}\\left({s-s_0}\\right)-\\frac{1}{n^2}\\left({s^2-s_0^2}\\right)}\\right)
+                                +\\mu_w
+                            }\\right]+u_w
+
+    where:
+
+    .. math:: n = \\frac{B}{b_w}
+
+    .. math:: s = \\frac{b_s}{b_w}
+
+    .. math:: \\kappa = \\frac{k_h}{k_s}
+
+    :math:`b_w` is the drain halfwidth, :math:`B` is the drain influence halfwidth,
+    :math:`b_s` is the smear zone halfwidth, :math:`k_h` is the undisturbed
+    horizontal permeability, :math:`k_s` is the smear zone horizontal
+    permeability. :math:`s_0=1` unless
+    drain wall is at :math:`x=0` in which case :math:`s_0=0` and
+    use :math:`n=B`, :math:`s_0=0`, :math:`s=b_s`.
+
+    References
+    ----------
+    .. [1] None.
+
+    """
+
+    def constant_part(n, s, kap, si,s0=1):
+        """u in smear zone with constant permeability i.e from si=1 to si=s"""
+
+        term2 = 2 / n * (si - s0) - 1 / n**2 * (si**2 - s0**2)
+        u = kap * term2
+        return u
+
+    def undisturbed_part(n, s, kap, si,s0=1):
+        """u outside of smear zone with constant permeability i.e from si=1 to si=s"""
+
+        term4 = (2 / n * (si - s) - 1 / n**2 * (si**2 - s**2)
+                    + kap * (2 / n * (s - s0) - 1 / n**2 * (s**2 - s0**2)))
+
+        u = term4
+        return u
+
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
+    if n<=1.0:
+        raise ValueError('n must be greater than 1. You have n = {}'.format(
+            n))
+
+    if s<1.0:
+        raise ValueError('s must be greater than 1. You have s = {}'.format(
+            s))
+
+    if kap<=0.0:
+        raise ValueError('kap must be greater than 0. You have kap = '
+                '{}'.format(kap))
+
+    if s>n:
+        raise ValueError('s must be less than n. You have s = '
+                '{} and n = {}'.format(s, n))
+    si = np.atleast_1d(si)
+    if np.any((si < 1) | (si > n)):
+        raise ValueError('si must satisfy 1 >= si >= n)')
+
+
+    if np.isclose(s, 1) or np.isclose(kap, 1):
+        return plane_strain_u_ideal(n, si, uavg, uw, muw,s0=s0)
+
+
+
+
+    mu = plane_strain_mu_constant(n, s, kap,s0=s0)
+    term1 = (uavg - uw) / (mu + muw)
+    term2 = np.empty_like(si, dtype=float)
+    smear = (si < s)
+    term2[smear] = constant_part(n, s, kap, si[smear],s0=s0)
+    term2[~smear] = undisturbed_part(n, s, kap, si[~smear],s0=s0)
+
+
+    u = term1 * (term2 + muw) + uw
+    return u
+
 
 
 
@@ -3789,7 +4140,7 @@ if __name__ == '__main__':
 #    watch()
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
-    
+
 
 
     eta = 5
