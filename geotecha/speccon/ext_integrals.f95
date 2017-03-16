@@ -2542,8 +2542,729 @@
 
       END SUBROUTINE    
 
+      
+      
 
-    
+      SUBROUTINE eload_sinlinear(loadtim, loadmag, omega, phase, &
+                                 eigs, tvals, dT, a, neig, nload, nt)
+        USE types
+        IMPLICIT NONE
+
+        INTEGER, intent(in) :: neig
+        INTEGER, intent(in) :: nload
+        INTEGER, intent(in) :: nt
+        REAL(DP), intent(in), dimension(0:nload-1) :: loadtim
+        REAL(DP), intent(in), dimension(0:nload-1) :: loadmag
+        REAL(DP), intent(in), dimension(0:neig-1) :: eigs
+        REAL(DP), intent(in), dimension(0:nt-1) :: tvals
+        REAL(DP), intent(in) :: dT
+        REAL(DP), intent(in) :: omega
+        REAL(DP), intent(in) :: phase
+        REAL(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
+        INTEGER :: i , j, k
+        REAL(DP):: EPSILON
+        a=0.0D0
+        EPSILON = 0.0000005D0
+        DO i = 0, nt-1
+          DO k = 0, nload-2
+
+            IF (tvals(i) < loadtim(k)) EXIT !t is before load step
+
+            IF (tvals(i) >= loadtim(k + 1)) THEN
+              !t is after the load step
+              IF(ABS(loadtim(k) - loadtim(k + 1)) <= &
+                (ABS(loadtim(k) + loadtim(k + 1))*EPSILON)) THEN
+                !step load
+                CONTINUE
+              ELSEIF(ABS(loadmag(k) - loadmag(k + 1)) <= &
+                    (ABS(loadmag(k) + loadmag(k + 1))*EPSILON)) THEN
+                !constant load
+                DO j=0, neig-1
+      a(i, j) = a(i, j) + (1.0/eigs(j)*(1.0/(1 + omega**2*eigs(j)**(-2)/&
+      dT**2)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(-omega*(&
+      -loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase) - omega*1.0&
+      /eigs(j)*1.0/(1 + omega**2*eigs(j)**(-2)/dT**2)*cos(-omega*(&
+      -loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*&
+      eigs(j)*(-loadtim(k + 1) + tvals(i)))/dT)*loadmag(k)/dT - 1.0/&
+      eigs(j)*(1.0/(1 + omega**2*eigs(j)**(-2)/dT**2)*exp(-dT*eigs(j)*(&
+      -loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase) - omega*1.0/eigs(j)*1.0/(1 + omega**2*&
+      eigs(j)**(-2)/dT**2)*cos(-omega*(-loadtim(k) + tvals(i)) + omega*&
+      tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))/dT)*&
+      loadmag(k)/dT)
+                END DO
+              ELSE
+                !ramp load
+                DO j=0, neig-1
+      a(i, j) = a(i, j) + (1.0/eigs(j)*(dT*eigs(j)*(-loadtim(k + 1) +&
+      tvals(i))*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(&
+      -omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)*1.0&
+      /(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2&
+      *1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k&
+      )/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*&
+      eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1) - dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i))*exp(-dT*eigs(j)*(-loadtim(k + 1) +&
+      tvals(i)))*sin(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(&
+      i) + phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(&
+      k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/&
+      eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT&
+      **3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k) + dT*&
+      eigs(j)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(-omega*&
+      (-loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)*loadtim(k)&
+      *1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1) - dT*eigs&
+      (j)*loadtim(k + 1)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*&
+      sin(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)&
+      *1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k) - dT*tvals(i)&
+      *eigs(j)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(-omega&
+      *(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)*1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*loadmag(k + 1) + dT*tvals(i)*eigs(j)*exp&
+      (-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(-omega*(-loadtim(k&
+      + 1) + tvals(i)) + omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*&
+      loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*loadmag(k) - omega*(-loadtim(k + 1) + tvals(i))&
+      *cos(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase&
+      )*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*1.0/(-dT*eigs(j)*&
+      loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*loadmag(k + 1) + omega*(-loadtim(k + 1) + tvals&
+      (i))*cos(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) +&
+      phase)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*loadmag(k) - omega*cos(-omega*(-loadtim(&
+      k + 1) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i)))*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(&
+      k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k&
+      + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)&
+      **(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/&
+      dT**3)*loadmag(k + 1) + omega*loadtim(k + 1)*cos(-omega*(-loadtim&
+      (k + 1) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i)))*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT&
+      *eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT +&
+      2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k) + omega*tvals(i)*cos(-omega*(-loadtim(k + 1) + tvals(i&
+      )) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k + 1) +&
+      tvals(i)))*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k&
+      ) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/&
+      eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT&
+      **3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1) -&
+      omega*tvals(i)*cos(-omega*(-loadtim(k + 1) + tvals(i)) + omega*&
+      tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k) + exp(-dT*&
+      eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(-omega*(-loadtim(k + 1&
+      ) + tvals(i)) + omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*loadtim(&
+      k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k&
+      + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)&
+      **(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/&
+      dT**3)*loadmag(k + 1) - exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(&
+      i)))*sin(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) +&
+      phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k) + omega**2*&
+      1.0/eigs(j)*(-loadtim(k + 1) + tvals(i))*exp(-dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i)))*sin(-omega*(-loadtim(k + 1) + tvals(&
+      i)) + omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k + 1)/dT - omega**2*1.0/eigs(j)*(-loadtim(k + 1) + tvals&
+      (i))*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(-omega*(&
+      -loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)*1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*loadmag(k)/dT + omega**2*1.0/eigs(j)*exp&
+      (-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin(-omega*(-loadtim(k&
+      + 1) + tvals(i)) + omega*tvals(i) + phase)*loadtim(k)*1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*loadmag(k + 1)/dT - omega**2*1.0/eigs(j)&
+      *loadtim(k + 1)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*sin&
+      (-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k)/dT - omega**2&
+      *tvals(i)*1.0/eigs(j)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i&
+      )))*sin(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) +&
+      phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1)/dT +&
+      omega**2*tvals(i)*1.0/eigs(j)*exp(-dT*eigs(j)*(-loadtim(k + 1) +&
+      tvals(i)))*sin(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(&
+      i) + phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(&
+      k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/&
+      eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT&
+      **3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k)/dT - 2*&
+      omega*1.0/eigs(j)*cos(-omega*(-loadtim(k + 1) + tvals(i)) + omega&
+      *tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1)/dT + 2*&
+      omega*1.0/eigs(j)*cos(-omega*(-loadtim(k + 1) + tvals(i)) + omega&
+      *tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k)/dT - omega**3&
+      *eigs(j)**(-2)*(-loadtim(k + 1) + tvals(i))*cos(-omega*(-loadtim(&
+      k + 1) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i)))*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT&
+      *eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT +&
+      2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k + 1)/dT**2 + omega**3*eigs(j)**(-2)*(-loadtim(k + 1) +&
+      tvals(i))*cos(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i&
+      ) + phase)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*1.0/(-dT&
+      *eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*loadmag(k)/dT**2 - omega**3*eigs(j)**(-2&
+      )*cos(-omega*(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) +&
+      phase)*exp(-dT*eigs(j)*(-loadtim(k + 1) + tvals(i)))*loadtim(k)*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1)/dT**2 +&
+      omega**3*eigs(j)**(-2)*loadtim(k + 1)*cos(-omega*(-loadtim(k + 1&
+      ) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim&
+      (k + 1) + tvals(i)))*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)&
+      *loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega&
+      **2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k&
+      + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k)/&
+      dT**2 + omega**3*tvals(i)*eigs(j)**(-2)*cos(-omega*(-loadtim(k +&
+      1) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i)))*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT&
+      *eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT +&
+      2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k + 1)/dT**2 - omega**3*tvals(i)*eigs(j)**(-2)*cos(-omega&
+      *(-loadtim(k + 1) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*&
+      eigs(j)*(-loadtim(k + 1) + tvals(i)))*1.0/(-dT*eigs(j)*loadtim(k&
+      + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k +&
+      1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**&
+      (-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT&
+      **3)*loadmag(k)/dT**2 - omega**2*eigs(j)**(-2)*exp(-dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i)))*sin(-omega*(-loadtim(k + 1) + tvals(&
+      i)) + omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k + 1)/dT**2 + omega**2*eigs(j)**(-2)*exp(-dT*eigs(j)*(&
+      -loadtim(k + 1) + tvals(i)))*sin(-omega*(-loadtim(k + 1) + tvals(&
+      i)) + omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k)/dT**2)/dT - 1.0/eigs(j)*(dT*eigs(j)*1.0/(-dT*eigs(j)*&
+      loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*exp(-dT*eigs(j)*(&
+      -loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase)*loadmag(k + 1) - dT*eigs(j)*1.0/(-dT*eigs&
+      (j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(&
+      j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT -&
+      omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(&
+      -3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*exp(-dT*eigs(j)*(&
+      -loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase)*loadmag(k) - dT*eigs(j)*loadtim(k + 1)*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(j)*(&
+      -loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase)*loadmag(k) + dT*eigs(j)*loadtim(k)*1.0/(&
+      -dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(&
+      i)))*sin(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase&
+      )*loadmag(k + 1) - dT*tvals(i)*eigs(j)*1.0/(-dT*eigs(j)*loadtim(k&
+      + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k +&
+      1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**&
+      (-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT&
+      **3)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k + 1)&
+      + dT*tvals(i)*eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j&
+      )*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega&
+      **2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k&
+      + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*&
+      eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals&
+      (i)) + omega*tvals(i) + phase)*loadmag(k) - omega*1.0/(-dT*eigs(j&
+      )*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)&
+      *loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*cos(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim&
+      (k) + tvals(i)))*loadmag(k + 1) + omega*1.0/(-dT*eigs(j)*loadtim(&
+      k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k&
+      + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)&
+      **(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/&
+      dT**3)*(-loadtim(k) + tvals(i))*cos(-omega*(-loadtim(k) + tvals(i&
+      )) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k) + tvals&
+      (i)))*loadmag(k) + omega*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(&
+      k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k&
+      + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)&
+      **(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/&
+      dT**3)*cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) +&
+      phase)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k) -&
+      omega*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)&
+      *(-loadtim(k) + tvals(i)))*loadmag(k + 1) + omega*tvals(i)*1.0/(&
+      -dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))&
+      *loadmag(k + 1) - omega*tvals(i)*1.0/(-dT*eigs(j)*loadtim(k + 1)&
+      + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/&
+      dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3&
+      )*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)&
+      *cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k) + 1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i&
+      )))*sin(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)&
+      *loadmag(k + 1) - 1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(&
+      j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i))&
+      + omega*tvals(i) + phase)*loadmag(k) + omega**2*1.0/eigs(j)*1.0/(&
+      -dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*exp(-dT*eigs&
+      (j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i&
+      )) + omega*tvals(i) + phase)*loadmag(k + 1)/dT - omega**2*1.0/&
+      eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))&
+      *exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k)/dT - omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*&
+      eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2&
+      *omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k)/dT + omega**2*&
+      1.0/eigs(j)*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(&
+      j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*&
+      omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k + 1)/dT - omega&
+      **2*tvals(i)*1.0/eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*&
+      eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2&
+      *omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k + 1)/dT + omega&
+      **2*tvals(i)*1.0/eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*&
+      eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2&
+      *omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k)/dT - 2*omega*&
+      1.0/eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(&
+      k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/&
+      eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT&
+      **3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)&
+      *(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT + 2*omega*1.0/eigs(j&
+      )*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(-loadtim(k)&
+      + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k&
+      ) + tvals(i)))*loadmag(k)/dT - omega**3*eigs(j)**(-2)*1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*cos(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)&
+      *(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT**2 + omega**3*eigs(j&
+      )**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))&
+      *cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k)/dT**2 +&
+      omega**3*eigs(j)**(-2)*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(k&
+      + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k +&
+      1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**&
+      (-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT&
+      **3)*cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase&
+      )*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k)/dT**2 -&
+      omega**3*eigs(j)**(-2)*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1&
+      ) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)&
+      /dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(&
+      -3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**&
+      3)*cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT**2 +&
+      omega**3*tvals(i)*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp&
+      (-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT**2 -&
+      omega**3*tvals(i)*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp&
+      (-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k)/dT**2 - omega**&
+      2*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(&
+      j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i))&
+      + omega*tvals(i) + phase)*loadmag(k + 1)/dT**2 + omega**2*eigs(j)&
+      **(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(j)*(&
+      -loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase)*loadmag(k)/dT**2)/dT)
+                END DO
+              END IF
+            ELSE
+              !t is in the load step
+              IF(ABS(loadmag(k) - loadmag(k + 1)) <= &
+                    (ABS(loadmag(k) + loadmag(k + 1))*EPSILON)) THEN
+                !constant load
+                DO j=0, neig-1
+      a(i, j) = a(i, j) + (1.0/eigs(j)*(sin(omega*tvals(i) + phase)*1.0/&
+      (1 + omega**2*eigs(j)**(-2)/dT**2) - omega*cos(omega*tvals(i) +&
+      phase)*1.0/eigs(j)*1.0/(1 + omega**2*eigs(j)**(-2)/dT**2)/dT)*&
+      loadmag(k)/dT - 1.0/eigs(j)*(1.0/(1 + omega**2*eigs(j)**(-2)/dT**&
+      2)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim&
+      (k) + tvals(i)) + omega*tvals(i) + phase) - omega*1.0/eigs(j)*1.0&
+      /(1 + omega**2*eigs(j)**(-2)/dT**2)*cos(-omega*(-loadtim(k) +&
+      tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k)&
+      + tvals(i)))/dT)*loadmag(k)/dT)
+                END DO
+              ELSE
+                !ramp load
+                DO j=0, neig-1
+      a(i, j) = a(i, j) + (1.0/eigs(j)*(-dT*sin(omega*tvals(i) + phase)*&
+      eigs(j)*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(&
+      j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*&
+      omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k) + dT*sin(omega*tvals(i) + phase)*eigs(j)*loadtim(k)*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1) - dT*&
+      tvals(i)*sin(omega*tvals(i) + phase)*eigs(j)*1.0/(-dT*eigs(j)*&
+      loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*loadmag(k + 1) + dT*tvals(i)*sin(omega*tvals(i&
+      ) + phase)*eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k) +&
+      omega*cos(omega*tvals(i) + phase)*loadtim(k + 1)*1.0/(-dT*eigs(j)&
+      *loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*loadmag(k) - omega*cos(omega*tvals(i) + phase)*&
+      loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k&
+      ) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/&
+      eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT&
+      **3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1) +&
+      omega*tvals(i)*cos(omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*&
+      loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*loadmag(k + 1) - omega*tvals(i)*cos(omega*tvals&
+      (i) + phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim&
+      (k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/&
+      eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT&
+      **3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k) + sin(&
+      omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs&
+      (j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*&
+      omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k + 1) - sin(omega*tvals(i) + phase)*1.0/(-dT*eigs(j)*&
+      loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*loadmag(k) - omega**2*sin(omega*tvals(i) +&
+      phase)*1.0/eigs(j)*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(k + 1&
+      ) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)&
+      /dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(&
+      -3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**&
+      3)*loadmag(k)/dT + omega**2*sin(omega*tvals(i) + phase)*1.0/eigs(&
+      j)*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1&
+      )/dT - omega**2*tvals(i)*sin(omega*tvals(i) + phase)*1.0/eigs(j)*&
+      1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega&
+      **2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1)/dT +&
+      omega**2*tvals(i)*sin(omega*tvals(i) + phase)*1.0/eigs(j)*1.0/(&
+      -dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*loadmag(k)/dT - 2*omega*cos(omega*&
+      tvals(i) + phase)*1.0/eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k + 1)/dT + 2*omega*cos(omega*tvals(i) + phase)*1.0/eigs(&
+      j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k)/dT + omega**3&
+      *cos(omega*tvals(i) + phase)*eigs(j)**(-2)*loadtim(k + 1)*1.0/(&
+      -dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*loadmag(k)/dT**2 - omega**3*cos(omega&
+      *tvals(i) + phase)*eigs(j)**(-2)*loadtim(k)*1.0/(-dT*eigs(j)*&
+      loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*&
+      loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*loadmag(k + 1)/dT**2 + omega**3*tvals(i)*cos(&
+      omega*tvals(i) + phase)*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k&
+      + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k +&
+      1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**&
+      (-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT&
+      **3)*loadmag(k + 1)/dT**2 - omega**3*tvals(i)*cos(omega*tvals(i)&
+      + phase)*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(&
+      j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*&
+      omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      loadmag(k)/dT**2 - omega**2*sin(omega*tvals(i) + phase)*eigs(j)**&
+      (-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*loadmag(k + 1)/dT**2 +&
+      omega**2*sin(omega*tvals(i) + phase)*eigs(j)**(-2)*1.0/(-dT*eigs(&
+      j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j&
+      )*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT -&
+      omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(&
+      -3)*loadtim(k)/dT**3)*loadmag(k)/dT**2)/dT - 1.0/eigs(j)*(dT*eigs&
+      (j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))&
+      *exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k + 1) - dT*eigs(&
+      j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))&
+      *exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k) - dT*eigs(j)*&
+      loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(&
+      j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i))&
+      + omega*tvals(i) + phase)*loadmag(k) + dT*eigs(j)*loadtim(k)*1.0/&
+      (-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(&
+      i)))*sin(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase&
+      )*loadmag(k + 1) - dT*tvals(i)*eigs(j)*1.0/(-dT*eigs(j)*loadtim(k&
+      + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k +&
+      1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**&
+      (-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT&
+      **3)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k + 1)&
+      + dT*tvals(i)*eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j&
+      )*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega&
+      **2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k&
+      + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*&
+      eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals&
+      (i)) + omega*tvals(i) + phase)*loadmag(k) - omega*1.0/(-dT*eigs(j&
+      )*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)&
+      *loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega&
+      **4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*&
+      loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*cos(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim&
+      (k) + tvals(i)))*loadmag(k + 1) + omega*1.0/(-dT*eigs(j)*loadtim(&
+      k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k&
+      + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)&
+      **(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/&
+      dT**3)*(-loadtim(k) + tvals(i))*cos(-omega*(-loadtim(k) + tvals(i&
+      )) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k) + tvals&
+      (i)))*loadmag(k) + omega*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(&
+      k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k&
+      + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)&
+      **(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/&
+      dT**3)*cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) +&
+      phase)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k) -&
+      omega*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)&
+      *(-loadtim(k) + tvals(i)))*loadmag(k + 1) + omega*tvals(i)*1.0/(&
+      -dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))&
+      *loadmag(k + 1) - omega*tvals(i)*1.0/(-dT*eigs(j)*loadtim(k + 1)&
+      + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/&
+      dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3&
+      )*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)&
+      *cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k) + 1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i&
+      )))*sin(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)&
+      *loadmag(k + 1) - 1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(&
+      j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i))&
+      + omega*tvals(i) + phase)*loadmag(k) + omega**2*1.0/eigs(j)*1.0/(&
+      -dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)&
+      /dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs&
+      (j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*exp(-dT*eigs&
+      (j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i&
+      )) + omega*tvals(i) + phase)*loadmag(k + 1)/dT - omega**2*1.0/&
+      eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))&
+      *exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k)/dT - omega**2*&
+      1.0/eigs(j)*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*&
+      eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2&
+      *omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k)/dT + omega**2*&
+      1.0/eigs(j)*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(&
+      j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*&
+      omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k + 1)/dT - omega&
+      **2*tvals(i)*1.0/eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*&
+      eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2&
+      *omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k + 1)/dT + omega&
+      **2*tvals(i)*1.0/eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*&
+      eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2&
+      *omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k&
+      ) + tvals(i)) + omega*tvals(i) + phase)*loadmag(k)/dT - 2*omega*&
+      1.0/eigs(j)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(&
+      k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/&
+      eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT&
+      **3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)&
+      *(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT + 2*omega*1.0/eigs(j&
+      )*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*&
+      omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*&
+      loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*cos(-omega*(-loadtim(k)&
+      + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)*(-loadtim(k&
+      ) + tvals(i)))*loadmag(k)/dT - omega**3*eigs(j)**(-2)*1.0/(-dT*&
+      eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/&
+      eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT&
+      - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)&
+      **(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))*cos(-omega*(&
+      -loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp(-dT*eigs(j)&
+      *(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT**2 + omega**3*eigs(j&
+      )**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*(-loadtim(k) + tvals(i))&
+      *cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k)/dT**2 +&
+      omega**3*eigs(j)**(-2)*loadtim(k + 1)*1.0/(-dT*eigs(j)*loadtim(k&
+      + 1) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k +&
+      1)/dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**&
+      (-3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT&
+      **3)*cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase&
+      )*exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k)/dT**2 -&
+      omega**3*eigs(j)**(-2)*loadtim(k)*1.0/(-dT*eigs(j)*loadtim(k + 1&
+      ) + dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)&
+      /dT + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(&
+      -3)*loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**&
+      3)*cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*&
+      exp(-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT**2 +&
+      omega**3*tvals(i)*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp&
+      (-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k + 1)/dT**2 -&
+      omega**3*tvals(i)*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) +&
+      dT*eigs(j)*loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT&
+      + 2*omega**2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*&
+      loadtim(k + 1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*&
+      cos(-omega*(-loadtim(k) + tvals(i)) + omega*tvals(i) + phase)*exp&
+      (-dT*eigs(j)*(-loadtim(k) + tvals(i)))*loadmag(k)/dT**2 - omega**&
+      2*eigs(j)**(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*&
+      loadtim(k) - 2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**&
+      2*1.0/eigs(j)*loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k +&
+      1)/dT**3 + omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(&
+      j)*(-loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i))&
+      + omega*tvals(i) + phase)*loadmag(k + 1)/dT**2 + omega**2*eigs(j)&
+      **(-2)*1.0/(-dT*eigs(j)*loadtim(k + 1) + dT*eigs(j)*loadtim(k) -&
+      2*omega**2*1.0/eigs(j)*loadtim(k + 1)/dT + 2*omega**2*1.0/eigs(j)&
+      *loadtim(k)/dT - omega**4*eigs(j)**(-3)*loadtim(k + 1)/dT**3 +&
+      omega**4*eigs(j)**(-3)*loadtim(k)/dT**3)*exp(-dT*eigs(j)*(&
+      -loadtim(k) + tvals(i)))*sin(-omega*(-loadtim(k) + tvals(i)) +&
+      omega*tvals(i) + phase)*loadmag(k)/dT**2)/dT)
+                END DO
+              END IF
+            END IF
+          END DO
+        END DO
+
+      END SUBROUTINE
+
+
+
+        
 
     
 

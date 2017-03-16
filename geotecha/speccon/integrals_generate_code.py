@@ -684,7 +684,7 @@ def Eload_coslinear_implementations():
     this matrix will be assembled into the diagonal matrix 'E' elsewhere.
 
 
-    Paste the resulting code (at least the loops) into `Eload_linear`.
+    Paste the resulting code (at least the loops) into `Eload_coslinear`.
 
     Creates three implementations:
 
@@ -1337,7 +1337,328 @@ def EDload_coslinear(loadtim, loadmag, omega, phase,eigs, tvals, dT=1.0, impleme
 
     return fn, fn2
 
+def Eload_sinlinear_implementations():
+    """Code generation for Integration of sin(omega*tau+phase)*load(tau) * exp(dT * eig * (t-tau))
+    between [0, t], where load(tau) is piecewise linear.
 
+    Performs integrations involving a piecewise linear load.  A 2d array of
+    dimensions A[len(tvals), len(eigs)]
+    is produced where the 'i'th row of A contains the diagonal elements of the
+    spectral 'E' matrix calculated for the time value tvals[i]. i.e. rows of
+    this matrix will be assembled into the diagonal matrix 'E' elsewhere.
+
+
+    Paste the resulting code (at least the loops) into `Eload_sinlinear`.
+
+    Creates three implementations:
+
+     - 'scalar', python loops (slowest).
+     - 'vectorized', numpy (much faster than scalar).
+     - 'fortran', fortran loops (fastest).  Needs to be compiled and interfaced
+       with f2py.
+
+    Returns
+    -------
+    fn : string
+        Python code with scalar (loops) and vectorized (numpy) implementations
+        also calls the fortran version.
+    fn2 : string
+        Fortran code.  needs to be compiled with f2py
+
+
+    Notes
+    -----
+    Assuming the load are formulated as the product of separate time and depth
+    dependant functions:
+
+    .. math:: \\sigma\\left({Z,t}\\right)=\\sigma\\left({Z}\\right)\\sigma\\left({t}\\right)
+
+    the solution to the consolidation equation using the spectral method has
+    the form:
+
+    .. math:: u\\left(Z,t\\right)=\\mathbf{\\Phi v E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}
+
+    The matrix :math:`E` is a time dependent diagonal matrix due to time
+    dependant loadings.  The version of :math:`E` calculated here in
+    `Eload_sinlinear` is from loading terms in the governing equation that are NOT
+    differentiated wrt :math:`t`.
+    The diagonal elements of :math:`E` are given by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{0}^t{{\\sin\\left(\\omega\\tau+\\textrm{phase}\\right)}{\\sigma\\left(\\tau\\right)}{\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}\\,d\\tau}
+
+    where
+
+     :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
+     :math:`dT` is a time factor for numerical convienience,
+     :math:`\\sigma\left(\\tau\\right)` is the time dependant portion of the loading function.
+
+    When the time dependant loading term :math:`\\sigma\\left(\\tau\\right)` is
+    piecewise in time. The contribution of each load segment is found by:
+
+    .. math:: \\mathbf{E}_{i,i}=\\int_{t_s}^{t_f}{{\\sin\\left(\\omega\\tau+\\textrm{phase}\\right)}{\\sigma\\left(\\tau\\right)}\\exp\\left({dT\\left(t-\\tau\\right)*\\lambda_i}\\right)\\,d\\tau}
+
+    where
+
+    .. math:: t_s = \\min\\left(t,t_{increment\\:start}\\right)
+
+    .. math:: t_f = \\min\\left(t,t_{increment\\:end}\\right)
+
+    (note that this function,`Eload_sinlinear`, rather than use :math:`t_s` and
+    :math:`t_f`,
+    explicitly finds increments that the current time falls in, falls after,
+    and falls before and treates each case on it's own.)
+
+    Each :math:`t` value of interest requires a separate diagonal matrix
+    :math:`E`.  To use space more efficiently and to facilitate numpy
+    broadcasting when using the results of the function, the diagonal elements
+    of :math:`E` for each time value `t` value are stored in the rows of
+    array :math:`A` returned by `Eload_sinlinear`.  Thus:
+
+    .. math:: \\mathbf{A}=\\left(\\begin{matrix}E_{0,0}(t_0)&E_{1,1}(t_0)& \cdots & E_{neig-1,neig-1}(t_0)\\\ E_{0,0}(t_1)&E_{1,1}(t_1)& \\cdots & E_{neig-1,neig-1}(t_1)\\\ \\vdots&\\vdots&\\ddots&\\vdots \\\ E_{0,0}(t_m)&E_{1,1}(t_m)& \cdots & E_{neig-1,neig-1}(t_m)\\end{matrix}\\right)
+
+    See Also
+    --------
+    geotecha.speccon.integrals.Eload_sinlinear : Resulting function.
+    geotecha.speccon.integrals.pEload_sinlinear : Resulting function with PolyLine
+        inputs.
+    geotecha.speccon.ext_integrals.eload_sinlinear : Resulting fortran function.
+    Eload_linear_implementations : Similar function with no
+        sine term.
+    Eload_coslinear_implementations : Similar function
+        but with cosine term.
+
+    """
+
+    from sympy import exp
+
+    sympy.var('t, tau, dT, eig, omega, phase')
+    loadmag = sympy.tensor.IndexedBase('loadmag')
+    loadtim = sympy.tensor.IndexedBase('loadtim')
+    tvals = sympy.tensor.IndexedBase('tvals')
+    eigs = sympy.tensor.IndexedBase('eigs')
+    i = sympy.tensor.Idx('i')
+    j = sympy.tensor.Idx('j')
+    k = sympy.tensor.Idx('k')
+
+
+    t0, t1, sig0, sig1 = sympy.symbols('t0, t1, sig0, sig1')
+    x, x0, x1 = sympy.symbols('x, x0, x1')
+    A, B = sympy.symbols('A, B')
+#    load1 = sympy.sin(omega * tau + phase)
+    load1 = sympy.sin(A * x + B)
+    load2 = sig0 + (sig1 - sig0)/(t1 - t0) * (tau - t0)
+
+    load1 = load1.subs(tau, x/(dT*eig)+t)
+    load2 = load2.subs(tau, x/(dT*eig)+t)
+
+    dx_dtau = dT * eig
+    mp = [(x0, -dT * eig*(t-t0)),
+          (x1, -dT * eig*(t-t1)),
+            (A, omega / (dT*eig)),
+            (B, omega * t + phase)]
+
+    mp2 = [(sig0, loadmag[k]),
+           (sig1, loadmag[k+1]),
+            (t0, loadtim[k]),
+            (t1, loadtim[k+1])]
+#    mp = [(exp(-dT*eig*t)*exp(dT*eig*loadtim[k]),
+#           exp(-dT*eig*(t-loadtim[k]))),
+#          (exp(-dT*eig*t)*exp(dT*eig*loadtim[k+1]),
+#           exp(-dT*eig*(t-loadtim[k+1])))]
+#    the default output for the integrals will have expression s like
+#    exp(-dT*eig*t)*exp(dT*eig*loadtim[k]).  when dT*eig*loadtim[k] is large
+#    the exponential may be so large as to cause an error.  YOu may need to
+#    manually alter the expression to exp(is large exp(-dT*eig*(t-loadtim[k]))
+#    in which case the term in the exponential will always be negative and not
+#    lead to any numerical blow up.
+#    load = linear(tau, loadtim[k], loadmag[k], loadtim[k+1], loadmag[k+1])
+#    after_instant = (loadmag[k+1] - loadmag[k]) * exp(-dT * eig * (t - loadtim[k]))
+#    mp does this automatically with subs
+#    load = linear(tau, loadtim[k], loadmag[k], loadtim[k+1], loadmag[k+1])
+    within_constant = sig0 * load1 * exp(x) / dx_dtau
+    within_constant = sympy.integrate(within_constant, (x, x0, 0),risch=False, conds='none')
+    within_constant = within_constant.subs(mp)
+    within_constant = within_constant.subs(mp2)
+    after_constant = sig0 * load1 * exp(x) / dx_dtau
+    after_constant = sympy.integrate(after_constant, (x, x0, x1), risch=False, conds='none')
+    after_constant = after_constant.subs(mp)
+    after_constant = after_constant.subs(mp2)
+
+    within_ramp = load1 * load2 * exp(x) / dx_dtau
+    within_ramp = sympy.integrate(within_ramp, (x, x0, 0), risch=False, conds='none')
+    within_ramp = within_ramp.subs(mp)
+    within_ramp = within_ramp.subs(mp2)
+
+    after_ramp = load1 * load2 * exp(x) / dx_dtau
+    after_ramp = sympy.integrate(after_ramp, (x, x0, x1), risch=False, conds='none')
+    after_ramp = after_ramp.subs(mp)
+    after_ramp = after_ramp.subs(mp2)
+
+
+    text_python = """\
+def Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, implementation='vectorized'):
+
+    loadtim = np.asarray(loadtim)
+    loadmag = np.asarray(loadmag)
+    eigs = np.asarray(eigs)
+    tvals = np.asarray(tvals)
+
+    if implementation == 'scalar':
+        sin = math.sin
+        cos = math.cos
+        exp = math.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        for i, t in enumerate(tvals):
+            for k in constants_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ({0})
+            for k in constants_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ({1})
+            for k in ramps_containing_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ({2})
+            for k in ramps_less_than_t[i]:
+                for j, eig in enumerate(eigs):
+                    A[i,j] += ({3})
+    elif implementation == 'fortran':
+        #note than all fortran subroutines are lowercase.
+
+        import geotecha.speccon.ext_integrals as ext_integ
+        A = ext_integ.eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+        #previous two lines are just for development to make sure that
+        #the fortran code is actually working.  They force
+#        try:
+#            from geotecha.speccon.ext_integrals import eload_linear as fn
+#        except ImportError:
+#            fn = Eload_sinlinear
+#         A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+    else:#default is 'vectorized' using numpy
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
+
+        A = np.zeros([len(tvals), len(eigs)])
+
+        (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
+            ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
+
+        eig = eigs[:, None]
+        for i, t in enumerate(tvals):
+            k = constants_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum({0}, axis=1)
+
+            k = constants_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum({1}, axis=1)
+
+            k = ramps_containing_t[i]
+            if len(k):
+                A[i, :] += np.sum({2}, axis=1)
+
+            k = ramps_less_than_t[i]
+            if len(k):
+                A[i, :] += np.sum({3}, axis=1)
+    return A"""
+
+
+
+    text_fortran = """\
+      SUBROUTINE eload_sinlinear(loadtim, loadmag, omega, phase, &
+                                 eigs, tvals, dT, a, neig, nload, nt)
+        USE types
+        IMPLICIT NONE
+
+        INTEGER, intent(in) :: neig
+        INTEGER, intent(in) :: nload
+        INTEGER, intent(in) :: nt
+        REAL(DP), intent(in), dimension(0:nload-1) :: loadtim
+        REAL(DP), intent(in), dimension(0:nload-1) :: loadmag
+        REAL(DP), intent(in), dimension(0:neig-1) :: eigs
+        REAL(DP), intent(in), dimension(0:nt-1) :: tvals
+        REAL(DP), intent(in) :: dT
+        REAL(DP), intent(in) :: omega
+        REAL(DP), intent(in) :: phase
+        REAL(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
+        INTEGER :: i , j, k
+        REAL(DP):: EPSILON
+        a=0.0D0
+        EPSILON = 0.0000005D0
+        DO i = 0, nt-1
+          DO k = 0, nload-2
+
+            IF (tvals(i) < loadtim(k)) EXIT !t is before load step
+
+            IF (tvals(i) >= loadtim(k + 1)) THEN
+              !t is after the load step
+              IF(ABS(loadtim(k) - loadtim(k + 1)) <= &
+                (ABS(loadtim(k) + loadtim(k + 1))*EPSILON)) THEN
+                !step load
+                CONTINUE
+              ELSEIF(ABS(loadmag(k) - loadmag(k + 1)) <= &
+                    (ABS(loadmag(k) + loadmag(k + 1))*EPSILON)) THEN
+                !constant load
+                DO j=0, neig-1
+{0}
+                END DO
+              ELSE
+                !ramp load
+                DO j=0, neig-1
+{1}
+                END DO
+              END IF
+            ELSE
+              !t is in the load step
+              IF(ABS(loadmag(k) - loadmag(k + 1)) <= &
+                    (ABS(loadmag(k) + loadmag(k + 1))*EPSILON)) THEN
+                !constant load
+                DO j=0, neig-1
+{2}
+                END DO
+              ELSE
+                !ramp load
+                DO j=0, neig-1
+{3}
+                END DO
+              END IF
+            END IF
+          END DO
+        END DO
+
+      END SUBROUTINE
+
+
+
+    """
+
+
+
+    fn = text_python.format(
+            tw(within_constant, 6),
+            tw(after_constant, 6),
+            tw(within_ramp, 6),
+            tw(after_ramp, 6))
+
+
+    mp3 = [(eig, eigs[j]),
+           (t,tvals[i])]
+    after_constant = after_constant.subs(mp3)
+    after_ramp = after_ramp.subs(mp3)
+    within_constant = within_constant.subs(mp3)
+    within_ramp = within_ramp.subs(mp3)
+    fn2 = text_fortran.format(
+        fcode_one_large_expr(after_constant, prepend='a(i, j) = a(i, j) + '),
+        fcode_one_large_expr(after_ramp, prepend='a(i, j) = a(i, j) + '),
+        fcode_one_large_expr(within_constant, prepend='a(i, j) = a(i, j) + '),
+        fcode_one_large_expr(within_ramp, prepend='a(i, j) = a(i, j) + '))
+
+    return fn, fn2
 
 
 
@@ -3038,7 +3359,7 @@ def dim1sin_DD_abDDf_linear_implementations():
     geotecha.speccon.integrals.pdim1sin_DD_abDDf_linear : Resulting function with PolyLine
         inputs.
     geotecha.speccon.ext_integrals.dim1sin_dd_abDddf_linear : Resulting fortran function.
-    
+
     Notes
     -----
     The `dim1sin_DD_abDDf_linear` matrix, :math:`A` is given by:
@@ -3059,8 +3380,8 @@ def dim1sin_DD_abDDf_linear_implementations():
 
     To make the above integration simpler we integate by parts to get:
 
-    .. math:: \\mathbf{A}_{i,j}= \\left.{\\frac{d}{dz}\\left({a\\left(z\\right)}{b\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\right)\\phi_i}\\right|_{z=0}^{z=1} 
-                    - \\left.{{a\\left(z\\right)}{b\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\frac{d\\phi_i}{dz}}\\right|_{z=0}^{z=1} 
+    .. math:: \\mathbf{A}_{i,j}= \\left.{\\frac{d}{dz}\\left({a\\left(z\\right)}{b\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\right)\\phi_i}\\right|_{z=0}^{z=1}
+                    - \\left.{{a\\left(z\\right)}{b\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\frac{d\\phi_i}{dz}}\\right|_{z=0}^{z=1}
                +\\int_{0}^1{{a\\left(z\\right)}{b\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\frac{d^2\\phi_i}{dz^2}\\,dz}
 
     In this case the sine basis functions means the end point terms in the above
@@ -3104,7 +3425,7 @@ def dim1sin_DD_abDDf_linear_implementations():
     foff_vector = foff_vector.subs(v.map_top_to_t_bot_to_b)
 
 
-    
+
 
     text_python = """def dim1sin_DD_abDDf_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectorized'):
 
@@ -3239,11 +3560,12 @@ if __name__ == '__main__':
 #    fn, fn2=dim1sin_ab_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_abc_linear_implementations();print(fn);print('#'*40); print(fn2)
 #    fn, fn2=dim1sin_D_aDb_linear_implementations();print(fn);print('#'*40); print(fn2)
-    fn, fn2=dim1sin_DD_abDDf_linear_implementations();print(fn);print('#'*40); print(fn2)
+#    fn, fn2=dim1sin_DD_abDDf_linear_implementations();print(fn);print('#'*40); print(fn2)
+    fn, fn2=Eload_sinlinear_implementations();print(fn);print('#'*40); print(fn2)
 #    print(dim1sin_a_linear_between())
 #    print(dim1_ab_linear_between())
 
-    with open("C:\\temp_py.txt", 'w') as f:
+    with open("C:\\temp\\temp_py.txt", 'w') as f:
         f.write(fn)
-    with open("C:\\temp_for.txt", 'w') as f:
+    with open("C:\\temp\\temp_for.txt", 'w') as f:
         f.write(fn2)
