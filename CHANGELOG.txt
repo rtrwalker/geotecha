@@ -1,4 +1,11 @@
 -----------------------------------------------------------------------
+2017-03-17 Generated new code for spectral galerkin method integration.
+           Integration is Eload_sinlinear for use with beams with moving
+           loads. Generation code and result code incorporated into:
+           geotecha.speccon.integrals_generate_code
+           geotecha.speccon.integrals
+           geotecha.speccon.ext_integrals
+           geotecha.speccon.tests.test_integrals
 2016-05-31 geotecha-0.1.4 Release.
            Added YinAndGrahamSoilModel voidratio_stress relationship.
            Added Elasto-Plastic for Unsaturated Soils (EPUS) based on
