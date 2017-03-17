@@ -2284,6 +2284,103 @@ def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn,
     return foft_Ipsiw_the
 
 
+def dim1sin_E_Igamv_the_mvpl(m,
+                            eigs,
+                            tvals,
+                            Igamv,
+                            moving_loads,
+#                            pseudo_k,
+#                            mag_vs_time,
+#                            omega_phase=None,
+                            dT=1.0,
+                            theta_zero_indexes=None,
+                            implementation='vectorized'):
+    """Calculate E and theta parts and assemble E_Igamv_the matrix
+    for loading terms of the form a(Z) * delta(Z-Zd)*mag(t) where mag is
+    piecewise linear in time multiplied by cos(omega * t + phase).
+
+
+    Make the E*inverse(gam*v)*theta part of solution
+    u(Z,t)=phi*v*E*inverse(gam*v)*theta for terms of the form
+    a(Z) * delta(Z-Zd)*mag(t).
+    The contribution of each `mag_vs_time`-`omega_phase` pairing and each zval
+    are superposed. The result is an array
+    of size (neig, len(tvals)). So each column is the are the column vector
+    E*inverse(gam*v)*theta calculated at each output time.  This will allow
+    us later to do u(Z,t) = phi*v*E_Igamv_the.
+
+    Uses sin(m*Z) in the calculation of theta.
+
+
+    Parameters
+    ----------
+    m : ``list`` of ``float``
+        Eigenvalues of BVP, the m in sin(m*Z). Generate with
+        geotecha.speccon.m_from_sin_mx.
+    eigs : 1d numpy.ndarray
+        List of eigenvalues of the spectral matrix i.e. Eigenvalues of the
+        square Igam_psi matrix.
+    tvals : 1d numpy.ndarray`
+        List of time values to evaluate E matrix at.
+    Igamv : ndarray
+        Speccon matrix.  Igamv = inverse of [gam * v])
+    moving_loads : list of MovingPointLoads objects
+        List of loads to apply .
+    dT : ``float``, optional
+        Time factor multiple for numerical convieniece. Default dT=1.0.
+    theta_zero_indexes : slice/list etc., optional
+        A slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        Default theta_zero_indexes=None i.e. no elements of theta will be
+        set to zero.
+
+    Returns
+    -------
+    E_Igamv_the : ndarray
+        Loading matrix of size (neig, len(tvals)).
+
+    Notes
+    -----
+    Assuming the loads are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
+
+
+    """
+
+    E_Igamv_the = np.zeros((len(eigs), len(tvals), len(m)))
+
+
+
+    for mvpl in moving_loads:
+        plines, omega_phase = mvpl.convert_to_specbeam()
+        omega, phase = omega_phase
+
+#TODO stopped here
+
+    if omega_phase is None:
+            omega_phase = [None] * len(mag_vs_time)
+
+    for z, k, mag_vs_t, om_ph in zip(zvals, pseudo_k, mag_vs_time, omega_phase):
+        if mag_vs_t is None:
+            continue
+        theta = k * np.sin(z * m)
+        if not theta_zero_indexes is None:
+            theta[theta_zero_indexes] = 0.0
+        if not om_ph is None:
+            omega, phase = om_ph
+            E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
+        else:
+            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT, implementation=implementation)
+        E_Igamv_the += (E*np.dot(Igamv, theta)).T
+
+
+    return E_Igamv_the
+
+
+
 if __name__ == '__main__':
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
