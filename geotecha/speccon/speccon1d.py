@@ -2350,31 +2350,51 @@ def dim1sin_E_Igamv_the_mvpl(m,
 
     """
 
-    E_Igamv_the = np.zeros((len(eigs), len(tvals), len(m)))
-
+    E_the = np.zeros(len(tvals), (len(eigs), len(m)))
+    #axes are (t,eig,theta), they will be transposed at the end of the function.
 
 
     for mvpl in moving_loads:
-        plines, omega_phase = mvpl.convert_to_specbeam()
-        omega, phase = omega_phase
+        plines, omega_phases = mvpl.convert_to_specbeam()
 
-#TODO stopped here
+        for mag_vs_t, omega_phase in zip(plines, omega_phases):
+            omega, phase = omega_phase
+            for i, mi in enumerate(m):
 
-    if omega_phase is None:
-            omega_phase = [None] * len(mag_vs_time)
+                E_the[:, :, i] += (
+                        integ.pEload_sinlinear(mag_vs_t,
+                                         omega*mi, phase*mi,
+                                         eigs,
+                                         tvals, dT,
+                                         implementation=implementation))
 
-    for z, k, mag_vs_t, om_ph in zip(zvals, pseudo_k, mag_vs_time, omega_phase):
-        if mag_vs_t is None:
-            continue
-        theta = k * np.sin(z * m)
-        if not theta_zero_indexes is None:
-            theta[theta_zero_indexes] = 0.0
-        if not om_ph is None:
-            omega, phase = om_ph
-            E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
-        else:
-            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT, implementation=implementation)
-        E_Igamv_the += (E*np.dot(Igamv, theta)).T
+
+    if not theta_zero_indexes is None:
+         E_the[:, :, theta_zero_indexes] = 0.0
+
+    E_theta *= Igamv[np.newaxis, :, :]
+
+    E_Igamv_the = E_the.sum(axis=-1).T
+
+
+
+
+
+#    if omega_phase is None:
+#            omega_phase = [None] * len(mag_vs_time)
+#
+#    for z, k, mag_vs_t, om_ph in zip(zvals, pseudo_k, mag_vs_time, omega_phase):
+#        if mag_vs_t is None:
+#            continue
+#        theta = k * np.sin(z * m)
+#        if not theta_zero_indexes is None:
+#            theta[theta_zero_indexes] = 0.0
+#        if not om_ph is None:
+#            omega, phase = om_ph
+#            E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
+#        else:
+#            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT, implementation=implementation)
+#        E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
 
     return E_Igamv_the
