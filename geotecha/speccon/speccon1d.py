@@ -2350,9 +2350,13 @@ def dim1sin_E_Igamv_the_mvpl(m,
 
     """
 
-    E_the = np.zeros(len(tvals), (len(eigs), len(m)))
+    E_the = np.zeros((len(tvals), len(eigs), len(m)))
     #axes are (t,eig,theta), they will be transposed at the end of the function.
 
+    if not theta_zero_indexes is None:
+        avoid = range(len(m))[theta_zero_indexes]
+    else:
+        avoid = []
 
     for mvpl in moving_loads:
         plines, omega_phases = mvpl.convert_to_specbeam()
@@ -2360,7 +2364,8 @@ def dim1sin_E_Igamv_the_mvpl(m,
         for mag_vs_t, omega_phase in zip(plines, omega_phases):
             omega, phase = omega_phase
             for i, mi in enumerate(m):
-
+                if i in avoid:
+                    continue
                 E_the[:, :, i] += (
                         integ.pEload_sinlinear(mag_vs_t,
                                          omega*mi, phase*mi,
@@ -2369,10 +2374,10 @@ def dim1sin_E_Igamv_the_mvpl(m,
                                          implementation=implementation))
 
 
-    if not theta_zero_indexes is None:
-         E_the[:, :, theta_zero_indexes] = 0.0
+#    if not theta_zero_indexes is None:
+#         E_the[:, :, theta_zero_indexes] = 0.0
 
-    E_theta *= Igamv[np.newaxis, :, :]
+    E_the *= Igamv[np.newaxis, :, :]
 
     E_Igamv_the = E_the.sum(axis=-1).T
 
