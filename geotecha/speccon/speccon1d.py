@@ -2339,18 +2339,21 @@ def dim1sin_E_Igamv_the_mvpl(m,
 
     Returns
     -------
-    E_Igamv_the : ndarray
+    E_Igamv_the : ndarray, dtype=complex
         Loading matrix of size (neig, len(tvals)).
 
     Notes
     -----
+    returns a complex array!!!
+
+
     Assuming the loads are formulated as the product of separate time and depth
     dependant functions as well as a cyclic component:
 
 
     """
 
-    E_the = np.zeros((len(tvals), len(eigs), len(m)))
+    E_the = np.zeros((len(tvals), len(eigs), len(m)),dtype=complex)
     #axes are (t,eig,theta), they will be transposed at the end of the function.
 
     if not theta_zero_indexes is None:

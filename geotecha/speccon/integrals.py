@@ -5566,11 +5566,12 @@ def Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
     tvals = np.asarray(tvals)
 
     if implementation == 'scalar':
-        sin = math.sin
-        cos = math.cos
-        exp = math.exp
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
+        #note that math module doesn't like complex numbers
 
-        A = np.zeros([len(tvals), len(eigs)])
+        A = np.zeros([len(tvals), len(eigs)], dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
@@ -6134,7 +6135,7 @@ def Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
         cos = np.cos
         exp = np.exp
 
-        A = np.zeros([len(tvals), len(eigs)])
+        A = np.zeros([len(tvals), len(eigs)], dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)

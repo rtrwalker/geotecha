@@ -2555,12 +2555,12 @@
         INTEGER, intent(in) :: nt
         REAL(DP), intent(in), dimension(0:nload-1) :: loadtim
         REAL(DP), intent(in), dimension(0:nload-1) :: loadmag
-        REAL(DP), intent(in), dimension(0:neig-1) :: eigs
+        COMPLEX(DP), intent(in), dimension(0:neig-1) :: eigs
         REAL(DP), intent(in), dimension(0:nt-1) :: tvals
         REAL(DP), intent(in) :: dT
         REAL(DP), intent(in) :: omega
         REAL(DP), intent(in) :: phase
-        REAL(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
+        COMPLEX(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
         INTEGER :: i , j, k
         REAL(DP):: EPSILON
         a=0.0D0
@@ -3262,6 +3262,9 @@
 
       END SUBROUTINE
 
+
+
+    
 
 
         

@@ -1368,6 +1368,10 @@ def Eload_sinlinear_implementations():
 
     Notes
     -----
+
+    Note this will make complex arrays a complex array!!!
+
+
     Assuming the load are formulated as the product of separate time and depth
     dependant functions:
 
@@ -1504,11 +1508,12 @@ def Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
     tvals = np.asarray(tvals)
 
     if implementation == 'scalar':
-        sin = math.sin
-        cos = math.cos
-        exp = math.exp
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
+        #note that math module doesn't like complex numbers
 
-        A = np.zeros([len(tvals), len(eigs)])
+        A = np.zeros([len(tvals), len(eigs)], dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
@@ -1543,7 +1548,7 @@ def Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
         cos = np.cos
         exp = np.exp
 
-        A = np.zeros([len(tvals), len(eigs)])
+        A = np.zeros([len(tvals), len(eigs)], dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
@@ -1580,12 +1585,12 @@ def Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
         INTEGER, intent(in) :: nt
         REAL(DP), intent(in), dimension(0:nload-1) :: loadtim
         REAL(DP), intent(in), dimension(0:nload-1) :: loadmag
-        REAL(DP), intent(in), dimension(0:neig-1) :: eigs
+        COMPLEX(DP), intent(in), dimension(0:neig-1) :: eigs
         REAL(DP), intent(in), dimension(0:nt-1) :: tvals
         REAL(DP), intent(in) :: dT
         REAL(DP), intent(in) :: omega
         REAL(DP), intent(in) :: phase
-        REAL(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
+        COMPLEX(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
         INTEGER :: i , j, k
         REAL(DP):: EPSILON
         a=0.0D0
@@ -3362,6 +3367,9 @@ def dim1sin_DD_abDDf_linear_implementations():
 
     Notes
     -----
+    the resulting code will produce matrixes of complex values.
+
+
     The `dim1sin_DD_abDDf_linear` matrix, :math:`A` is given by:
 
     .. math:: \\mathbf{A}_{i,j}=\\int_{0}^1{\\frac{d^2}{dz^2}\\left({a\\left(z\\right)}{b\\left(z\\right)}\\frac{d^2\\phi_j}{dz^2}\\right)\\phi_i\\,dz}
