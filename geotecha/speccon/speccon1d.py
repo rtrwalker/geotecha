@@ -1512,13 +1512,13 @@ def dim1sin_E_Igamv_the_deltamag_linear(m,
                                         theta_zero_indexes=None,
                                         implementation='vectorized'):
     """Calculate E and theta parts and assemble E_Igamv_the matrix
-    for loading terms of the form a(Z) * delta(Z-Zd)*mag(t) where mag is
+    for loading terms of the form delta(Z-Zd)*mag(t) where mag is
     piecewise linear in time multiplied by cos(omega * t + phase).
 
 
     Make the E*inverse(gam*v)*theta part of solution
     u(Z,t)=phi*v*E*inverse(gam*v)*theta for terms of the form
-    a(Z) * delta(Z-Zd)*mag(t).
+    k*delta(Z-Zd)*mag(t).
     The contribution of each `mag_vs_time`-`omega_phase` pairing and each zval
     are superposed. The result is an array
     of size (neig, len(tvals)). So each column is the are the column vector
