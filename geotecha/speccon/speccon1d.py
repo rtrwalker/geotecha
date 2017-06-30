@@ -1624,7 +1624,7 @@ def dim1sin_E_Igamv_the_deltamag_linear(m,
 
     """
 
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
+    E_Igamv_the = np.zeros((len(m), len(tvals)), dtype=complex)
 
     if omega_phase is None:
             omega_phase = [None] * len(mag_vs_time)

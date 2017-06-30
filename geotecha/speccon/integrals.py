@@ -2681,7 +2681,7 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
     Returns
     -------
     A : numpy.ndarray
-        A 2d array of dimesnions A[len(tvals), len(eigs)].
+        A 2d array of dimesnions A[len(tvals), len(eigs)] (note dtype=complex.
         The 'i'th row of A is the diagonal elements of the spectral 'E' matrix
         calculated for the time tvals[i].
 
@@ -2756,11 +2756,11 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
     tvals = np.asarray(tvals)
 
     if implementation == 'scalar':
-        sin = math.sin
-        cos = math.cos
-        exp = math.exp
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
 
-        A = np.zeros([len(tvals), len(eigs)])
+        A = np.zeros([len(tvals), len(eigs)], dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
@@ -2841,7 +2841,7 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
         cos = np.cos
         exp = np.exp
 
-        A = np.zeros([len(tvals), len(eigs)])
+        A = np.zeros([len(tvals), len(eigs)],dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)

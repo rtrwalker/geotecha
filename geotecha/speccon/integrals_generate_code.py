@@ -93,6 +93,7 @@ def Eload_linear_implementations():
 
     Notes
     -----
+    This function produces a complex array
 
     Assuming the load are formulated as the product of separate time and depth
     dependant functions:
@@ -224,11 +225,12 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
     tvals = np.asarray(tvals)
 
     if implementation == 'scalar':
-        sin = math.sin
-        cos = math.cos
-        exp = math.exp
+        sin = np.sin
+        cos = np.cos
+        exp = np.exp
 
-        A = np.zeros([len(tvals), len(eigs)])
+
+        A = np.zeros([len(tvals), len(eigs)], dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
@@ -263,7 +265,7 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
         cos = np.cos
         exp = np.exp
 
-        A = np.zeros([len(tvals), len(eigs)])
+        A = np.zeros([len(tvals), len(eigs)], dtype=complex)
 
         (ramps_less_than_t, constants_less_than_t, steps_less_than_t,
             ramps_containing_t, constants_containing_t) = segment_containing_also_segments_less_than_xi(loadtim, loadmag, tvals, steps_or_equal_to = True)
@@ -300,10 +302,10 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
         INTEGER, intent(in) :: nt
         REAL(DP), intent(in), dimension(0:nload-1) :: loadtim
         REAL(DP), intent(in), dimension(0:nload-1) :: loadmag
-        REAL(DP), intent(in), dimension(0:neig-1) :: eigs
+        COMPLEX(DP), intent(in), dimension(0:neig-1) :: eigs
         REAL(DP), intent(in), dimension(0:nt-1) :: tvals
         REAL(DP), intent(in) :: dT
-        REAL(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
+        COMPLEX(DP), intent(out), dimension(0:nt-1, 0:neig-1) :: a
         INTEGER :: i , j, k
         REAL(DP):: EPSILON
         a=0.0D0
