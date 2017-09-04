@@ -1188,7 +1188,7 @@ def shanks(seq, ind=0):
     return +seq[...,-1]
 
 
-def gk_quad(f, a, b, args=(), n=10):
+def gk_quad(f, a, b, args=(), n=10, sum_intervals=False):
     """Integration by Gauss-Kronrod quadrature between intervals
 
 
@@ -1204,17 +1204,23 @@ def gk_quad(f, a, b, args=(), n=10):
     n : [7,10,15,20,25,30], optional
         Number of gauss quadrature evaluation points. Default n=10. There will
         be 2*n+1 Kronrod quadrature points.
+        sum_intervals : [False, True]
+    If sum_intervals=True the integral for each a and b, will be summed.
+        Otherwise each interval integration will be returned.  The sum of the
+        error estimates will also be summed.
 
     Returns
     -------
-    igral : 1d float array of size len(a)
-        Integral of f between a and b.  Each value in igral corresponds to
-        the corresponding a-b interval.  If you are just using a and b
-        to subdivide a larger interval then simply sum igral for the entire
-        integral.
-    err_estimate : 1d float array of size len(a)
-        Estimate of the error in the integral.  i.e. fine integral minus
-        coarse integral.
+    igral : ndarray
+        Integral of f between a and b.
+        If sum_intervals=False then shape of igral will be (len(a), ...)
+        where ... corresponds to however many dimensions are returned
+        from f with scalar arguments.   Each value in igral corresponds to
+        the corresponding a-b interval.  If sum_intervals=True then igral will
+        have shape (...).
+    err_estimate : ndarray same size as igal
+        Estimate of the error in the integral.  i.e. absolute value of fine
+        integral minus coarse integral.
 
     """
 
@@ -1238,42 +1244,67 @@ def gk_quad(f, a, b, args=(), n=10):
 
 
     xij = bma * xj_ + bpa # xj_ are in [-1, 1] so need to transform to [a, b]
-    fij = f(xij, *args)
+
+    #get shape of output with scalar argument and form a slice that will ensure
+    #any extra dims are appended to the args.
+    extra = np.array(f(xij.flat[0], *args))
+    gen_slice = [slice(None)] * xij.ndim + [None] * extra.ndim
+
+    fij = f(xij[gen_slice], *args)
 
 #    igral1 = np.ravel(bma) * np.sum(fij * wj1, axis=1)
 #    igral2 = np.ravel(bma) * np.sum(fij * wj2, axis=1)
-    igral1 = bma[:, 0] * np.sum(fij * wj1, axis=1)
-    igral2 = bma[:, 0] * np.sum(fij * wj2, axis=1)
-    err_estimate = igral2 - igral1
+#    igral1 = bma[:, 0] * np.sum(fij * wj1, axis=1)
+#    igral2 = bma[:, 0] * np.sum(fij * wj2, axis=1)
+
+    igral1 =  np.sum(bma[gen_slice] *fij * wj1[gen_slice], axis=1)
+    igral2 =  np.sum(bma[gen_slice] *fij * wj2[gen_slice], axis=1)
+    err_estimate = np.abs(igral2 - igral1)
+
+
+    if sum_intervals:
+        igral1 = np.sum(igral1, axis=0)
+        igral2 = np.sum(igral2, axis=0)
+
+        err_estimate = np.sum(err_estimate, axis=0)
 
     return igral2, err_estimate
 
 
-def gl_quad(f, a, b, args=(), n=10, shanks_ind=False):
+def gl_quad(f, a, b, args=(), n=10, shanks_ind=False, sum_intervals=False):
     """Integration by Gauss-Legendre quadrature with subdivided interval
 
     Parameters
     ----------
     f : function or method
-        function to integrate.
+        function to integrate. Must accept vector aguments for x. Might
+        need to use numpy.vecotrize.
     a, b : 1d array
         limits of integration
     args : tuple, optional
         args will be passed to f using f(x, *args). default=()
     n : [2-20, 32, 64, 100], optional
         number of quadrature evaluation points. default=10
+    sum_intervals : [False, True]
+        If sum_intervals=True the integral for each a and b, will be summed.
+        Otherwise each interval integration will be returned.
 
     Returns
     -------
-    igral : 1d float array of size len(a)
-        Integral of f between a and b.  Each value in igral corresponds to
-        the corresponding a-b interval.  If you are just using a and b
-        to subdivide a larger interval then simply sum igral for the entire
-        integral.
+    igral : ndarray
+        Integral of f between a and b.
+        If sum_intervals=False then shape of igral will be (len(a), ...)
+        where ... corresponds to however many dimensions are returned
+        from f with scalar arguments.   Each value in igral corresponds to
+        the corresponding a-b interval.  If sum_intervals=True then igral will
+        have shape (...).
 
     Notes
     -----
     Be careful when using large values of n.There may be precision issues.
+    If f returns an ndarray when x is scalar.  igral will have additonal
+    dimensions corresponding to those of the f-with-scalar-x output.
+
 
     """
 
@@ -1292,20 +1323,22 @@ def gl_quad(f, a, b, args=(), n=10, shanks_ind=False):
     xj_ = xj_[np.newaxis, :]
     wj = wj[np.newaxis, :]
 
-    bma = (b - a) / 2 # b minus a
-    bpa = (a + b) /2 # b plus a
+    bma = (bi - ai) / 2 # b minus a
+    bpa = (ai + bi) /2 # b plus a
 
 
     xij = bma * xj_ + bpa # xj_ are in [-1, 1] so need to transform to [a, b]
-    fij = f(xij, *args)
 
-    igral = np.sum(bma * fij * wj, axis=1)
+    #get shape of output with scalar argument and form a slice that will ensure
+    #any extra dims are appended to the args.
+    extra = np.array(f(xij.flat[0], *args))
+    gen_slice = [slice(None)] * xij.ndim + [None] * extra.ndim
+
+    fij = f(xij[gen_slice], *args)
+
+    igral = np.sum(bma[gen_slice] * fij *wj[gen_slice], axis=1)
+
+    if sum_intervals:
+        igral = np.sum(igral, axis=0)
 
     return igral
-
-
-
-if __name__ == '__main__':
-    import nose
-    nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest'])
-#    nose.runmodule(argv=['nose', '--verbosity=3'])
