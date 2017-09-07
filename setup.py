@@ -128,6 +128,7 @@ INSTALL_REQUIRES=[
     "sphinx>=1.4",
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
+    "mock",
     ]
 ZIP_SAFE=False
 TEST_SUITE='nose.collector'

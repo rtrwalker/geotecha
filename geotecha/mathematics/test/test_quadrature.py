@@ -41,7 +41,7 @@ def test_gl_quad_polynomials():
 def check_gl_quad(n):
     """check that gl_quad integrates polynomial of degree 2*n-1 'exactly'
 
-    This test is not rigorous because the ploynmials formed can be fairly well
+    This test is not rigorous because the polynomials formed can be fairly well
     approximated using lower order schemes"""
 
     a, b = (-0.9, 1.3)
@@ -54,7 +54,7 @@ def check_gl_quad(n):
     assert_allclose(gl_quad(f,a,b, n=n), exact, rtol=1e-14,atol=0)
 
 def test_gk_quad_polynomials():
-    """tests for gl_quad exact polynomial"""
+    """tests for gk_quad exact polynomial"""
     for n in [7,10,15,20,25,30]:
         yield check_gk_quad, n
 
@@ -62,7 +62,7 @@ def check_gk_quad(n):
     """check that gk_quad integrates polynomial of degree 3*n+1 (even) and
     3*n+2 (odd)exactly
 
-    This test is not rigorous because the ploynmials formed can be fairly well
+    This test is not rigorous because the polynomials formed can be fairly well
     approximated using lower order schemes
     """
     a, b = (-0.9, 1.3)
@@ -93,6 +93,170 @@ class test_shanks(unittest.TestCase):
                         m in range(1, nn)])
 
         assert_allclose(shanks(seq, -50), np.pi, atol=1e-8)
+
+
+def test_gl_quad_polynomials_chunks():
+    """tests for gl_quad exact polynomial broken into intervals"""
+    for n in [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20, 32, 64, 100]:
+        yield check_gl_quad_chunks, n
+
+def check_gl_quad_chunks(n):
+    """check that gk_quad integrates polynomial of degree 3*n+1 (even) and
+    3*n+2 (odd)exactly, with multiple intervals
+
+    This test is not rigorous because the polynomials formed can be fairly well
+    approximated using lower order schemes
+    """
+    #a, b = (-0.9, 1.3)
+    a = np.array([-0.9, -0.4, .5])
+    b = np.array([-0.4, 0.5, 1.3])
+    coeff = np.arange(1, 3*n + 1 + (n%2))
+    coeff[::2]  =coeff[::2]*-1.0
+    f = np.poly1d(coeff)
+    F = f.integ()
+    exact = np.sum(F(b) - F(a))
+
+    assert_allclose(gl_quad(f,a,b, n=n, sum_intervals=True), exact, rtol=1e-3,atol=0)
+
+
+def test_gl_quad_polynomials_chunks_extra_dims():
+    """tests for gl_quad exact polynomial broken into intervals with extra dims"""
+    for n in [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20, 32, 64, 100]:
+        yield check_gl_quad_chunks_extra_dims, n
+
+def check_gl_quad_chunks_extra_dims(n):
+    """check that gl_quad integrates polynomial of degree 3*n+1 (even) and
+    3*n+2 (odd)exactly, with multiple intervals with function that returns
+    extra dims.
+
+    This test is not rigorous because the polynomials formed can be fairly well
+    approximated using lower order schemes
+    """
+    #a, b = (-0.9, 1.3)
+    a = np.array([-0.9, -0.4, .5])
+    b = np.array([-0.4, 0.5, 1.3])
+    coeff = np.arange(1, 3*n + 1 + (n%2))
+    coeff[::2]  =coeff[::2]*-1.0
+    f = np.poly1d(coeff)
+    def g(x):
+        out = f(x)*np.arange(1,9).reshape(4,2)
+        return out
+    g_ = g#np.vectorize(g)
+    F = f.integ()
+    exact = np.sum(F(b) - F(a)) * np.arange(1,9).reshape(4, 2)
+
+    assert_allclose(gl_quad(g_,a,b, n=n, sum_intervals=True), exact, rtol=1e-3,atol=0)
+
+
+def test_gl_quad_polynomials_chunks_extra_dims2():
+    """tests for gl_quad exact polynomial broken into intervals with extra dims"""
+    for n in [2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20, 32, 64, 100]:
+        yield check_gl_quad_chunks_extra_dims2, n
+
+def check_gl_quad_chunks_extra_dims2(n):
+    """check that gl_quad integrates polynomial of degree 3*n+1 (even) and
+    3*n+2 (odd)exactly, with multiple intervals with function that returns
+    extra dims.
+
+    This test is not rigorous because the polynomials formed can be fairly well
+    approximated using lower order schemes
+    """
+    #a, b = (-0.9, 1.3)
+    a = np.array([-0.9, -0.4, .5])
+    b = np.array([-0.4, 0.5, 1.3])
+    coeff = np.arange(1, 3*n + 1 + (n%2))
+    coeff[::2]  =coeff[::2]*-1.0
+    f = np.poly1d(coeff)
+    def g(x):
+        out = f(x)*np.arange(1,9)
+        return out
+    g_ = g#np.vectorize(g)
+    F = f.integ()
+    exact = np.sum(F(b) - F(a)) * np.arange(1,9)
+
+    assert_allclose(gl_quad(g_,a,b, n=n, sum_intervals=True), exact, rtol=1e-3,atol=0)
+
+
+def test_gk_quad_polynomials_chunks():
+    """tests for gl_quad exact polynomial broken into intervals"""
+    for n in [7,10,15,20,25,30]:
+        yield check_gk_quad_chunks, n
+
+def check_gk_quad_chunks(n):
+    """check that gk_quad integrates polynomial of degree 3*n+1 (even) and
+    3*n+2 (odd)exactly, with multiple intervals
+
+    This test is not rigorous because the polynomials formed can be fairly well
+    approximated using lower order schemes
+    """
+    #a, b = (-0.9, 1.3)
+    a = np.array([-0.9, -0.4, .5])
+    b = np.array([-0.4, 0.5, 1.3])
+    coeff = np.arange(1, 3*n + 1 + (n%2))
+    coeff[::2]  =coeff[::2]*-1.0
+    f = np.poly1d(coeff)
+    F = f.integ()
+    exact = np.sum(F(b) - F(a))
+
+    assert_allclose(gk_quad(f,a,b, n=n, sum_intervals=True)[0], exact, rtol=1e-3,atol=0)
+
+
+def test_gk_quad_polynomials_chunks_extra_dims():
+    """tests for gk_quad exact polynomial broken into intervals with extra dims"""
+    for n in [7,10,15,20,25,30]:
+        yield check_gk_quad_chunks_extra_dims, n
+
+def check_gk_quad_chunks_extra_dims(n):
+    """check that gk_quad integrates polynomial of degree 3*n+1 (even) and
+    3*n+2 (odd)exactly, with multiple intervals with function that returns
+    extra dims.
+
+    This test is not rigorous because the polynomials formed can be fairly well
+    approximated using lower order schemes
+    """
+    #a, b = (-0.9, 1.3)
+    a = np.array([-0.9, -0.4, .5])
+    b = np.array([-0.4, 0.5, 1.3])
+    coeff = np.arange(1, 3*n + 1 + (n%2))
+    coeff[::2]  =coeff[::2]*-1.0
+    f = np.poly1d(coeff)
+    def g(x):
+        out = f(x)*np.arange(1,9).reshape(4,2)
+        return out
+    g_ = g#np.vectorize(g)
+    F = f.integ()
+    exact = np.sum(F(b) - F(a)) * np.arange(1,9).reshape(4, 2)
+
+    assert_allclose(gk_quad(g_,a,b, n=n, sum_intervals=True)[0], exact, rtol=1e-3,atol=0)
+
+
+def test_gk_quad_polynomials_chunks_extra_dims2():
+    """tests for gl_quad exact polynomial broken into intervals with extra dims"""
+    for n in [7,10,15,20,25,30]:
+        yield check_gk_quad_chunks_extra_dims2, n
+
+def check_gk_quad_chunks_extra_dims2(n):
+    """check that gk_quad integrates polynomial of degree 3*n+1 (even) and
+    3*n+2 (odd)exactly, with multiple intervals with function that returns
+    extra dims.
+
+    This test is not rigorous because the polynomials formed can be fairly well
+    approximated using lower order schemes
+    """
+    #a, b = (-0.9, 1.3)
+    a = np.array([-0.9, -0.4, .5])
+    b = np.array([-0.4, 0.5, 1.3])
+    coeff = np.arange(1, 3*n + 1 + (n%2))
+    coeff[::2]  =coeff[::2]*-1.0
+    f = np.poly1d(coeff)
+    def g(x):
+        out = f(x)*np.arange(1,9)
+        return out
+    g_ = g#np.vectorize(g)
+    F = f.integ()
+    exact = np.sum(F(b) - F(a)) * np.arange(1,9)
+
+    assert_allclose(gk_quad(g_,a,b, n=n, sum_intervals=True)[0], exact, rtol=1e-3,atol=0)
 
 
 
