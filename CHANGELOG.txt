@@ -1,4 +1,12 @@
-2017--9-07 Guass Legendre and Gauss Kronrod numerical integration
+2018-07-23 Converted a number of speccon in-place addition
+           operations (+=) to np.add(A,B, out=A, casting='unsafe')
+           as I was getting a heap of "TypeError: Cannot cast ufunc add
+           output from dtype('complex128') to dtype('float64') with casting
+           rule 'same_kind'" errors.  After specbeam modifications
+           some things are expected to be complex, others
+           aren't.  Probably not the best way to do things
+           but this is where I am at.
+2017-09-07 Guass Legendre and Gauss Kronrod numerical integration
            functions gl_quad and gk_quad now work with fucnctions
            that return an array from scalar input.  The extra dimensions
            are taked on the end of the return array.  See

@@ -826,7 +826,8 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn,
                     E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
         if not bot_vs_time is None:
             if bot_omega_phase is None:
@@ -840,7 +841,8 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn,
                     E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                #E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
     #and np.dot(theta, Igamv) will give differetn 1d arrays.
@@ -1263,7 +1265,8 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn,
                     E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
         if not bot_vs_time is None:
             if bot_omega_phase is None:
@@ -1278,7 +1281,8 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn,
                     E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
     #and np.dot(theta, Igamv) will give differetn 1d arrays.
@@ -1474,7 +1478,8 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn,
                 theta = k * np.sin(z * m) * zd
                 if not theta_zero_indexes is None:
                     theta[theta_zero_indexes] = 0.0
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     if not bot_vs_time is None:
         if bot_omega_phase is None:
@@ -1490,7 +1495,8 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn,
                 theta = k * np.sin(z * m) * z
                 if not theta_zero_indexes is None:
                     theta[theta_zero_indexes] = 0.0
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
     #and np.dot(theta, Igamv) will give differetn 1d arrays.
@@ -2061,7 +2067,8 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m,
             #Basically np.dot(Igamv, theta) gives us what we want i.e.
             #theta was treated as a column array.  The alternative
             #np.dot(theta, Igamv) would have treated theta as a row vector.
-            E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#            E_Igamv_the += (E*np.dot(Igamv, theta)).T
+            np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     return E_Igamv_the
 

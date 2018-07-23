@@ -968,12 +968,18 @@ class Speccon1dVR(speccon1d.Speccon1d):
             zvals = [v[0] for v in self.fixed_ppress]
             pseudo_k = [v[1] for v in self.fixed_ppress]
             mag_vs_time = [v[2] for v in self.fixed_ppress]
-            self.E_Igamv_the_fixed_ppress += (
+#            self.E_Igamv_the_fixed_ppress += (
+#                speccon1d.dim1sin_E_Igamv_the_deltamag_linear(
+#                self.m, self.eigs, self.tvals, self.Igamv,
+#                zvals, pseudo_k, mag_vs_time,
+#                self.fixed_ppress_omega_phase, self.dT,
+#                implementation=self.implementation))
+            np.add(self.E_Igamv_the_fixed_ppress, (
                 speccon1d.dim1sin_E_Igamv_the_deltamag_linear(
                 self.m, self.eigs, self.tvals, self.Igamv,
                 zvals, pseudo_k, mag_vs_time,
                 self.fixed_ppress_omega_phase, self.dT,
-                implementation=self.implementation))
+                implementation=self.implementation)), out=self.E_Igamv_the_fixed_ppress, casting="unsafe")
 
     def _make_E_Igamv_the_pumping(self):
         """Make the pumping loading matrices
@@ -1012,11 +1018,17 @@ class Speccon1dVR(speccon1d.Speccon1d):
             #dividing by mvref*H is because input pumping velocities need to
             # normalised
             mag_vs_time = [v[1] / (self.mvref * self.H) for v in self.pumping]
-            self.E_Igamv_the_pumping += (
+#            self.E_Igamv_the_pumping += (
+#                speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
+#                    self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
+#                    mag_vs_time, self.pumping_omega_phase, self.dT,
+#                    implementation=self.implementation))
+            np.add(self.E_Igamv_the_pumping, (
                 speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
                     self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
                     mag_vs_time, self.pumping_omega_phase, self.dT,
-                    implementation=self.implementation))
+                    implementation=self.implementation)),
+                    out=self.E_Igamv_the_pumping, casting="unsafe")
 
     def _normalised_bot_vs_time(self):
         """Normalise bot_vs_time when drn=1, i.e. bot_vs_time is a gradient
