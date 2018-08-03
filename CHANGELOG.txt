@@ -1,3 +1,5 @@
+2018-08-04 Added SimpleTimer class to geotecha.inputputut.inputoutput for
+           Simple nested wall clock timing, pritn to stdout.
 2018-07-23 Converted a number of speccon in-place addition
            operations (+=) to np.add(A,B, out=A, casting='unsafe')
            as I was getting a heap of "TypeError: Cannot cast ufunc add

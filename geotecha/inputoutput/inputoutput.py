@@ -2203,6 +2203,74 @@ def modules_in_package(package_name, exclude=['test']):
     return [name for _, name, _ in pkgutil.iter_modules([pkgpath])
             if name not in exclude]
 
+class SimpleTimer(object):
+    """Simple timer to display start, end, and elapsed wall clock time of
+    code execution.
+
+    Messages displayed when start and finish methods called.
+
+    Attributes
+    ----------
+    start_times : dict
+        Start times corresponding to each timing level.
+    messages : dict
+        Message/title corresponding to each timeing level.
+    end_times : dict
+        end times corresponding to each timing level.
+
+    """
+
+    def __init__(self):
+        self.start_times = dict()
+        self.messages = dict()
+        self.end_times = dict()
+
+    def start(self, i, msg=None):
+        """Print message saying timing level i has started.
+
+        Paramters
+        ---------
+        i : int
+            index of timed process.  Numerical value of i will detemine
+            indent of printed message. If i==0 then row of astericks will be
+            printed before message.
+        msg : string, optional
+            title of timing process.  printed message will be "Started " + msg.
+            Default msg=None which will make "Started Level i" appear.
+
+        """
+
+        self.start_times[i] = time.time()
+
+        if msg is None:
+            self.messages[i] = "Level {}".format(i)
+        else:
+            self.messages[i] = msg
+        if i==0:
+            print("*"*40)
+        print("  "*i + "Started " + self.messages[i])
+
+    def finish(self, i):
+        """Print message saying timing level i has finished along with the
+        elapsed time.
+
+        Paramters
+        ---------
+        i : int
+            index of timed process.  Numerical value of i will detemine
+            indent of printed message. If i==0 then row of astericks will be
+            printed after finish message.
+
+
+        """
+        self.end_times[i] = time.time()
+        elapsed_time = (self.end_times[i] - self.start_times[i])
+
+
+        print("  "*i + "Finished {}, run time = {}".format(self.messages[i],
+                  str(timedelta(seconds=elapsed_time))))
+        if i==0:
+            print("*"*40)
 
 if __name__ == '__main__':
     import nose
