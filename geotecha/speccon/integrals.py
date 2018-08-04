@@ -29,6 +29,7 @@ from geotecha.piecewise.piecewise_linear_1d import segments_between_xi_and_xj
 import geotecha.piecewise.piecewise_linear_1d as pwise
 from geotecha.piecewise.piecewise_linear_1d import PolyLine
 
+MUST_TRY_FORTRAN=False #use = True when debugging the fortran extensions.
 
 def m_from_sin_mx(i, boundary=0):
     """Sine series eigenvalue of boundary value problem on [0, 1]
@@ -1374,6 +1375,9 @@ def dim1sin_af_linear(m, at, ab, zt, zb, implementation='vectorized'):
                 A[j, i] = A[i, j]
 
     elif implementation == 'fortran':
+        if MUST_TRY_FORTRAN:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_af_linear(m, at, ab, zt, zb)
         try:
             import geotecha.speccon.ext_integrals as ext_integ
             A = ext_integ.dim1sin_af_linear(m, at, ab, zt, zb)
@@ -1763,11 +1767,15 @@ def dim1sin_abf_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectorized'):
                 A[j, i] = A[i, j]
 
     elif implementation == 'fortran':
-        try:
+        if MUST_TRY_FORTRAN:
             import geotecha.speccon.ext_integrals as ext_integ
             A = ext_integ.dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb)
-        except ImportError:
-            A = dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
+        else:
+            try:
+                import geotecha.speccon.ext_integrals as ext_integ
+                A = ext_integ.dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb)
+            except ImportError:
+                A = dim1sin_abf_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
 
     else:#default is 'vectorized' using numpy
         sin = np.sin
@@ -2091,11 +2099,15 @@ def dim1sin_D_aDf_linear(m, at, ab, zt, zb, implementation='vectorized'):
                 A[j, i] = A[i, j]
 
     elif implementation == 'fortran':
-        try:
+        if MUST_TRY_FORTRAN:
             import geotecha.speccon.ext_integrals as ext_integ
             A = ext_integ.dim1sin_d_adf_linear(m, at, ab, zt, zb)
-        except ImportError:
-            A = dim1sin_D_aDf_linear(m, at, ab, zt, zb, implementation='vectorized')
+        else:
+            try:
+                import geotecha.speccon.ext_integrals as ext_integ
+                A = ext_integ.dim1sin_d_adf_linear(m, at, ab, zt, zb)
+            except ImportError:
+                A = dim1sin_D_aDf_linear(m, at, ab, zt, zb, implementation='vectorized')
 
     else:#default is 'vectorized' using numpy
         sin = np.sin
@@ -2259,13 +2271,15 @@ def dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized'):
                     m[i]**(-1)*cos(m[i]*zt[layer])*bt[layer]*at[layer])
 
     elif implementation == 'fortran':
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)
-#        try:
-#            import geotecha.speccon.ext_integrals as ext_integ
-#            A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)
-#        except ImportError:
-#            A = dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
+        if MUST_TRY_FORTRAN:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)
+        else:
+            try:
+                import geotecha.speccon.ext_integrals as ext_integ
+                A = ext_integ.dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb)
+            except ImportError:
+                A = dim1sin_ab_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
 
     else:#default is 'vectorized' using numpy
         sin = np.sin
@@ -2437,13 +2451,15 @@ def dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb, implementation='vector
                     m[i]**(-1)*cos(m[i]*zt[layer])*ct[layer]*bt[layer]*at[layer])
 
     elif implementation == 'fortran':
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb, ct, cb, zt, zb)
-#        try:
-#            import geotecha.speccon.ext_integrals as ext_integ
-#            A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb)
-#        except ImportError:
-#            A = dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb, implementation='vectorized')
+        if MUST_TRY_FORTRAN:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb)
+        else:
+            try:
+                import geotecha.speccon.ext_integrals as ext_integ
+                A = ext_integ.dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb)
+            except ImportError:
+                A = dim1sin_abc_linear(m, at, ab, bt, bb,  ct, cb, zt, zb, implementation='vectorized')
 
     else:#default is 'vectorized' using numpy
         sin = np.sin
@@ -2623,13 +2639,15 @@ def dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
                 1])**(-1)*(bb[nlayers - 1] - bt[nlayers - 1])*ab[nlayers - 1]*sin(zb[nlayers -
                 1]*m[i]))
     elif implementation == 'fortran':
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.dim1sin_d_adb_linear(m, at, ab, bt, bb, zt, zb)
-#        try:
-#            import geotecha.speccon.ext_integrals as ext_integ
-#            A = ext_integ.dim1sin_d_adb_linear(m, at, ab, bt, bb, zt, zb)
-#        except ImportError:
-#            A = dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
+        if MUST_TRY_FORTRAN:
+            import geotecha.speccon.ext_integrals as ext_integ
+            A = ext_integ.dim1sin_d_adb_linear(m, at, ab, bt, bb, zt, zb)
+        else:
+            try:
+                import geotecha.speccon.ext_integrals as ext_integ
+                A = ext_integ.dim1sin_d_adb_linear(m, at, ab, bt, bb, zt, zb)
+            except ImportError:
+                A = dim1sin_D_aDb_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
 
     else:#default is 'vectorized' using numpy
         sin = np.sin
@@ -2826,16 +2844,14 @@ def Eload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectoriz
                         1]))*(-dT*eig*loadtim[k + 1] + dT*eig*loadtim[k])**(-1)*loadmag[k])/(dT*eig))
     elif implementation == 'fortran':
         #note than all fortran subroutines are lowercase.
-
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.eload_linear(loadtim, loadmag, eigs, tvals, dT)
-        #previous two lines are just for development to make sure that
-        #the fortran code is actually working.  They force
-#        try:
-#            from geotecha.speccon.ext_integrals import eload_linear as fn
-#        except ImportError:
-#            fn = Eload_linear
-#         A = fn(loadtim, loadmag, eigs, tvals, dT)
+        if MUST_TRY_FORTRAN:
+            from geotecha.speccon.ext_integrals import eload_linear as fn
+        else:
+            try:
+                from geotecha.speccon.ext_integrals import eload_linear as fn
+            except ImportError:
+                fn = Eload_linear
+        A = fn(loadtim, loadmag, eigs, tvals, dT)
     else:#default is 'vectorized' using numpy
         sin = np.sin
         cos = np.cos
@@ -3045,16 +3061,14 @@ def EDload_linear(loadtim, loadmag, eigs, tvals, dT=1.0, implementation='vectori
 
     elif implementation == 'fortran':
         #note than all fortran subroutines are lowercase.
-
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.edload_linear(loadtim, loadmag, eigs, tvals, dT)
-        #previous two lines are just for development to make sure that
-        #the fortran code is actually working.  They force
-#        try:
-#            from geotecha.speccon.ext_integrals import edload_linear as fn
-#        except ImportError:
-#            fn = EDload_linear
-#         A = fn(loadtim, loadmag, eigs, tvals, dT)
+        if MUST_TRY_FORTRAN:
+            from geotecha.speccon.ext_integrals import edload_linear as fn
+        else:
+            try:
+                from geotecha.speccon.ext_integrals import edload_linear as fn
+            except ImportError:
+                fn = EDload_linear
+        A = fn(loadtim, loadmag, eigs, tvals, dT)
     else:#default is 'vectorized' using numpy
         sin = np.sin
         cos = np.cos
@@ -3746,16 +3760,14 @@ def Eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
                         omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2))/(dT*eig))
     elif implementation == 'fortran':
         #note than all fortran subroutines are lowercase.
-
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.eload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT)
-        #previous two lines are just for development to make sure that
-        #the fortran code is actually working.  They force
-#        try:
-#            from geotecha.speccon.ext_integrals import eload_linear as fn
-#        except ImportError:
-#            fn = Eload_coslinear
-#         A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+        if MUST_TRY_FORTRAN:
+            from geotecha.speccon.ext_integrals import eload_coslinear as fn
+        else:
+            try:
+                from geotecha.speccon.ext_integrals import eload_coslinear as fn
+            except ImportError:
+                fn = Eload_coslinear
+        A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
     else:#default is 'vectorized' using numpy
         sin = np.sin
         cos = np.cos
@@ -4983,16 +4995,14 @@ def EDload_coslinear(loadtim, loadmag, omega, phase,eigs, tvals, dT=1.0, impleme
 
     elif implementation == 'fortran':
         #note than all fortran subroutines are lowercase.
-
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.edload_coslinear(loadtim, loadmag, omega, phase, eigs, tvals, dT)
-        #previous two lines are just for development to make sure that
-        #the fortran code is actually working.  They force
-#        try:
-#            from geotecha.speccon.ext_integrals import edload_linear as fn
-#        except ImportError:
-#            fn = EDload_coslinear
-#         A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+        if MUST_TRY_FORTRAN:
+            from geotecha.speccon.ext_integrals import edload_coslinear as fn
+        else:
+            try:
+                from geotecha.speccon.ext_integrals import edload_coslinear as fn
+            except ImportError:
+                fn = EDload_coslinear
+        A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
     else:#default is 'vectorized' using numpy
         sin = np.sin
         cos = np.cos
@@ -6120,16 +6130,14 @@ def Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT=1.0, impleme
                         omega**4*loadtim[k]/(dT**3*eig**3))**(-1)*loadmag[k]/(dT**2*eig**2))/(dT*eig))
     elif implementation == 'fortran':
         #note than all fortran subroutines are lowercase.
-
-        import geotecha.speccon.ext_integrals as ext_integ
-        A = ext_integ.eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals, dT)
-        #previous two lines are just for development to make sure that
-        #the fortran code is actually working.  They force
-#        try:
-#            from geotecha.speccon.ext_integrals import eload_linear as fn
-#        except ImportError:
-#            fn = Eload_sinlinear
-#         A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
+        if MUST_TRY_FORTRAN:
+            from geotecha.speccon.ext_integrals import eload_sinlinear as fn
+        else:
+            try:
+                from geotecha.speccon.ext_integrals import eload_sinlinear as fn
+            except ImportError:
+                fn = Eload_sinlinear
+        A = fn(loadtim, loadmag, omega, phase, eigs, tvals, dT)
     else:#default is 'vectorized' using numpy
         sin = np.sin
         cos = np.cos
@@ -7089,11 +7097,15 @@ def dim1sin_DD_abDDf_linear(m, at, ab, bt, bb,  zt, zb, implementation='vectoriz
                 A[j, i] = A[i, j]
 
     elif implementation == 'fortran':
-        try:
+        if MUST_TRY_FORTRAN:
             import geotecha.speccon.ext_integrals as ext_integ
             A = ext_integ.dim1sin_dd_abddf_linear(m, at, ab, bt, bb, zt, zb)
-        except ImportError:
-            A = dim1sin_DD_abDDf_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
+        else:
+            try:
+                import geotecha.speccon.ext_integrals as ext_integ
+                A = ext_integ.dim1sin_dd_abddf_linear(m, at, ab, bt, bb, zt, zb)
+            except ImportError:
+                A = dim1sin_DD_abDDf_linear(m, at, ab, bt, bb, zt, zb, implementation='vectorized')
 
     else:#default is 'vectorized' using numpy
         sin = np.sin
