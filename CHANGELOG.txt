@@ -1,3 +1,13 @@
+2018-08-09 Added specbeam, code for Finite elastic Euler-Bernoulli beam
+           resting on viscoelastic foundation with piecewise-linear
+           properties, subjected to multiple moving point loads.  Used
+           in journal article: Walker, R.T.R. and Indraratna, B, (in press)
+           "Moving loads on a viscoelastic foundation with special
+           reference to railwaytransition zones". International
+           Journal of Geomechanics.
+           Code and tests in:
+           geotecha.beam_on_foundation.specbeam,
+           geotecha.beam_on_foundation.test.test_specbeam
 2018-08-04 Added SimpleTimer class to geotecha.inputputut.inputoutput for
            Simple nested wall clock timing, pritn to stdout.
 2018-07-23 Converted a number of speccon in-place addition
