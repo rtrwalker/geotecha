@@ -734,9 +734,10 @@ def test_SpecBeam_const_mat_midpoint_defl_runme_analytical_50():
             xvals_norm=np.array([0.5]),
 
             use_analytical=True,
-#            implementation="vectorized",
-            implementation="fortran",
-#            file_stem="specbeam50"
+            implementation="vectorized",
+#            implementation="fortran",
+#            file_stem="specbeam50",
+            force_calc=True,
             )
 
 
@@ -748,7 +749,7 @@ def test_SpecBeam_const_mat_midpoint_defl_runme_analytical_50():
 #
 #    yall = a.wofx(x_norm=0.5, normalise_w=False)
     ycompare = np.interp(expected_50terms_t, t, a.defl[0,:])
-    a.saveme()
+#    a.saveme()
 
     print("n=", pdict['nterms'])
     end_time0 = time.time()
@@ -916,8 +917,9 @@ def test_SpecBeam_const_mat_midpoint_defl_runme_analytical_200():
             xvals_norm=np.array([0.5]),
 
             use_analytical=True,
-#            implementation="vectorized",
-            implementation="fortran",
+            implementation="vectorized",
+#            implementation="fortran",
+            force_calc=True,
             )
 
 
@@ -1083,8 +1085,9 @@ def test_SpecBeam_const_mat_deflection_shape_stationary_load():
             tvals=t,
             xvals=xvals,
             use_analytical=False,
-#            implementation="vectorized",
-            implementation="fortran")
+            implementation="vectorized",
+#            implementation="fortran",
+            )
 
     a = SpecBeam(**pdict)
     a.runme()
