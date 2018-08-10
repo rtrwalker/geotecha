@@ -9494,7 +9494,7 @@ if __name__ == "__main__":
         a.plotme(ax=None,t=0, v0=0, t0=0, x0=0, xlim = (-10,10), ylim=(0,100))
         plt.show()#x0,t0,tf,v
 
-    if 1:
+    if 0:
         #messing around with moving point loads
         a = MovingPointLoads([0.,-3,-4,-5],[20.,15,10,10 ])
 #        a.animateme(x0=-5,t0=0,tf=15,v0=6, xlim = (-10,20), ylim=(0,100))
@@ -9514,14 +9514,14 @@ if __name__ == "__main__":
         a.plot_specbeam_PolyLines(ax=None, v=-2, L=15, t0=0)
 
         plt.show()#x0,t0,tf,v
-    if 0:
+    if 1:
         #messing around with moving point loads
         a = MovingPointLoads(x=[0.,-3,-4,-5],p=[20.,15,10,10 ],v=3,L=10,t0=0)
         fig, ax = plt.subplots()
         for t in [0,2,3,6,12]:
             x,p = a.point_loads_on_beam(t)
 
-            ax.plot(x,p,marker='o',linestyle=".",label= "{}".format(t))
+            ax.plot(x,p,marker='o',linestyle="None",label= "{}".format(t))
         ax.set_title("L={},v={}".format(a.L,a.v))
         ax.set_ylim(0,100)
         plt.show()
@@ -9532,7 +9532,7 @@ if __name__ == "__main__":
         for t in [0,2,3,6,12]:
             x,p = a.point_loads_on_beam(t)
 
-            ax.plot(x,p,marker='o',linestyle=".",label= "{}".format(t))
+            ax.plot(x,p,marker='o',linestyle="None",label= "{}".format(t))
         ax.set_title("L={},v={}".format(a.L,a.v))
         ax.set_ylim(0,100)
         plt.show()

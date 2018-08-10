@@ -1,10 +1,10 @@
 # speccon1d_unsat example (if viewing this in docs, plots are at bottom of page)
 
-# Unsaturated soil 1 dimensional consolidation. 
+# Unsaturated soil 1 dimensional consolidation.
 # 3 layers, instant load
 # Compare with Shan et al. (2014) Fig5
 
-# Shan, Z., Ling, D., and Ding, H. (2014). "Analytical solution 
+# Shan, Z., Ling, D., and Ding, H. (2014). "Analytical solution
 # for the 1D consolidation of unsaturated multi-layered soil."
 # Computers and Geotechnics, 57, 17-23. doi 10.1016/j.compgeo.2013.11.009
 
@@ -13,7 +13,7 @@
 # speccon1d_unsat.exe script program.
 
 
-# note the code is a bit slopy 
+# note the code is a bit slopy
 
 from __future__ import division, print_function
 import numpy as np
@@ -271,13 +271,13 @@ def shanetal2014_3_layers_instant():
     H = 10 #m
     drn = 1
     neig = 200
-    
+
     mvref = 1e-4 #1/kPa
     kwref = 1.0e-9 #m/s
-    
+
     karef = 1e-8 #m/s
     Daref = karef / 10 # from equation ka=Da*g
-    
+
     wa = 29.0e-3 #kg / mol
     R = 8.31432 #J/(mol.K)
     ua_= 101 #kPa
@@ -285,39 +285,39 @@ def shanetal2014_3_layers_instant():
     dTa = Daref /(mvref) / (wa*ua_/(R*T))/ H ** 2
     dTw = kwref / mvref/ 10 / H**2
     dT = max(dTw,dTa)
-    
+
     kw = PolyLine([0,0.3,0.7], [0.3,0.7,1.0], [0.1,1,0.1], [0.1,1,0.1])
     Da = PolyLine([0,0.3,0.7], [0.3,0.7,1.0], [0.1,1,0.1], [0.1,1,0.1])
     S = PolyLine([0,0.3,0.7], [0.3,0.7,1.0], [0.8,0.6,0.7], [0.8,0.6,0.7])
     n = PolyLine([0,0.3,0.7], [0.3,0.7,1.0], [0.45,0.5,0.4], [0.45,0.5,0.4])
-    
+
     m1s = -2.5
     m2s = 0.4*m1s
     m1w = 0.2*m1s
     m2w = 4*m1w
     m1a = m1s-m1w
     m2a = m2s-m2w
-    
+
     #print(m1w,m2w,m1a,m2a)
     m1kw = PolyLine([0,1], [m1w]*2)
     m2w =  PolyLine([0,1], [m2w]*2)
     m1ka = PolyLine([0,1], [m1a]*2)
     m2a =  PolyLine([0,1], [m2a]*2)
-    
-    
+
+
     surcharge_vs_depth = PolyLine([0,1], [1,1])
     surcharge_vs_time = PolyLine([0,0,10000], [0, {dq}, {dq}])
-    
+
     ppress_z = np.{z}
     #avg_ppress_z_pairs = [[0,1]]
     #settlement_z_pairs = [[0,1]]
     tvals = np.{t}
-    
-    
+
+
     #ppress_z_tval_indexes = slice(None, len(tua)+len(tuw))
     #avg_ppress_z_pairs_tval_indexes = slice(None, None)#[0,4,6]
     #settlement_z_pairs_tval_indexes = slice(len(tua)+len(tuw),len(tua)+len(tuw)+len(tset))
-    
+
     save_data_to_file= False
     save_figures_to_file= False
     show_figures= False
@@ -354,7 +354,7 @@ def shanetal2014_3_layers_instant():
     styles = [dict(dashes=[4,1],color='black'),
               dict(dashes=[8,2], color='black'),
               dict(dashes=[5,2,2,2], color='black')]
-              
+
     for jj, zz in enumerate(z_for_uw_vs_t):
         label_calc = "$z={}m$".format(zz)
         if jj==len(z_for_uw_vs_t)-1:
@@ -367,7 +367,7 @@ def shanetal2014_3_layers_instant():
                 marker='o', markersize=3,
                 color='black',
                 markerfacecolor='none',
-                ls='.',
+                ls="None",
                 label=label_expect)
 
 
@@ -399,7 +399,7 @@ def shanetal2014_3_layers_instant():
                 marker='o', markersize=3,
                 color='black',
                 markerfacecolor='none',
-                ls='.',
+                ls='None',
                 label=label_expect)
 
 
