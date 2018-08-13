@@ -98,7 +98,7 @@ class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         >>> a = AvSoilModel(av=1.5, siga=19, ea=4)
         >>> a.e_from_stress(np.array([20, 21]))
-        array([ 2.5,  1. ])
+        array([2.5, 1. ])
 
         """
 
@@ -127,7 +127,7 @@ class AvSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         >>> a = AvSoilModel(av=1.5, siga=19, ea=4)
         >>> a.stress_from_e(np.array([1, 2.5]))
-        array([ 21.,  20.])
+        array([21., 20.])
 
         """
 
@@ -221,7 +221,7 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> a = CcCrSoilModel(Cc=3, Cr=0.5, siga=10, ea=5)
         >>> a.e_from_stress(estress=np.array([40, 60]),
         ... pstress=np.array([50, 55]))
-        array([ 2.95154499,  2.66554625])
+        array([2.95154499, 2.66554625])
 
         Normally consolidated (pstress not specified):
 
@@ -281,8 +281,8 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a = CcCrSoilModel(Cc=3, Cr=0.5, siga=10, ea=5)
-        >>> a.stress_from_e(e=np.array([ 2.95154499,  2.66554625]), pstress=50)
-        array([ 40.0...,  59.99...])
+        >>> a.stress_from_e(e=np.array([2.95154499, 2.66554625]), pstress=50)
+        array([40.0..., 59.99...])
 
         Normally consolidated:
 
@@ -388,7 +388,7 @@ class CcCrSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> a = CcCrSoilModel(Cc=3.0, Cr=0.5, siga=10, ea=5)
         >>> a.av_from_stress(estress=np.array([40, 60.0]),
         ... pstress=np.array([50, 55.0]))
-        array([ 0.00542868,  0.02171472])
+        array([0.00542868, 0.02171472])
 
         """
 
@@ -498,7 +498,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.e_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
-        array([ 2.95,  2.75])
+        array([2.95, 2.75])
 
 
         Logarithmic effective stress scale:
@@ -522,7 +522,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.e_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
-        array([ 2.75930...,  2.70824...])
+        array([2.75930..., 2.70824...])
 
 
         Logarithmic void ratio scale
@@ -546,7 +546,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.e_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
-        array([ 3.330803...,  2.64575...])
+        array([3.330803..., 2.64575...])
 
 
         Logarithmic effective stress and void ratio scales
@@ -570,7 +570,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.e_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
-        array([ 2.76255...,  2.604857...])
+        array([2.76255..., 2.604857...])
 
 
         Increasing vs decreasing inputs
@@ -654,7 +654,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         >>> a.stress_from_e(e=np.array([2.8, 2.65]),
         ... pstress=np.array([2.25, 2.0]))
-        array([ 1.75...,  2.28333...])
+        array([1.75..., 2.28333...])
 
 
         Logarithmic effective stress scale
@@ -678,7 +678,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.stress_from_e(e=2.73, pstress=np.array([2.25, 2.]))
-        array([ 1.363494...,  2.2427...])
+        array([1.363494..., 2.2427...])
 
 
         Logarithmic void ratio scale
@@ -703,7 +703,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         >>> a.stress_from_e(e=np.array([2.75, 2.65]),
         ... pstress=np.array([2.25, 2]))
-        array([ 2.082163...,  2.24856...])
+        array([2.082163..., 2.24856...])
 
 
         Logarithmic effective stress and void ratio scales
@@ -727,7 +727,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.stress_from_e(e=2.65, pstress=np.array([2.25, 2]))
-        array([ 1.8948013...,  2.23463...])
+        array([1.8948013..., 2.23463...])
 
 
         Increasing vs decreasing inputs
@@ -847,7 +847,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         >>> x, y = np.array([1,2,2.5]), np.array([4, 3.5, 2])
         >>> a = PwiseLinearSoilModel(siga=x, ea=y, Cr=0.1)
         >>> a.av_from_stress(estress=1.25, pstress=2.25)
-        0.10...
+        0.1...
 
         On compression line:
 
@@ -863,7 +863,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         >>> a.av_from_stress(estress=np.array([1.25, 2.25]),
         ... pstress=np.array([2.25, 2.]))
-        array([ 0.1,  3. ])
+        array([0.1, 3. ])
 
 
         Logarithmic effective stress scale
@@ -888,7 +888,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
 
         >>> a.av_from_stress(estress=np.array([1.25, 2.25]),
         ... pstress=np.array([2.25, 2.]))
-        array([ 0.034743...,  2.987...])
+        array([0.034743..., 2.987...])
 
 
         Logarithmic void ratio scale
@@ -912,7 +912,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.av_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
-        array([ 0.76694...,  2.9612...])
+        array([0.76694..., 2.9612...])
 
 
         Logarithmic effective stress and void ratio scales
@@ -936,7 +936,7 @@ class PwiseLinearSoilModel(OneDimensionalVoidRatioEffectiveStress):
         Array inputs:
 
         >>> a.av_from_stress(estress=np.array([1.25, 2.25]), pstress=2.25)
-        array([ 0.2210045...,  2.9034...])
+        array([0.2210045..., 2.9034...])
 
 
         Increasing vs decreasing inputs

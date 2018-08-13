@@ -2902,13 +2902,13 @@ def layer_coords(h, segs, min_segs=1):
     Examples
     --------
     >>> layer_coords([4], 2)
-    array([ 0.,  2.,  4.])
+    array([0., 2., 4.])
     >>> layer_coords([2], 1, 4)
-    array([ 0. ,  0.5,  1. ,  1.5,  2. ])
+    array([0. , 0.5, 1. , 1.5, 2. ])
     >>> layer_coords([2,4,2], 5, 2)
-    array([ 0.,  1.,  2.,  4.,  6.,  7.,  8.])
+    array([0., 1., 2., 4., 6., 7., 8.])
     >>> layer_coords([5,1,5], 3, 2)
-    array([  0. ,   2.5,   5. ,   5.5,   6. ,   8.5,  11. ])
+    array([ 0. ,  2.5,  5. ,  5.5,  6. ,  8.5, 11. ])
 
 
     """
@@ -2971,23 +2971,23 @@ def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
     Examples
     --------
     >>> subdivide_into_elements(n=3, h=6.0, p=1, symmetry=True)
-    array([ 2.,  2.,  2.])
+    array([2., 2., 2.])
     >>> subdivide_into_elements(n=4, h=6.0, p=1, symmetry=True)
-    array([ 1.5,  1.5,  1.5,  1.5])
+    array([1.5, 1.5, 1.5, 1.5])
     >>> subdivide_into_elements(n=4, h=6.0, p=1, symmetry=False)
-    array([ 1.5,  1.5,  1.5,  1.5])
+    array([1.5, 1.5, 1.5, 1.5])
     >>> subdivide_into_elements(n=3, h=6.0, p=2, symmetry=True)
-    array([ 1.5,  3. ,  1.5])
+    array([1.5, 3. , 1.5])
     >>> subdivide_into_elements(n=3, h=6.0, p=0.5, symmetry=True)
-    array([ 2.4,  1.2,  2.4])
+    array([2.4, 1.2, 2.4])
     >>> subdivide_into_elements(n=4, h=6.0, p=2, symmetry=True)
-    array([ 1.,  2.,  2.,  1.])
+    array([1., 2., 2., 1.])
     >>> subdivide_into_elements(n=4, h=6.0, p=0.5, symmetry=True)
-    array([ 2.,  1.,  1.,  2.])
+    array([2., 1., 1., 2.])
     >>> subdivide_into_elements(n=4, h=6.0, p=0.5, symmetry=False)
-    array([ 3.2,  1.6,  0.8,  0.4])
+    array([3.2, 1.6, 0.8, 0.4])
     >>> subdivide_into_elements(n=3, h=3.5, p=2, symmetry=False)
-    array([ 0.5,  1. ,  2. ])
+    array([0.5, 1. , 2. ])
     >>> sum(subdivide_into_elements(n=20, h=3.5, p=1.05, symmetry=False))
     3.5
 
@@ -3008,11 +3008,11 @@ def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
         if n%2==0: #even
             x = h
             x /= 2 * (p**(n / 2) - 1) / (p - 1)
-            ppower[n / 2:] = np.arange(n / 2)[::-1]
+            ppower[n // 2:] = np.arange(n / 2)[::-1]
         else: #odd
             x = h
             x /=  2 * (p**((n + 1) / 2) - 1) / (p - 1) - p**((n - 1) / 2)
-            ppower[(n + 1) / 2:] = np.arange((n - 1) / 2)[::-1]
+            ppower[(n + 1) // 2:] = np.arange((n - 1) / 2)[::-1]
     else:
         x = h / (p**n - 1) * (p - 1)
         ppower = np.arange(n)

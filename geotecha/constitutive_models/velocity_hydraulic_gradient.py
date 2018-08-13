@@ -30,19 +30,19 @@ from geotecha.mathematics import root_finding
 
 class OneDimensionalFlowRelationship(object):
     """Base class for defining velocity vs hydraulic gradient relationships
-    
+
     Attributes
     ----------
     non_Darcy: True
-        A class variable indicating if model has a non-Darcian flow 
+        A class variable indicating if model has a non-Darcian flow
         relationship.  Can be overridden in subclasses.  Basically
-        the Darcian flow equations are simple and it might be simpler to  
+        the Darcian flow equations are simple and it might be simpler to
         bypass the use of a OneDimensionalFlowRelationship.
-        
+
     """
 
     non_Darcy = True
-    
+
     def v_from_i(self, hyd_grad, **kwargs):
         """Velocity from hydraulic gradient"""
         #Note this should work for +ve and -ve hydraulic gradients
@@ -59,7 +59,7 @@ class OneDimensionalFlowRelationship(object):
         raise NotImplementedError("dv_di must be implemented.")
 
     def vdrain_strain_rate(self, eta, head, **kwargs):
-        """Vertical drain strain rate as based on the eta method"""        
+        """Vertical drain strain rate as based on the eta method"""
         raise NotImplementedError("vdrain_strain_rate must be implemented.")
 
     def v_and_i_for_plotting(self, **kwargs):
@@ -113,7 +113,7 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
     """
 
     non_Darcy = False
-        
+
     def __init__(self, k=1.0):
         self._attribute_list = ['k']
         self.k = k
@@ -142,7 +142,7 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
         >>> a.v_from_i(-8.0)
         -24.0
         >>> a.v_from_i(np.array([5.0, 8.0]))
-        array([ 15.,  24.])
+        array([15., 24.])
 
 
         """
@@ -171,7 +171,7 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
         >>> a.i_from_v(-24.0)
         -8.0
         >>> a.i_from_v(np.array([15, 24]))
-        array([ 5.,  8.])
+        array([5., 8.])
 
 
         """
@@ -200,7 +200,7 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
         >>> a.dv_di(-8.0)
         -3.0
         >>> a.dv_di(np.array([5.0, 8.0]))
-        array([ 3.,  3.])
+        array([3., 3.])
 
 
         """
@@ -209,42 +209,42 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
 
     def vdrain_strain_rate(self, eta, head, **kwargs):
         """Vertical drain strain rate as based on the eta method""
-        
+
         [strain rate] = head * self.k * eta
 
-                        
+
         Parameters
         ----------
         eta : float
             Value of vertical drain geometry, peremability parameter. This
-            value should be calculated based on Darcy's law (see 
+            value should be calculated based on Darcy's law (see
             geotecha.consolidation.smearzones.drain_eta)
         head : float
             Hydraulic head driving the flow.  For vertical drains this is
-            usually the difference between the average head in the soil and 
+            usually the difference between the average head in the soil and
             the head in the drain.
         **kwargs : any
-            Any additional keyword arguments are ignored. 
-            
+            Any additional keyword arguments are ignored.
+
         Returns
         -------
         strain_rate : float
             Strain rate based on eta method.
-            
+
         See also
         --------
         geotecha.consolidation.smearzones : Functions to determine eta.
-            
+
         Examples
         --------
         >>> a = DarcyFlowModel(k=3)
         >>> a.vdrain_strain_rate(eta=2.5, head=4)
         30.0
-        
+
         """
-        
+
         return head * self.k * eta
-        
+
     def v_and_i_for_plotting(self, **kwargs):
         """Velocity and hydraulic gradient that plot the relationship
 
@@ -386,23 +386,23 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
 
 
     """
-    
+
     non_Darcy = True
 
     def __init__(self, klinear=None, kstar=None, n=None, i0=None, iL=None):
 
-        
-                
-        
+
+
+
         d = OrderedDict()
         d['kstar']=kstar
-        d['n']=n 
+        d['n']=n
         d['iL']=iL
-        d['i0']=i0 
-        d['klinear'] = klinear            
+        d['i0']=i0
+        d['klinear'] = klinear
         self._attribute_list = list(d.keys())
-        params = [v for v in d if not d[v] is None]                                    
-#        self._attribute_list = ('kstar', 'n', 'iL', 'i0', 'klinear')                                    
+        params = [v for v in d if not d[v] is None]
+#        self._attribute_list = ('kstar', 'n', 'iL', 'i0', 'klinear')
 #        params = [v for v in self._attribute_list if not eval(v) is None]
         if len(params) != 3 or (kstar is None and klinear is None):
             raise TypeError("Wrong number of parameters to define model.'"
@@ -478,16 +478,16 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
                     return np.log(_klinear/_kstar/_n) / np.log(_iL) + 1
 
 
-                
+
 #                self.n = scipy.optimize.fixed_point(fn,
 #                                                    1.0001,
 #                                                    args=(klinear, kstar, iL))
-                # note as at 20151106 scipy.optimize.fixed_point may not 
-                # converge for this function because convergence acceleration 
+                # note as at 20151106 scipy.optimize.fixed_point may not
+                # converge for this function because convergence acceleration
                 # is used.  Use my modified version instead:
                 self.n = root_finding.fixed_point_no_accel(fn,
                                                            1.00001,
-                                                           args=(klinear, kstar, iL))                                                    
+                                                           args=(klinear, kstar, iL))
 
 #                self.n = klinear / kstar / iL**(n - 1)
                 self.iL = iL
@@ -503,22 +503,22 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
                 self.klinear = klinear
             else:
                 self.kstar = kstar
-                                
-                def fn(_n, _klinear, _kstar, _i0): 
-                    
+
+                def fn(_n, _klinear, _kstar, _i0):
+
                     return np.log(_klinear/_kstar/_n) / np.log((_i0 *_n/(_n - 1))) + 1
 
 
 #                self.n = scipy.optimize.fixed_point(fn,
 #                                                    1.00001,
 #                                                    args=(klinear, kstar, i0))
-                # note as at 20151106 scipy.optimize.fixed_point may not 
-                # converge for this function because convergence acceleration 
+                # note as at 20151106 scipy.optimize.fixed_point may not
+                # converge for this function because convergence acceleration
                 # is used.  Use my modified version instead:
                 self.n = root_finding.fixed_point_no_accel(fn,
                                                            1.00001,
                                                            args=(klinear, kstar, i0))
-                                                    
+
                 self.iL = i0 * self.n / (self.n - 1)
                 self.i0 = i0
                 self.klinear = klinear
@@ -588,16 +588,16 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
         Examples
         --------
         >>> a = HansboNonDarcianFlowModel(kstar=2, n=1.3, iL=16.2402611294)
-        >>> a.v_from_i(8.0)        
+        >>> a.v_from_i(8.0)
         29.857...
-        >>> a.v_from_i(-8.0)        
+        >>> a.v_from_i(-8.0)
         -29.857...
         >>> a.v_from_i(np.array([8.0, 20.0]))
-        array([ 29.857...,  97.513...])
+        array([29.857..., 97.513...])
 
 
         """
-        
+
         abs_hyd_grad = abs(hyd_grad)
         return np.where(abs_hyd_grad >= self.iL,
                         self.klinear * (abs_hyd_grad - self.i0),
@@ -621,16 +621,16 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
         Examples
         --------
         >>> a = HansboNonDarcianFlowModel(kstar=2, n=1.3, iL=16.2402611294)
-        >>> a.i_from_v(29.858) 
+        >>> a.i_from_v(29.858)
         8.0...
         >>> a.i_from_v(-29.858)
         -8.0...
         >>> a.i_from_v(np.array([29.858, 97.514]))
-        array([  8.0...,  20.0...])
+        array([ 8.0..., 20.0...])
 
 
         """
-        
+
         absvelocity = np.abs(velocity)
         return np.where(absvelocity >= self.vL,
                         absvelocity / self.klinear  + self.i0,
@@ -659,10 +659,10 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
         >>> a.dv_di(-8.0)
         -4.851...
         >>> a.dv_di(np.array([8.0, 20.0]))
-        array([ 4.851...,  6...])
+        array([4.851..., 6...])
 
         """
-        
+
         abs_hyd_grad = abs(hyd_grad)
         return np.where(abs_hyd_grad >= self.iL,
                         self.klinear,
@@ -670,49 +670,49 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
 
     def vdrain_strain_rate(self, eta, head, **kwargs):
         """Vertical drain strain rate as based on the eta method""
-        
+
         [strain rate] = head**self.nflow * self.klinear * gamw**(nflow - 1) * eta
 
 
-        Note that `vdrain_strain_rate` only uses the exponential portion of 
-        the Non-Darcian flow relationship.  If hydraulic gradients are 
-        greater than the limiting value iL then the flow rates will be 
-        overestimated.                        
-        
+        Note that `vdrain_strain_rate` only uses the exponential portion of
+        the Non-Darcian flow relationship.  If hydraulic gradients are
+        greater than the limiting value iL then the flow rates will be
+        overestimated.
+
         Parameters
         ----------
         eta : float
             Value of vertical drain geometry, peremability parameter. This
-            value should be calculated based on Hansbo's non-Darcian flow 
+            value should be calculated based on Hansbo's non-Darcian flow
             model (see geotecha.consolidation.smearzones.non_darcy_drain_eta)
         head : float
             Hydraulic head driving the flow.  For vertical drains this is
-            usually the difference between the average head in the soil and 
+            usually the difference between the average head in the soil and
             the head in the drain.
         gamw : float, optional
-            Unit weight of water. Note that this gamw must be consistent with 
+            Unit weight of water. Note that this gamw must be consistent with
             the value used to determine eta.  Default gamw=10.
         **kwargs : any
-            Any additional keyword arguments, other than 'gamw', are ignored. 
-            
+            Any additional keyword arguments, other than 'gamw', are ignored.
+
         Returns
         -------
         strain_rate : float
             Strain rate based on eta method.
-            
+
         See also
         --------
         geotecha.consolidation.smearzones : Functions to determine eta.
-            
+
         Examples
-        --------        
+        --------
         >>> a = HansboNonDarcianFlowModel(klinear=2, n=1.3, iL=16.2402611294)
         >>> a.vdrain_strain_rate(eta=0.1, head=4, gamw=10)
         2.419...
-        
-        
+
+
         """
-        
+
         gamw = kwargs.get('gamw', 10)
         return head**self.n * self.klinear * gamw**(self.n - 1) * eta
 
@@ -742,13 +742,13 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
         y = self.v_from_i(x)
         return x, y
 
-                    
+
 if __name__ == "__main__":
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
     pass
-    
-    if 1:    
+
+    if 1:
         p = dict(kstar=2, n=1.3, iL=16.2402611294, i0=3.7477525683, klinear=6)
         a = HansboNonDarcianFlowModel(kstar=p['kstar'], iL=p['iL'], klinear=p['klinear'])
         print(a)

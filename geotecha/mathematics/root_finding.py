@@ -226,7 +226,7 @@ def find_n_roots(func, args=(), n=1, x0=0.001, dx=0.001, p=1.0, max_iter=2000,
 def fixed_point_no_accel(func, x0, args=(), xtol=1e-8, maxiter=500):
     """
     Find a fixed point of the function (NO CONVEGENCE ACCELERATION!!!).
-    
+
     Based on scipy.optimize.fixed_point but no convergence acelleration (RTRW)
 
     Given a function of one or more variables and a starting point, find a
@@ -247,7 +247,7 @@ def fixed_point_no_accel(func, x0, args=(), xtol=1e-8, maxiter=500):
 
     Notes
     -----
-    Does NOT use Steffensen's Method using Aitken's ``Del^2`` convergence 
+    Does NOT use Steffensen's Method using Aitken's ``Del^2`` convergence
     Acceleration. See Burden, Faires, "Numerical Analysis", 5th edition, pg. 80
 
     Examples
@@ -259,14 +259,14 @@ def fixed_point_no_accel(func, x0, args=(), xtol=1e-8, maxiter=500):
     >>> c1 = np.array([10,12.])
     >>> c2 = np.array([3, 5.])
     >>> optimize.fixed_point(func, [1.2, 1.3], args=(c1,c2))
-    array([ 1.4920333 ,  1.37228132])
+    array([1.4920333 , 1.37228132])
     >>> fixed_point_no_accel(func, [1.2, 1.3], args=(c1,c2))
-    array([ 1.4920333 ,  1.37228132])
-    
-    
-    Sometimes iterations should converge but fail when acceleration 
+    array([1.4920333 , 1.37228132])
+
+
+    Sometimes iterations should converge but fail when acceleration
     convergence is used:
-    
+
     >>> def fn(n, kl, ks, i0):
     ...     return np.log(kl/ks/n) / np.log((i0 *n/(n - 1))) + 1
     >>> fixed_point_no_accel(fn, 1.001, args=[6, 2, 3.7477525683])
@@ -274,14 +274,14 @@ def fixed_point_no_accel(func, x0, args=(), xtol=1e-8, maxiter=500):
     >>> optimize.fixed_point(fn, 1.001, args=[6, 2, 3.7477525683])
     Traceback (most recent call last):
     RuntimeError: Failed to converge after 500 iterations, value is nan
-    
-    
+
+
     """
     if not np.isscalar(x0):
         x0 = np.asarray(x0)
         p0 = x0
         for iter in range(maxiter):
-            p1 = func(p0, *args)            
+            p1 = func(p0, *args)
 #            p2 = func(p1, *args)
 #            d = p2 - 2.0 * p1 + p0
 #            p = where(d == 0, p2, p0 - (p1 - p0)*(p1 - p0) / d)

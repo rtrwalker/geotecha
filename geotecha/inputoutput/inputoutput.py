@@ -692,13 +692,19 @@ def fcode_one_large_expr(expr, prepend=None, **settings):
 
     """
 
+    # FCodePrinter.indent_code uses ''.join to combine lines.  Should it be
+    # '\n'.join ? This is my work around:
+    class FCodePrinter2(FCodePrinter):
+        @property
+        def _lead(self):
+            if self._settings['source_format'] == 'fixed':
+#                return {'code': "      ", 'cont': "     @ ", 'comment': "C     "} orig
+                return {'code': "      ", 'cont': "&\n      ", 'comment': "C     "}
+            elif self._settings['source_format'] == 'free':
+                return {'code': "", 'cont': "      ", 'comment': "! "}
 
-    printer = FCodePrinter(settings)
+    printer = FCodePrinter2(settings)
 
-    if printer._settings['source_format'] == 'fixed':
-        #FCodePrinter.indent_code uses ''.join to combine lines.  Should it be
-        # '\n'.join ? This is my work around:
-        printer._lead_cont = '&\n      ' #+ printer._lead_cont
     expr = printer.parenthesize(expr, 50)
 
     if not prepend is None:
@@ -1608,7 +1614,7 @@ class PrefixNumpyArrayString(object):
     >>> a=PrefixNumpyArrayString('numpy.')
     >>> a.turn_on()
     >>> print(np.arange(3))
-    numpy.array([             0,              1,              2])
+    numpy.array([0, 1, 2])
     >>> a.turn_off()
     >>> print(np.arange(3))
     [0 1 2]

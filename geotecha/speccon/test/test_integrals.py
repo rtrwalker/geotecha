@@ -724,38 +724,38 @@ class test_dim1sin_D_aDb_linear(base_t_ester):
         self.cases = [
 
             ['a const, b const PTIB',
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]},
+             {'m': self.PTIB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1], 'bt': [1.0], 'bb': [1]},
              self.zero],
             ['a const, b const PTPB',
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]},
+             {'m': self.PTPB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1], 'bt': [1.0], 'bb': [1]},
              self.zero],
 
             ['a const, b linear within one layer PTIB',
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]},
+             {'m': self.PTIB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1.0], 'bt': [1.0], 'bb': [2]},
              self.zero],
             ['a const, b linear within one layer PTPB',
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]},
+             {'m': self.PTPB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1.0], 'bt': [1.0], 'bb': [2]},
              self.zero],
 
             ['a linear within one layer, b linear within one layer PTIB',
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
+             {'m': self.PTIB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [2], 'bt': [1], 'bb': [2]},
              np.array([0.63661977, 0.21220659])],
             ['a linear within one layer, b linear within one layer PTPB',
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
+             {'m': self.PTPB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [2], 'bt': [1], 'bb': [2]},
              np.array([0.63661977, 0])],
 
             ['a const within two layers, b linear accross both layers PTIB',
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.58778525, 0.95105652])],
             ['a const within two layers, b linear accross both layers PTPB',
-             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.95105652, 0.58778525])],
 
             ['a linear within two layers, b linear accross both layers PTIB',
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.40150567, -0.16821602])],
             ['a linear within two layers, b linear accross both layers PTPB',
-             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.25619717, -0.23511410])],
 
 #            ['a const, b linear  in two layers PTIB',
@@ -778,7 +778,7 @@ class test_pdim1sin_D_aDb_linear(base_t_ester):
 
 
             ['a const, b linear  in two layers PTIB',
-             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1, 1]),'b': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1.4, 2.2])},
+             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1.0, 1],[1.0, 1]),'b': PolyLine([0, 0.4],[0.4, 1],[1.0, 1],[1.4, 2.2])},
              np.array([0.58778525, 0.95105652])]
 
 

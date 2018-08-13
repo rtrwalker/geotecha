@@ -300,7 +300,7 @@ class test_string_of_object_attributes(unittest.TestCase):
         assert_equal(string_of_object_attributes(a, 'a b c d'.split()),
                      textwrap.dedent("""\
                      b = 4
-                     c = np.array([          1,           2,           3])
+                     c = np.array([1, 2, 3])
                      d = 'happy'
 
 
@@ -317,7 +317,7 @@ class test_string_of_object_attributes(unittest.TestCase):
         assert_equal(string_of_object_attributes(a, 'a b c d'.split(), numpy_array_prefix = None),
                      textwrap.dedent("""\
                      b = 4
-                     c = array([       1,        2,        3])
+                     c = array([1, 2, 3])
                      d = 'happy'
 
 

@@ -71,7 +71,7 @@ def real_func(x, *myargs):
     >>> real_func(3.j,f, 2)
     0.0
     >>> real_func(np.array([3.j, 1+2.j]),f, 2)
-    array([ 0.,  2.])
+    array([0., 2.])
 
     """
 
@@ -114,7 +114,7 @@ def imag_func(x, *myargs):
     >>> imag_func(3.j,f, 2)
     8.0
     >>> imag_func(np.array([3.j, 2.j]),f, 2)
-    array([ 8.,  6.])
+    array([8., 6.])
 
     """
 
