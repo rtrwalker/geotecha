@@ -705,6 +705,8 @@ def fcode_one_large_expr(expr, prepend=None, **settings):
 
     printer = FCodePrinter2(settings)
 
+    printer._lead_cont = '&\n      ' # this should account for eariler version of sympy
+     
     expr = printer.parenthesize(expr, 50)
 
     if not prepend is None:
