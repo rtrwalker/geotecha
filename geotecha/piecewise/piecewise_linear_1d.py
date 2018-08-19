@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -676,7 +676,7 @@ def segment_containing_xi_also_containing_xj(x, xi, xj, subset=None):
         Each sub-list is the start index of the segement that contains
         xi or xj.
 
-    See also
+    See Also
     --------
     segments_containing_xi : Function called for `xi` and `xj`.
 
@@ -739,7 +739,7 @@ def segments_between_xi_and_xj(x, xi, xj):
         When xi and xj not in the same segment, segments_between will be the
         segments in between xi and xj but not containing xi or xj.
 
-    See also
+    See Also
     --------
     segment_containing_xi_also_containing_xj : Find segment of xi and xj.
 
@@ -786,7 +786,7 @@ def convert_x1_x2_y1_y2_to_x_y(x1, x2, y1, y2):
     x, y : 1d ndarray, float
         x and y data of continuous line that matches the x1_x2_y1_y2 data.
 
-    See also
+    See Also
     --------
     convert_x_y_to_x1_x2_y1_y2 : Reverse of this function.
 
@@ -890,7 +890,7 @@ def convert_x_y_to_x1_x2_y1_y2(x, y):
     x2, y2 : 1d array, float
         x and y values at end of each segment (note x1[1:]==x2[:-1]).
 
-    See also
+    See Also
     --------
     convert_x1_x2_y1_y2_to_x_y : Reverse of this function.
 
@@ -984,7 +984,7 @@ def pinterp_x1_x2_y1_y2(a, xi, **kwargs):
         Interpolated y value corresponding to xi
 
 
-    See also
+    See Also
     --------
     interp_x1_x2_y1_y2 : Wrapped function.
 
@@ -1074,7 +1074,7 @@ def pinterp_x_y(a, xi, **kwargs):
         Interpolated y value corresponding to xi
 
 
-    See also
+    See Also
     --------
     interp_x_y : Wrapped function.
 
@@ -1235,7 +1235,7 @@ def pinterp_xa_ya_multipy_x1b_x2b_y1b_y2b(a, b, xai, xbi, **kwargs):
         passed through to interp_xa_ya_multipy_x1b_x2b_y1b_y2b.
 
 
-    See also
+    See Also
     --------
     interp_xa_ya_multipy_x1b_x2b_y1b_y2b : Wrapped Function.
 
@@ -1281,7 +1281,7 @@ def interp_xa_ya_multipy_x1b_x2b_y1b_y2b(xa, ya,
         If True (default), if xbi falls on boundary of segments choose the
         maximum segment to interpolate within.
 
-    See also
+    See Also
     --------
     interp_x_y : Interpolate the x_y part.
     interp_x1_x2_y1_y2 : Interpolate the x1_x2_y1_y2 part.
@@ -1311,7 +1311,7 @@ def pavg_x_y_between_xi_xj(a, xi, xj, **kwargs):
         Interpolated values. len(A)=len(xi)
 
 
-    See also
+    See Also
     --------
     avg_x_y_between_xi_xj : Wrapped function.
 
@@ -1339,7 +1339,7 @@ def avg_x_y_between_xi_xj(x, y, xi, xj):
         Interpolated values. len(A)=len(xi)
 
 
-    See also
+    See Also
     --------
     integrate_x_y_between_xi_xj : Integration is intemediate step in
         average calculation.
@@ -1369,7 +1369,7 @@ def pintegrate_x_y_between_xi_xj(a, xi, xj, **kwargs):
         Interpolated values. len(A) == len(xi).
 
 
-    See also
+    See Also
     --------
     integrate_x_y_between_xi_xj : Wrapped function.
 
@@ -1394,7 +1394,7 @@ def integrate_x_y_between_xi_xj(x, y, xi, xj):
         Interpolated values. len(A) == len(xi)
 
 
-    See also
+    See Also
     --------
     interp_x_y : Interpolate the x_y part.
     segments_between_xi_and_xj : Line segments between xi and xj.
@@ -1441,7 +1441,7 @@ def pintegrate_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
     A : 1d array of float
         Results of integrations. len(A) == len(xi).
 
-    See also
+    See Also
     --------
     integrate_x1_x2_y1_y2_between_xi_xj : Wrapped function.
 
@@ -1467,7 +1467,7 @@ def integrate_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     A : 1d array of float
         Results of integrations. len(A) == len(xi).
 
-    See also
+    See Also
     --------
     interp_x1_x2_y1_y2 : Interpolation of x1_x2_y1_y2 data.
     segments_between_xi_and_xj : Line segments between xi and xj.
@@ -1522,7 +1522,7 @@ def pavg_x1_x2_y1_y2_between_xi_xj(a, xi, xj, **kwargs):
     A : 1d array of float
         Average for each xi, xj pair. len(A) == len(xi).
 
-    See also
+    See Also
     --------
     avg_x1_x2_y1_y2_between_xi_xj : Wrapped function.
 
@@ -1548,7 +1548,7 @@ def avg_x1_x2_y1_y2_between_xi_xj(x1, x2, y1, y2, xi, xj):
     A : 1d array of float
         Average for each xi, xj pair. len(A) == len(xi).
 
-    See also
+    See Also
     --------
     integrate_x1_x2_y1_y2_between_xi_xj : Integration is intermediate
         step for average calculation.
@@ -1592,7 +1592,7 @@ def pxa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(a, b,
         Result of averageing and interpolating.
         shape(A) == (len(xbi), len(xai)).
 
-    See also
+    See Also
     --------
     xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between : Wrapped function.
 
@@ -1637,7 +1637,7 @@ def xa_ya_multipy_avg_x1b_x2b_y1b_y2b_between(xa, ya,
     A : 2d array of float
         Result. shape(A) == (len(xbi), len(xai)), i.e. rows represent
 
-    See also
+    See Also
     --------
     interp_x_y : Interpolate the x_y part.
     avg_x1_x2_y1_y2_between_xi_xj : Average the x1_x2_y1_y2 part between
@@ -1679,7 +1679,7 @@ def pintegrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between(a, b,
     A : len(xi) 1d array of float
         Integrations for each xi, xj pair.
 
-    See also
+    See Also
     --------
     integrate_x1a_x2a_y1a_y2a_multiply_x1b_x2b_y1b_y2b_between : Wrapped
         function.
@@ -1838,7 +1838,7 @@ def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between_s
         Results for each xbi, xbj pair and xai value.
 
 
-    See also
+    See Also
     --------
     xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
         Wrapped function.
@@ -1897,7 +1897,7 @@ def pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(a
         Results for each xbi, xbj pair and xai value.
 
 
-    See also
+    See Also
     --------
     xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : Wrapped
         Function.
@@ -1982,7 +1982,7 @@ def xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between(xa
 #    `a` and `b` `omega_phase` can be lists that will be superposed.  This is not available in
 #    the original function
 #
-#    See also
+#    See Also
 #    --------
 #    xa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between
 #    pxa_ya_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : similar polyline wrapper but no superposition
@@ -2050,7 +2050,7 @@ def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_betwe
         Results for each xbi, xbj pair and xai value.
 
 
-    See also
+    See Also
     --------
     xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between :
         Wrapped function
@@ -2120,7 +2120,7 @@ def pxa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_betwe
     A : (len(xbi), len(xai)) 2d array
         Results for each xbi, xbj pair and xai value.
 
-    See also
+    See Also
     --------
     xa_ya_cos_multiply_integrate_x1b_x2b_y1b_y2b_multiply_x1c_x2c_y1c_y2c_between : Wrapped
         Function.
@@ -2902,13 +2902,13 @@ def layer_coords(h, segs, min_segs=1):
     Examples
     --------
     >>> layer_coords([4], 2)
-    array([ 0.,  2.,  4.])
+    array([0., 2., 4.])
     >>> layer_coords([2], 1, 4)
-    array([ 0. ,  0.5,  1. ,  1.5,  2. ])
+    array([0. , 0.5, 1. , 1.5, 2. ])
     >>> layer_coords([2,4,2], 5, 2)
-    array([ 0.,  1.,  2.,  4.,  6.,  7.,  8.])
+    array([0., 1., 2., 4., 6., 7., 8.])
     >>> layer_coords([5,1,5], 3, 2)
-    array([  0. ,   2.5,   5. ,   5.5,   6. ,   8.5,  11. ])
+    array([ 0. ,  2.5,  5. ,  5.5,  6. ,  8.5, 11. ])
 
 
     """
@@ -2960,7 +2960,7 @@ def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
     out : array of float
         Length of each element. Should sum to `h`.
 
-    See also
+    See Also
     --------
     np.logspace
     np.linspace
@@ -2971,23 +2971,23 @@ def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
     Examples
     --------
     >>> subdivide_into_elements(n=3, h=6.0, p=1, symmetry=True)
-    array([ 2.,  2.,  2.])
+    array([2., 2., 2.])
     >>> subdivide_into_elements(n=4, h=6.0, p=1, symmetry=True)
-    array([ 1.5,  1.5,  1.5,  1.5])
+    array([1.5, 1.5, 1.5, 1.5])
     >>> subdivide_into_elements(n=4, h=6.0, p=1, symmetry=False)
-    array([ 1.5,  1.5,  1.5,  1.5])
+    array([1.5, 1.5, 1.5, 1.5])
     >>> subdivide_into_elements(n=3, h=6.0, p=2, symmetry=True)
-    array([ 1.5,  3. ,  1.5])
+    array([1.5, 3. , 1.5])
     >>> subdivide_into_elements(n=3, h=6.0, p=0.5, symmetry=True)
-    array([ 2.4,  1.2,  2.4])
+    array([2.4, 1.2, 2.4])
     >>> subdivide_into_elements(n=4, h=6.0, p=2, symmetry=True)
-    array([ 1.,  2.,  2.,  1.])
+    array([1., 2., 2., 1.])
     >>> subdivide_into_elements(n=4, h=6.0, p=0.5, symmetry=True)
-    array([ 2.,  1.,  1.,  2.])
+    array([2., 1., 1., 2.])
     >>> subdivide_into_elements(n=4, h=6.0, p=0.5, symmetry=False)
-    array([ 3.2,  1.6,  0.8,  0.4])
+    array([3.2, 1.6, 0.8, 0.4])
     >>> subdivide_into_elements(n=3, h=3.5, p=2, symmetry=False)
-    array([ 0.5,  1. ,  2. ])
+    array([0.5, 1. , 2. ])
     >>> sum(subdivide_into_elements(n=20, h=3.5, p=1.05, symmetry=False))
     3.5
 
@@ -3008,11 +3008,11 @@ def subdivide_into_elements(n=2, h=1.0, p=1, symmetry=True):
         if n%2==0: #even
             x = h
             x /= 2 * (p**(n / 2) - 1) / (p - 1)
-            ppower[n / 2:] = np.arange(n / 2)[::-1]
+            ppower[n // 2:] = np.arange(n / 2)[::-1]
         else: #odd
             x = h
             x /=  2 * (p**((n + 1) / 2) - 1) / (p - 1) - p**((n - 1) / 2)
-            ppower[(n + 1) / 2:] = np.arange((n - 1) / 2)[::-1]
+            ppower[(n + 1) // 2:] = np.arange((n - 1) / 2)[::-1]
     else:
         x = h / (p**n - 1) * (p - 1)
         ppower = np.arange(n)

@@ -13,7 +13,7 @@ What is speccon?
 'speccon' is the common name for a number of programs that use the
 spectral Galerkin method to solve multilayer consolidation problems.
 
-Speccon programs currently avialable in geotecha are:
+Speccon programs currently available in *geotecha* are:
 
  - **speccon1d_vr** - Multilayer consolidation with vertical drains.
   - See :class:`geotecha.speccon.speccon1d_vr.Speccon1dVR` for details and 
@@ -61,12 +61,12 @@ There are two main ways to use speccon programs:
     relevant variables.  Remember that the string itself cannot contain
     all python syntax.  This is not as restrictive as it first appears
     as you can easily pass calculated values into the string using 
-    the format method essentially giving yyou access to all python 
+    the format method essentially giving you access to all python 
     functionality.
   - After initializing a speccon object perform the analysis with the
     make_all method.
     a subset of teh python language
-  - This is the most flexible approach especially for paramteric studies
+  - This is the most flexible approach especially for parametric studies
     and custom plots.
 
 
@@ -93,7 +93,7 @@ Create a text file containing the text below.  Locate and run the
 speccon1d_vr.exe file.  Choose the just created input file.  A folder of
 output should be created in the same directory as the input file.
 
-.. literalinclude:: ..\geotecha_examples\speccon\example_1d_vr_001_schiffmanandstein1970.py
+.. literalinclude:: ..\\geotecha_examples\\speccon\\example_1d_vr_001_schiffmanandstein1970.py
    :language: python
 
 
@@ -109,7 +109,7 @@ Put the following in a .py file and run it with python.  A figure with
 three subplots should appear.
 
 
-.. plot:: geotecha_examples\speccon\example_1d_vr_001a_schiffmanandstein1970.py
+.. plot:: geotecha_examples\\speccon\\example_1d_vr_001a_schiffmanandstein1970.py
    :include-source:
 
 
@@ -120,7 +120,7 @@ Put the following in a .py file and run it with python.  A figure with
 three subplots should appear.
 
 
-.. plot:: geotecha_examples\speccon\example_1d_vr_001b_schiffmanandstein1970.py
+.. plot:: geotecha_examples\\speccon\\example_1d_vr_001b_schiffmanandstein1970.py
    :include-source:
 
 

@@ -1,4 +1,57 @@
 -----------------------------------------------------------------------
+2018-09-19 geotecha-0.2.1 Release.
+		   Added specbeam (see changelog below).
+		   Updated for python3.6		   
+2018-09-19 Abandoned trying to build and test code on anything less
+           than python3.6 on 64 bit Windows.  There is an Anaconda
+		   release for python3.6 and I can get it to build and pass
+		   all tests on that.  Code may still work on earlier 
+		   python versions and 32 bit systems, but Rohan has 
+		   given up on them.
+2018-08-19 Fixed issue with docs\sphinxext\gen_examples_rst_files.py .
+		   When auto-generating rst files for the geotecha examples
+		   in the docs, the old code (maybe with newer python??)
+		   inserted paths with only a single backslash.  Fixed
+		   using repr(path)[1:-1].
+2018-08-17 Removed some more-than-one-"See Also" and more-than-one-
+		   "Paramteters" sections in a docstring issues that were
+		   causing newer versions of numpydoc to fail when building
+		   docs.
+2018-08-09 Added specbeam, code for Finite elastic Euler-Bernoulli beam
+           resting on viscoelastic foundation with piecewise-linear
+           properties, subjected to multiple moving point loads.  Used
+           in journal article: Walker, R.T.R. and Indraratna, B, (in press)
+           "Moving loads on a viscoelastic foundation with special
+           reference to railway transition zones". International
+           Journal of Geomechanics.
+           Code and tests in:
+           geotecha.beam_on_foundation.specbeam,
+           geotecha.beam_on_foundation.test.test_specbeam
+2018-08-04 Added SimpleTimer class to geotecha.inputputut.inputoutput for
+           Simple nested wall clock timing, pritn to stdout.
+2018-07-23 Converted a number of speccon in-place addition
+           operations (+=) to np.add(A,B, out=A, casting='unsafe')
+           as I was getting a heap of "TypeError: Cannot cast ufunc add
+           output from dtype('complex128') to dtype('float64') with casting
+           rule 'same_kind'" errors.  After specbeam modifications
+           some things are expected to be complex, others
+           aren't.  Probably not the best way to do things
+           but this is where I am at.
+2017-09-07 Guass Legendre and Gauss Kronrod numerical integration
+           functions gl_quad and gk_quad now work with functions
+           that return an array from scalar input.  The extra dimensions
+           are tacked on the end of the return array.  See
+           geotecha.mathematics.quadrature and
+           geotecha.mathematics.test\test_quadrature.
+2017-03-17 Generated new code for spectral Galerkin method integration.
+           Integration is Eload_sinlinear for use with beams with moving
+           loads. Generation code and result code incorporated into:
+           geotecha.speccon.integrals_generate_code
+           geotecha.speccon.integrals
+           geotecha.speccon.ext_integrals
+           geotecha.speccon.tests.test_integrals
+
+-----------------------------------------------------------------------
 2016-05-31 geotecha-0.1.4 Release.
            Added YinAndGrahamSoilModel voidratio_stress relationship.
            Added Elasto-Plastic for Unsaturated Soils (EPUS) based on

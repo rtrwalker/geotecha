@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -101,7 +101,7 @@ class Talbot(object):
            and rational approximations. BIT. Numerical Mathematics,
            46(3):653 670, 2006.
 
-    See also
+    See Also
     --------
     geotecha.mathematics.mp_laplace.Talbot : higher precision numerical inverse
         Laplace transform.

@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -100,7 +100,7 @@ def test_copy_dict():
 #    ok_(copy_dict({'a':7, 'b':12}, {'a':21, 'c':13})=={'a':21, 'b':12, 'c':13})
     assert_equal(copy_dict({'a':7, 'b':12}, {'a':21, 'c':13}),
                  {'a':21, 'b':12, 'c':13})
-                 
+
 def test_MarkersDashesColors():
     """tests for MarkersDashesColors class"""
 
@@ -1247,8 +1247,8 @@ class test_plot_data_in_grid(temp_cls):
                      np.array([[6, 9],
                                [7, 4]]))
 
-        assert_equal(ax1.get_subplotspec().get_geometry(), (3,3,0, None))
-        assert_equal(ax2.get_subplotspec().get_geometry(), (3,3,1, None))
+        assert_equal(ax1.get_subplotspec().get_geometry(), (3,3,0, 0))
+        assert_equal(ax2.get_subplotspec().get_geometry(), (3,3,1, 1))
 
 
     def test_plot_args_scatter(self):
@@ -1292,8 +1292,8 @@ class test_plot_data_in_grid(temp_cls):
         ax2 = fig.get_axes()[1]
         #get_geometry give (nrows, ncols, start_index, end_index)
         # end_index is None if the gs doesn't span any positions.
-        assert_equal(ax1.get_subplotspec().get_geometry(), (3,3,3, None))
-        assert_equal(ax2.get_subplotspec().get_geometry(), (3,3,0, None))
+        assert_equal(ax1.get_subplotspec().get_geometry(), (3,3,3, 3))
+        assert_equal(ax2.get_subplotspec().get_geometry(), (3,3,0, 0))
 
     def test_gs_index_span(self):
         fig = plt.figure()
@@ -1306,7 +1306,7 @@ class test_plot_data_in_grid(temp_cls):
         ax2 = fig.get_axes()[1]
 
         assert_equal(ax1.get_subplotspec().get_geometry(), (3, 3, 5, 8))
-        assert_equal(ax2.get_subplotspec().get_geometry(), (3,3, 2, None))
+        assert_equal(ax2.get_subplotspec().get_geometry(), (3,3, 2, 2))
 
 
 

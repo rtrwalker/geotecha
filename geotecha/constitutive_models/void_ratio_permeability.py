@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
         Array Inputs:
 
         >>> a.e_from_k(np.array([8.0, 4.0]))
-        array([ 3.854...,  3.403...])
+        array([3.854..., 3.403...])
 
 
         """
@@ -119,7 +119,7 @@ class CkPermeabilityModel(PermeabilityVoidRatioRelationship):
         Array Inputs
 
         >>> a.k_from_e(np.array([3.855, 3.404]))
-        array([ 8.0...,  4.0...])
+        array([8.0..., 4.0...])
 
 
 
@@ -201,7 +201,7 @@ class ConstantPermeabilityModel(PermeabilityVoidRatioRelationship):
         Array Inputs:
 
         >>> a.k_from_e(np.array([3.855, 3.404]))
-        array([ 2.5,  2.5])
+        array([2.5, 2.5])
 
         """
 
@@ -304,7 +304,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         Array Inputs:
 
         >>> a.e_from_k(np.array([1.25, 1.75]))
-        array([ 5.5,  6.5])
+        array([5.5, 6.5])
 
         Logarithmic permeability scale:
 
@@ -313,7 +313,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.e_from_k(1.25)
         5.643...
         >>> a.e_from_k(np.array([1.25, 1.75]))
-        array([ 5.643...,  6.614...])
+        array([5.643..., 6.614...])
 
         Logarithmic void ratio scale:
 
@@ -322,7 +322,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.e_from_k(1.25)
         5.4387...
         >>> a.e_from_k(np.array([1.25, 1.75]))
-        array([ 5.4387...,  6.435...])
+        array([5.4387..., 6.435...])
 
         Logarithmic permeability and void ratio scale:
 
@@ -331,7 +331,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.e_from_k(1.25)
         5.572...
         >>> a.e_from_k(np.array([1.25, 1.75]))
-        array([ 5.572...,  6.560...])
+        array([5.572..., 6.560...])
 
         Increasing vs decreasing inputs:
 
@@ -388,7 +388,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         Array Inputs:
 
         >>> a.k_from_e(np.array([5.5, 6.5]))
-        array([ 1.25,  1.75])
+        array([1.25, 1.75])
 
         Logarithmic permeability scale:
 
@@ -398,7 +398,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         1.25...
 
         >>> a.k_from_e(np.array([5.644, 6.615]))
-        array([ 1.25...,  1.75...])
+        array([1.25..., 1.75...])
 
         Logarithmic void ratio scale:
 
@@ -408,7 +408,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         1.25...
 
         >>> a.k_from_e(np.array([5.4388, 6.436]))
-        array([ 1.25...,  1.75...])
+        array([1.25..., 1.75...])
 
         Logarithmic permeability and void ratio scale:
 
@@ -417,7 +417,7 @@ class PwiseLinearPermeabilityModel(PermeabilityVoidRatioRelationship):
         >>> a.k_from_e(5.573)
         1.25...
         >>> a.k_from_e(np.array([5.573, 6.561]))
-        array([ 1.25...,  1.75...])
+        array([1.25..., 1.75...])
 
         Increasing vs decreasing inputs:
 

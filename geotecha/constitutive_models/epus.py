@@ -226,7 +226,7 @@ class EPUS(object):
         out : float
             water content Wc
 
-        See also
+        See Also
         --------
         CurveFittingSWCC.Wc : actual function called.
 
@@ -249,7 +249,7 @@ class EPUS(object):
         out : float
             Derivative of water content Wc w.r.t. suction
 
-        See also
+        See Also
         --------
         CurveFittingSWCC.DWc : actual function called.
 
@@ -1395,7 +1395,7 @@ class EpusProfile(object):
     Parameters
     ----------
     epus_object : instance of EPUS object
-        An EPUS object from which all relevant paramters can be taken.
+        An EPUS object from which all relevant parameters can be taken.
         Use a dummy stress path for this; it will be ignored.  Also Npoint
         will be ignored.  Basically just using and EPUS object as a
         convienient container.
@@ -1967,7 +1967,7 @@ class EpusProfile(object):
             calculate the relative permeability. Defulat npp_swcc=500
         
                     
-        See also
+        See Also
         --------
         geotecha.constitutive_models.void_ratio_permeability : void ratio
             saturated permeability relationship.
@@ -2043,7 +2043,7 @@ class EpusProfile(object):
             Default qfit=1
         
                     
-        See also
+        See Also
         --------
         geotecha.constitutive_models.void_ratio_permeability : void ratio
             saturated permeability relationship.

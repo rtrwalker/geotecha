@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ The `consolidation` sub-package contains modules related to soil
 consolidation.  Primarily it implements analytical solutions to
 consolidation problems described in the literature.
 
-See also
+See Also
 --------
 geotecha.speccon : soil consolidation using the spectral method
 

@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -58,7 +58,7 @@ def real_func(x, *myargs):
     out : ndarray
         Real part of func(x, *myargs)
 
-    See also
+    See Also
     --------
     imag_func : imaginary part of function
 
@@ -71,7 +71,7 @@ def real_func(x, *myargs):
     >>> real_func(3.j,f, 2)
     0.0
     >>> real_func(np.array([3.j, 1+2.j]),f, 2)
-    array([ 0.,  2.])
+    array([0., 2.])
 
     """
 
@@ -101,7 +101,7 @@ def imag_func(x, *myargs):
     out : ndarray
         Imaginary part of func(x, *myargs).
 
-    See also
+    See Also
     --------
     real_func : real part of function
 
@@ -114,7 +114,7 @@ def imag_func(x, *myargs):
     >>> imag_func(3.j,f, 2)
     8.0
     >>> imag_func(np.array([3.j, 2.j]),f, 2)
-    array([ 8.,  6.])
+    array([8., 6.])
 
     """
 
@@ -145,7 +145,7 @@ def func_mirror_for_even_weight(x, *myargs):
     out : ndarray
         Value of func(-x, *myargs).
 
-    See also
+    See Also
     --------
     func_mirror_for_odd_weight : mirror for an odd weight function
 
@@ -189,7 +189,7 @@ def func_mirror_for_odd_weight(x, *myargs):
     out : ndarray
         Value of -func(-x, *myargs)
 
-    See also
+    See Also
     --------
     func_mirror_for_even_weight : mirror for an even wieght function
 

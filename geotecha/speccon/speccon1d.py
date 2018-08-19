@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -50,7 +50,7 @@ class Speccon1d(inputoutput.InputFileLoaderCheckerSaver):
 
         Generally run this after attributes have been entered
 
-        See also
+        See Also
         --------
         check_input_attributes
         make_time_independent_arrays
@@ -203,7 +203,8 @@ def dim1sin_avgf(m,
     Use sin(m*Z) for the phi part.
 
 
-    Parameters
+    
+    
     ----------
     m : ``list`` of ``float``
         Eigenvalues of BVP, the m in sin(m*Z). Generate with
@@ -826,7 +827,8 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn,
                     E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
         if not bot_vs_time is None:
             if bot_omega_phase is None:
@@ -840,7 +842,8 @@ def dim1sin_E_Igamv_the_BC_abf_linear(drn,
                     E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                #E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
     #and np.dot(theta, Igamv) will give differetn 1d arrays.
@@ -1263,7 +1266,8 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn,
                     E = integ.pEload_coslinear(top_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(top_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
         if not bot_vs_time is None:
             if bot_omega_phase is None:
@@ -1278,7 +1282,8 @@ def dim1sin_E_Igamv_the_BC_D_aDf_linear(drn,
                     E = integ.pEload_coslinear(bot_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
                 else:
                     E = integ.pEload_linear(bot_vs_t, eigs, tvals, dT, implementation=implementation)
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
     #and np.dot(theta, Igamv) will give differetn 1d arrays.
@@ -1474,7 +1479,8 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn,
                 theta = k * np.sin(z * m) * zd
                 if not theta_zero_indexes is None:
                     theta[theta_zero_indexes] = 0.0
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     if not bot_vs_time is None:
         if bot_omega_phase is None:
@@ -1490,7 +1496,8 @@ def dim1sin_E_Igamv_the_BC_deltaf_linear(drn,
                 theta = k * np.sin(z * m) * z
                 if not theta_zero_indexes is None:
                     theta[theta_zero_indexes] = 0.0
-                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#                E_Igamv_the += (E*np.dot(Igamv, theta)).T
+                np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     #theta is 1d array, Igamv is nieg by neig array, np.dot(Igamv, theta)
     #and np.dot(theta, Igamv) will give differetn 1d arrays.
@@ -1512,13 +1519,13 @@ def dim1sin_E_Igamv_the_deltamag_linear(m,
                                         theta_zero_indexes=None,
                                         implementation='vectorized'):
     """Calculate E and theta parts and assemble E_Igamv_the matrix
-    for loading terms of the form a(Z) * delta(Z-Zd)*mag(t) where mag is
+    for loading terms of the form delta(Z-Zd)*mag(t) where mag is
     piecewise linear in time multiplied by cos(omega * t + phase).
 
 
     Make the E*inverse(gam*v)*theta part of solution
     u(Z,t)=phi*v*E*inverse(gam*v)*theta for terms of the form
-    a(Z) * delta(Z-Zd)*mag(t).
+    k*delta(Z-Zd)*mag(t).
     The contribution of each `mag_vs_time`-`omega_phase` pairing and each zval
     are superposed. The result is an array
     of size (neig, len(tvals)). So each column is the are the column vector
@@ -1624,7 +1631,7 @@ def dim1sin_E_Igamv_the_deltamag_linear(m,
 
     """
 
-    E_Igamv_the = np.zeros((len(m), len(tvals)))
+    E_Igamv_the = np.zeros((len(m), len(tvals)), dtype=complex)
 
     if omega_phase is None:
             omega_phase = [None] * len(mag_vs_time)
@@ -1830,136 +1837,6 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m,
     piecewise linear in depth and time and multiplied by cos(omega * t + phase).
 
 
-    Make the E*inverse(gam*v)*theta part of solution
-    u(Z,t)=phi*v*E*inverse(gam*v)*theta for terms of the form
-    a(Z)*b(Z)*mag(t, Z).
-    The contribution of each `mag_vs_time`-`omega_phase` pairing and
-    are superposed. The result is an array
-    of size (neig, len(tvals)). So each column is the column vector
-    E*inverse(gam*v)*theta calculated at each output time.  This will allow
-    us later to do u(Z,t) = phi*v*E_Igamv_the.
-
-
-    Uses sin(m*Z) in the calculation of theta.
-
-    Parameters
-    ----------
-    drn : [0,1]
-        Drainage condition,
-        drn=0 for Pervious top pervious bottom (PTPB).
-        drn=1 for Pervious top impoervious bottom (PTIB).
-    m : ``list`` of ``float``
-        Eigenvalues of BVP, the m in sin(m*Z). Generate with
-        geotecha.speccon.m_from_sin_mx.
-    eigs : 1d numpy.ndarray
-        List of eigenvalues of the spectral matrix i.e. Eigenvalues of the
-        square Igam_psi matrix.
-    tvals : 1d numpy.ndarray`
-        List of time values to evaluate E matrix at.
-    Igamv : ndarray
-        Speccon matrix.  Igamv = inverse of [gam * v])
-    a, b : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        radial draiange term is dTh*kh*et*mag(Z,t) `a` would be kh, `b` would
-        be et.
-    dT : ``float``, optional
-        Time factor multiple for numerical convieniece. Default dT=1.0.
-    theta_zero_indexes : slice/list etc., optional
-        A slice object, list, etc that can be used for numpy fancy indexing.
-        Any specified index of the theta vector will be set to zero.  This is
-        useful when using the spectral method with block matrices and the
-        loading term only refers to a subset of the equations.  When using
-        block matrices m should be the same size as the block matrix.
-        Default theta_zero_indexes=None i.e. no elements of theta will be
-        set to zero.
-
-    Returns
-    -------
-    E_Igamv_the : ndarray
-        Loading matrix of size (neig, len(tvals)).
-
-    Notes
-    -----
-    Assuming the loads are formulated as the product of separate time and depth
-    dependant functions as well as a cyclic component:
-
-    .. math:: \\sigma\\left({Z,t}\\right)=
-                \\sigma\\left({Z}\\right)
-                \\sigma\\left({t}\\right)
-                \\cos\\left(\\omega t + \\phi\\right)
-
-    the solution to the consolidation equation using the spectral method has
-    the form:
-
-    .. math:: u\\left(Z,t\\right)=
-                \\mathbf{\\phi v E}
-                \\left(\\mathbf{\\Gamma v}\\right)^{-1}
-                \\mathbf{\\theta}
-
-
-    This function calculates :math:`\\mathbf{E}\\left(\\mathbf{\\Gamma v}\\right)^{-1}\\mathbf{\\theta}`
-    for terms of the following form:
-
-
-    .. math:: a\\left({Z}\\right)b\\left({Z}\\right)\\sigma\\left({Z, t}\\right)
-
-    It is assumed that :math:`\\sigma\\left({t}\\right)` is piecewise linear
-    in time with a cyclic component, and that multiple functions are
-    superposed.  Also :math:`a\\left(Z\\right)` and :math:`b\\left(Z\\right)`
-    are piecewise linear functions with respect to :math:`Z`.
-
-
-    For this particular function the :math:`\\mathbf{\\theta}` vector for
-    each load is given by:
-
-    .. math:: \\mathbf{\\theta}_{i}=
-                \\int_{0}^1{
-                  {a\\left(Z\\right)}
-                  {b\\left(Z\\right)}
-                  {\\sigma\\left(Z\\right)}
-                  \\phi_i\\,dZ}
-
-
-    The :math:`\\mathbf{E}` matrix for each load is given by:
-
-    .. math:: \\mathbf{E}_{i,j}=
-                \\int_{0}^{t_j}{
-                  {\\cos\\left(\\omega\\tau+\\textrm{phase}\\right)}
-                  {\\sigma\\left(\\tau\\right)}
-                  {\\exp\\left({(dT\\left(t-\\tau\\right)\\lambda_i}\\right)}
-                  \\,d\\tau}
-
-
-    where
-
-     - :math:`\\lambda_i` is the `ith` eigenvalue of the problem,
-     - :math:`dT` is a time factor for numerical convienience,
-     - :math:`\\sigma\left(\\tau\\right)` is the piecewise linear time
-       dependant load.
-
-
-    Note that the listed equations above are in terms of normalised depth Z,
-    with depth integrations between [0, 1].  However, IF YOU KNOW WHAT YOU
-    ARE DOING the integrations can be done using non-normalised depths.
-    The first z value in the piecewise definition a(z) must still be 0
-    however the end point for integration will be the final z value in the
-    definition of a(z).  If you are doing this then your `m` values will
-    include the normalising Factor. e.g. m = [pi/2/H, 3*pi/2/H] and a(z) is
-    defined in two layers [0, z1], [z1, zend] as opposed to
-    m = [pi/2, 3*pi/2] and a(Z) is two layers [0, z1/H], [z1/H, zend/H].
-
-
-
-
-    #########
-
-
-
-
-
-
-    Loading dependant E_Igamv_the matrix for a(z)*b(z)*D[mag(z, t), t] where mag is bilinear in depth and time multiplied by cos(omega*t + phase)
-
     Make the E*inverse(gam*v)*theta part of solution u=phi*v*E*inverse(gam*v)*theta.
     The contribution of each `mag_vs_time`-`mag_vs_depth`-`omega_phase` pair are superposed.
     The result is an array
@@ -1980,11 +1857,11 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m,
     Igamv : ndarray
         speccon matrix
     a : PolyLine
-        Piewcewise linear function.  e.g. for 1d consolidation surcharge
-        loading term is mv*D[sigma(z, t), t] so a would be mv.
+        Piewcewise linear function.  e.g. for 1d consolidation vacuum term is
+        kh*et*w(z,t) so a would be `kh`, `b` would be `et`
     b : PolyLine
         Piewcewise linear function.  e.g. for 1d consolidation vacuum term is
-         kh*et*w(z,t) so a would be `kh`, `b` would be `et`
+        kh*et*w(z,t) so a would be `kh`, `b` would be `et`
     mag_vs_depth : list of PolyLine
         Piecewise linear magnitude  vs depth.
     mag_vs_time : list of PolyLine
@@ -2061,7 +1938,8 @@ def dim1sin_E_Igamv_the_abmag_bilinear(m,
             #Basically np.dot(Igamv, theta) gives us what we want i.e.
             #theta was treated as a column array.  The alternative
             #np.dot(theta, Igamv) would have treated theta as a row vector.
-            E_Igamv_the += (E*np.dot(Igamv, theta)).T
+#            E_Igamv_the += (E*np.dot(Igamv, theta)).T
+            np.add(E_Igamv_the, (E*np.dot(Igamv, theta)).T,out=E_Igamv_the, casting='unsafe')
 
     return E_Igamv_the
 
@@ -2282,6 +2160,131 @@ def dim1sin_foft_Ipsiw_the_BC_D_aDf_linear(drn,
     #theta was treated as a column array.  The alternative
     #np.dot(theta, Igamv) would have treated theta as a row vector.
     return foft_Ipsiw_the
+
+
+def dim1sin_E_Igamv_the_mvpl(m,
+                            eigs,
+                            tvals,
+                            Igamv,
+                            moving_loads,
+#                            pseudo_k,
+#                            mag_vs_time,
+#                            omega_phase=None,
+                            dT=1.0,
+                            theta_zero_indexes=None,
+                            implementation='vectorized'):
+    """Calculate E and theta parts and assemble E_Igamv_the matrix
+    for loading terms of the form a(Z) * delta(Z-Zd)*mag(t) where mag is
+    piecewise linear in time multiplied by cos(omega * t + phase).
+
+
+    Make the E*inverse(gam*v)*theta part of solution
+    u(Z,t)=phi*v*E*inverse(gam*v)*theta for terms of the form
+    a(Z) * delta(Z-Zd)*mag(t).
+    The contribution of each `mag_vs_time`-`omega_phase` pairing and each zval
+    are superposed. The result is an array
+    of size (neig, len(tvals)). So each column is the are the column vector
+    E*inverse(gam*v)*theta calculated at each output time.  This will allow
+    us later to do u(Z,t) = phi*v*E_Igamv_the.
+
+    Uses sin(m*Z) in the calculation of theta.
+
+
+    Parameters
+    ----------
+    m : ``list`` of ``float``
+        Eigenvalues of BVP, the m in sin(m*Z). Generate with
+        geotecha.speccon.m_from_sin_mx.
+    eigs : 1d numpy.ndarray
+        List of eigenvalues of the spectral matrix i.e. Eigenvalues of the
+        square Igam_psi matrix.
+    tvals : 1d numpy.ndarray`
+        List of time values to evaluate E matrix at.
+    Igamv : ndarray
+        Speccon matrix.  Igamv = inverse of [gam * v])
+    moving_loads : list of MovingPointLoads objects
+        List of loads to apply .
+    dT : ``float``, optional
+        Time factor multiple for numerical convieniece. Default dT=1.0.
+    theta_zero_indexes : slice/list etc., optional
+        A slice object, list, etc that can be used for numpy fancy indexing.
+        Any specified index of the theta vector will be set to zero.  This is
+        useful when using the spectral method with block matrices and the
+        loading term only refers to a subset of the equations.  When using
+        block matrices m should be the same size as the block matrix.
+        Default theta_zero_indexes=None i.e. no elements of theta will be
+        set to zero.
+
+    Returns
+    -------
+    E_Igamv_the : ndarray, dtype=complex
+        Loading matrix of size (neig, len(tvals)).
+
+    Notes
+    -----
+    returns a complex array!!!
+
+
+    Assuming the loads are formulated as the product of separate time and depth
+    dependant functions as well as a cyclic component:
+
+
+    """
+
+    E_the = np.zeros((len(tvals), len(eigs), len(m)),dtype=complex)
+    #axes are (t,eig,theta), they will be transposed at the end of the function.
+
+    if not theta_zero_indexes is None:
+        avoid = range(len(m))[theta_zero_indexes]
+    else:
+        avoid = []
+
+    for mvpl in moving_loads:
+        plines, omega_phases = mvpl.convert_to_specbeam()
+
+        for mag_vs_t, omega_phase in zip(plines, omega_phases):
+            omega, phase = omega_phase
+            for i, mi in enumerate(m):
+                if i in avoid:
+                    continue
+                E_the[:, :, i] += (
+                        integ.pEload_sinlinear(mag_vs_t,
+                                         omega*mi, phase*mi,
+                                         eigs,
+                                         tvals, dT,
+                                         implementation=implementation))
+
+
+#    if not theta_zero_indexes is None:
+#         E_the[:, :, theta_zero_indexes] = 0.0
+
+    E_the *= Igamv[np.newaxis, :, :]
+
+    E_Igamv_the = E_the.sum(axis=-1).T
+
+
+
+
+
+#    if omega_phase is None:
+#            omega_phase = [None] * len(mag_vs_time)
+#
+#    for z, k, mag_vs_t, om_ph in zip(zvals, pseudo_k, mag_vs_time, omega_phase):
+#        if mag_vs_t is None:
+#            continue
+#        theta = k * np.sin(z * m)
+#        if not theta_zero_indexes is None:
+#            theta[theta_zero_indexes] = 0.0
+#        if not om_ph is None:
+#            omega, phase = om_ph
+#            E = integ.pEload_coslinear(mag_vs_t, omega, phase, eigs, tvals, dT, implementation=implementation)
+#        else:
+#            E = integ.pEload_linear(mag_vs_t, eigs, tvals, dT, implementation=implementation)
+#        E_Igamv_the += (E*np.dot(Igamv, theta)).T
+
+
+    return E_Igamv_the
+
 
 
 if __name__ == '__main__':

@@ -161,7 +161,7 @@ ax1.set_ylabel('Excess pore pressure in air phase, kPa')
 ax1.set_xlabel('Time')
 ax1.set_xscale('log')
 ax1.plot(tua, pora[0],
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax1.plot(tua, a.pora[0,:len(tua)],
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',
@@ -175,7 +175,7 @@ ax3.set_xlabel('Time')
 ax3.set_ylabel('Settlement')
 ax3.set_xscale('log')
 ax3.plot(tset, settle[0],
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax3.plot(tset, a.set[0],
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',
@@ -191,7 +191,7 @@ ax4.set_ylabel('Excess pore pressure in water phase, kPa')
 ax4.set_xlabel('Time')
 ax4.set_xscale('log')
 ax4.plot(tuw, porw[0],
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax4.plot(tuw, a.porw[0,len(tua):len(tua)+len(tuw)],
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',

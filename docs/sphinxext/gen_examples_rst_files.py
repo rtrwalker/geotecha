@@ -155,16 +155,19 @@ Geotecha Examples
             fh.write(u'=' * len(title) + u'\n\n')
 
             if do_plot:
-                fpath = fullpath[fullpath.index('geotecha_examples'):]
+                fpath = fullpath[fullpath.index('geotecha_examples'):]                
 #                fpath = os.path.split(fullpath)
 #                fpath = os.path.join(fpath[fpath.index('geotecha_examples'):])
 #                fh.write(u"\n\n.. plot:: %s\n\n::\n\n" % fullpath)
 #                fh.write(u"\n\n.. plot:: %s\n   :include-source:\n\n\n" % fullpath)
-                fh.write(u"\n\n.. plot:: %s\n   :include-source:\n\n\n" % fpath)
-                pass
+#                fh.write(u"\n\n.. plot:: {:s}\n   :include-source:\n\n\n".format(repr(fpath)[1:-1]))
+#                fh.write(u"\n\n.. plot:: %s\n   :include-source:\n\n\n" % fpath)
+                fh.write(u"\n\n.. plot:: %s\n   :include-source:\n\n\n" % repr(fpath)[1:-1])
             else:
-                fh.write(u"[`source code <%s>`_]\n\n::\n\n" % fname)
-
+#                fh.write(u"[`source code <%s>`_]\n\n::\n\n" % fname)
+                fh.write(u"[`source code <%s>`_]\n\n::\n\n" % repr(fname)[1:-1])
+                
+                    
 #            # indent the contents
 #            contents = u'\n'.join([u'    %s'%row.rstrip() for row in contents.split(u'\n')])
 #            fh.write(contents)

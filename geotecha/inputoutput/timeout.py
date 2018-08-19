@@ -133,6 +133,7 @@ def _longcos(x, wait=0):
     return math.cos(x)
 
 if __name__ == '__main__':
+    #note you can't really run these nose tests within spyder
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
 #    nose.runmodule(argv=['nose', '--verbosity=3'])

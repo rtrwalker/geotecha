@@ -327,7 +327,7 @@ ax1.set_xlabel('Excess pore pressure \nin soil, kPa')
 ax1.set_ylabel('Depth')
 ax1.invert_yaxis()
 ax1.plot(pors, z,
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax1.plot(a.pors, z,
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',
@@ -342,7 +342,7 @@ ax2.set_ylabel('Average excess pore press \n (soil and column), kPa')
 ax2.set_xscale('log')
 ax2.set_xlim((0.01, 10))
 ax2.plot(t, avp[0],
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax2.plot(t, a.avp[0],
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',
@@ -358,7 +358,7 @@ ax3.invert_yaxis()
 ax3.set_xscale('log')
 ax3.set_xlim((0.01, 10))
 ax3.plot(t, settle[0],
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax3.plot(t, a.set[0],
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',
@@ -374,7 +374,7 @@ ax4.set_xlabel('Excess pore pressure \nin column, kPa')
 ax4.set_ylabel('Depth')
 ax4.invert_yaxis()
 ax4.plot(porc, z,
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax4.plot(a.porc, z,
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',

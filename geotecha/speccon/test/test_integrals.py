@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -48,6 +48,7 @@ from geotecha.speccon.integrals import Eload_linear
 from geotecha.speccon.integrals import EDload_linear
 from geotecha.speccon.integrals import EDload_coslinear
 from geotecha.speccon.integrals import Eload_coslinear
+from geotecha.speccon.integrals import Eload_sinlinear
 
 from geotecha.speccon.integrals import pdim1sin_a_linear_between
 from geotecha.speccon.integrals import pdim1sin_af_linear
@@ -61,6 +62,7 @@ from geotecha.speccon.integrals import pEload_linear
 from geotecha.speccon.integrals import pEDload_linear
 from geotecha.speccon.integrals import pEDload_coslinear
 from geotecha.speccon.integrals import pEload_coslinear
+from geotecha.speccon.integrals import pEload_sinlinear
 
 
 
@@ -722,38 +724,38 @@ class test_dim1sin_D_aDb_linear(base_t_ester):
         self.cases = [
 
             ['a const, b const PTIB',
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]},
+             {'m': self.PTIB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1], 'bt': [1.0], 'bb': [1]},
              self.zero],
             ['a const, b const PTPB',
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [1]},
+             {'m': self.PTPB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1], 'bt': [1.0], 'bb': [1]},
              self.zero],
 
             ['a const, b linear within one layer PTIB',
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]},
+             {'m': self.PTIB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1.0], 'bt': [1.0], 'bb': [2]},
              self.zero],
             ['a const, b linear within one layer PTPB',
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [1], 'bt': [1], 'bb': [2]},
+             {'m': self.PTPB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [1.0], 'bt': [1.0], 'bb': [2]},
              self.zero],
 
             ['a linear within one layer, b linear within one layer PTIB',
-             {'m': self.PTIB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
+             {'m': self.PTIB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [2], 'bt': [1], 'bb': [2]},
              np.array([0.63661977, 0.21220659])],
             ['a linear within one layer, b linear within one layer PTPB',
-             {'m': self.PTPB, 'zt': [0], 'zb': [1], 'at': [1], 'ab': [2], 'bt': [1], 'bb': [2]},
+             {'m': self.PTPB, 'zt': [0.0], 'zb': [1], 'at': [1.0], 'ab': [2], 'bt': [1], 'bb': [2]},
              np.array([0.63661977, 0])],
 
             ['a const within two layers, b linear accross both layers PTIB',
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.58778525, 0.95105652])],
             ['a const within two layers, b linear accross both layers PTPB',
-             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 2], 'ab': [1, 2], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.95105652, 0.58778525])],
 
             ['a linear within two layers, b linear accross both layers PTIB',
-             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.40150567, -0.16821602])],
             ['a linear within two layers, b linear accross both layers PTPB',
-             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
+             {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1], 'at': [1.0, 1], 'ab': [1.4, 1.6], 'bt': [1,1.4], 'bb': [1.4, 2]},
              np.array([0.25619717, -0.23511410])],
 
 #            ['a const, b linear  in two layers PTIB',
@@ -776,7 +778,7 @@ class test_pdim1sin_D_aDb_linear(base_t_ester):
 
 
             ['a const, b linear  in two layers PTIB',
-             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1, 1]),'b': PolyLine([0, 0.4],[0.4, 1],[1, 1],[1.4, 2.2])},
+             {'m': self.PTIB, 'a': PolyLine([0, 0.4],[0.4, 1],[1.0, 1],[1.0, 1]),'b': PolyLine([0, 0.4],[0.4, 1],[1.0, 1],[1.4, 2.2])},
              np.array([0.58778525, 0.95105652])]
 
 
@@ -1037,6 +1039,74 @@ class test_pEload_coslinear(base_t_ester):
 
             ]
 
+class test_Eload_sinlinear(base_t_ester):
+    """A suite of tests for the Eload_sinlinear function"""
+	# I'm reusing the Eload_coslinear tests using cos(x)=sin(x+pi/2)
+    def __init__(self):
+        base_t_ester.__init__(self, Eload_sinlinear, prefix = self.__class__.__name__)
+        self.eigs = np.array([2.46740110027, 22.2066099025])
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        self.implementation = ['scalar','vectorized','fortran']
+        #Eload_sinlinear(loadtim, loadmag, omega, phase, eigs, tvals)
+
+
+        self.cases = [
+
+            ['instantaneous load at 0',
+             {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': self.eigs, 'tvals': np.array([-1,0,1]),
+              'omega':0.5, 'phase': 0.2 + np.pi/2},
+             np.array([[  0.        ,   0.        ],
+                       [  0.        ,   0.        ],
+                       [-31.48878032,  -3.50775008]])],
+
+            ['instantaneous load at 0, dT=2',
+             {'loadtim': np.array([0,0,10]), 'loadmag': np.array([0, -100,-100]), 'eigs': self.eigs_dT2, 'tvals': np.array([-1,0,1]), 'dT':2.0,
+              'omega':0.5, 'phase': 0.2 + np.pi/2},
+             np.array([[  0.        ,   0.        ],
+                       [  0.        ,   0.        ],
+                       [-31.48878032,  -3.50775008]])],
+
+            ['two ramp loads',
+             {'loadtim': [0, 0.3, 0.5, 0.8, 10], 'loadmag': [0, -40, -40, -80, -80], 'eigs': self.eigs, 'tvals': [-1,0.1, 0.3, 0.4, 0.5, 0.7, 1],
+              'omega':0.5, 'phase': 0.2 + np.pi/2},
+              np.array([[  0.        ,   0.        ],
+                       [ -0.59825397,  -0.34919877],
+                       [ -4.53415557,  -1.44767131],
+                       [ -6.83944717,  -1.64607949],
+                       [ -8.57150008,  -1.63572176],
+                       [-12.73600277,  -2.35976553],
+                       [-19.4308577 ,  -2.80349801]])],
+
+
+            ]
+
+
+class test_pEload_sinlinear(base_t_ester):
+    """A suite of tests for the pEload_sinlinear function"""
+		# I'm reusing the Eload_coslinear tests using cos(x)=sin(x+pi/2)
+    def __init__(self):
+        base_t_ester.__init__(self, pEload_sinlinear, prefix = self.__class__.__name__)
+        self.eigs = np.array([2.46740110027, 22.2066099025])
+        self.eigs_dT2 = np.array([1.23370055014, 11.1033049512])
+        #pEload_sinlinear(a, omega, phase, eigs, tvals)
+
+
+        self.cases = [
+
+            ['two ramp loads',
+             {'a': PolyLine([0, 0.3, 0.5, 0.8, 10], [0, -40, -40, -80, -80]), 'eigs': self.eigs, 'tvals': [-1,0.1, 0.3, 0.4, 0.5, 0.7, 1],
+              'omega':0.5, 'phase': 0.2 + np.pi/2},
+              np.array([[  0.        ,   0.        ],
+                   [ -0.59825397,  -0.34919877],
+                   [ -4.53415557,  -1.44767131],
+                   [ -6.83944717,  -1.64607949],
+                   [ -8.57150008,  -1.63572176],
+                   [-12.73600277,  -2.35976553],
+                   [-19.4308577 ,  -2.80349801]])],
+
+
+            ]
+
 
 class test_dim1sin(base_t_ester):
     """A suite of tests for the dim1sin function"""
@@ -1154,8 +1224,8 @@ class test_dim1sin_DD_abDDf_linear(base_t_ester):
              {'m': self.PTPB, 'zt': [0, 0.4], 'zb': [0.4, 1],
               'at': [1, 1], 'ab':[1, 1], 'bt': [1, 1], 'bb': [1, 1]},
              self.iso_PTPB],
-             
-            ['a 2 layers, const within each layer, PTIB',   
+
+            ['a 2 layers, const within each layer, PTIB',
              {'m': self.PTIB, 'zt': [0, 0.4], 'zb': [0.4, 1],
               'at': [1, 2], 'ab':[1, 2], 'bt': [1, 1], 'bb': [1, 1]},
              np.array([[ 5.79197709804, -5.73080776939], [-5.73080776939,  379.129447802]])],

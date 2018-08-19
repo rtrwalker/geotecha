@@ -172,7 +172,7 @@ ax1.set_xlabel('Excess pore pressure in air, kPa')
 ax1.set_ylabel('Depth')
 ax1.invert_yaxis()
 ax1.plot(pora, z,
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax1.plot(a.pora, z,
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',
@@ -185,7 +185,7 @@ ax2.set_xlabel('Excess pore pressure in water, kPa')
 ax2.set_ylabel('Depth')
 ax2.invert_yaxis()
 ax2.plot(porw, z,
-         ls=".", color='Blue', marker="+", ms=5,
+         ls="None", color='Blue', marker="+", ms=5,
          label='expected')
 ax2.plot(a.porw, z,
          ls='-', color='red', marker='o', ms=5, markerfacecolor='None',

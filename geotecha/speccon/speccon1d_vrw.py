@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -641,7 +641,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         """make all time independent arrays
 
 
-        See also
+        See Also
         --------
         self._make_m : make the basis function eigenvalues
         self._make_gam : make the mv dependent gamma matrix
@@ -661,7 +661,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
     def make_time_dependent_arrays(self):
         """make all time dependent arrays
 
-        See also
+        See Also
         --------
         self.make_E_Igamv_the()
 
@@ -872,7 +872,7 @@ class Speccon1dVRW(speccon1d.Speccon1d):
         E*inverse(gam*v)*theta calculated at each output time.  This will allow
         us later to do u = phi*v*self.E_Igamv_the
 
-        See also
+        See Also
         --------
         _make_E_Igamv_the_surcharge :  surchage contribution
         _make_E_Igamv_the_BC : top boundary pore pressure contribution
@@ -945,11 +945,16 @@ class Speccon1dVRW(speccon1d.Speccon1d):
             zvals = [v[0] for v in self.fixed_ppress]
             pseudo_k = [v[1] for v in self.fixed_ppress]
             mag_vs_time = [v[2] for v in self.fixed_ppress]
-            self.E_Igamv_the_fixed_ppress += (
+#            self.E_Igamv_the_fixed_ppress += (
+#                speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
+#                    self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
+#                    mag_vs_time, self.fixed_ppress_omega_phase, self.dT,
+#                    implementation=self.implementation))
+            np.add(self.E_Igamv_the_fixed_ppress, (
                 speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
                     self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
                     mag_vs_time, self.fixed_ppress_omega_phase, self.dT,
-                    implementation=self.implementation))
+                    implementation=self.implementation)), out=self.E_Igamv_the_fixed_ppress, casting='unsafe')
 
     def _make_E_Igamv_the_pumping(self):
         """make the pumping loading matrices
@@ -965,11 +970,16 @@ class Speccon1dVRW(speccon1d.Speccon1d):
             #dividing by mvref*H is because input pumping velocities need to
             # normalised
             mag_vs_time = [v[1] / (self.mvref * self.H) for v in self.pumping]
-            self.E_Igamv_the_pumping += (
+#            self.E_Igamv_the_pumping += (
+#                speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
+#                    self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
+#                    mag_vs_time, self.pumping_omega_phase, self.dT,
+#                    implementation=self.implementation))
+            np.add(self.E_Igamv_the_pumping, (
                 speccon1d.dim1sin_E_Igamv_the_deltamag_linear(self.m,
                     self.eigs, self.tvals, self.Igamv, zvals, pseudo_k,
                     mag_vs_time, self.pumping_omega_phase, self.dT,
-                    implementation=self.implementation))
+                    implementation=self.implementation)), out=self.E_Igamv_the_pumping, casting='unsafe')
 
     def _normalised_bot_vs_time(self):
         """Normalise bot_vs_time when drn=1, i.e. bot_vs_time is a gradient

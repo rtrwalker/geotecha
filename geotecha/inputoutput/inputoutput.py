@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -47,6 +47,8 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
+import time
+from datetime  import timedelta
 import fnmatch
 import argparse
 import logging
@@ -117,7 +119,7 @@ class SyntaxChecker(ast.NodeVisitor):
     allow_PolyLine
         Allow PolyLine class from geotecha.piecewise.piecewise_linear_1d.
 
-    See also
+    See Also
     --------
     ast.NodeVisitor : Parent class.  Descriptions of python syntax grammar.
     object_members : Easily print a string of an objects routines for use in
@@ -586,7 +588,7 @@ def make_module_from_text(reader, syntax_checker=None):
     m : module
         text as module
 
-    See also
+    See Also
     --------
     SyntaxChecker : allow certain syntax
 
@@ -684,19 +686,27 @@ def fcode_one_large_expr(expr, prepend=None, **settings):
     out : str
         Fortran ready code that can be copy and pasted into a Fortran routine.
 
-    See also
+    See Also
     --------
     sympy.printing.fcode : contains all the functionality.
 
     """
 
+    # FCodePrinter.indent_code uses ''.join to combine lines.  Should it be
+    # '\n'.join ? This is my work around:
+    class FCodePrinter2(FCodePrinter):
+        @property
+        def _lead(self):
+            if self._settings['source_format'] == 'fixed':
+#                return {'code': "      ", 'cont': "     @ ", 'comment': "C     "} orig
+                return {'code': "      ", 'cont': "&\n      ", 'comment': "C     "}
+            elif self._settings['source_format'] == 'free':
+                return {'code': "", 'cont': "      ", 'comment': "! "}
 
-    printer = FCodePrinter(settings)
+    printer = FCodePrinter2(settings)
 
-    if printer._settings['source_format'] == 'fixed':
-        #FCodePrinter.indent_code uses ''.join to combine lines.  Should it be
-        # '\n'.join ? This is my work around:
-        printer._lead_cont = '&\n      ' #+ printer._lead_cont
+    printer._lead_cont = '&\n      ' # this should account for eariler version of sympy
+     
     expr = printer.parenthesize(expr, 50)
 
     if not prepend is None:
@@ -760,7 +770,7 @@ def copy_attributes_from_text_to_object(reader, *args, **kwargs):
         object to interpret the `reader` by using the keyword argument
         'syntax_checker'=<some SyntaxChecker object>.
 
-    See also
+    See Also
     --------
     copy_attributes_between_objects : See for args and kwargs input.
     SyntaxChecker : Restrict the allowable syntax in the `reader`.
@@ -1012,7 +1022,7 @@ def initialize_objects_attributes(obj,
     assignment e.g. 'self.a = 6' and then later comment it out when coding of
     the class is finsihed.
 
-    See also
+    See Also
     --------
     code_for_explicit_attribute_initialization : Use for temporary explicit
         attribute initialization to facilitate auto-complete, then comment
@@ -1055,7 +1065,7 @@ def code_for_explicit_attribute_initialization(attributes=[],
         methos) to explicitly initialize attributes, so the attributes appear
         in autocomplete.
 
-    See also
+    See Also
     --------
     initialize_objects_attributes : Similar functionality with no copy paste.
 
@@ -1470,7 +1480,7 @@ class InputFileLoaderCheckerSaver(object):
         Notes
         -----
 
-        See also
+        See Also
         --------
         check_attribute_combinations
         check_attribute_is_list
@@ -1606,7 +1616,7 @@ class PrefixNumpyArrayString(object):
     >>> a=PrefixNumpyArrayString('numpy.')
     >>> a.turn_on()
     >>> print(np.arange(3))
-    numpy.array([             0,              1,              2])
+    numpy.array([0, 1, 2])
     >>> a.turn_off()
     >>> print(np.arange(3))
     [0 1 2]
@@ -2203,6 +2213,74 @@ def modules_in_package(package_name, exclude=['test']):
     return [name for _, name, _ in pkgutil.iter_modules([pkgpath])
             if name not in exclude]
 
+class SimpleTimer(object):
+    """Simple timer to display start, end, and elapsed wall clock time of
+    code execution.
+
+    Messages displayed when start and finish methods called.
+
+    Attributes
+    ----------
+    start_times : dict
+        Start times corresponding to each timing level.
+    messages : dict
+        Message/title corresponding to each timeing level.
+    end_times : dict
+        end times corresponding to each timing level.
+
+    """
+
+    def __init__(self):
+        self.start_times = dict()
+        self.messages = dict()
+        self.end_times = dict()
+
+    def start(self, i, msg=None):
+        """Print message saying timing level i has started.
+
+        Parameters
+        ---------
+        i : int
+            index of timed process.  Numerical value of i will detemine
+            indent of printed message. If i==0 then row of astericks will be
+            printed before message.
+        msg : string, optional
+            title of timing process.  printed message will be "Started " + msg.
+            Default msg=None which will make "Started Level i" appear.
+
+        """
+
+        self.start_times[i] = time.time()
+
+        if msg is None:
+            self.messages[i] = "Level {}".format(i)
+        else:
+            self.messages[i] = msg
+        if i==0:
+            print("*"*40)
+        print("  "*i + "Started " + self.messages[i])
+
+    def finish(self, i):
+        """Print message saying timing level i has finished along with the
+        elapsed time.
+
+        Parameters
+        ---------
+        i : int
+            index of timed process.  Numerical value of i will detemine
+            indent of printed message. If i==0 then row of astericks will be
+            printed after finish message.
+
+
+        """
+        self.end_times[i] = time.time()
+        elapsed_time = (self.end_times[i] - self.start_times[i])
+
+
+        print("  "*i + "Finished {}, run time = {}".format(self.messages[i],
+                  str(timedelta(seconds=elapsed_time))))
+        if i==0:
+            print("*"*40)
 
 if __name__ == '__main__':
     import nose

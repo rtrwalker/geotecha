@@ -1,5 +1,5 @@
 # geotecha - A software suite for geotechncial engineering
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ def mu_ideal(n, *args):
 
     """
 
-    n = np.asarray(n) 
+    n = np.asarray(n)
     if np.any(n <= 1):
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             ', '.join([str(v) for v in np.atleast_1d(n)])))
@@ -194,7 +194,7 @@ def _sx(n, s):
 
     .. math:: s_X = 2n-s
 
-    See also
+    See Also
     --------
     mu_overlapping_linear : uses _sx
     _kapx : used in mu_overlapping_linear
@@ -233,7 +233,7 @@ def _kapx(n, s, kap):
     .. math:: s_X = 2n-s
 
 
-    See also
+    See Also
     --------
     mu_overlapping_linear : uses _kapx
     _sx : used in mu_overlapping_linear
@@ -305,7 +305,7 @@ def mu_overlapping_linear(n, s, kap):
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
 
-    See also
+    See Also
     --------
     mu_linear : :math:`\\mu` for non-overlapping smear zones
 
@@ -1526,7 +1526,7 @@ def k_overlapping_linear(n, s, kap, si):
         kapx =  _kapx(n, s, kap)
         mu = mu_linear(n, sx, kapx) * kap / kapx
         return mu
-    
+
     n = np.asarray(n)
     s = np.asarray(s)
     kap = np.asarray(kap)
@@ -1737,7 +1737,7 @@ def u_constant(n, s, kap, si, uavg=1, uw=0, muw=0):
         return u
     n = np.asarray(n)
     s = np.asarray(s)
-    kap = np.asarray(kap)        
+    kap = np.asarray(kap)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -1926,7 +1926,7 @@ def u_linear(n, s, kap, si, uavg=1, uw=0, muw=0):
             return u
     n = np.asarray(n)
     s = np.asarray(s)
-    kap = np.asarray(kap)            
+    kap = np.asarray(kap)
     if n<=1.0:
         raise ValueError('n must be greater than 1. You have n = {}'.format(
             n))
@@ -2128,7 +2128,7 @@ def u_parabolic(n, s, kap, si, uavg=1, uw=0, muw=0):
 
         u = term1 * (term2 + term7)
         return u
-        
+
     n = np.asarray(n)
     s = np.asarray(s)
     kap = np.asarray(kap)
@@ -2630,11 +2630,11 @@ def drain_eta(re, mu_function, *args, **kwargs):
     --------
 
     >>> drain_eta(1.5, mu_ideal, 10)
-    0.56317834043349857
+    0.563178340433...
     >>> drain_eta(1.5, 'mu_ideal', 10)
-    0.56317834043349857
+    0.5631783404334...
     >>> drain_eta(1.5, mu_constant, 5, 1.5, 1.6, muw=1)
-    0.41158377241444855
+    0.4115837724144...
 
     """
 
@@ -2851,9 +2851,9 @@ def _g(r_rw, re_rw, nflow=1.0001, nterms=20):
     >>> _g(5, 5, nflow=1.01)
     102.120...
     >>> _g(10.0, np.array([50.0,20]), nflow=1.2)
-    array([ 8.7841...,  8.664...])
+    array([8.7841..., 8.664...])
 
-    See also
+    See Also
     --------
     _gbar : multiply _g by y and integrate w.r.t y
 
@@ -3018,10 +3018,10 @@ def _gbar(r_rw, re_rw, nflow=1.0001, nterms=20):
     >>> _gbar(5, 5, nflow=1.01)
     1273.3329...
     >>> _gbar(10.0, np.array([50.0,20]), nflow=1.2)
-    array([ 405.924...,  403.0541...])
+    array([405.924..., 403.0541...])
 
 
-    See also
+    See Also
     --------
     _g : earlier step in derivation of `_gbar`.
 
@@ -3132,14 +3132,14 @@ def non_darcy_beta_ideal(n, nflow=1.0001, nterms=20, *args):
     >>> non_darcy_beta_ideal(20, 1.000001, nterms=20)
     2.2538...
     >>> non_darcy_beta_ideal(np.array([20, 10]), 1.000001, nterms=20)
-    array([ 2.253...,  1.578...])
+    array([2.253..., 1.578...])
     >>> non_darcy_beta_ideal(15, 1.3)
     2.618...
     >>> non_darcy_beta_ideal(np.array([20, 15]), np.array([1.000001,1.3]), nterms=20)
-    array([ 2.253...,  2.618...])
+    array([2.253..., 2.618...])
 
 
-    See also
+    See Also
     --------
     _g : used in this function.
     _gbar : used in this function.
@@ -3159,7 +3159,7 @@ def non_darcy_beta_ideal(n, nflow=1.0001, nterms=20, *args):
 
     """
 
-    n = np.asarray(n)    
+    n = np.asarray(n)
     nflow = np.asarray(nflow)
     if np.any(n <= 1):
         raise ValueError('n must be greater than 1. '
@@ -3275,11 +3275,11 @@ def non_darcy_beta_constant(n, s, kap, nflow=1.0001, nterms=20, *args):
     6.1150...
     >>> non_darcy_beta_constant(np.array([20, 15]), 5,
     ... np.array([5,4]), np.array([1.000001, 1.3]), nterms=20)
-    array([ 8.471...,  6.1150...])
+    array([8.471..., 6.1150...])
 
 
 
-    See also
+    See Also
     --------
     _g : used in this function.
     _gbar : used in this function.
@@ -3298,10 +3298,10 @@ def non_darcy_beta_constant(n, s, kap, nflow=1.0001, nterms=20, *args):
 
 
     """
-    
-    n = np.asarray(n)    
-    s = np.asarray(s)    
-    kap = np.asarray(kap)    
+
+    n = np.asarray(n)
+    s = np.asarray(s)
+    kap = np.asarray(kap)
     nflow = np.asarray(nflow)
     if np.any(n <= 1):
         raise ValueError('n must be greater than 1. '
@@ -3584,13 +3584,13 @@ def non_darcy_u_piecewise_constant(s, kap, si, uavg=1, uw=0, muw=0,
     Examples
     --------
     >>> u_piecewise_constant([1.5, 3,], [2, 3], 1.6, n=5, kap_m=1)
-    array([ 0.4153...])
+    array([0.4153...])
     >>> non_darcy_u_piecewise_constant([1.5, 3,], [2, 3], 1.6, n=5, kap_m=1,
     ... nflow=1.0000001)
-    array([ 0.4153...])
+    array([0.4153...])
     >>> non_darcy_u_piecewise_constant([1.5, 3,], [2, 3], 1.6, n=5, kap_m=1,
     ... nflow=1.3)
-    array([ 0.3865...])
+    array([0.3865...])
 
 
     References
@@ -3693,18 +3693,18 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
     """For non-Darcy flow calculate the vertical drain eta parameter
 
     eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow-1) * nflow * iL**(nflow-1))
-    
+
     nflow will be obtained from the **kwargs.  rw will be back calculated
-    from the n parameter (n=re/rw) which is usually the first of the *arg parameters 
+    from the n parameter (n=re/rw) which is usually the first of the *arg parameters
     or one of the **kwargs
-    
+
     Note that eta is used in radial consolidation equations:
-    [strain rate] = (u - uw)**n * k / gamw * eta    
+    [strain rate] = (u - uw)**n * k / gamw * eta
     Compare with the Darcian case of (eta terms are calculated differerntly
-    for Darcy and non-Darcy cases): 
+    for Darcy and non-Darcy cases):
     [strain rate] = (u - uw) * k / gamw * eta
-    
-    Note that `non_darcy_drain_eta` only uses the exponential portion of the 
+
+    Note that `non_darcy_drain_eta` only uses the exponential portion of the
     Non-Darcian flow relationship.  If hydraulic gradients are greater than
     iL then the flow rates will be overestimated.
 
@@ -3718,9 +3718,9 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
         Unit weight of water. Usually gamw=10 kN/m**3 or gamw=9.807 kN/m**3.
     beta_function : obj or string
         The non_darcy_beta function to use. e.g. non_darcy_beta_ideal
-        non_darcy_beat_constant, non_darcy_piecewise_constant. 
+        non_darcy_beat_constant, non_darcy_piecewise_constant.
         This can either be the function object itself
-        or the name of the function e.g. 'non_darcy_beta_ideal'.    
+        or the name of the function e.g. 'non_darcy_beta_ideal'.
     *args, **kwargs : various
         The arguments to pass to the beta_function.
 
@@ -3730,20 +3730,20 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
         Value of eta parameter for non-Darcian flow
 
     Examples
-    --------    
-    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10, 
+    --------
+    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10,
     ... beta_function='non_darcy_beta_ideal', n=15, nflow=1.3, nterms=20)
     0.09807...
-    >>> non_darcy_drain_eta(1.5, 10, 10, 
+    >>> non_darcy_drain_eta(1.5, 10, 10,
     ... 'non_darcy_beta_ideal', 15, nflow=1.3, nterms=20)
     0.09807...
-    
-    
-    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10, 
-    ... beta_function='non_darcy_beta_ideal', n=np.array([20.0, 15.0]), 
+
+
+    >>> non_darcy_drain_eta(re=1.5, iL=10, gamw=10,
+    ... beta_function='non_darcy_beta_ideal', n=np.array([20.0, 15.0]),
     ... nflow=np.array([1.000001, 1.3]), nterms=20)
-    array([ 0.3943...,  0.0980...])
-           
+    array([0.3943..., 0.0980...])
+
 
     """
 
@@ -3759,17 +3759,17 @@ def non_darcy_drain_eta(re, iL, gamw, beta_function, *args, **kwargs):
     except:
         n = args[0]
     rw = re / n
-     
+
     nflow = kwargs['nflow']
-    
+
     beta = beta_fn(*args, **kwargs)
-    
-    eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow - 1) 
+
+    eta = 2 / (re**2 * beta**nflow * (rw * gamw)**(nflow - 1)
                * nflow * iL**(nflow - 1))
     return eta
 
 
-    
+
 
 
 ########################################################################
@@ -3789,7 +3789,7 @@ if __name__ == '__main__':
 #    watch()
     import nose
     nose.runmodule(argv=['nose', '--verbosity=3', '--with-doctest', '--doctest-options=+ELLIPSIS'])
-    
+
 
 
     eta = 5
@@ -3822,7 +3822,7 @@ if __name__ == '__main__':
 #        4.72881356,  4.79661017,  4.86440678,  4.93220339,  5., 30       ])
 #
 #    y = 1.0/np.array(
-#        [ 0.5       ,  0.50847458,  0.51694915,  0.52542373,  0.53389831,
+#        [0.5       ,  0.50847458,  0.51694915,  0.52542373,  0.53389831,
 #        0.54237288,  0.55084746,  0.55932203,  0.56779661,  0.57627119,
 #        0.58474576,  0.59322034,  0.60169492,  0.61016949,  0.61864407,
 #        0.62711864,  0.63559322,  0.6440678 ,  0.65254237,  0.66101695,
