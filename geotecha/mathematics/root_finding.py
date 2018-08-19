@@ -1,4 +1,4 @@
-# Copyright (C) 2013  Rohan T. Walker (rtrwalker@gmail.com)
+# Copyright (C) 2018  Rohan T. Walker (rtrwalker@gmail.com)
 # geotecha - A software suite for geotechncial engineering
 #
 # This program is free software: you can redistribute it and/or modify
