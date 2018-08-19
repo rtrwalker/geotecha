@@ -1,3 +1,7 @@
+-----------------------------------------------------------------------
+2018-09-19 geotecha-0.2.1 Release.
+		   Added specbeam (see changelog below).
+		   Updated for python3.6		   
 2018-09-19 Abandoned trying to build and test code on anything less
            than python3.6 on 64 bit Windows.  There is an Anaconda
 		   release for python3.6 and I can get it to build and pass

@@ -91,7 +91,6 @@ DOCLINES = __doc__.split("\n")
 CLASSIFIERS = """\
 Development Status :: 4 - Beta
 License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)
-Programming Language :: Python :: 2.7
 Programming Language :: Python :: 3.4
 Topic :: Scientific/Engineering
 """
@@ -110,22 +109,22 @@ AUTHOR = "Dr Rohan Walker"
 AUTHOR_EMAIL = "rtrwalker@gmail.com"
 PLATFORMS = ["Windows"]#, "Linux", "Solaris", "Mac OS-X", "Unix"]
 MAJOR = 0
-MINOR = 1
-MICRO = 4
+MINOR = 2
+MICRO = 1
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 INSTALL_REQUIRES=[
-    "numpy>=1.8",
-    "matplotlib>=1.3",
-    "scipy>=0.13.3",
-    "sympy>=0.2.7",
+    "numpy>=1.14",
+    "matplotlib>=2.0.0",
+    "scipy>=1.1.0",
+    "sympy>=1.1.1",
     "brewer2mpl",
     "testfixtures",
     "pandas",
     "numpydoc",
     "IPython",
-    "sphinx>=1.4",
+    "sphinx>=1.7.4",
 #    "pkg_resources", #underscore in package name does not play nicely
 #    "mpl_toolkits",
     "mock",
