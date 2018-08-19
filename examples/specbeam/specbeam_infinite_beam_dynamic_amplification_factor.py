@@ -1,4 +1,4 @@
-# specbeam example(if viewing this in docs, plots are at bottom of page)
+# specbeam example (if viewing this in docs, plots are at bottom of page)
 
 # Dynamic Amplification Factor vs velocity ratio (alpha) for variuos
 # damping ratios (beta) for moving point load on infinite beam on elastic
@@ -10,7 +10,7 @@
 #
 # Essentially a duplication of
 # geotecha.beam_on_foundation.specbam.article_figure_02 which was used to
-# generate a journal articel figure for
+# generate a journal article figure for
 #    Walker, R.T.R. and Indraratna, B, (in press) "Moving loads on a
 #    viscoelastic foundation with special reference to railway
 #    transition zones". International Journal of Geomechanics.
@@ -32,8 +32,8 @@ matplotlib.style.use('classic')
 
 
 
-# see geotecha.beam_on_foundation.specbam.article_figure_02 and
-# geotecha.beam_on_foundation.specbam.FIGURE_DAF_constant_prop for description
+# see geotecha.beam_on_foundation.specbeam.article_figure_02 and
+# geotecha.beam_on_foundation.specbeam.FIGURE_DAF_constant_prop for description
 # of variables.
 
 #Note this can take some time to run

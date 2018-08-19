@@ -117,9 +117,7 @@ def pdim1sin_af_linear(m, a, **kwargs):
     each layer respectively.
 
 
-    See also
-    --------
-    dim1sin_af_linear
+s
 
     """
 

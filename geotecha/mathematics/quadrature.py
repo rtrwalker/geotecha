@@ -1140,7 +1140,7 @@ def shanks(seq, ind=0):
         Extrapolated value.  If `seq` is a numpy array then due to in-place
         modification the result will also be in seq[..., -1].
 
-    See also
+    See Also
     --------
     shanks_table : Copy of sympy.mpmath.calculus.extrapolation.shanks
         Provides the whole epsilon table and error estimates.

@@ -1028,7 +1028,7 @@ class SpecBeam(object):
     def make_time_dependent_arrays(self):
         """make all time dependent arrays
 
-        See also
+        See Also
         --------
         self.make_E_Igamv_the()
 
@@ -1050,7 +1050,7 @@ class SpecBeam(object):
         E*inverse(gam*v)*theta calculated at each output time.  This will allow
         us later to do defl = phi*v*self.E_Igamv_the
 
-        See also
+        See Also
         --------
         _make_E_Igamv_the_mvl :  moiving point load contribution
 
@@ -4545,7 +4545,7 @@ def case_study_PaixaoEtAl2014(
         Current working directory will be searched for a results file
         named according to "saveas" and
         if found it will be loaded.  Be careful as name of results file may
-        not be unique to your analysis paramters.  Safest to use
+        not be unique to your analysis parameters.  Safest to use
         force_calc = True, but if you are simply regenerating graphs then
         consider force_calc=False.  Default force_calc=True.
 
@@ -7460,7 +7460,7 @@ def transition_zones1(
     3 plots will be produced:
     - Line will be plotted based on permututions of `Lt_Lcs`, `alphas`,
     `reverses`.  So number of lines can quickly get out of hand.  Usually
-    interested in varyin one of the paramters at a time.
+    interested in varyin one of the parameters at a time.
     - Plot 1a) shows the design transtion stiffness profile
     Plot 1b) shows max deflection experienced at each point
     - Plot 2) is deflection vs time at the point which experiences the
@@ -7564,7 +7564,7 @@ def transition_zones1(
         Current working directory will be searched for a results file
         named according to "saveas" and
         if found it will be loaded.  Be careful as name of results file may
-        not be unique to your analysis paramters.  Safest to use
+        not be unique to your analysis parameters.  Safest to use
         force_calc = True, but if you are simply regenerating graphs then
         consider force_calc=False.  Default force_calc=True.
     article_formatting : [False, True], optional
@@ -7576,7 +7576,7 @@ def transition_zones1(
 
     Notes
     -----
-    While all paramters are normalised the raw properties that all others
+    While all parameters are normalised the raw properties that all others
     are based on are:
     - E = 6.998*1e9, #Pa
     - rho = 2373, #kg/m3
@@ -8647,7 +8647,7 @@ def FIG_DAF_envelope_vary_beta(ax=None, betas=None, alphas=None,
         Current working directory will be searched for a results file
         named according to "saveas" and
         if found it will be loaded.  Be careful as name of results file may
-        not be unique to your analysis paramters.  Safest to use
+        not be unique to your analysis parameters.  Safest to use
         force_calc = True, but if you are simply regenerating graphs then
         consider force_calc=False.  Default force_calc=True.
     t_extend : float, optional

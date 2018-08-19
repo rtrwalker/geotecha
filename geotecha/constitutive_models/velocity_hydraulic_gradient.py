@@ -231,7 +231,7 @@ class DarcyFlowModel(OneDimensionalFlowRelationship):
         strain_rate : float
             Strain rate based on eta method.
 
-        See also
+        See Also
         --------
         geotecha.consolidation.smearzones : Functions to determine eta.
 
@@ -700,7 +700,7 @@ class HansboNonDarcianFlowModel(OneDimensionalFlowRelationship):
         strain_rate : float
             Strain rate based on eta method.
 
-        See also
+        See Also
         --------
         geotecha.consolidation.smearzones : Functions to determine eta.
 

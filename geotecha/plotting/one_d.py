@@ -1998,7 +1998,7 @@ def save_figure(fig, fname='fig', ext=['pdf', 'eps', 'png'], dpi=1200):
 def figure_from_source_code(obj, figsize=None, font=None):
     """Put source code of object into a matplotlib figure
 
-    Paramters
+    Parameters
     ---------
     obj : python object
         object to display source code of

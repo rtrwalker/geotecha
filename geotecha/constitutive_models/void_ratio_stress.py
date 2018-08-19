@@ -1408,7 +1408,7 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
     def initial_conditions(self, e0=None, estress0=None, pstress0=None, t0=None):
         """Calculate the initial conditions
 
-        Only use two of the paramters, the other two will be calculated.
+        Only use two of the parameters, the other two will be calculated.
 
         Parameters
         ----------
@@ -1861,7 +1861,7 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
             Time rate of change of void ratio at tvals_
 
 
-        See also
+        See Also
         --------
         geotecha.piecewise.piecewsie_linear_1d.subdivide_x_into_segments : used
             to determine time intervals.
@@ -1973,7 +1973,7 @@ class YinAndGrahamSoilModel(OneDimensionalVoidRatioEffectiveStress):
             Time rate of change of stress at tvals_
 
 
-        See also
+        See Also
         --------
         geotecha.piecewise.piecewsie_linear_1d.subdivide_x_into_segments : used
             to determine time intervals.

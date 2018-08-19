@@ -650,7 +650,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         """make all time independent arrays
 
 
-        See also
+        See Also
         --------
         self._make_m : make the basis function eigenvalues
         self._make_gam : make the mv dependent gamma matrix
@@ -673,7 +673,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
     def make_time_dependent_arrays(self):
         """make all time dependent arrays
 
-        See also
+        See Also
         --------
         self.make_E_Igamv_the()
 
@@ -915,7 +915,7 @@ class Speccon1dVRC(speccon1d.Speccon1d):
         E*inverse(gam*v)*theta calculated at each output time.  This will allow
         us later to do u = phi*v*self.E_Igamv_the
 
-        See also
+        See Also
         --------
         _make_E_Igamv_the_surcharge :  surchage contribution
         _make_E_Igamv_the_BC : top boundary pore pressure contribution

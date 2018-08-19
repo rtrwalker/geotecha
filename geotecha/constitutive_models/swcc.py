@@ -685,7 +685,7 @@ class SWCC_PhamAndFredlund2008(SWCC):
         If k_from_psi returns a number greater than zero then try reducing
         aev.
 
-        Paramters
+        Parameters
         ---------
         psi : float
             Soil suction. Can be a 1d array.

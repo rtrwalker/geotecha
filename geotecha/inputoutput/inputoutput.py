@@ -119,7 +119,7 @@ class SyntaxChecker(ast.NodeVisitor):
     allow_PolyLine
         Allow PolyLine class from geotecha.piecewise.piecewise_linear_1d.
 
-    See also
+    See Also
     --------
     ast.NodeVisitor : Parent class.  Descriptions of python syntax grammar.
     object_members : Easily print a string of an objects routines for use in
@@ -588,7 +588,7 @@ def make_module_from_text(reader, syntax_checker=None):
     m : module
         text as module
 
-    See also
+    See Also
     --------
     SyntaxChecker : allow certain syntax
 
@@ -686,7 +686,7 @@ def fcode_one_large_expr(expr, prepend=None, **settings):
     out : str
         Fortran ready code that can be copy and pasted into a Fortran routine.
 
-    See also
+    See Also
     --------
     sympy.printing.fcode : contains all the functionality.
 
@@ -770,7 +770,7 @@ def copy_attributes_from_text_to_object(reader, *args, **kwargs):
         object to interpret the `reader` by using the keyword argument
         'syntax_checker'=<some SyntaxChecker object>.
 
-    See also
+    See Also
     --------
     copy_attributes_between_objects : See for args and kwargs input.
     SyntaxChecker : Restrict the allowable syntax in the `reader`.
@@ -1022,7 +1022,7 @@ def initialize_objects_attributes(obj,
     assignment e.g. 'self.a = 6' and then later comment it out when coding of
     the class is finsihed.
 
-    See also
+    See Also
     --------
     code_for_explicit_attribute_initialization : Use for temporary explicit
         attribute initialization to facilitate auto-complete, then comment
@@ -1065,7 +1065,7 @@ def code_for_explicit_attribute_initialization(attributes=[],
         methos) to explicitly initialize attributes, so the attributes appear
         in autocomplete.
 
-    See also
+    See Also
     --------
     initialize_objects_attributes : Similar functionality with no copy paste.
 
@@ -1480,7 +1480,7 @@ class InputFileLoaderCheckerSaver(object):
         Notes
         -----
 
-        See also
+        See Also
         --------
         check_attribute_combinations
         check_attribute_is_list
@@ -2238,7 +2238,7 @@ class SimpleTimer(object):
     def start(self, i, msg=None):
         """Print message saying timing level i has started.
 
-        Paramters
+        Parameters
         ---------
         i : int
             index of timed process.  Numerical value of i will detemine
@@ -2264,7 +2264,7 @@ class SimpleTimer(object):
         """Print message saying timing level i has finished along with the
         elapsed time.
 
-        Paramters
+        Parameters
         ---------
         i : int
             index of timed process.  Numerical value of i will detemine

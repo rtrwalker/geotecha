@@ -194,7 +194,7 @@ def _sx(n, s):
 
     .. math:: s_X = 2n-s
 
-    See also
+    See Also
     --------
     mu_overlapping_linear : uses _sx
     _kapx : used in mu_overlapping_linear
@@ -233,7 +233,7 @@ def _kapx(n, s, kap):
     .. math:: s_X = 2n-s
 
 
-    See also
+    See Also
     --------
     mu_overlapping_linear : uses _kapx
     _sx : used in mu_overlapping_linear
@@ -305,7 +305,7 @@ def mu_overlapping_linear(n, s, kap):
     horizontal permeability, :math:`k_s` is the smear zone horizontal
     permeability
 
-    See also
+    See Also
     --------
     mu_linear : :math:`\\mu` for non-overlapping smear zones
 
@@ -2853,7 +2853,7 @@ def _g(r_rw, re_rw, nflow=1.0001, nterms=20):
     >>> _g(10.0, np.array([50.0,20]), nflow=1.2)
     array([8.7841..., 8.664...])
 
-    See also
+    See Also
     --------
     _gbar : multiply _g by y and integrate w.r.t y
 
@@ -3021,7 +3021,7 @@ def _gbar(r_rw, re_rw, nflow=1.0001, nterms=20):
     array([405.924..., 403.0541...])
 
 
-    See also
+    See Also
     --------
     _g : earlier step in derivation of `_gbar`.
 
@@ -3139,7 +3139,7 @@ def non_darcy_beta_ideal(n, nflow=1.0001, nterms=20, *args):
     array([2.253..., 2.618...])
 
 
-    See also
+    See Also
     --------
     _g : used in this function.
     _gbar : used in this function.
@@ -3279,7 +3279,7 @@ def non_darcy_beta_constant(n, s, kap, nflow=1.0001, nterms=20, *args):
 
 
 
-    See also
+    See Also
     --------
     _g : used in this function.
     _gbar : used in this function.

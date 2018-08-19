@@ -19,7 +19,7 @@ The `consolidation` sub-package contains modules related to soil
 consolidation.  Primarily it implements analytical solutions to
 consolidation problems described in the literature.
 
-See also
+See Also
 --------
 geotecha.speccon : soil consolidation using the spectral method
 

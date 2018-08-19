@@ -58,7 +58,7 @@ def real_func(x, *myargs):
     out : ndarray
         Real part of func(x, *myargs)
 
-    See also
+    See Also
     --------
     imag_func : imaginary part of function
 
@@ -101,7 +101,7 @@ def imag_func(x, *myargs):
     out : ndarray
         Imaginary part of func(x, *myargs).
 
-    See also
+    See Also
     --------
     real_func : real part of function
 
@@ -145,7 +145,7 @@ def func_mirror_for_even_weight(x, *myargs):
     out : ndarray
         Value of func(-x, *myargs).
 
-    See also
+    See Also
     --------
     func_mirror_for_odd_weight : mirror for an odd weight function
 
@@ -189,7 +189,7 @@ def func_mirror_for_odd_weight(x, *myargs):
     out : ndarray
         Value of -func(-x, *myargs)
 
-    See also
+    See Also
     --------
     func_mirror_for_even_weight : mirror for an even wieght function
 
