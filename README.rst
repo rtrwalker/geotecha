@@ -212,7 +212,8 @@ have with :
 
    python -c "import numpy; print(numpy.version.version)"
 
-
+I have also had some odd behaviour where I run tests and get a couple
+of test failures.  Then run the same tests and they all pass.
 
 Building the docs
 ^^^^^^^^^^^^^^^^^
