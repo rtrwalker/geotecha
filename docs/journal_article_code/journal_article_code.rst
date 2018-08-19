@@ -19,7 +19,7 @@ that is applicable.
 
 There are also many implementations of other people's research papers
 in geotecha.  These are not listed below but can be found by looking
-throug the api docs.  Many are related to soil consolidaton applications.
+through the api docs.  Many are related to soil consolidation applications.
 
 
  - **Walker, R.T.R. and Indraratna, B, (in press 2018ish) "Moving loads on

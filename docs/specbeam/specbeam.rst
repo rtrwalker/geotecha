@@ -17,8 +17,8 @@ railway transition zones" published in the International Journal of Geomechanics
 It models a finite elastic Euler-Bernoulli beam resting on
 viscoelastic foundation subjected to a moving load(s), with piecewise-linear
 spatially varying properties.  It uses the spectral Galerkin method to solve the
-dynamic system deflections over time. Ding et al. (2012) [1]_  models a simialr
-situation with constatn spatial properties.
+dynamic system deflections over time. Ding et al. (2012) [1]_  models a similar
+situation with constant spatial properties.
 
 
 See :class:`geotecha.beam_on_foundation.specbeam.SpecBeam` for details

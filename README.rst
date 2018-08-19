@@ -21,7 +21,7 @@ consolidation with and without vertical drains.  In particular:
 
  - the `speccon` programs solve one-dimensional partial differential equations
    associated with multi-layer problems using the spectral Galerkin
-   method.  Material properties are constant with time but piecewsie-linear
+   method.  Material properties are constant with time but piecewise-linear
    with depth.  Loads and boundary conditions are piecewise linear with
    time (plus a sinusoidal component).
  - `specbeam` models a finite elastic Euler-Bernoulli beam resting on
@@ -40,7 +40,7 @@ There you can find more descriptions of speccon and specbeam.  Peruse the
 api docs for a listing of all the modules, classes and code (make sure you
 scroll up to the top of each api_doc page to see the summary listing of
 each module - frustratingly a clicked hyperlink doesn't
-take you to the topof the page!)
+take you to the top of the page!)
 
 
 GitHub Repository
@@ -200,12 +200,12 @@ You might get two test failures about importing ext_integrals and ext_epus.
 This indicates that the fortran extensions are not working.  Don't worry
 python/numpy (slower) versions of relevant functions will be used instead.
 
-If you have a numpy version less than 1.14 then the tests will probally throw
+If you have a numpy version less than 1.14 then the tests will probably throw
 many failures associated with spaces and string representations of numpy
 arrays.  This is due to changes in numpy
 https://docs.scipy.org/doc/numpy-1.14.0/release.html
 Don't worry I've just updated things for python3.6, you will eventually
-upgrade and the test failures will dissapear. Check which numpy version you
+upgrade and the test failures will disappear. Check which numpy version you
 have with :
 
 .. code-block::
@@ -232,19 +232,18 @@ Issues with building/installing
 At times (every time?) I have had issues with building from source on windows.
 So here are some hints to point you in the right direction.
 In python2.7 and up to python 3.4 it was relatively easy because
-there was a mingwpy package ( https://anaconda.org/carlkl/mingwpy ), however,
-that very useful project has been abandonded
+there was a Mingwpy package ( https://anaconda.org/carlkl/mingwpy ), however,
+that very useful project has been abandoned
 ( https://groups.google.com/forum/#!topic/mingwpy/1k_BLFPLmBI ).
 So here is what works for me on Windows 10, 64 bit with python3.6
 
 Based on the helpful blog post from Michael Hirsch ( https://www.scivision.co/python-windows-visual-c++-14-required/ )
 install the relevant version of Microsoft Build Tools for Visual C++
 (2017 for me) from https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2017
-(look in the "Tools for Visual Studio 2017" secton).
+(look in the "Tools for Visual Studio 2017" section).
 Note it is a large install taking up ~6GB.
 
-Now install m2w64-toolchain hosted by Anaconda (don't be confused by the
-'64' in 'm2w64-toolchain'; I believe it works for 64 bit and 32 bit systems):
+Now install m2w64-toolchain hosted by Anaconda:
 
 .. code-block::
 
@@ -256,7 +255,7 @@ Clean up previous builds:
 
    python setup.py clean --all
 
-Now try and build the thing explicitly specifiying the compiler:
+Now try and build the thing explicitly specifying the compiler:
 
 .. code-block::
 
@@ -265,7 +264,7 @@ Now try and build the thing explicitly specifiying the compiler:
 
 
 Test the install as above.  No test failures will indicate that the
-fortran extension modules have been sucessfully built and installed.
+Fortran extension modules have been successfully built and installed.
 
 
 Removing geotecha
@@ -297,7 +296,7 @@ If you need to start again remove the env with:
    conda env remove --name py36
 
 Close the anaconda prompt and then open the py36 anaconda prompt (start menu).
-Your py36 env is now ready to install geotecha and other python packages.
+Your py36 env is now ready to install *geotecha* and other python packages.
 
 
 .. _GPLv3: http://choosealicense.com/licenses/gpl-3.0/
