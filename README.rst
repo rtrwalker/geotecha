@@ -35,7 +35,7 @@ consolidation with and without vertical drains.  In particular:
 
 Documentation
 -------------
-*geotecha* documentation is currently stored at http://pythonhosted.org//geotecha/ .
+*geotecha* documentation is currently stored at https://rtrwalker.github.io .
 There you can find more descriptions of speccon and specbeam.  Peruse the
 api docs for a listing of all the modules, classes and code (make sure you
 scroll up to the top of each api_doc page to see the summary listing of

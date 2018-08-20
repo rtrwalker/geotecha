@@ -110,7 +110,7 @@ AUTHOR_EMAIL = "rtrwalker@gmail.com"
 PLATFORMS = ["Windows"]#, "Linux", "Solaris", "Mac OS-X", "Unix"]
 MAJOR = 0
 MINOR = 2
-MICRO = 1
+MICRO = 2
 ISRELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 

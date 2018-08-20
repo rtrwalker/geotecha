@@ -1,4 +1,9 @@
 -----------------------------------------------------------------------
+2018-09-20 geotecha-0.2.2 Release.
+	       Changed link to docs from pythonhosted.org (deprecated)
+		   to https://rtrwalker.github.io .
+
+-----------------------------------------------------------------------
 2018-09-19 geotecha-0.2.1 Release.
 		   Added specbeam (see changelog below).
 		   Updated for python3.6		   
