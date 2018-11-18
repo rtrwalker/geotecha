@@ -16,13 +16,25 @@ import sys
 import os
 import pkg_resources
 
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
-sys.path.append(os.path.abspath('sphinxext'))
-sys.path.append(os.path.abspath('..')) # geotecha directory
+## __GEN_DOCS__ Env variable
+## This variable is important as is used to "not load" and `stuff` in loading geotecha.* libs
+os.environ["__GEN_DOCS__"] = "1"
 
+# where this conf.py file is and add to path
+HERE_PATH =  os.path.abspath( os.path.dirname( __file__ ))
+sys.path.insert(0, HERE_PATH)
+print "HERE_PATH", HERE_PATH
+
+## add parent path which is where sphinx will import the geotecha (ie not installed)
+ROOT_PATH = os.path.abspath( os.path.join(HERE_PATH, "..") )
+if sys.path.count(ROOT_PATH) == 0:
+	sys.path.insert(0, ROOT_PATH)
+
+print "ROOT_PATH", ROOT_PATH
+
+## Now we import the geotecha
+import geotecha
+print "import geotecha"
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -32,25 +44,25 @@ sys.path.append(os.path.abspath('..')) # geotecha directory
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.todo',
-    'sphinx.ext.coverage',
-    'sphinx.ext.mathjax',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary',
-#    'matplotlib.sphinxext.mathmpl',
-    'matplotlib.sphinxext.only_directives',
-    'matplotlib.sphinxext.plot_directive',
-    'IPython.sphinxext.ipython_directive',
-    'ipython_console_highlighting',
-#    'inheritance_diagram',
-    'numpydoc',
-    'gen_api_rst_files', # these are in sphinxext, but above I added it to path
-    'gen_examples_rst_files']
-
+	'sphinx.ext.autodoc',
+	#'sphinx.ext.doctest',
+	'sphinx.ext.todo',
+	'sphinx.ext.coverage',
+	#'sphinx.ext.mathjax',
+	#'sphinx.ext.viewcode',
+	#'sphinx.ext.autosummary',
+	#    'matplotlib.sphinxext.mathmpl',
+	#'matplotlib.sphinxext.only_directives',
+	#'matplotlib.sphinxext.plot_directive',
+	#'IPython.sphinxext.ipython_directive',
+	#ipython_console_highlighting',
+	#    'inheritance_diagram',
+	#'numpydoc',
+	#'gen_api_rst_files', # these are in sphinxext, but above I added it to path
+	#'gen_examples_rst_files']
+]
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+#templates_path = ['_templates']
 
 # The suffix of source filenames.
 source_suffix = '.rst'
@@ -68,18 +80,17 @@ copyright = u'2014, Rohan Walker'
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
-
+# @pedromorgan takes a risk.. we need to solve this though
+# #TODO 
+version_str = "1.4"
+"""
 try:
-    version_str = pkg_resources.require(project)[0].version
+	version_str = pkg_resources.parse_requirements(project)[0].version
 except (pkg_resources.DistributionNotFound, AttributeError):
 #    version_str = 'unknown'
-    msg = "Error: geotecha and pkg_resources must be installed before building the documentation"
-    sys.exit(msg)
-#try:
-#    import geotecha
-#except ImportError:
-#    msg = "Error: geotecha must be installed before building the documentation"
-#    sys.exit(msg)
+	msg = "Error: geotecha and pkg_resources must be installed before building the documentation"
+	sys.exit(msg)
+"""
 # The short X.Y version.
 version = version_str
 # The full version, including alpha/beta/rc tags.
@@ -108,7 +119,7 @@ exclude_patterns = ['_build']
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-#add_module_names = True
+add_module_names = True
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
@@ -142,10 +153,10 @@ html_style = 'default.css'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = "geotecha"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-#html_short_title = None
+html_short_title = "geotecha"
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
@@ -228,8 +239,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'geotecha.tex', u'geotecha Documentation',
-   u'Rohan Walker', 'manual'),
+('index', 'geotecha.tex', u'geotecha Documentation',
+u'Rohan Walker', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -258,8 +269,8 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'geotecha', u'geotecha Documentation',
-     [u'Rohan Walker'], 1)
+	('index', 'geotecha', u'geotecha Documentation',
+	[u'Rohan Walker'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -272,9 +283,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'geotecha', u'geotecha Documentation',
-   u'Rohan Walker', 'geotecha', 'One line description of project.',
-   'Miscellaneous'),
+('index', 'geotecha', u'geotecha Documentation',
+u'Rohan Walker', 'geotecha', 'One line description of project.',
+'Miscellaneous'),
 ]
 
 # Documents to append as an appendix to all manuals.

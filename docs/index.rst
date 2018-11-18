@@ -1,5 +1,5 @@
 ************************************
-Welcome to geotecha's documentation!
+geotecha documentation
 ************************************
 
 .. htmlonly::
